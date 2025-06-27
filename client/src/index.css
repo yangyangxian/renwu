@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* global styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #f9fafb;
+  color: #333;
+}
+
