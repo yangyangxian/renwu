@@ -83,3 +83,26 @@ Apply the generated SQL script to your local database using the `psql` command:
 - The Drizzle ORM config uses `casing: 'snake_case'` for automatic mapping between camelCase in TypeScript and snake_case in the database.
 - If you change the schema, always regenerate and re-apply the migration before running the backend.
 - For more, see [Drizzle ORM docs](https://orm.drizzle.team/docs/overview).
+
+---
+
+## ⚠️ Migration Workflow Best Practices
+
+**Always apply the latest migrations before generating new ones!**
+
+1. **Pull the latest code and migrations:**
+   ```sh
+   git pull
+   ```
+2. **Apply all existing migrations to your local database:**
+   ```sh
+   npx drizzle-kit push
+   ```
+3. **Only after this, generate new migrations if you have schema changes:**
+   ```sh
+   npx drizzle-kit generate --name=your_migration_name
+   ```
+
+- This ensures your migration history stays consistent and prevents conflicts or missing migrations.
+- Never edit existing migration files after they are committed. If you need to change the schema, create a new migration.
+- Always commit both the migration SQL files and the `drizzle/meta` folder.
