@@ -1,4 +1,5 @@
 import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import configs from '../appConfig.js';
 import { CustomError } from '../classes/CustomError.js';
 import { ErrorCodes } from '@fullstack/common';
@@ -8,9 +9,11 @@ if (!configs.dbUrl || configs.dbUrl.trim() === '') {
   logger.error('DATABASE_URL is not set or is empty. Database operations may fail. Please check your environment variables.');
 }
 
-const sql = postgres(configs.dbUrl || '', {
+const queryClient = postgres(configs.dbUrl || '', {
   ssl: configs.dbUrl ? 'require' : false
 });
+
+const db = drizzle({ client: queryClient, casing: 'snake_case' });
 
 export async function executeQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
   if (!configs.dbUrl || configs.dbUrl.trim() === '') {
@@ -21,7 +24,7 @@ export async function executeQuery<T = any>(query: string, params: any[] = []): 
   }
   
   try {
-    const result = await sql.unsafe(query, params);
+    const result = await queryClient.unsafe(query, params);
     return result as unknown as T[];
   } catch (error) {
     throw error;
