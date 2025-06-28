@@ -5,10 +5,15 @@ export const DOCS_PATH = '/docs';
 export const DOCS_NESTED_ROUTES_PATH = '/docs/nestedroutesguide';
 export const DOCS_API_EXAMPLE_PATH = '/docs/apidataexample';
 
+export const Tasks_PATH = '/home/tasks';
+export const Projects_PATH = '/home/projects';
+
 export const publicRoutes: string[] = [
   ROOT_PATH,
   LOGIN_PATH,
   SIGNUP_PATH,
+  Tasks_PATH,
+  Projects_PATH
 ];
 
 // Route mapping configuration
