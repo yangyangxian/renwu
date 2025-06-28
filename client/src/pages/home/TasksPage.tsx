@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Outlet } from "react-router-dom";
 
 export default function TasksPage() {
   const [view, setView] = useState("board");
@@ -40,7 +41,7 @@ export default function TasksPage() {
 
   return (
     <>
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4 my-3">
         <Select defaultValue={selectedProject} onValueChange={setSelectedProject}>
           <SelectTrigger
             className="min-w-[10rem] h-9 px-3 rounded-md bg-white dark:text-slate-200"
@@ -105,6 +106,10 @@ export default function TasksPage() {
           <span className="text-slate-500 dark:text-slate-400">📅 Calendar view coming soon...</span>
         </Card>
       )}
+      {/* Subpage content will be embedded here when on a subroute like /tasks/subtask */}
+      <div className="mt-8">
+        <Outlet />
+      </div>
     </>
   );
 }

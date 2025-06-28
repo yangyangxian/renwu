@@ -1,6 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { CustomError } from '../classes/CustomError.js';
 import { ErrorCodes } from '@fullstack/common';
+import { db } from '../database/databaseAccess.js';
+import { users } from '../database/schema.js';
+import { eq } from 'drizzle-orm';
 
 export class UserEntity {
   id: string = '';
@@ -11,34 +14,36 @@ export class UserEntity {
 }
 
 class UserService {
-  private users: UserEntity[] = [
-    {
-      id: '1',
-      name: 'Alice Smith',
-      email: 'alice@demo.com',
-      password: bcrypt.hashSync('demo', 10),
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
   async getUserByEmail(email: string): Promise<UserEntity | null> {
-    return this.users.find(u => u.email === email) || null;
+    const result = await db.select().from(users).where(eq(users.email, email));
+    if (result.length === 0) return null;
+    const user = result[0];
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      password: user.passwordHash,
+      createdAt: user.createdAt?.toISOString?.() ?? '',
+    };
   }
 
   async createUser({ name, email, password }: { name: string; email: string; password: string }): Promise<UserEntity> {
     if (await this.getUserByEmail(email)) {
-      // TODO: Add a specific error code for conflict/duplicate if needed
       throw new CustomError('Email already exists', ErrorCodes.EMAIL_ALREADY_EXISTS);
     }
-    const user: UserEntity = {
-      id: (this.users.length + 1).toString(),
+    const passwordHash = await bcrypt.hash(password, 10);
+    const inserted = await db.insert(users).values({
       name,
       email,
-      password: await bcrypt.hash(password, 10),
-      createdAt: new Date().toISOString(),
+      passwordHash,
+    }).returning();
+    const user = inserted[0];
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt?.toISOString?.() ?? '',
     };
-    this.users.push(user);
-    return user;
   }
 }
 

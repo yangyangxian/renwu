@@ -27,7 +27,7 @@ router.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<User
         );
       }
       const user = await userService.getUserByEmail(email);
-      if (!user) {
+      if (!user || !user.password) {
         throw new CustomError(
           'Invalid credentials',
           ErrorCodes.INVALID_CREDENTIALS
@@ -75,7 +75,7 @@ router.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<Use
           ErrorCodes.MISSING_CREDENTIALS
         );
       }
-      // For demo, use email as name
+
       const user = await userService.createUser({ name: email, email, password });
       const token = createJWT({
         userId: user.id,

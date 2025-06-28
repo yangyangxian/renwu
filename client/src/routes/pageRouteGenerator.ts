@@ -1,94 +1,61 @@
 import React from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { ROUTE_MAPPINGS } from './routeConfig';
+import HomePage from '@/pages/HomePage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
-const pageModules = import.meta.glob('../pages/**/*.tsx', { eager: true });
+// Import all .tsx files recursively under /pages/home
+const pageModules = import.meta.glob('../pages/home/**/*.tsx', { eager: true });
+
+// Helper to build a file+folder based route tree (file = parent, folder = children)
+function buildFileFolderRoutes(modules: Record<string, any>) {
+  // Map: { routeName: { file: mod, children: { ... } } }
+  const tree: any = {};
+  for (const [file, mod] of Object.entries(modules)) {
+    const rel = file.replace(/^\.\.\/pages\/home\//, '').replace(/\.tsx$/, '');
+    const segments = rel.split('/');
+    if (segments.length === 1) {
+      // Top-level file (e.g. TasksPage)
+      const name = segments[0].replace(/Page$/, '').toLowerCase();
+      tree[name] = tree[name] || {};
+      tree[name].file = mod;
+    } else if (segments.length === 2) {
+      // Child file (e.g. tasks/SubTaskPage)
+      const parent = segments[0].replace(/Page$/, '').toLowerCase();
+      const child = segments[1].replace(/Page$/, '').toLowerCase();
+      tree[parent] = tree[parent] || {};
+      tree[parent].children = tree[parent].children || {};
+      tree[parent].children[child] = mod;
+    }
+  }
+  return tree;
+}
 
 export function getDynamicRoutes(): RouteObject[] {
-  const flatRoutes = getPageRoutes();
-  const mappedRoutes = applyRouteMappings(flatRoutes);
-  return buildNestedRoutes(mappedRoutes);
-}
-
-export function getPageRoutes(): RouteObject[] {
-  const routes = Object.entries(pageModules)
-    .map(([file, mod]) => {
-      let relPath = file.replace(/^[.][.]/, '').replace(/^\/pages\//, '').replace(/\.tsx$/, '');
-      relPath = relPath
-        .split('/')
-        .filter(seg => !/^[\(].+[\)]$/.test(seg))
-        .join('/');
-      const segments = relPath.split('/');
-      const last = segments[segments.length - 1].replace(/Page$/, '').toLowerCase();
-      
-      // Generate path based on file structure
-      return {
-        path: '/' + (segments.length > 1 ? segments.slice(0, -1).join('/') + '/' : '') + last,
+  const tree = buildFileFolderRoutes(pageModules);
+  const children: RouteObject[] = [];
+  // Do NOT add a default landing page as index route
+  for (const [route, v] of Object.entries(tree)) {
+    const val = v as any;
+    if (!val.file) continue;
+    const routeObj: RouteObject = {
+      path: route,
+      element: React.createElement(val.file.default),
+    };
+    if (val.children) {
+      routeObj.children = Object.entries(val.children).map(([child, mod]) => ({
+        path: child,
         element: React.createElement((mod as any).default),
-      };
-    })
-    .flat();
-  return routes;
-}
-
-function applyRouteMappings(routes: RouteObject[]): RouteObject[] {
-  const mappedRoutes = [...routes];
-  
-  // Apply configured route mappings
-  Object.entries(ROUTE_MAPPINGS).forEach(([targetPath, sourcePath]) => {
-    const sourceRoute = routes.find(route => route.path === sourcePath);
-    if (sourceRoute) {
-      mappedRoutes.push({
-        path: targetPath,
-        element: sourceRoute.element,
-      });
+      }));
     }
-  });
-  
-  return mappedRoutes;
-}
-
-function buildNestedRoutes(flatRoutes: RouteObject[]): RouteObject[] {
-  const root: any = { children: {} };
-  for (const route of flatRoutes) {
-    if (!route.path) continue;
-    const segments = route.path.replace(/^\//, '').split('/');
-    let node = root;
-    for (let i = 0; i < segments.length; i++) {
-      const seg = segments[i];
-      if (!node.children[seg]) {
-        node.children[seg] = { children: {} };
-      }
-      node = node.children[seg];
-      if (i === segments.length - 1) {
-        node.route = route;
-      }
-    }
+    children.push(routeObj);
   }
-  function toRoutes(node: any, parentPath = ''): RouteObject[] {
-    const routes: RouteObject[] = [];
-    for (const [seg, child] of Object.entries(node.children)) {
-      const fullPath = parentPath ? `${parentPath}/${seg}` : seg;
-      const typedChild = child as { route?: RouteObject, children: any };
-      const hasChildren = Object.keys(typedChild.children).length > 0;
-      let routePath = seg === '' ? '' : seg;
-      if (hasChildren && !routePath.endsWith('/*') && !routePath.startsWith(':')) {
-        routePath += '/*';
-      }
-      if (typedChild.route) {
-        routes.push({
-          path: routePath,
-          element: typedChild.route.element,
-          children: toRoutes(typedChild, fullPath),
-        });
-      } else {
-        routes.push({
-          path: routePath,
-          children: toRoutes(typedChild, fullPath),
-        });
-      }
-    }
-    return routes;
-  }
-  return toRoutes(root);
+  // NotFound
+  children.push({ path: '*', element: React.createElement(NotFoundPage) });
+  return [
+    {
+      path: '/',
+      element: React.createElement(HomePage),
+      children,
+    },
+  ];
 }

@@ -9,11 +9,9 @@ if (!configs.dbUrl || configs.dbUrl.trim() === '') {
   logger.error('DATABASE_URL is not set or is empty. Database operations may fail. Please check your environment variables.');
 }
 
-const queryClient = postgres(configs.dbUrl || '', {
-  ssl: configs.dbUrl ? 'require' : false
-});
+const queryClient = postgres(configs.dbUrl || '');
 
-const db = drizzle({ client: queryClient, casing: 'snake_case' });
+const db = drizzle({ client: queryClient});
 
 export async function executeQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
   if (!configs.dbUrl || configs.dbUrl.trim() === '') {
@@ -30,3 +28,5 @@ export async function executeQuery<T = any>(query: string, params: any[] = []): 
     throw error;
   }
 }
+
+export { db };
