@@ -43,12 +43,12 @@ export default function TasksPage() {
       <div className="flex items-center gap-4 mb-4">
         <Select defaultValue={selectedProject} onValueChange={setSelectedProject}>
           <SelectTrigger
-            className="min-w-[10rem] h-9 px-3 rounded-md bg-white text-slate-900 dark:text-slate-200"
+            className="min-w-[10rem] h-9 px-3 rounded-md bg-white dark:text-slate-200"
             id="project-select"
           >
             <SelectValue placeholder="Select project..." />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="border-none">
             <SelectItem value="all">All Tasks</SelectItem>
             <SelectItem value="personal">Personal Tasks</SelectItem>
             <SelectItem value="demo">Demo Project</SelectItem>

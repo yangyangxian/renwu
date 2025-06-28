@@ -2,22 +2,29 @@ import { Button } from "@/components/ui/button";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { Card, CardContent } from "@/components/ui/card";
 import { LayoutDashboard, ListChecks, Folder } from "lucide-react";
-import { NavLink, useOutlet } from "react-router-dom";
+import { NavLink, useOutlet, useNavigate } from "react-router-dom";
 import { Projects_PATH, Tasks_PATH } from "@/routes/routeConfig";
 
 export default function HomePage() {
   const { toggleDark } = useDarkMode();
   const outlet = useOutlet();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col pt-16">
       {/* Top Navigation Bar */}
       <nav className="fixed top-0 left-0 w-full bg-white dark:bg-black dark:border-2 shadow-md z-50 flex justify-between items-center h-16 px-5">
         <div className="flex items-center gap-6">
-          <span className="text-xl text-slate-900 dark:text-white flex items-center gap-2">
+          <Button
+            variant='secondary'
+            className="text-xl font-bold shadow-none cursor-pointer bg-transparent hover:bg-transparent"
+            onClick={() => navigate("/")}
+            aria-label="Go to home"
+            tabIndex={0}
+          >
             <LayoutDashboard className="w-6 h-6 text-primary" />
             Task manager
-          </span>
+          </Button>
           {/* Project selector removed from navbar */}
         </div>
         <div className="flex items-center gap-4">
