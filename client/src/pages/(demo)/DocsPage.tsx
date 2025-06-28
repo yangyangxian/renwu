@@ -4,7 +4,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { ROOT_PATH, DOCS_PATH, DOCS_NESTED_ROUTES_PATH, DOCS_API_EXAMPLE_PATH } from '@/routes/routeConfig';
 
 function DocsPage() {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const location = useLocation();
 
   const handleLogout = async () => {
@@ -58,21 +58,6 @@ function DocsPage() {
           >
             API Data Example
           </NavLink>
-        </div>
-
-        {/* User info and logout */}
-        <div className="flex items-center gap-4">
-          {user && (
-            <span className="text-slate-700">
-              Welcome, {user.name || user.email}!
-            </span>
-          )}
-          <button
-            onClick={handleLogout}
-            className="py-2 px-4 bg-pink-500 text-white border-none rounded-md text-sm cursor-pointer transition-colors duration-200 hover:bg-pink-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
-          >
-            Log Out
-          </button>
         </div>
       </nav>
       {/* Main content below navbar */}
