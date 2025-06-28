@@ -74,26 +74,34 @@ export default function HomePage() {
       <main className="flex flex-1">
         {/* Sidebar with icon and text */}
         <aside>
-          <Card className="w-45 h-[calc(100vh-6rem)] px-3 py-3 flex flex-col items-center gap-2 overflow-y-auto m-4 bg-white dark:bg-black">
+          <Card className="w-48 h-[calc(100vh-6rem)] px-3 py-3 flex flex-col items-center gap-2 overflow-y-auto m-3">
             <CardContent className="flex flex-col gap-1 w-full p-0">
               <Button
                 variant={['board', 'list', 'calendar'].includes(view) ? 'secondary' : 'ghost'}
                 className={`w-full flex items-center gap-3 px-4 justify-start text-base font-medium
-                  ${['board', 'list', 'calendar'].includes(view) ? '' : 'text-slate-800 dark:text-slate-300'}`}
+                  ${['board', 'list', 'calendar'].includes(view)
+                    ? 'bg-gray-100 dark:bg-white text-slate-900 dark:text-slate-900'
+                    : 'text-slate-800 dark:text-slate-300'}`}
                 aria-label="Tasks"
                 onClick={() => setView('board')}
               >
-                <ListChecks className={`w-5 h-5 ${['board', 'list', 'calendar'].includes(view) ? '' : 'text-slate-800 dark:text-slate-300'}`} />
-                <span>Tasks</span>
+                <ListChecks className={`w-5 h-5 ${['board', 'list', 'calendar'].includes(view)
+                  ? 'text-slate-900 dark:text-slate-900'
+                  : 'text-slate-800 dark:text-slate-300'}`} />
+                <span>My Tasks</span>
               </Button>
               <Button
                 variant={view === 'projects' ? 'secondary' : 'ghost'}
                 className={`w-full flex items-center gap-3 px-4 justify-start text-base font-medium
-                  ${view !== 'projects' ? 'text-slate-800 dark:text-slate-300' : ''}`}
+                  ${view === 'projects'
+                    ? 'bg-gray-100 dark:bg-white text-slate-900 dark:text-slate-900'
+                    : 'text-slate-800 dark:text-slate-300'}`}
                 aria-label="Projects"
                 onClick={() => setView('projects')}
               >
-                <Folder className={`w-5 h-5 ${view !== 'projects' ? 'text-slate-800 dark:text-slate-300' : ''}`} />
+                <Folder className={`w-5 h-5 ${view === 'projects'
+                  ? 'text-slate-900 dark:text-slate-900'
+                  : 'text-slate-800 dark:text-slate-300'}`} />
                 <span>Projects</span>
               </Button>
             </CardContent>
@@ -101,14 +109,15 @@ export default function HomePage() {
         </aside>
         {/* Main Landing Content */}
         <section className="flex-1 flex flex-col items-start justify-start w-full">
-          <div className="max-w-2xl w-full mt-4">
+          <div className="max-w-2xl w-full mt-[14px]">
+            
             {/* Show Tabs and project selector only for Tasks */}
             {view === 'board' || view === 'list' || view === 'calendar' ? (
               <>
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-4">
                   <Select defaultValue={selectedProject} onValueChange={setSelectedProject}>
                     <SelectTrigger
-                      className="min-w-[8rem] h-9 px-3 rounded-md bg-white text-slate-900 dark:text-slate-200 focus:outline-none"
+                      className="min-w-[10rem] h-9 px-3 rounded-md bg-white text-slate-900 dark:text-slate-200"
                       id="project-select"
                     >
                       <SelectValue placeholder="Select project..." />
@@ -137,14 +146,14 @@ export default function HomePage() {
                 </div>
                 {/* View Content */}
                 {view === 'board' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full">
                     {filteredTasks.map((task, idx) => (
                       <Card key={idx} className="text-left">
-                        <CardHeader className="pb-2">
+                        <CardHeader>
                           <CardTitle className="text-slate-800 dark:text-white text-base">{task.title}</CardTitle>
                           <div className="text-xs text-slate-500 dark:text-slate-200">{task.subtitle}</div>
                         </CardHeader>
-                        <CardContent className="pt-0">
+                        <CardContent>
                           <CardDescription className="text-xs text-slate-400 dark:text-slate-300 mt-1">
                             {task.description}
                           </CardDescription>
@@ -156,7 +165,7 @@ export default function HomePage() {
                 {view === 'list' && (
                   <div className="flex flex-col gap-2 w-full">
                     {filteredTasks.map((task, idx) => (
-                      <Card key={idx} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2">
+                      <Card key={idx} className="bg-slate-50 dark:bg-slate-900 dark:border-slate-700 rounded-md px-4 py-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                           <span className="font-medium text-slate-800 dark:text-white text-sm">{task.title}</span>
                           <span className="text-xs text-slate-500 dark:text-slate-200">{task.subtitle}</span>
