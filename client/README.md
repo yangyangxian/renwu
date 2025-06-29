@@ -2,25 +2,22 @@
 
 This is the frontend for the React Fullstack App, built with Vite and React.
 
-## 🐳 Docker Deployment (Nginx)
+## Pages & Routing
 
-This project includes a Dockerfile for building and serving the frontend as a static SPA using Nginx.
+- All routeable pages are in `src/pages`.
+- The file path relative to `src/pages` determines the URL path. For example, `src/pages/user/ProfilePage.tsx` maps to `/user/profile`.
+- `HomePage.tsx` is a special case and maps to both `/` and `/home`.
+- **Route Grouping**: Folders with names in parentheses, like `(login)`, are for organization only and do not affect the URL. For example, `src/pages/(login)/LoginPage.tsx` maps to `/login`.
+- **Nested Routes**: Directory structure determines nested routes. For example, `src/pages/tasks/SubTaskPage.tsx` maps to `/tasks/subtask`.
+- **Authentication**: All routes are wrapped with `ProtectedRoute` for authentication. Unauthenticated users are redirected to `/login`.
+- **Not Found Handling**: A wildcard route (`*`) displays `NotFoundPage` for unmatched paths.
+- The core logic for dynamic routing is in `src/routes/pageRouteGenerator.ts` and used in `src/App.tsx`.
 
-> **Important:** You must run the Docker build command from the project root (not from the client directory) so the build can access the shared `common` package.
+## Project Structure
 
-### Build the Docker Image
-```sh
-docker build -f client/Dockerfile -t frontend-nginx .
-```
-
-### Run the Container
-```sh
-docker run -p 8080:80 frontend-nginx
-```
-
-- The app will be available at [http://localhost:8080](http://localhost:8080)
-- Nginx serves the static files from the build output (`dist/`)
-- The config supports client-side routing (SPA fallback to `index.html`)
+- `src/` – Main source code (pages, services, assets)
+- `public/` – Static public assets
+- `dist/` – Production build output
 
 ## Scripts
 
@@ -49,7 +46,6 @@ Simple browser-compatible logging with `src/utils/logger.ts`:
 
 ```typescript
 import logger from './utils/logger.js';
-
 logger.info('Message'); 
 ```
 
@@ -59,28 +55,25 @@ logger.info('Message');
 - API requests to `/api` are proxied to the backend server (see `vite.config.js`).
 - Shared types are imported from the `common` package.
 
-## Dynamic Routing
+## 🐳 Docker Deployment (Nginx)
 
-The client application features a dynamic routing system that automatically generates routes based on the file structure within the `src/pages` directory. This approach simplifies route management and promotes a convention-over-configuration pattern.
+This project includes a Dockerfile for building and serving the frontend as a static SPA using Nginx.
 
-Key features of the dynamic routing system:
+> **Important:** You must run the Docker build command from the project root (not from the client directory) so the build can access the shared `common` package.
 
-- **File-based Route Generation**: Routes are created automatically for `.tsx` files found in `src/pages`.
-- **Path Convention**:
-  - The file path relative to `src/pages` determines the URL path. For example, `src/pages/user/ProfilePage.tsx` would map to `/user/profile`.
-  - `HomePage.tsx` is a special case and maps to both `/` and `/home`.
-- **Route Grouping**: Folders with names enclosed in parentheses, like `(login)`, are used for organizing page components without affecting the URL path. For example, `src/pages/(login)/LoginPage.tsx` maps to `/login`.
-- **Nested Routes**: The system supports nested routes based on the directory structure. For instance, files in `src/pages/home/` will be nested under the `/home` path.
-- **Authentication**: Routes are automatically wrapped with a `ProtectedRoute` component, which handles authentication logic and redirects unauthenticated users to the login page.
-- **Not Found Handling**: A wildcard route (`*`) is automatically added to display a `NotFoundPage` for any unmatched paths.
+### Build the Docker Image
+```sh
+docker build -f client/Dockerfile -t frontend-nginx .
+```
 
-The core logic for this dynamic routing can be found in `src/routes/pageRouteGenerator.ts` and is utilized within `src/App.tsx`.
+### Run the Container
+```sh
+docker run -p 8080:80 frontend-nginx
+```
 
-## Project Structure
-
-- `src/` – Main source code (pages, services, assets)
-- `public/` – Static public assets
-- `dist/` – Production build output
+- The app will be available at [http://localhost:8080](http://localhost:8080)
+- Nginx serves the static files from the build output (`dist/`)
+- The config supports client-side routing (SPA fallback to `index.html`)
 
 ## Notes
 
