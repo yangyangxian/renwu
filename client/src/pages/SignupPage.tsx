@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { getErrorMessage } from '@/resources/errorMessages';
 import { ApiErrorResponse, ErrorCodes } from '@fullstack/common';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui-kit/Button';
+import { Input } from '@/components/ui-kit/Input';
+import { Card } from '@/components/ui-kit/Card';
 
 function SignupPage() {
   const navigate = useNavigate();

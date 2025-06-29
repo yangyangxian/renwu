@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui-kit/Button";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router-dom";

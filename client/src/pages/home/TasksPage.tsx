@@ -5,9 +5,9 @@ import {
   SelectValue,
   SelectContent,
   SelectItem
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+} from "@/components/ui-kit/Select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui-kit/Card";
 import { Outlet } from "react-router-dom";
 
 export default function TasksPage() {

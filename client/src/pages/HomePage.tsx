@@ -1,9 +1,10 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui-kit/Button";
+import { Card, CardContent } from "@/components/ui-kit/Card";
 import { ListChecks, Folder } from "lucide-react";
-import { NavLink, useOutlet, useNavigate, useLocation } from "react-router-dom";
+import { useOutlet, useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, TASKS_PATH } from "@/routes/routeConfig";
 import { useAuth } from "@/providers/AuthProvider";
+import { SidebarNavLink } from "@/components/homepage/SidebarNavLink";
 
 export default function HomePage() {
   const outlet = useOutlet();
@@ -21,40 +22,8 @@ export default function HomePage() {
         <aside>
           <Card className="w-48 h-[calc(100vh-6rem)] p-3 flex flex-col items-center gap-2 overflow-y-auto m-3">
             <CardContent className="flex flex-col gap-1 w-full p-0">
-              <NavLink to={TASKS_PATH} className="w-full" end>
-                {({ isActive }) => (
-                  <Button
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className={`w-full flex items-center gap-3 px-4 justify-start text-base font-medium
-                      ${isActive
-                        ? 'bg-gray-100 dark:bg-white text-slate-900 dark:text-slate-900'
-                        : 'text-slate-800 dark:text-slate-300'}`}
-                    aria-label="Tasks"
-                  >
-                    <ListChecks className={`w-5 h-5 ${isActive
-                      ? 'text-slate-900 dark:text-slate-900'
-                      : 'text-slate-800 dark:text-slate-300'}`} />
-                    <span>My Tasks</span>
-                  </Button>
-                )}
-              </NavLink>
-              <NavLink to={PROJECTS_PATH} className="w-full" end>
-                {({ isActive }) => (
-                  <Button
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className={`w-full flex items-center gap-3 px-4 justify-start text-base font-medium
-                      ${isActive
-                        ? 'bg-gray-100 dark:bg-white text-slate-900 dark:text-slate-900'
-                        : 'text-slate-800 dark:text-slate-300'}`}
-                    aria-label="Projects"
-                  >
-                    <Folder className={`w-5 h-5 ${isActive
-                      ? 'text-slate-900 dark:text-slate-900'
-                      : 'text-slate-800 dark:text-slate-300'}`} />
-                    <span>Projects</span>
-                  </Button>
-                )}
-              </NavLink>
+              <SidebarNavLink to={TASKS_PATH} icon={<ListChecks className="w-5 h-5" />}>My Tasks</SidebarNavLink>
+              <SidebarNavLink to={PROJECTS_PATH} icon={<Folder className="w-5 h-5" />}>Projects</SidebarNavLink>
             </CardContent>
           </Card>
         </aside>

@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui-kit/Card";
 
 export default function ProjectsPage() {
   return (

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui-kit/Button';
 import { useNavigate } from 'react-router-dom';
 import { LOGIN_PATH, SIGNUP_PATH } from '@/routes/routeConfig';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui-kit/Label';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
