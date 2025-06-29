@@ -8,14 +8,10 @@ import {
   pgEnum,
   primaryKey,
 } from 'drizzle-orm/pg-core';
+import { TaskStatus } from '@fullstack/common';
 
 // ---------- ENUM: Task Status ----------
-export const taskStatusEnum = pgEnum('task_status', [
-  'todo',
-  'in-progress',
-  'done',
-  'closed',
-]);
+export const taskStatusEnum = pgEnum('task_status', Object.values(TaskStatus) as [string, ...string[]]);
 
 // ---------- TABLE: Users ----------
 export const users = pgTable('users', {

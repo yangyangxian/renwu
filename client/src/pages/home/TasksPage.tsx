@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectTrigger,
@@ -10,50 +10,35 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { Card } from "@/components/ui-kit/Card";
 import { Outlet } from "react-router-dom";
 import BoardView from "@/components/taskspage/BoardView";
-
-// Define the Task type here, or import it from the correct file if it exists
-type Task = {
-  title: string;
-  subtitle: string;
-  description: string;
-  dueDate?: string;
-  status: "inprogress" | "todo" | "done" | "close";
-};
+import { apiClient } from '@/utils/APIClient';
+import { ApiErrorResponse, ErrorCodes, TaskResDto } from '@fullstack/common';
+import { getErrorMessage } from '@/resources/errorMessages';
 
 export default function TasksPage() {
   const [view, setView] = useState("board");
   const [selectedProject, setSelectedProject] = useState("all");
+  const [tasks, setTasks] = useState<TaskResDto[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const tasks: Task[] = [
-    {
-      title: "Design landing page",
-      subtitle: "UI/UX",
-      description: "Create a modern, clean landing page with sidebar and dark mode support.",
-      status: "inprogress",
-      dueDate: "2025-07-15"
-    },
-    {
-      title: "Implement authentication",
-      subtitle: "Backend",
-      description: "Add user sign up, sign in, and JWT-based session management.",
-      status: "todo",
-      dueDate: "2025-07-20"
-    },
-    {
-      title: "Set up database",
-      subtitle: "Database",
-      description: "Configure and connect to a scalable database for tasks and users.",
-      status: "todo",
-      dueDate: "2025-07-05"
-    }
-  ];
+  useEffect(() => {
+    apiClient.get<TaskResDto[]>(`/api/tasks/me`)
+      .then((data) => {
+        setTasks(data);
+        setError(null);
+      })
+      .catch((apiError: ApiErrorResponse) => {
+        setError(apiError?.message || 'An unknown error occurred.');
+      });
+  }, []);
 
   // Filter tasks by selected project (simple mock logic)
   const filteredTasks = selectedProject === "all"
     ? tasks
-    : selectedProject === "personal"
-      ? tasks.filter(t => t.subtitle.toLowerCase().includes("personal"))
-      : tasks.filter(t => t.subtitle.toLowerCase().includes(selectedProject));
+    : tasks; // No subtitle, so no further filtering
+
+  // Debug log
+  console.log('Tasks from API:', tasks);
+  console.log('Filtered tasks:', filteredTasks);
 
   return (
     <>
@@ -87,21 +72,29 @@ export default function TasksPage() {
           </TabsList>
         </Tabs>
       </div>
+      {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {view === 'board' && (
-        <BoardView tasks={filteredTasks} />
+        filteredTasks.length === 0 ? (
+          <div className="text-center text-slate-500 dark:text-slate-400 my-8">No tasks found.</div>
+        ) : (
+          <BoardView tasks={filteredTasks} />
+        )
       )}
       {view === 'list' && (
-        <div className="flex flex-col gap-2 w-full">
-          {filteredTasks.map((task, idx) => (
-            <Card key={idx} className="bg-slate-50 dark:bg-slate-900 dark:border-slate-700 rounded-md px-4 py-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                <span className="font-medium text-slate-800 dark:text-white text-sm">{task.title}</span>
-                <span className="text-xs text-slate-500 dark:text-slate-200">{task.subtitle}</span>
-                <span className="text-xs text-slate-400 dark:text-slate-300 mt-1 sm:mt-0">{task.description}</span>
-              </div>
-            </Card>
-          ))}
-        </div>
+        filteredTasks.length === 0 ? (
+          <div className="text-center text-slate-500 dark:text-slate-400 my-8">No tasks found.</div>
+        ) : (
+          <div className="flex flex-col gap-2 w-full">
+            {filteredTasks.map((task, idx) => (
+              <Card key={idx} className="bg-slate-50 dark:bg-slate-900 dark:border-slate-700 rounded-md px-4 py-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                  <span className="font-medium text-slate-800 dark:text-white text-sm">{task.title}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-300 mt-1 sm:mt-0">{task.description}</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )
       )}
       {view === 'calendar' && (
         <Card className="w-full text-center py-12">

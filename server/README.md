@@ -1,5 +1,58 @@
 # Backend for React + Vite Frontend
 
+## 🗄️ Database & Drizzle ORM Usage
+
+This project uses [Drizzle ORM](https://orm.drizzle.team/) for type-safe database access and migrations.
+
+### 1. Database Setup
+- Make sure you have a running PostgreSQL instance.
+- Set your database connection string in the `.env.development` file as `DATABASE_URL`.
+
+### 2. Generating SQL Migration Scripts
+After pulling the code or making schema changes, generate the SQL migration script from the Drizzle schema:
+
+```sh
+npx drizzle-kit generate --name=init
+```
+- This will create/update migration files in `server/drizzle/` (e.g., `0000_init.sql`).
+
+### 3. Applying Migrations to Your Local Database
+Apply the generated SQL script to your local database using the `psql` command:
+
+```sh
+ npx drizzle-kit push 
+```
+
+**Note:**
+- The Drizzle ORM config uses `casing: 'snake_case'` for automatic mapping between camelCase in TypeScript and snake_case in the database.
+- If you change the schema, always regenerate and re-apply the migration before running the backend.
+- For more, see [Drizzle ORM docs](https://orm.drizzle.team/docs/overview).
+
+---
+
+## ⚠️ Migration Workflow Best Practices
+
+**Always apply the latest migrations before generating new ones!**
+
+1. **Pull the latest code and migrations:**
+   ```sh
+   git pull
+   ```
+2. **Apply all existing migrations to your local database:**
+   ```sh
+   npx drizzle-kit push
+   ```
+3. **Only after this, generate new migrations if you have schema changes:**
+   ```sh
+   npx drizzle-kit generate --name=your_migration_name
+   ```
+
+- This ensures your migration history stays consistent and prevents conflicts or missing migrations.
+- Never edit existing migration files after they are committed. If you need to change the schema, create a new migration.
+- Always commit both the migration SQL files and the `drizzle/meta` folder.
+
+---
+
 ## 🐳 Docker Deployment (Node.js Backend)
 
 This project includes a Dockerfile for building and running the backend as a Node.js server.
@@ -53,56 +106,3 @@ The server will serve the frontend from `/client/dist` and expose API routes und
 - The backend will serve `index.html` for all non-API routes (for React Router support).
 - For development, use `npm run dev` to enable watch mode for both common and backend code.
 - Environment variables can be set in a `.env` file in the `server` directory.
-
----
-
-## 🗄️ Database & Drizzle ORM Usage
-
-This project uses [Drizzle ORM](https://orm.drizzle.team/) for type-safe database access and migrations.
-
-### 1. Database Setup
-- Make sure you have a running PostgreSQL instance.
-- Set your database connection string in the `.env.development` file as `DATABASE_URL`.
-
-### 2. Generating SQL Migration Scripts
-After pulling the code or making schema changes, generate the SQL migration script from the Drizzle schema:
-
-```sh
-npx drizzle-kit generate --name=init
-```
-- This will create/update migration files in `server/drizzle/` (e.g., `0000_init.sql`).
-
-### 3. Applying Migrations to Your Local Database
-Apply the generated SQL script to your local database using the `psql` command:
-
-```sh
- npx drizzle-kit push 
-```
-
-**Note:**
-- The Drizzle ORM config uses `casing: 'snake_case'` for automatic mapping between camelCase in TypeScript and snake_case in the database.
-- If you change the schema, always regenerate and re-apply the migration before running the backend.
-- For more, see [Drizzle ORM docs](https://orm.drizzle.team/docs/overview).
-
----
-
-## ⚠️ Migration Workflow Best Practices
-
-**Always apply the latest migrations before generating new ones!**
-
-1. **Pull the latest code and migrations:**
-   ```sh
-   git pull
-   ```
-2. **Apply all existing migrations to your local database:**
-   ```sh
-   npx drizzle-kit push
-   ```
-3. **Only after this, generate new migrations if you have schema changes:**
-   ```sh
-   npx drizzle-kit generate --name=your_migration_name
-   ```
-
-- This ensures your migration history stays consistent and prevents conflicts or missing migrations.
-- Never edit existing migration files after they are committed. If you need to change the schema, create a new migration.
-- Always commit both the migration SQL files and the `drizzle/meta` folder.

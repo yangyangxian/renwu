@@ -1,22 +1,17 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Card";
 import TaskCard from "@/components/taskspage/TaskCard";
+import { TaskResDto, TaskStatus } from "@fullstack/common";
 
 interface BoardViewProps {
-  tasks: {
-    title: string;
-    subtitle: string;
-    description: string;
-    dueDate?: string;
-    status: "todo" | "inprogress" | "done" | "close";
-  }[];
+  tasks: TaskResDto[];
 }
 
 const statusColumns = [
-  { key: "todo", label: "To do", titleBg: "bg-amber-400 dark:bg-amber-600" },
-  { key: "inprogress", label: "In Progress", titleBg: "bg-blue-500 dark:bg-blue-700" },
-  { key: "done", label: "Done", titleBg: "bg-green-500 dark:bg-green-700" },
-  { key: "close", label: "Closed", titleBg: "bg-gray-500" }
+  { key: TaskStatus.TODO, label: "To do", titleBg: "bg-amber-400 dark:bg-amber-600" },
+  { key: TaskStatus.IN_PROGRESS, label: "In Progress", titleBg: "bg-blue-500 dark:bg-blue-700" },
+  { key: TaskStatus.DONE, label: "Done", titleBg: "bg-green-500 dark:bg-green-700" },
+  { key: TaskStatus.CLOSE, label: "Closed", titleBg: "bg-gray-500" }
 ];
 
 const BoardView: React.FC<BoardViewProps> = ({ tasks }) => (
@@ -31,7 +26,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks }) => (
             <div className="text-md">No tasks</div>
           ) : (
             tasks.filter(task => task.status === col.key).map((task, idx) => (
-              <TaskCard key={idx} title={task.title} subtitle={task.subtitle} description={task.description} />
+              <TaskCard key={task.id || idx} title={task.title} description={task.description} dueDate={task.dueDate} />
             ))
           )}
         </CardContent>

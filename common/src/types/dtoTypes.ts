@@ -1,3 +1,4 @@
+import { TaskStatus } from '../emuns/taskStatus';
 /*
 * The reason why using classes instead of interfaces is to ensure that the fields of DTOs can be used for object mapping in api.
 */
@@ -26,5 +27,15 @@ export class LoginReqDto {
 
 export class LogoutResDto {
   message: string = '';
+}
+
+export class TaskResDto {
+  id: string = '';
+  title: string = '';
+  description: string = '';
+  dueDate?: string = '';
+  status: TaskStatus = TaskStatus.TODO;
+  assignedTo?: string = '';
+  createdAt?: string = '';
 }
 
