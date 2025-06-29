@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Select,
   SelectTrigger,
@@ -7,28 +7,44 @@ import {
   SelectItem
 } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui-kit/Card";
+import { Card } from "@/components/ui-kit/Card";
 import { Outlet } from "react-router-dom";
+import BoardView from "@/components/taskspage/BoardView";
+
+// Define the Task type here, or import it from the correct file if it exists
+type Task = {
+  title: string;
+  subtitle: string;
+  description: string;
+  dueDate?: string;
+  status: "inprogress" | "todo" | "done" | "close";
+};
 
 export default function TasksPage() {
   const [view, setView] = useState("board");
   const [selectedProject, setSelectedProject] = useState("all");
 
-  const tasks = [
+  const tasks: Task[] = [
     {
       title: "Design landing page",
-      subtitle: "UI/UX • In Progress",
-      description: "Create a modern, clean landing page with sidebar and dark mode support."
+      subtitle: "UI/UX",
+      description: "Create a modern, clean landing page with sidebar and dark mode support.",
+      status: "inprogress",
+      dueDate: "2025-07-15"
     },
     {
       title: "Implement authentication",
-      subtitle: "Backend • Todo",
-      description: "Add user sign up, sign in, and JWT-based session management."
+      subtitle: "Backend",
+      description: "Add user sign up, sign in, and JWT-based session management.",
+      status: "todo",
+      dueDate: "2025-07-20"
     },
     {
       title: "Set up database",
-      subtitle: "Database • Todo",
-      description: "Configure and connect to a scalable database for tasks and users."
+      subtitle: "Database",
+      description: "Configure and connect to a scalable database for tasks and users.",
+      status: "todo",
+      dueDate: "2025-07-05"
     }
   ];
 
@@ -72,21 +88,7 @@ export default function TasksPage() {
         </Tabs>
       </div>
       {view === 'board' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full">
-          {filteredTasks.map((task, idx) => (
-            <Card key={idx} className="text-left">
-              <CardHeader>
-                <CardTitle className="text-slate-800 dark:text-white text-base">{task.title}</CardTitle>
-                <div className="text-xs text-slate-500 dark:text-slate-200">{task.subtitle}</div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-xs text-slate-400 dark:text-slate-300 mt-1">
-                  {task.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <BoardView tasks={filteredTasks} />
       )}
       {view === 'list' && (
         <div className="flex flex-col gap-2 w-full">
