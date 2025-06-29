@@ -1,7 +1,7 @@
 import { useRoutes, RouteObject } from 'react-router-dom'; 
 import { getDynamicRoutes } from '@/routes/pageRouteGenerator';
 import ProtectedRoute from '@/components/ProtectedRoute';
-// AuthProvider is now wrapped in main.tsx, so it's not needed here directly for the routes component.
+import MainLayout from '@/layout/MainLayout';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 function App() {
@@ -17,7 +17,8 @@ function App() {
     processedRoutes.push({ path: '*', element: <NotFoundPage /> });
   }
 
-  return useRoutes(processedRoutes);
+  const element = useRoutes(processedRoutes);
+  return <MainLayout>{element}</MainLayout>;
 }
 
 export default App;

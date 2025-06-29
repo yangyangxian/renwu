@@ -1,5 +1,3 @@
-import LandingPage from "@/pages/home";
-
 export const ROOT_PATH = '/';
 export const LOGIN_PATH = '/login';
 export const SIGNUP_PATH = '/signup';

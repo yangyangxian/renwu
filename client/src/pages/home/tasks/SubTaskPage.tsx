@@ -1,9 +1,7 @@
-import React from 'react';
-
-const SubTaskPage = () => {
+export default function SubTaskPage() {
   return (
-    <div className="p-8 text-xl text-blue-600">This is a nested SubTask page under /tasks/subtask</div>
+    <div className="p-2 text-sm text-green-800">
+      This is a nested SubTask page under /tasks/subtask
+    </div>
   );
-};
-
-export default SubTaskPage;
+}
