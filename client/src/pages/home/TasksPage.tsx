@@ -1,24 +1,21 @@
 import { useState, useEffect } from "react";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem
-} from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { Card } from "@/components/ui-kit/Card";
 import { Outlet } from "react-router-dom";
 import BoardView from "@/components/taskspage/BoardView";
 import { apiClient } from '@/utils/APIClient';
-import { ApiErrorResponse, ErrorCodes, TaskResDto } from '@fullstack/common';
-import { getErrorMessage } from '@/resources/errorMessages';
+import { ApiErrorResponse, TaskResDto, TaskStatus } from '@fullstack/common';
+import { Button } from "@/components/ui-kit/Button";
+import { TaskDialog } from "@/components/taskspage/TaskDialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 
 export default function TasksPage() {
   const [view, setView] = useState("board");
   const [selectedProject, setSelectedProject] = useState("all");
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     apiClient.get<TaskResDto[]>(`/api/tasks/me`)
@@ -36,13 +33,9 @@ export default function TasksPage() {
     ? tasks
     : tasks; // No subtitle, so no further filtering
 
-  // Debug log
-  console.log('Tasks from API:', tasks);
-  console.log('Filtered tasks:', filteredTasks);
-
   return (
-    <>
-      <div className="flex items-center gap-4 my-3">
+    <div className="w-full">
+      <div id="menuBar" className="flex my-3 gap-3">
         <Select defaultValue={selectedProject} onValueChange={setSelectedProject}>
           <SelectTrigger
             className="min-w-[10rem] h-9 px-3 rounded-md bg-white dark:text-slate-200"
@@ -50,7 +43,7 @@ export default function TasksPage() {
           >
             <SelectValue placeholder="Select project..." />
           </SelectTrigger>
-          <SelectContent className="border-none">
+          <SelectContent>
             <SelectItem value="all">All Tasks</SelectItem>
             <SelectItem value="personal">Personal Tasks</SelectItem>
             <SelectItem value="demo">Demo Project</SelectItem>
@@ -71,6 +64,28 @@ export default function TasksPage() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+        <div className="ml-auto">
+          <Button variant="default" onClick={() => setIsDialogOpen(true)}>
+            + Add Task
+          </Button>
+          <TaskDialog
+            open={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            onSubmit={task => {
+              // TODO: Replace with real API call
+              setShowSuccess(true);
+              setTimeout(() => setShowSuccess(false), 1500);
+              setTasks(prev => [
+                { id: Math.random().toString(), title: task.description.slice(0, 24) || 'Untitled', ...task },
+                ...prev
+              ]);
+            }}
+            title="Add New Task"
+          />
+          {showSuccess && (
+            <div className="text-green-600 text-sm mt-2">Task added (demo only)</div>
+          )}
+        </div>
       </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {view === 'board' && (
@@ -105,6 +120,6 @@ export default function TasksPage() {
       <div className="mt-8">
         <Outlet />
       </div>
-    </>
+    </div>
   );
 }

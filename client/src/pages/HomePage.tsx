@@ -29,23 +29,21 @@ export default function HomePage() {
         </aside>
       )}
       {/* Main Landing Content or Outlet */}
-      <section className="flex items-start justify-start w-full pl-3">
-        <div className="w-full">
-          {showLanding ? (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
-              <span className="mb-4 text-center font-bold text-4xl">Welcome to Task Manager</span>
-              <p className="text-lg text-muted-foreground mb-8 text-center max-w-xl">
-                Organize your tasks, manage your projects, and boost your productivity with a modern, collaborative task management app.
-              </p>
-              <div className="flex gap-4">
-                <Button onClick={() => navigate('/login')} size="lg">Log In</Button>
-                <Button onClick={() => navigate('/signup')} size="lg" variant="outline">Sign Up</Button>
-              </div>
+      <section className="flex w-full pl-3">
+        {showLanding ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
+            <span className="mb-4 text-center font-bold text-4xl">Welcome to Task Manager</span>
+            <p className="text-lg text-muted-foreground mb-8 text-center max-w-xl">
+              Organize your tasks, manage your projects, and boost your productivity with a modern, collaborative task management app.
+            </p>
+            <div className="flex gap-4">
+              <Button onClick={() => navigate('/login')} size="lg">Log In</Button>
+              <Button onClick={() => navigate('/signup')} size="lg" variant="outline">Sign Up</Button>
             </div>
-          ) : (
-              outlet
-          )}
-        </div>
+          </div>
+        ) : (
+            outlet
+        )}
       </section>
     </div>
   );

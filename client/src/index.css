@@ -1,6 +1,6 @@
-@import "@/styles/shadcn-ui-theme.css";
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@/styles/shadcn-ui-theme.css";
 
 @custom-variant dark (&:is(.dark *));
 
