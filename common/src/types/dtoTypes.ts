@@ -1,4 +1,4 @@
-import { TaskStatus } from '../emuns/taskStatus';
+import { TaskStatus } from '../emuns/taskStatus.js';
 /*
 * The reason why using classes instead of interfaces is to ensure that the fields of DTOs can be used for object mapping in api.
 */

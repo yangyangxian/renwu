@@ -47,7 +47,6 @@ router.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<User
       });
       res.cookie('auth-token', token, {
         httpOnly: true,
-        secure: appConfig.envMode === 'production',
         sameSite: 'strict',
         maxAge: appConfig.jwtMaxAge
       });
