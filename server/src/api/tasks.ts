@@ -8,10 +8,7 @@ import { createApiResponse } from '../utils/apiUtils.js';
 const router = express.Router();
 
 router.get('/me', async (req, res, next) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-        return next(new CustomError("User not authenticated", ErrorCodes.UNAUTHORIZED));
-    }
+    const userId = req.user!.userId;
     const tasks = await taskService.getTasksByUserId(userId);
     if (tasks.length === 0) {
         throw new CustomError("No tasks found for this user", ErrorCodes.NOT_FOUND);

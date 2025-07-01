@@ -1,5 +1,5 @@
 import { db } from '../database/databaseAccess.js';
-import { tasks } from '../database/schema.js';
+import { tasks, projects } from '../database/schema.js';
 import { eq } from 'drizzle-orm';
 
 export class TaskEntity {
@@ -8,21 +8,42 @@ export class TaskEntity {
   title: string = '';
   description: string = '';
   status: string = '';
+  projectId?: string = '';
+  projectName?: string = '';
   dueDate?: string = '';
   createdAt: string = '';
+  updatedAt: string = '';
 }
 
 class TaskService {
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
-    const result = await db.select().from(tasks).where(eq(tasks.assignedTo, userId));
+    const result = await db
+      .select({
+        id: tasks.id,
+        userId: tasks.assignedTo,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        projectId: tasks.projectId,
+        dueDate: tasks.dueDate,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+        projectName: projects.name,
+      })
+      .from(tasks)
+      .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .where(eq(tasks.assignedTo, userId));
     return result.map(task => ({
       id: task.id,
-      userId: task.assignedTo,
+      userId: task.userId,
       title: task.title,
       description: task.description ?? '',
       status: task.status,
-      dueDate: task.dueDate?.toISOString?.() ?? '',
-      createdAt: task.createdAt?.toISOString?.() ?? '',
+      projectId: task.projectId ?? '',
+      projectName: task.projectName ?? '',
+      dueDate: task.dueDate ? task.dueDate.toISOString() : '',
+      createdAt: task.createdAt ? task.createdAt.toISOString() : '',
+      updatedAt: task.updatedAt ? task.updatedAt.toISOString() : '',
     }));
   }
 }

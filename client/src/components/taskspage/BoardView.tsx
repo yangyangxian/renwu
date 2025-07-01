@@ -28,7 +28,13 @@ const BoardView: React.FC<BoardViewProps> = React.memo(function BoardView({ task
               <div className="text-md">No tasks</div>
             ) : (
               tasks.filter(task => task.status === col.key).map((task, idx) => (
-                <TaskCard key={task.id || idx} title={task.title} description={task.description} dueDate={task.dueDate} />
+                <TaskCard
+                  key={task.id || idx}
+                  title={task.title}
+                  description={task.description}
+                  dueDate={task.dueDate}
+                  projectName={task.projectName}
+                />
               ))
             )}
           </CardContent>

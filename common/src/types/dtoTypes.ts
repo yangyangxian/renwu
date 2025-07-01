@@ -37,5 +37,17 @@ export class TaskResDto {
   status: TaskStatus = TaskStatus.TODO;
   assignedTo?: string = '';
   createdAt?: string = '';
+  updatedAt?: string = '';
+  projectId?: string = '';
+  projectName?: string = '';
+}
+
+export class ProjectResDto {
+  id: string = '';
+  name: string = '';
+  description?: string = '';
+  createdBy?: string = '';
+  createdAt?: string = '';
+  updatedAt?: string = '';
 }
 

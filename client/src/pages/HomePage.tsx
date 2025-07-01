@@ -29,7 +29,7 @@ export default function HomePage() {
         </aside>
       )}
       {/* Main Landing Content or Outlet */}
-      <section className="flex w-full pl-3">
+      <section className="flex w-full justify-center pl-3">
         {showLanding ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
             <span className="mb-4 text-center font-bold text-4xl">Welcome to Task Manager</span>

@@ -12,12 +12,14 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (task: { dueDate: string; assignedTo: string; status: TaskStatus; description: string }) => void;
+  onSubmit: (task: { dueDate: string; assignedTo: string; status: TaskStatus; description: string; projectId?: string }) => void;
   initialValues?: {
     dueDate?: string;
     assignedTo?: string;
     status?: TaskStatus;
     description?: string;
+    projectId?: string;
+    projectName?: string;
   };
   title?: string;
 }
@@ -45,6 +47,12 @@ const statusOptions = [
   },
 ];
 
+// Mock project options (replace with API data later)
+const projectOptions = [
+  { id: "project1", name: "Demo Project" },
+  { id: "project2", name: "Work Project" },
+];
+
 export const TaskDialog: React.FC<TaskDialogProps> = ({
   open,
   onOpenChange,
@@ -56,10 +64,15 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const [taskAssignedTo, setTaskAssignedTo] = useState(initialValues.assignedTo || "");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>(initialValues.status || TaskStatus.TODO);
   const [taskDescription, setTaskDescription] = useState(initialValues.description || "");
+  const [taskProjectId, setTaskProjectId] = useState(initialValues.projectId || "");
+  const [taskProjectName, setTaskProjectName] = useState(initialValues.projectName || "");
 
   // Use the task title if present, otherwise fallback to dialog title
   const dialogTitle = initialValues.assignedTo ? `Task for ${initialValues.assignedTo}` : title;
   const isEdit = Boolean(initialValues && (initialValues.description || initialValues.dueDate || initialValues.status || initialValues.assignedTo));
+
+  // Personal label logic: use assignedTo if present
+  const personalLabel = initialValues.assignedTo ? `Personal (${initialValues.assignedTo})` : "Personal";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,55 +96,89 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 dueDate: taskDueDate,
                 assignedTo: taskAssignedTo,
                 status: taskStatus,
-                description: taskDescription
+                description: taskDescription,
+                projectId: taskProjectId
               });
               onOpenChange(false);
             }}
             className="flex flex-col gap-6 px-10 py-6"
           >
             <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <Label className="text-base" htmlFor="due-date">Due date</Label>
-                <Input
-                  id="due-date"
-                  type="date"
-                  value={taskDueDate}
-                  onChange={e => setTaskDueDate(e.target.value)}
-                  required
-                  className="w-[12rem]"
-                />
+              {/* First row: Project and Assigned to */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                <div className="flex flex-col gap-2 flex-1">
+                  <Label className="text-base">Project</Label>
+                  <Select
+                    value={taskProjectId || "personal"}
+                    onValueChange={value => {
+                      setTaskProjectId(value === "personal" ? "" : value);
+                      setTaskProjectName(
+                        value === "personal"
+                          ? ""
+                          : (projectOptions.find((p) => p.id === value)?.name || "")
+                      );
+                    }}
+                  >
+                    <SelectTrigger id="project-select" className="min-w-[12rem] w-full">
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">{personalLabel}</SelectItem>
+                      {projectOptions.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2 flex-1">
+                  <Label className="text-base">Assigned to</Label>
+                  <Select value={taskAssignedTo} onValueChange={value => setTaskAssignedTo(value)}>
+                    <SelectTrigger id="assigned-to" className="min-w-[12rem] w-full">
+                      <SelectValue placeholder="Select user" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user1">User 1</SelectItem>
+                      <SelectItem value="user2">User 2</SelectItem>
+                      <SelectItem value="user3">User 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-base">Assigned to</Label>
-                <Select value={taskAssignedTo} onValueChange={value => setTaskAssignedTo(value)}>
-                  <SelectTrigger id="assigned-to" className="min-w-[12rem]">
-                    <SelectValue placeholder="Select user" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user1">User 1</SelectItem>
-                    <SelectItem value="user2">User 2</SelectItem>
-                    <SelectItem value="user3">User 3</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Second row: Due date and Status */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                <div className="flex flex-col gap-2 flex-1">
+                  <Label className="text-base" htmlFor="due-date">Due date</Label>
+                  <Input
+                    id="due-date"
+                    type="date"
+                    value={taskDueDate}
+                    onChange={e => setTaskDueDate(e.target.value)}
+                    required
+                    className="w-full min-w-[12rem]"
+                  />
+                </div>
+                <div className="flex flex-col gap-2 flex-1">
+                  <Label className="text-base">Status</Label>
+                  <Select value={taskStatus} onValueChange={v => setTaskStatus(v as TaskStatus)}>
+                    <SelectTrigger id="status" className="min-w-[12rem] w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          <span className="flex flex-row items-center justify-between w-full">
+                            <span className="mr-2">{opt.label}</span>
+                            {opt.icon}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label className="text-base">Status</Label>
-                <Select value={taskStatus} onValueChange={v => setTaskStatus(v as TaskStatus)}>
-                  <SelectTrigger id="status" className="min-w-[12rem]">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        <span className="flex flex-row items-center justify-between w-full">
-                          <span className="mr-2">{opt.label}</span>
-                          {opt.icon}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Description row */}
               <div className="flex flex-col gap-2">
                 <Label className="text-base mb-1" htmlFor="description">Description</Label>
                 <Textarea

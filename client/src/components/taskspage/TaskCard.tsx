@@ -6,9 +6,10 @@ interface TaskCardProps {
   title: string;
   description: string;
   dueDate?: string;
+  projectName?: string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ title, description, dueDate }) => (
+const TaskCard: React.FC<TaskCardProps> = ({ title, description, dueDate, projectName }) => (
   <Card className="bg-muted dark:bg-black p-3">
     <div className="flex items-center justify-between mb-1">
       <h3 className="text-base font-medium leading-tight line-clamp-2">{title}</h3>
@@ -17,6 +18,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, description, dueDate }) => (
       )}
     </div>
     <div className="text-xs text-foreground/70 line-clamp-3">{description}</div>
+    {projectName && (
+      <div className="text-xs text-blue-500 mt-1">{projectName}</div>
+    )}
   </Card>
 );
 
