@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Card";
 import TaskCard from "@/components/taskspage/TaskCard";
 import { TaskResDto, TaskStatus } from "@fullstack/common";
+import { Label } from "@/components/ui-kit/Label";
 
 interface BoardViewProps {
   tasks: TaskResDto[];
@@ -25,7 +26,7 @@ const BoardView: React.FC<BoardViewProps> = React.memo(function BoardView({ task
           </CardHeader>
           <CardContent className="p-3 flex flex-col gap-3">
             {tasks.filter(task => task.status === col.key).length === 0 ? (
-              <div className="text-md">No tasks</div>
+              <Label className="text-sm">No tasks</Label>
             ) : (
               tasks.filter(task => task.status === col.key).map((task, idx) => (
                 <TaskCard

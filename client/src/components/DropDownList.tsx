@@ -21,13 +21,13 @@ export const DropDownList: React.FC<DropDownListProps> = ({
   className
 }) => (
   <Select value={value} onValueChange={onValueChange} disabled={disabled}>
-    <SelectTrigger id={id} className={className}>
+    <SelectTrigger id={id} className={className ? `${className} text-secondary-foreground` : 'text-secondary-foreground'}>
       <SelectValue placeholder={placeholder} />
     </SelectTrigger>
     <SelectContent>
       {options.map(opt => (
         <SelectItem key={opt.value} value={opt.value}>
-          <span className="flex flex-row items-center justify-between w-full">
+          <span className="flex flex-row items-center justify-between w-full text-secondary-foreground">
             <span className="mr-2">{opt.label}</span>
             {opt.icon}
           </span>

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Textarea } from "@/components/ui-kit/Textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, ProjectResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
@@ -128,7 +127,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full min-w-[12rem] text-left justify-between"
+                        className="w-full min-w-[12rem] text-left justify-between text-secondary-foreground"
                         aria-label="Select due date"
                       >
                         <span>{taskDueDate ? new Date(taskDueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>

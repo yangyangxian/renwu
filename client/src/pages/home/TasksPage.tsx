@@ -150,7 +150,7 @@ export default function TasksPage() {
       )}
       {view === 'list' && (
         filteredTasks.length === 0 ? (
-          <div className="text-center text-slate-500 dark:text-slate-400 my-8">No tasks found.</div>
+          <div className="text-slate-500 dark:text-slate-400 my-8">No tasks found.</div>
         ) : (
           <div className="flex flex-col gap-2 w-full">
             {filteredTasks.map((task, idx) => (
