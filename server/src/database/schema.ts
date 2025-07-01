@@ -1,5 +1,5 @@
 // schema.ts
-// To generate migration: npx drizzle-kit generate --name=init
+// To generate migration: npx drizzle-kit generate --name=
 // To push migration to database: npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import {
@@ -34,7 +34,7 @@ export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
-  ownerId: uuid('owner_id').references(() => users.id, {
+  createdBy: uuid('created_by').references(() => users.id, {
     onDelete: 'set null',
   }),
   createdAt: timestamp('created_at').defaultNow(),

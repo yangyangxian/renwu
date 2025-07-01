@@ -36,6 +36,13 @@
       "when": 1751353815690,
       "tag": "0004_makeroleasenumtype",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1751355703960,
+      "tag": "0005_changefieldname",
+      "breakpoints": true
     }
   ]
 }
