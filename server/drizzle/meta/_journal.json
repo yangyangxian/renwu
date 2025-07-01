@@ -22,6 +22,20 @@
       "when": 1751203788088,
       "tag": "0002_regular_skullbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1751353603845,
+      "tag": "0003_added_projectmember_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1751353815690,
+      "tag": "0004_makeroleasenumtype",
+      "breakpoints": true
     }
   ]
 }

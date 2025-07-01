@@ -1,4 +1,7 @@
 // schema.ts
+// To generate migration: npx drizzle-kit generate --name=init
+// To push migration to database: npx drizzle-kit push
+// !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import {
   pgTable,
   uuid,
@@ -8,10 +11,13 @@ import {
   pgEnum,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import { TaskStatus } from '@fullstack/common';
+import { TaskStatus, ProjectRole } from '@fullstack/common';
 
 // ---------- ENUM: Task Status ----------
 export const taskStatusEnum = pgEnum('task_status', Object.values(TaskStatus) as [string, ...string[]]);
+
+// ---------- ENUM: Project Role ----------
+export const projectRoleEnum = pgEnum('project_role', Object.values(ProjectRole) as [string, ...string[]]);
 
 // ---------- TABLE: Users ----------
 export const users = pgTable('users', {
@@ -56,3 +62,22 @@ export const tasks = pgTable('tasks', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+// ---------- TABLE: Project Members ----------
+export const projectMembers = pgTable(
+  'project_members',
+  {
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: projectRoleEnum('role').notNull().default(ProjectRole.MEMBER),
+    joinedAt: timestamp('joined_at').defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.projectId, table.userId] }),
+  ]
+);
+
