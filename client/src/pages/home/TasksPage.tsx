@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Outlet } from "react-router-dom";
 import BoardView from "@/components/taskspage/BoardView";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui-kit/Tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui-kit/Popover";
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
@@ -45,16 +46,18 @@ export default function TasksPage() {
       .catch(() => {});
   }, []);
 
-  // Filter by project and date
-  const filteredTasks = tasks.filter(t => {
-    const dateOk = t.updatedAt && new Date(t.updatedAt) >= dateThreshold;
-    // If projectId is null/undefined, treat as 'personal'.
-    const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
-    if (selectedProject === 'all') return dateOk;
-    if (selectedProject === 'personal') return dateOk && isPersonal;
-    // Compare projectId loosely (number or string, allow for type coercion)
-    return dateOk && t.projectId == selectedProject;
-  });
+  // Filter by project and date (memoized)
+  const filteredTasks = useMemo(() =>
+    tasks.filter(t => {
+      const dateOk = t.updatedAt && new Date(t.updatedAt) >= dateThreshold;
+      // If projectId is null/undefined, treat as 'personal'.
+      const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
+      if (selectedProject === 'all') return dateOk;
+      if (selectedProject === 'personal') return dateOk && isPersonal;
+      // Compare projectId loosely (number or string, allow for type coercion)
+      return dateOk && t.projectId == selectedProject;
+    })
+  , [tasks, dateThreshold, selectedProject]);
 
   return (
     <div className="w-full">
@@ -80,20 +83,23 @@ export default function TasksPage() {
         {/* Date picker using Shadcn UI Popover + Calendar */}
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
-            <div className="relative group">
-              <Button
-                type="button"
-                className="w-full min-w-[9rem] justify-between text-secondary-foreground"
-                variant="outline"
-                aria-label="Show tasks updated since"
-              >
-                {formatDate(dateThreshold)}
-                <CalendarIcon className="size-4" />
-              </Button>
-              {/* Tooltip for date picker (now appears below the button, centered) */}
-              <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 z-10 whitespace-nowrap">
-                From updated date
-              </span>
+            <div className="relative">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    className="w-full min-w-[9rem] justify-between text-secondary-foreground"
+                    variant="outline"
+                    aria-label="Show tasks updated since"
+                  >
+                    {formatDate(dateThreshold)}
+                    <CalendarIcon className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  From updated date
+                </TooltipContent>
+              </Tooltip>
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
