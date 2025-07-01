@@ -61,7 +61,7 @@ export default function TasksPage() {
       <div id="menuBar" className="flex my-3 gap-3 items-center">
         <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
           <SelectTrigger
-            className="min-w-[10rem] h-9 px-3 rounded-md bg-white dark:text-slate-200"
+            className="min-w-[9rem] px-3 bg-white dark:text-slate-200"
             id="project-select"
           >
             <SelectValue placeholder="Select project..." />
@@ -76,22 +76,23 @@ export default function TasksPage() {
             ))}
           </SelectContent>
         </Select>
+
         {/* Date picker using Shadcn UI Popover + Calendar */}
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild>
-            <div className="relative group w-[10rem]">
+            <div className="relative group">
               <Button
                 type="button"
-                className="w-full h-9 min-w-[10rem] px-3 text-left justify-between"
+                className="w-full min-w-[9rem] justify-between text-secondary-foreground"
                 variant="outline"
                 aria-label="Show tasks updated since"
               >
-                <span>{formatDate(dateThreshold)}</span>
-                <CalendarIcon className="size-3.5" />
+                {formatDate(dateThreshold)}
+                <CalendarIcon className="size-4" />
               </Button>
               {/* Tooltip for date picker (now appears below the button, centered) */}
               <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 z-10 whitespace-nowrap">
-                Filter by updated date
+                From updated date
               </span>
             </div>
           </PopoverTrigger>
@@ -103,20 +104,22 @@ export default function TasksPage() {
             />
           </PopoverContent>
         </Popover>
+
         {/* Tabs for Board/List/Calendar views */}
         <Tabs defaultValue={view} value={view} onValueChange={setView}>
           <TabsList className="bg-white dark:bg-muted">
-            <TabsTrigger value="board" className="px-4 py-2 text-sm font-medium rounded-l-md focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <TabsTrigger value="board" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               Board
             </TabsTrigger>
-            <TabsTrigger value="list" className="px-4 py-2 text-sm font-medium focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <TabsTrigger value="list" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               List
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <TabsTrigger value="calendar" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               Calendar
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
         <div className="ml-auto">
           <Button variant="default" onClick={() => setIsDialogOpen(true)}>
             + Add Task
@@ -133,6 +136,7 @@ export default function TasksPage() {
               ]);
             }}
             title="Add New Task"
+            projects={projects}
           />
           {showSuccess && (
             <div className="text-green-600 text-sm mt-2">Task added (demo only)</div>

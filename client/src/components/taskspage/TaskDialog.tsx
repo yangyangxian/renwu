@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
-import { Input } from "@/components/ui-kit/Input";
 import { Textarea } from "@/components/ui-kit/Textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Button } from "@/components/ui-kit/Button";
-import { TaskStatus } from "@fullstack/common";
+import { TaskStatus, ProjectResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
 import { CheckCircle, Square, Loader2, XCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui-kit/Calendar";
+import { DropDownList } from "@/components/DropDownList";
 
 interface TaskDialogProps {
   open: boolean;
@@ -22,35 +25,15 @@ interface TaskDialogProps {
     projectName?: string;
   };
   title?: string;
+  projects: ProjectResDto[];
+  assignedToOptions?: { id: string; name: string }[];
 }
 
 const statusOptions = [
-  {
-    value: TaskStatus.TODO,
-    label: "To Do",
-    icon: <Square className="text-yellow-500 ml-2" />,
-  },
-  {
-    value: TaskStatus.IN_PROGRESS,
-    label: "In Progress",
-    icon: <Loader2 className="text-blue-500 ml-2 animate-spin-slow" />,
-  },
-  {
-    value: TaskStatus.DONE,
-    label: "Done",
-    icon: <CheckCircle className="text-green-500 ml-2" />,
-  },
-  {
-    value: TaskStatus.CLOSE,
-    label: "Closed",
-    icon: <XCircle className="text-red-400 ml-2" />,
-  },
-];
-
-// Mock project options (replace with API data later)
-const projectOptions = [
-  { id: "project1", name: "Demo Project" },
-  { id: "project2", name: "Work Project" },
+  { value: TaskStatus.TODO, label: "To Do", icon: <Square className="text-yellow-500 ml-2" /> },
+  { value: TaskStatus.IN_PROGRESS, label: "In Progress", icon: <Loader2 className="text-blue-500 ml-2 animate-spin-slow" /> },
+  { value: TaskStatus.DONE, label: "Done", icon: <CheckCircle className="text-green-500 ml-2" /> },
+  { value: TaskStatus.CLOSE, label: "Closed", icon: <XCircle className="text-red-400 ml-2" /> },
 ];
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
@@ -59,20 +42,20 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   onSubmit,
   initialValues = {},
   title = "Add New Task",
+  projects,
+  assignedToOptions,
 }) => {
   const [taskDueDate, setTaskDueDate] = useState(initialValues.dueDate || "");
-  const [taskAssignedTo, setTaskAssignedTo] = useState(initialValues.assignedTo || "");
+  // Set default for taskAssignedTo to 'me' if no assignedToOptions and not already set
+  const [taskAssignedTo, setTaskAssignedTo] = useState(
+    initialValues.assignedTo || (!!assignedToOptions?.length ? "" : "me")
+  );
   const [taskStatus, setTaskStatus] = useState<TaskStatus>(initialValues.status || TaskStatus.TODO);
   const [taskDescription, setTaskDescription] = useState(initialValues.description || "");
   const [taskProjectId, setTaskProjectId] = useState(initialValues.projectId || "");
-  const [taskProjectName, setTaskProjectName] = useState(initialValues.projectName || "");
 
   // Use the task title if present, otherwise fallback to dialog title
   const dialogTitle = initialValues.assignedTo ? `Task for ${initialValues.assignedTo}` : title;
-  const isEdit = Boolean(initialValues && (initialValues.description || initialValues.dueDate || initialValues.status || initialValues.assignedTo));
-
-  // Personal label logic: use assignedTo if present
-  const personalLabel = initialValues.assignedTo ? `Personal (${initialValues.assignedTo})` : "Personal";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,7 +80,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 assignedTo: taskAssignedTo,
                 status: taskStatus,
                 description: taskDescription,
-                projectId: taskProjectId
+                projectId: taskProjectId || undefined
               });
               onOpenChange(false);
             }}
@@ -108,74 +91,68 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
                   <Label className="text-base">Project</Label>
-                  <Select
-                    value={taskProjectId || "personal"}
+                  <DropDownList
+                    value={taskProjectId || "personal"} id="project-select" className="min-w-[12rem] w-full"
                     onValueChange={value => {
                       setTaskProjectId(value === "personal" ? "" : value);
-                      setTaskProjectName(
-                        value === "personal"
-                          ? ""
-                          : (projectOptions.find((p) => p.id === value)?.name || "")
-                      );
                     }}
-                  >
-                    <SelectTrigger id="project-select" className="min-w-[12rem] w-full">
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="personal">{personalLabel}</SelectItem>
-                      {projectOptions.map(project => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    options={[
+                      { value: "personal", label: "No project (Personal)" },
+                      ...projects.map(project => ({ value: project.id, label: project.name }))
+                    ]}
+                  />
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
                   <Label className="text-base">Assigned to</Label>
-                  <Select value={taskAssignedTo} onValueChange={value => setTaskAssignedTo(value)}>
-                    <SelectTrigger id="assigned-to" className="min-w-[12rem] w-full">
-                      <SelectValue placeholder="Select user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user1">User 1</SelectItem>
-                      <SelectItem value="user2">User 2</SelectItem>
-                      <SelectItem value="user3">User 3</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <DropDownList
+                    value={taskAssignedTo || "me"}
+                    id="assigned-to"
+                    className="min-w-[12rem] w-full"
+                    onValueChange={setTaskAssignedTo}
+                    disabled={!Array.isArray(assignedToOptions) || assignedToOptions.length === 0}
+                    options={
+                      Array.isArray(assignedToOptions) && assignedToOptions.length > 0
+                        ? assignedToOptions.map(user => ({ value: user.id, label: user.name }))
+                        : [{ value: "me", label: "Me" }]
+                    }
+                    placeholder="Select user"
+                  />
                 </div>
               </div>
               {/* Second row: Due date and Status */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
                   <Label className="text-base" htmlFor="due-date">Due date</Label>
-                  <Input
-                    id="due-date"
-                    type="date"
-                    value={taskDueDate}
-                    onChange={e => setTaskDueDate(e.target.value)}
-                    required
-                    className="w-full min-w-[12rem]"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full min-w-[12rem] text-left justify-between"
+                        aria-label="Select due date"
+                      >
+                        <span>{taskDueDate ? new Date(taskDueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>
+                        <CalendarIcon className="size-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={taskDueDate ? new Date(taskDueDate) : undefined}
+                        onSelect={d => d && setTaskDueDate(d.toISOString().slice(0, 10))}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
                   <Label className="text-base">Status</Label>
-                  <Select value={taskStatus} onValueChange={v => setTaskStatus(v as TaskStatus)}>
-                    <SelectTrigger id="status" className="min-w-[12rem] w-full">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          <span className="flex flex-row items-center justify-between w-full">
-                            <span className="mr-2">{opt.label}</span>
-                            {opt.icon}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <DropDownList
+                    value={taskStatus}
+                    onValueChange={v => setTaskStatus(v as TaskStatus)}
+                    options={statusOptions}
+                    id="status"
+                    className="min-w-[12rem] w-full"
+                  />
                 </div>
               </div>
               {/* Description row */}

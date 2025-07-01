@@ -34,6 +34,7 @@ const BoardView: React.FC<BoardViewProps> = React.memo(function BoardView({ task
                   description={task.description}
                   dueDate={task.dueDate}
                   projectName={task.projectName}
+                  status={task.status}
                 />
               ))
             )}
