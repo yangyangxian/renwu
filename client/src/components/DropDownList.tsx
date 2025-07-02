@@ -26,10 +26,10 @@ export const DropDownList: React.FC<DropDownListProps> = ({
     </SelectTrigger>
     <SelectContent>
       {options.map(opt => (
-        <SelectItem key={opt.value} value={opt.value}>
-          <span className="flex flex-row items-center justify-between w-full text-secondary-foreground">
-            <span className="mr-2">{opt.label}</span>
+        <SelectItem key={opt.value} value={opt.value} className="p-1">
+          <span className="flex flex-row items-center justify-between w-full text-secondary-foreground">           
             {opt.icon}
+            <span className="ml-2">{opt.label}</span>
           </span>
         </SelectItem>
       ))}

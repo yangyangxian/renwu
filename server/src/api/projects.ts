@@ -9,10 +9,13 @@ const router = express.Router();
 // GET /api/projects/me - get projects for the current user
 router.get('/me', async (req, res) => {
   const userId = req.user!.userId;
-  
   const projects = await projectService.getProjectsByUserId(userId);
-  // If using Drizzle's join, projects will be an array of { projects: ..., project_members: ... }
-  const data: ProjectResDto[] = projects.map((row: any) => mapObject(row.projects, new ProjectResDto()));
+  // Map each project to ProjectResDto, including members
+  const data: ProjectResDto[] = projects.map((project) => {
+    const dto = mapObject(project, new ProjectResDto());
+    dto.members = project.members;
+    return dto;
+  });
   res.json(createApiResponse<ProjectResDto[]>(data));
 });
 

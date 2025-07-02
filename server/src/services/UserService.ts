@@ -11,9 +11,14 @@ export class UserEntity {
   email: string = '';
   password?: string = '';
   createdAt: string = '';
+
+  constructor(init?: Partial<UserEntity>) {
+    Object.assign(this, init);
+  }
 }
 
 class UserService {
+
   async getUserByEmail(email: string): Promise<UserEntity | null> {
     const result = await db.select().from(users).where(eq(users.email, email));
     if (result.length === 0) return null;

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 
 export class TaskEntity {
   id: string = '';
-  userId: string = '';
+  assignedTo: string = '';
   title: string = '';
   description: string = '';
   status: string = '';
@@ -20,7 +20,7 @@ class TaskService {
     const result = await db
       .select({
         id: tasks.id,
-        userId: tasks.assignedTo,
+        assignedTo: tasks.assignedTo,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -35,7 +35,7 @@ class TaskService {
       .where(eq(tasks.assignedTo, userId));
     return result.map(task => ({
       id: task.id,
-      userId: task.userId,
+      assignedTo: task.assignedTo,
       title: task.title,
       description: task.description ?? '',
       status: task.status,

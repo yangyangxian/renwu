@@ -6,6 +6,7 @@ import { Label } from "@/components/ui-kit/Label";
 
 interface BoardViewProps {
   tasks: TaskResDto[];
+  onTaskClick?: (taskId: string) => void;
 }
 
 const statusColumns = [
@@ -15,8 +16,7 @@ const statusColumns = [
   { key: TaskStatus.CLOSE, label: "Closed", titleBg: "bg-gray-500" }
 ];
 
-const BoardView: React.FC<BoardViewProps> = React.memo(function BoardView({ tasks }) {
-  console.log("BoardView component loaded");
+const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full">
       {statusColumns.map((col) => (
@@ -29,14 +29,15 @@ const BoardView: React.FC<BoardViewProps> = React.memo(function BoardView({ task
               <Label className="text-sm">No tasks</Label>
             ) : (
               tasks.filter(task => task.status === col.key).map((task, idx) => (
-                <TaskCard
-                  key={task.id || idx}
-                  title={task.title}
-                  description={task.description}
-                  dueDate={task.dueDate}
-                  projectName={task.projectName}
-                  status={task.status}
-                />
+                <div key={task.id || idx} onClick={() => onTaskClick && onTaskClick(task.id)}>
+                  <TaskCard
+                    title={task.title}
+                    description={task.description}
+                    dueDate={task.dueDate}
+                    projectName={task.projectName}
+                    status={task.status}
+                  />
+                </div>
               ))
             )}
           </CardContent>
@@ -44,6 +45,6 @@ const BoardView: React.FC<BoardViewProps> = React.memo(function BoardView({ task
       ))}
     </div>
   );
-});
+};
 
 export default BoardView;

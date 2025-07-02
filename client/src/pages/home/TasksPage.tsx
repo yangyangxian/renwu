@@ -22,12 +22,14 @@ function formatDate(date: Date) {
 }
 
 export default function TasksPage() {
+  console.log("TasksPage rendered");
   const [view, setView] = useState("board");
   const [selectedProject, setSelectedProject] = useState("all");
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
   const [projects, setProjects] = useState<ProjectResDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [dateThreshold, setDateThreshold] = useState(() => {
     const d = new Date();
@@ -58,6 +60,18 @@ export default function TasksPage() {
       return dateOk && t.projectId == selectedProject;
     })
   , [tasks, dateThreshold, selectedProject]);
+
+  const allProjectMembers = useMemo(() => {
+    const allMembers = projects.flatMap(p =>
+      Array.isArray(p.members)
+        ? p.members.map(m => ({ ...m, projectId: p.id }))
+        : []
+    );
+    const seen = new Set<string>();
+    return allMembers
+      .filter(m => typeof m.id === 'string' && m.id && !seen.has(m.id) && !!seen.add(m.id))
+      .map(m => ({ id: m.id as string, name: m.name, projectId: m.projectId }));
+  }, [projects]);
 
   return (
     <div className="w-full">
@@ -127,32 +141,52 @@ export default function TasksPage() {
         </Tabs>
 
         <div className="ml-auto">
-          <Button variant="default" onClick={() => setIsDialogOpen(true)}>
+          <Button variant="default" onClick={() => { setEditingTask(null); setIsDialogOpen(true); }}>
             + Add Task
           </Button>
-          <TaskDialog
-            open={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            onSubmit={task => {
-              setShowSuccess(true);
-              setTimeout(() => setShowSuccess(false), 1500);
-              setTasks(prev => [
-                { id: Math.random().toString(), title: task.description.slice(0, 24) || 'Untitled', ...task },
-                ...prev
-              ]);
-            }}
-            title="Add New Task"
-            projects={projects}
-          />
+          {isDialogOpen && (
+            <TaskDialog
+              open={isDialogOpen}
+              onOpenChange={open => {
+                setIsDialogOpen(open);
+                if (!open) setEditingTask(null);
+              }}
+              onSubmit={task => {
+                setShowSuccess(true);
+                setTimeout(() => setShowSuccess(false), 1500);
+                if (task.id) {
+                  // Edit mode: update task in list
+                  setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...task, title: task.description.slice(0, 24) || 'Untitled' } : t));
+                } else {
+                  // Add mode: add new task
+                  setTasks(prev => [
+                    { id: Math.random().toString(), title: task.description.slice(0, 24) || 'Untitled', ...task },
+                    ...prev
+                  ]);
+                }
+              }}
+              title={editingTask ? "Edit Task" : "Add New Task"}
+              projects={projects}
+              projectMembers={allProjectMembers}
+              initialValues={editingTask || {}}
+            />
+          )}
           {showSuccess && (
-            <div className="text-green-600 text-sm mt-2">Task added (demo only)</div>
+            <div className="text-green-600 text-sm mt-2">Task {editingTask ? 'updated' : 'added'} (demo only)</div>
           )}
         </div>
       </div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
       {/* Always show BoardView for minimal UI, even if no tasks */}
       {view === 'board' && (
-        <BoardView tasks={filteredTasks} />
+        <BoardView
+          tasks={filteredTasks}
+          onTaskClick={taskId => {
+            const fullTask = tasks.find(t => t.id === taskId) || null;
+            setEditingTask(fullTask);
+            setIsDialogOpen(true);
+          }}
+        />
       )}
       {view === 'list' && (
         filteredTasks.length === 0 ? (

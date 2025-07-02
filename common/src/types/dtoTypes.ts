@@ -49,5 +49,6 @@ export class ProjectResDto {
   createdBy?: string = '';
   createdAt?: string = '';
   updatedAt?: string = '';
+  members?: UserResDto[] = [];
 }
 
