@@ -1,4 +1,26 @@
 import { TaskStatus } from '../emuns/taskStatus.js';
+
+// DTO for updating a task (PUT /api/tasks/:taskId)
+export class TaskUpdateReqDto {
+  title?: string;
+  description?: string;
+  dueDate?: string;
+  status?: TaskStatus;
+  assignedTo?: string;
+  projectId?: string;
+}
+
+// DTO for creating a task (POST /api/tasks)
+export class TaskCreateReqDto {
+  title: string = '';
+  description?: string = '';
+  dueDate?: string = '';
+  status?: TaskStatus = TaskStatus.TODO;
+  assignedTo?: string = '';
+  projectId?: string = '';
+  createdBy: string = '';
+}
+
 /*
 * The reason why using classes instead of interfaces is to ensure that the fields of DTOs can be used for object mapping in api.
 */

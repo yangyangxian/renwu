@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/providers/AuthProvider";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Textarea } from "@/components/ui-kit/Textarea";
+import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, ProjectResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
@@ -21,9 +22,12 @@ interface ProjectMember {
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (task: { id?: string; dueDate: string; assignedTo: string; status: TaskStatus; description: string; projectId?: string }) => void;
+  onSubmit: (task: { id?: string; title: string; dueDate: string; assignedTo: string; 
+    status: TaskStatus; description: string; projectId?: string,
+    createdBy: string }) => void;
   initialValues?: {
     id?: string;
+    title?: string;
     dueDate?: string;
     assignedTo?: string;
     status?: TaskStatus;
@@ -49,6 +53,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 }) => {
   console.log("initialValues" + JSON.stringify(initialValues));
   const [taskId] = useState(initialValues.id || "");
+  const [taskTitle, setTaskTitle] = useState(initialValues.title || "");
+  const [editingTitle, setEditingTitle] = useState(false);
   const [taskDueDate, setTaskDueDate] = useState(initialValues.dueDate || "");
   const [taskAssignedTo, setTaskAssignedTo] = useState(initialValues.assignedTo || "");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>(initialValues.status || TaskStatus.TODO);
@@ -114,14 +120,28 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 assignedTo: taskAssignedTo,
                 status: taskStatus,
                 description: taskDescription,
-                projectId: taskProjectId || undefined
+                projectId: taskProjectId || undefined,
+                createdBy: user?.id || "",
+                title: taskTitle
               });
               onOpenChange(false);
             }}
             className="flex flex-col gap-6 px-10 py-6"
           >
             <div className="flex flex-col gap-6">
-              {/* First row: Project and Assigned to */}
+              {/* Title row */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-base mb-1">Title</Label>
+                <Input
+                  id="title"
+                  placeholder="Task title"
+                  value={taskTitle}
+                  onChange={e => setTaskTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Project and Assigned to */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
                   <Label className="text-base">Project</Label>
@@ -149,7 +169,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   />
                 </div>
               </div>
-              {/* Second row: Due date and Status */}
+              {/*  Due date and Status */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
                   <Label className="text-base" htmlFor="due-date">Due date</Label>
@@ -185,12 +205,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   />
                 </div>
               </div>
+
               {/* Description row */}
               <div className="flex flex-col gap-2">
                 <Label className="text-base mb-1" >Description</Label>
                 <Textarea
                   id="description"
-                  className="bg-slate-50 dark:bg-slate-900 px-3 py-2 min-h-[150px] focus:ring-2 focus:ring-primary/30"
+                  className="bg-muted px-3 py-2 min-h-[150px] focus:ring-2 focus:ring-primary/30"
                   placeholder="Task description (Markdown supported in future)"
                   value={taskDescription}
                   onChange={e => setTaskDescription(e.target.value)}
@@ -206,7 +227,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             </div>
           </form>
           {/* Right panel for future content */}
-          <div className="hidden lg:flex flex-col w-full border-l bg-slate-50 dark:bg-slate-900 px-6 py-6">
+          <div className="hidden lg:flex flex-col w-full border-l px-6 py-6">
             <div className="text-lg text-muted-foreground font-bold mb-4">Changelog / Activity</div>
             <div className="text-sm text-slate-500 dark:text-slate-400">(Coming soon: see task history, comments, etc.)</div>
           </div>

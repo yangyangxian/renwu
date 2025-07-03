@@ -11,9 +11,9 @@ interface TaskCardProps {
 }
 
 const statusToColor: Record<TaskStatus, string> = {
-  [TaskStatus.TODO]: "text-amber-400 dark:text-amber-600",
-  [TaskStatus.IN_PROGRESS]: "text-blue-500 dark:text-blue-700",
-  [TaskStatus.DONE]: "text-green-500 dark:text-green-700",
+  [TaskStatus.TODO]: "text-amber-400 dark:text-amber-500",
+  [TaskStatus.IN_PROGRESS]: "text-blue-500 dark:text-blue-400",
+  [TaskStatus.DONE]: "text-green-500 dark:text-green-600",
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 

@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui-kit/Card";
 import { Outlet } from "react-router-dom";
 import BoardView from "@/components/taskspage/BoardView";
 import { apiClient } from '@/utils/APIClient';
-import { TaskResDto, ProjectResDto } from '@fullstack/common';
+import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
+import { Plus } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -22,15 +24,12 @@ function formatDate(date: Date) {
 }
 
 export default function TasksPage() {
-  console.log("TasksPage rendered");
   const [view, setView] = useState("board");
   const [selectedProject, setSelectedProject] = useState("all");
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
   const [projects, setProjects] = useState<ProjectResDto[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [dateThreshold, setDateThreshold] = useState(() => {
     const d = new Date();
     d.setMonth(d.getMonth() - 1);
@@ -39,10 +38,17 @@ export default function TasksPage() {
   });
   const [popoverOpen, setPopoverOpen] = useState(false);
 
+  const fetchTasks = async () => {
+    try {
+      const data = await apiClient.get<TaskResDto[]>(`/api/tasks/me`);
+      setTasks(data);
+    } catch {
+      toast.error('Failed to load tasks.');
+    }
+  };
+
   useEffect(() => {
-    apiClient.get<TaskResDto[]>(`/api/tasks/me`)
-      .then(setTasks)
-      .catch(() => setError('Failed to load tasks.'));
+    fetchTasks();
     apiClient.get<ProjectResDto[]>(`/api/projects/me`)
       .then(setProjects)
       .catch(() => {});
@@ -72,6 +78,48 @@ export default function TasksPage() {
       .filter(m => typeof m.id === 'string' && m.id && !seen.has(m.id) && !!seen.add(m.id))
       .map(m => ({ id: m.id as string, name: m.name, projectId: m.projectId }));
   }, [projects]);
+
+  // Handler for add/edit task dialog submit
+  const handleTaskSubmit = async (task: any) => {
+    if (task.id) {
+      // Edit mode: update task via API
+      const updatePayload: TaskUpdateReqDto = {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        status: task.status,
+        assignedTo: task.assignedTo,
+        projectId: task.projectId,
+      };
+      try {
+        await apiClient.put<TaskUpdateReqDto, TaskResDto>(`/api/tasks/${task.id}`, updatePayload);
+        await fetchTasks();
+        toast.success('Task updated!');
+      } catch (e) {
+        // error handled by toast
+        toast.error('Failed to update task.');
+      }
+    } else {
+      // Add mode: create new task via API
+      const createPayload: TaskCreateReqDto = {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        status: task.status,
+        assignedTo: task.assignedTo,
+        projectId: task.projectId,
+        createdBy: task.createdBy
+      };
+      try {
+        await apiClient.post<TaskCreateReqDto, TaskResDto>(`/api/tasks`, createPayload);
+        await fetchTasks();
+        toast.success('Task added!');
+      } catch (e) {
+        // error handled by toast
+        toast.error('Failed to create task.');
+      }
+    }
+  };
 
   return (
     <div className="w-full">
@@ -141,8 +189,9 @@ export default function TasksPage() {
         </Tabs>
 
         <div className="ml-auto">
-          <Button variant="default" onClick={() => { setEditingTask(null); setIsDialogOpen(true); }}>
-            + Add Task
+          <Button variant="outline" onClick={() => { setEditingTask(null); setIsDialogOpen(true); }}>
+            <Plus className="w-4 h-4" />
+            Add Task
           </Button>
           {isDialogOpen && (
             <TaskDialog
@@ -151,33 +200,16 @@ export default function TasksPage() {
                 setIsDialogOpen(open);
                 if (!open) setEditingTask(null);
               }}
-              onSubmit={task => {
-                setShowSuccess(true);
-                setTimeout(() => setShowSuccess(false), 1500);
-                if (task.id) {
-                  // Edit mode: update task in list
-                  setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...task, title: task.description.slice(0, 24) || 'Untitled' } : t));
-                } else {
-                  // Add mode: add new task
-                  setTasks(prev => [
-                    { id: Math.random().toString(), title: task.description.slice(0, 24) || 'Untitled', ...task },
-                    ...prev
-                  ]);
-                }
-              }}
+              onSubmit={handleTaskSubmit}
               title={editingTask ? "Edit Task" : "Add New Task"}
               projects={projects}
               projectMembers={allProjectMembers}
               initialValues={editingTask || {}}
             />
           )}
-          {showSuccess && (
-            <div className="text-green-600 text-sm mt-2">Task {editingTask ? 'updated' : 'added'} (demo only)</div>
-          )}
         </div>
       </div>
-      {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      {/* Always show BoardView for minimal UI, even if no tasks */}
+
       {view === 'board' && (
         <BoardView
           tasks={filteredTasks}
