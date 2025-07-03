@@ -18,6 +18,16 @@ export class TaskEntity {
 }
 
 class TaskService {
+  /**
+   * Delete a task by ID
+   * @param taskId string
+   */
+  async deleteTask(taskId: string): Promise<void> {
+    const deleted = await db.delete(tasks).where(eq(tasks.id, taskId)).returning();
+    if (!deleted || deleted.length === 0) {
+      throw new CustomError('Task not found or already deleted', ErrorCodes.NOT_FOUND);
+    }
+  }
 
   /**
    * Convert TaskCreateReqDto to a DB-ready object for insertion

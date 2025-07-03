@@ -37,6 +37,23 @@ router.put('/:taskId',
   }
 );
 
+// Delete a task by ID
+router.delete('/:taskId',
+  async (
+    req: express.Request<{ taskId: string }>,
+    res: express.Response<ApiResponse<null>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      const { taskId } = req.params;
+      await taskService.deleteTask(taskId);
+      res.json(createApiResponse<null>(null));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 router.get('/me', async (req, res, next) => {
     const userId = req.user!.userId;
     const tasks = await taskService.getTasksByUserId(userId);

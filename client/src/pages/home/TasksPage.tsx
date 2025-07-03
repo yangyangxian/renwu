@@ -121,6 +121,16 @@ export default function TasksPage() {
     }
   };
 
+  const handleDelete = async (taskId: string) => {
+    try {
+      await apiClient.delete(`/api/tasks/${taskId}`);
+      await fetchTasks();
+      toast.success('Task deleted!');
+    } catch (e) {
+      toast.error('Failed to delete task.');
+    }
+  };
+
   return (
     <div className="w-full">
       <div id="menuBar" className="flex my-3 gap-3 items-center">
@@ -189,9 +199,14 @@ export default function TasksPage() {
         </Tabs>
 
         <div className="ml-auto">
-          <Button variant="outline" onClick={() => { setEditingTask(null); setIsDialogOpen(true); }}>
-            <Plus className="w-4 h-4" />
-            Add Task
+          <Button
+            variant="default"
+            className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
+             from-purple-400 to-purple-600 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
+            onClick={() => { setEditingTask(null); setIsDialogOpen(true); }}
+          >
+            <Plus className="w-5 h-5" />
+            <span className="font-semibold">Add Task</span>
           </Button>
           {isDialogOpen && (
             <TaskDialog
@@ -218,8 +233,10 @@ export default function TasksPage() {
             setEditingTask(fullTask);
             setIsDialogOpen(true);
           }}
+          onTaskDelete={handleDelete}
         />
       )}
+
       {view === 'list' && (
         filteredTasks.length === 0 ? (
           <div className="text-slate-500 dark:text-slate-400 my-8">No tasks found.</div>

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui-kit/Label";
 interface BoardViewProps {
   tasks: TaskResDto[];
   onTaskClick?: (taskId: string) => void;
+  onTaskDelete?: (taskId: string) => void;
 }
 
 const statusColumns = [
@@ -16,7 +17,7 @@ const statusColumns = [
   { key: TaskStatus.CLOSE, label: "Closed", titleBg: "bg-gray-400 dark:bg-gray-500" }
 ];
 
-const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
+const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full">
       {statusColumns.map((col) => (
@@ -24,7 +25,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
           <CardHeader className={`py-[10px] px-3 flex items-center ${col.titleBg}`}>
             <CardTitle className="font-extralight text-white">{col.label}</CardTitle>
           </CardHeader>
-          <CardContent className="p-3 flex flex-col gap-3">
+          <CardContent className="p-3 flex flex-col gap-3 max-h-[77vh] overflow-scroll">
             {tasks.filter(task => task.status === col.key).length === 0 ? (
               <Label className="text-sm">No tasks</Label>
             ) : (
@@ -36,6 +37,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
                     dueDate={task.dueDate}
                     projectName={task.projectName}
                     status={task.status}
+                    onDelete={onTaskDelete ? () => onTaskDelete(task.id) : undefined}
                   />
                 </div>
               ))
