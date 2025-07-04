@@ -19,7 +19,7 @@ export default function HomePage() {
     <div className="flex flex-col md:flex-row w-full px-3 mt-3 h-[calc(100vh-6rem)]">
       {/* Sidebar with icon and text */}
       {isAuthenticated && (
-        <aside className="p-1">
+        <aside className="pb-1">
           <Card className="w-48 px-3 py-3 flex h-full flex-col items-center gap-2 overflow-y-auto">
             <CardContent className="flex flex-col gap-1 w-full p-0">
               <SidebarNavLink to={TASKS_PATH} icon={<ListChecks className="w-5 h-5" />}>My Tasks</SidebarNavLink>
