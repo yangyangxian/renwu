@@ -21,6 +21,7 @@ interface TaskCardProps {
   projectName?: string;
   status?: TaskStatus;
   onDelete?: () => void;
+  onClick?: () => void;
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -30,13 +31,14 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete, onClick, description }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <Card
       className="group bg-muted dark:bg-black p-3 shadow transition hover:shadow-lg hover:scale-102 cursor-pointer duration-200 relative"
       tabIndex={0}
       aria-label={title}
+      onClick={onClick}
     >
       {/* Delete icon, only visible on hover or focus */}
       <Button

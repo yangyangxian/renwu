@@ -32,16 +32,16 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete 
               <Label className="text-sm">No tasks</Label>
             ) : (
               tasks.filter(task => task.status === col.key).map((task, idx) => (
-                <div key={task.id || idx} onClick={() => onTaskClick && onTaskClick(task.id)}>
-                  <TaskCard
-                    title={task.title}
-                    description={task.description}
-                    dueDate={task.dueDate}
-                    projectName={task.projectName}
-                    status={task.status}
-                    onDelete={onTaskDelete ? () => onTaskDelete(task.id) : undefined}
-                  />
-                </div>
+                <TaskCard
+                  key={task.id || idx}
+                  title={task.title}
+                  description={task.description}
+                  dueDate={task.dueDate}
+                  projectName={task.projectName}
+                  status={task.status}
+                  onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+                  onDelete={onTaskDelete ? () => onTaskDelete(task.id) : undefined}
+                />
               ))
             )}
           </CardContent>
