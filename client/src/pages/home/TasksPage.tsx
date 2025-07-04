@@ -132,8 +132,8 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="w-full">
-      <div id="menuBar" className="flex my-3 gap-3 items-center">
+    <div className="w-full h-full flex flex-col gap-3">
+      <div id="menuBar" className="flex gap-3 items-center">
         <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
           <SelectTrigger
             className="min-w-[9rem] px-3 bg-white dark:text-slate-200"
@@ -226,15 +226,17 @@ export default function TasksPage() {
       </div>
 
       {view === 'board' && (
-        <BoardView
-          tasks={filteredTasks}
-          onTaskClick={taskId => {
-            const fullTask = tasks.find(t => t.id === taskId) || null;
-            setEditingTask(fullTask);
-            setIsDialogOpen(true);
-          }}
-          onTaskDelete={handleDelete}
-        />
+        <div className="flex-1 overflow-auto">
+          <BoardView
+            tasks={filteredTasks}
+            onTaskClick={taskId => {
+              const fullTask = tasks.find(t => t.id === taskId) || null;
+              setEditingTask(fullTask);
+              setIsDialogOpen(true);
+            }}
+            onTaskDelete={handleDelete}
+          />
+        </div>
       )}
 
       {view === 'list' && (
@@ -258,9 +260,6 @@ export default function TasksPage() {
           <span className="text-slate-500 dark:text-slate-400">📅 Calendar view coming soon...</span>
         </Card>
       )}
-      <div className="mt-8">
-        <Outlet />
-      </div>
     </div>
   );
 }

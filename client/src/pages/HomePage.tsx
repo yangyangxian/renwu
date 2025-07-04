@@ -16,11 +16,11 @@ export default function HomePage() {
   const showLanding = !isAuthenticated && location.pathname === "/";
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full px-3">
+    <div className="flex flex-col md:flex-row w-full px-3 mt-3 h-[calc(100vh-6rem)] ">
       {/* Sidebar with icon and text */}
       {isAuthenticated && (
         <aside>
-          <Card className="w-48 h-[calc(100vh-6rem)] px-3 py-3 flex flex-col items-center gap-2 overflow-y-auto my-3">
+          <Card className="w-48 px-3 py-3 flex h-full flex-col items-center gap-2 overflow-y-auto">
             <CardContent className="flex flex-col gap-1 w-full p-0">
               <SidebarNavLink to={TASKS_PATH} icon={<ListChecks className="w-5 h-5" />}>My Tasks</SidebarNavLink>
               <SidebarNavLink to={PROJECTS_PATH} icon={<Folder className="w-5 h-5" />}>Projects</SidebarNavLink>
@@ -29,7 +29,7 @@ export default function HomePage() {
         </aside>
       )}
       {/* Main Landing Content or Outlet */}
-      <section className="flex w-full justify-center pl-3">
+      <section className="flex w-full max-h-full justify-center pl-3">
         {showLanding ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
             <span className="mb-4 text-center font-bold text-4xl">Welcome to Task Manager</span>

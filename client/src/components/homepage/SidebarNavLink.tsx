@@ -16,8 +16,8 @@ export function SidebarNavLink({ to, icon, children }: SidebarNavLinkProps) {
           variant={isActive ? 'secondary' : 'ghost'}
           className={`w-full flex items-center gap-3 px-4 justify-start text-base font-medium
             ${isActive
-              ? 'bg-gray-100 dark:bg-white text-slate-900 dark:text-slate-900'
-              : 'text-slate-800 dark:text-slate-300'}`}
+              ? 'bg-purple-400 dark:bg-purple-700 text-white hover:bg-primary-purple'
+              : 'text-slate-800 dark:text-slate-300 hover:bg-muted dark:hover:bg-primary-foreground'}`}
           aria-label={typeof children === 'string' ? children : undefined}
         >
           {icon}

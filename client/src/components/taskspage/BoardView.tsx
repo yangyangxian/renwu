@@ -19,13 +19,13 @@ const statusColumns = [
 
 const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full h-full">
       {statusColumns.map((col) => (
-        <Card key={col.key}>
-          <CardHeader className={`py-[10px] px-3 flex items-center ${col.titleBg}`}>
+        <Card key={col.key} className="max-h-full  overflow-auto">
+          <CardHeader className={`py-[10px] px-3 flex items-center ${col.titleBg}`}> 
             <CardTitle className="font-extralight text-white">{col.label}</CardTitle>
           </CardHeader>
-          <CardContent className="p-3 flex flex-col gap-3 max-h-[77vh] overflow-scroll">
+          <CardContent className="p-3 flex flex-col gap-3">
             {tasks.filter(task => task.status === col.key).length === 0 ? (
               <Label className="text-sm">No tasks</Label>
             ) : (

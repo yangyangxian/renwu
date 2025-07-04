@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
-import { publicRoutes, LOGIN_PATH, SIGNUP_PATH, ROOT_PATH } from '@/routes/routeConfig';
+import { publicRoutes, LOGIN_PATH, SIGNUP_PATH, ROOT_PATH, TASKS_PATH } from '@/routes/routeConfig';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,6 +16,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // If user is authenticated and tries to access login or signup page, redirect to docs
   if (isAuthenticated && (location.pathname === LOGIN_PATH || location.pathname === SIGNUP_PATH)) {
     return <Navigate to={ROOT_PATH} replace />;
+  }
+
+  //
+  if (isAuthenticated && location.pathname === ROOT_PATH) {
+    return <Navigate to={TASKS_PATH} replace />;
   }
 
   // If user is not authenticated and trying to access a protected route, redirect to login
