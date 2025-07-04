@@ -27,7 +27,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete 
           >
             <CardTitle className="font-extralight text-white">{col.label}</CardTitle>
           </CardHeader>
-          <CardContent className="p-3 flex flex-col gap-3">
+          <CardContent className="p-3 flex flex-col overflow-auto gap-3">
             {tasks.filter(task => task.status === col.key).length === 0 ? (
               <Label className="text-sm">No tasks</Label>
             ) : (
