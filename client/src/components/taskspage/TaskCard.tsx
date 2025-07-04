@@ -30,7 +30,6 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-
 const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   return (

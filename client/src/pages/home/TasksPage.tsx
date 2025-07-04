@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui-kit/Card";
-import { Outlet } from "react-router-dom";
 import BoardView from "@/components/taskspage/BoardView";
 import { apiClient } from '@/utils/APIClient';
 import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
@@ -9,19 +8,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { Plus } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui-kit/Tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui-kit/Popover";
-import { Calendar } from "@/components/ui-kit/Calendar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", {
-    month: "long",
-    day: "2-digit",
-    year: "numeric",
-  });
-}
 
 export default function TasksPage() {
   const [view, setView] = useState("board");
@@ -30,13 +17,8 @@ export default function TasksPage() {
   const [projects, setProjects] = useState<ProjectResDto[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
-  const [dateThreshold, setDateThreshold] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  // Date range filter: '1m' = last 1 month, '3m' = last 3 months, '1y' = last 1 year, 'all' = no filter
+  const [dateRange, setDateRange] = useState<'1m' | '3m' | '1y' | 'all'>('1m');
 
   const fetchTasks = async () => {
     try {
@@ -54,18 +36,27 @@ export default function TasksPage() {
       .catch(() => {});
   }, []);
 
-  // Filter by project and date (memoized)
-  const filteredTasks = useMemo(() =>
-    tasks.filter(t => {
-      const dateOk = t.updatedAt && new Date(t.updatedAt) >= dateThreshold;
+  const filteredTasks = useMemo(() => {
+    // Calculate threshold date based on dateRange
+    let threshold: Date | null = null;
+    if (dateRange !== 'all') {
+      threshold = new Date();
+      if (dateRange === '1m') threshold.setMonth(threshold.getMonth() - 1);
+      if (dateRange === '3m') threshold.setMonth(threshold.getMonth() - 3);
+      if (dateRange === '1y') threshold.setFullYear(threshold.getFullYear() - 1);
+      threshold.setHours(0, 0, 0, 0);
+    }
+    return tasks.filter(t => {
+      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : null;
+      const dateOk = !threshold || (updatedAt && updatedAt >= threshold);
       // If projectId is null/undefined, treat as 'personal'.
       const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
       if (selectedProject === 'all') return dateOk;
       if (selectedProject === 'personal') return dateOk && isPersonal;
       // Compare projectId loosely (number or string, allow for type coercion)
       return dateOk && t.projectId == selectedProject;
-    })
-  , [tasks, dateThreshold, selectedProject]);
+    });
+  }, [tasks, dateRange, selectedProject]);
 
   const allProjectMembers = useMemo(() => {
     const allMembers = projects.flatMap(p =>
@@ -79,10 +70,8 @@ export default function TasksPage() {
       .map(m => ({ id: m.id as string, name: m.name, projectId: m.projectId }));
   }, [projects]);
 
-  // Handler for add/edit task dialog submit
   const handleTaskSubmit = async (task: any) => {
     if (task.id) {
-      // Edit mode: update task via API
       const updatePayload: TaskUpdateReqDto = {
         title: task.title,
         description: task.description,
@@ -96,11 +85,9 @@ export default function TasksPage() {
         await fetchTasks();
         toast.success('Task updated!');
       } catch (e) {
-        // error handled by toast
         toast.error('Failed to update task.');
       }
     } else {
-      // Add mode: create new task via API
       const createPayload: TaskCreateReqDto = {
         title: task.title,
         description: task.description,
@@ -152,36 +139,20 @@ export default function TasksPage() {
           </SelectContent>
         </Select>
 
-        {/* Date picker using Shadcn UI Popover + Calendar */}
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild>
-            <div className="relative">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    className="w-full min-w-[9rem] justify-between text-secondary-foreground"
-                    variant="outline"
-                    aria-label="Show tasks updated since"
-                  >
-                    {formatDate(dateThreshold)}
-                    <CalendarIcon className="size-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  From updated date
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dateThreshold}
-              onSelect={d => { if (d) setDateThreshold(d); }}
-            />
-          </PopoverContent>
-        </Popover>
+        {/* Date range dropdown */}
+        <div className="flex items-center">
+          <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
+            <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200" id="date-range-select">
+              <SelectValue placeholder="Date range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1m">Last 1 month</SelectItem>
+              <SelectItem value="3m">Last 3 months</SelectItem>
+              <SelectItem value="1y">Last 1 year</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Tabs for Board/List/Calendar views */}
         <Tabs defaultValue={view} value={view} onValueChange={setView}>
@@ -191,9 +162,6 @@ export default function TasksPage() {
             </TabsTrigger>
             <TabsTrigger value="list" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               List
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              Calendar
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -226,7 +194,7 @@ export default function TasksPage() {
       </div>
 
       {view === 'board' && (
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto pb-1">
           <BoardView
             tasks={filteredTasks}
             onTaskClick={taskId => {
@@ -254,11 +222,6 @@ export default function TasksPage() {
             ))}
           </div>
         )
-      )}
-      {view === 'calendar' && (
-        <Card className="w-full text-center py-12">
-          <span className="text-slate-500 dark:text-slate-400">📅 Calendar view coming soon...</span>
-        </Card>
       )}
     </div>
   );

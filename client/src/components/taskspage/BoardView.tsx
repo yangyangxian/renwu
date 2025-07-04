@@ -21,8 +21,10 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full h-full">
       {statusColumns.map((col) => (
-        <Card key={col.key} className="max-h-full  overflow-auto">
-          <CardHeader className={`py-[10px] px-3 flex items-center ${col.titleBg}`}> 
+        <Card key={col.key} className="max-h-full overflow-auto">
+          <CardHeader
+            className={`py-[10px] px-3 flex items-center ${col.titleBg} sticky top-0 z-10`}
+          >
             <CardTitle className="font-extralight text-white">{col.label}</CardTitle>
           </CardHeader>
           <CardContent className="p-3 flex flex-col gap-3">
