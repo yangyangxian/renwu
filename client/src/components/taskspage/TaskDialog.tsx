@@ -54,7 +54,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   console.log("initialValues" + JSON.stringify(initialValues));
   const [taskId] = useState(initialValues.id || "");
   const [taskTitle, setTaskTitle] = useState(initialValues.title || "");
-  const [editingTitle, setEditingTitle] = useState(false);
   const [taskDueDate, setTaskDueDate] = useState(initialValues.dueDate || "");
   const [taskAssignedTo, setTaskAssignedTo] = useState(initialValues.assignedTo || "");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>(initialValues.status || TaskStatus.TODO);

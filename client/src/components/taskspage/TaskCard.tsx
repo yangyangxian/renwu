@@ -22,6 +22,7 @@ interface TaskCardProps {
   status?: TaskStatus;
   onDelete?: () => void;
   onClick?: () => void;
+  className?: string;
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -31,11 +32,11 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete, onClick, description }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete, onClick, description, className }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <Card
-      className="group bg-muted dark:bg-black p-3 shadow transition hover:shadow-lg hover:scale-102 cursor-pointer duration-200 relative"
+      className={`group bg-muted dark:bg-black p-3 shadow transition hover:shadow-lg hover:scale-102 cursor-pointer duration-200 relative ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}

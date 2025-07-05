@@ -12,7 +12,6 @@ export default function HomePage() {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
 
-  // Only show landing content if not authenticated and at root path
   const showLanding = !isAuthenticated && location.pathname === "/";
 
   return (

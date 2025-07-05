@@ -203,6 +203,26 @@ export default function TasksPage() {
               setIsDialogOpen(true);
             }}
             onTaskDelete={handleDelete}
+            onTaskStatusChange={async (taskId, newStatus) => {
+              const task = tasks.find(t => String(t.id) === String(taskId));
+              if (!task) return;
+              try {
+                await apiClient.put(`/api/tasks/${taskId}`,
+                  {
+                    title: task.title,
+                    description: task.description,
+                    dueDate: task.dueDate,
+                    status: newStatus,
+                    assignedTo: task.assignedTo,
+                    projectId: task.projectId,
+                  }
+                );
+                await fetchTasks();
+                toast.success('Task status updated!');
+              } catch (e) {
+                toast.error('Failed to update task status.');
+              }
+            }}
           />
         </div>
       )}
