@@ -6,10 +6,9 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, ProjectResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { CheckCircle, Square, Loader2, XCircle } from "lucide-react";
+import { CheckCircle, Square, Loader2, XCircle, Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
-import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/DropDownList";
 
@@ -97,7 +96,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 !max-w-[60vw] gap-0">
+      <DialogContent className="p-0 !max-w-[1200px] gap-0">
         <VisuallyHidden>
           <DialogTitle></DialogTitle>. 
         </VisuallyHidden>
@@ -108,7 +107,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           </span>
           <span className="w-8" /> {/* Spacer for symmetry */}
         </nav>
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] w-full min-h-[400px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] w-full min-h-[400px]">
           {/* Main form */}
           <form
             onSubmit={e => {
@@ -130,7 +129,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             <div className="flex flex-col gap-6">
               {/* Title row */}
               <div className="flex flex-col gap-2">
-                <Label className="text-base mb-1">Title</Label>
+                <Label className="text-base mb-1 flex items-center gap-3">
+                  <Tag className="size-4" />
+                  Title
+                </Label>
                 <Input
                   id="title"
                   placeholder="Task title"
@@ -143,7 +145,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/* Project and Assigned to */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base">Project</Label>
+                  <Label className="text-base flex items-center gap-3">
+                    <FolderOpen className="size-4" />
+                    Project
+                  </Label>
                   <DropDownList
                     value={taskProjectId || "personal"}
                     id="project-select"
@@ -156,7 +161,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   />
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base">Assigned to</Label>
+                  <Label className="text-base flex items-center gap-3">
+                    <User className="size-4" />
+                    Assigned to
+                  </Label>
                   <DropDownList
                     value={taskAssignedTo}
                     id="assigned-to"
@@ -171,7 +179,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/*  Due date and Status */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base" htmlFor="due-date">Due date</Label>
+                  <Label className="text-base flex items-center gap-3" htmlFor="due-date">
+                    <Clock className="size-4" />
+                    Due date
+                  </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -180,7 +191,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         className="w-full min-w-[12rem] text-left justify-between text-secondary-foreground"
                         aria-label="Select due date"
                       >
-                        <span>{taskDueDate ? new Date(taskDueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>
+                        <span className="ml-1">{taskDueDate ? new Date(taskDueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>
                         <CalendarIcon className="size-4 ml-2" />
                       </Button>
                     </PopoverTrigger>
@@ -194,7 +205,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   </Popover>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base">Status</Label>
+                  <Label className="text-base flex items-center gap-3">
+                    <CheckCircle className="size-4" />
+                    Status
+                  </Label>
                   <DropDownList
                     value={taskStatus}
                     onValueChange={v => setTaskStatus(v as TaskStatus)}
@@ -207,7 +221,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
               {/* Description row */}
               <div className="flex flex-col gap-2">
-                <Label className="text-base mb-1" >Description</Label>
+                <Label className="text-base mb-1 flex items-center gap-3">
+                  <FileText className="size-4" />
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   className="bg-muted px-3 py-2 min-h-[150px] focus:ring-2 focus:ring-primary/30"
