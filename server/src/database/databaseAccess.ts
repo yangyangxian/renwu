@@ -6,27 +6,37 @@ import { ErrorCodes } from '@fullstack/common';
 import logger from '../utils/logger.js';
 
 if (!configs.dbUrl || configs.dbUrl.trim() === '') {
-  logger.error('DATABASE_URL is not set or is empty. Database operations may fail. Please check your environment variables.');
+  logger.error('DATABASE_URL is not set or is empty. Database operations will fail. Please check your environment variables.');
 }
 
 const queryClient = postgres(configs.dbUrl || '');
+const rawDb = drizzle({ client: queryClient });
 
-const db = drizzle({ client: queryClient});
-
-export async function executeQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
+// Simple connection check function
+function checkDbConnection() {
   if (!configs.dbUrl || configs.dbUrl.trim() === '') {
-    throw new CustomError(
-      'DATABASE_URL is not configured.',
-      ErrorCodes.DATABASE_CONNECTION_NOT_CONFIGURED
-    );
-  }
-  
-  try {
-    const result = await queryClient.unsafe(query, params);
-    return result as unknown as T[];
-  } catch (error) {
-    throw error;
+    logger.error('Database operation attempted but DATABASE_URL is not configured.');
+    throw new CustomError('DATABASE_URL is not configured.', ErrorCodes.DATABASE_CONNECTION_NOT_CONFIGURED);
   }
 }
+
+// Simple wrapper that only checks connection - no error interception
+const db = new Proxy(rawDb, {
+  get(target: any, prop: string | symbol) {
+    const originalValue = target[prop];
+    
+    // Only check connection for main database operations
+    if (typeof originalValue === 'function' && 
+        ['select', 'insert', 'update', 'delete'].includes(prop as string)) {
+      
+      return function(...args: any[]) {
+        checkDbConnection();
+        return originalValue.apply(target, args);
+      };
+    }
+    
+    return originalValue;
+  }
+});
 
 export { db };

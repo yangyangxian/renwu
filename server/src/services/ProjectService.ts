@@ -1,4 +1,7 @@
 import { UserEntity } from './UserService.js';
+import { eq, inArray } from 'drizzle-orm';
+import { db } from '../database/databaseAccess.js';
+import { projects, projectMembers, users } from '../database/schema.js';
 
 export class ProjectEntity {
   id: string = '';
@@ -13,9 +16,6 @@ export class ProjectEntity {
     Object.assign(this, init);
   }
 }
-import { eq, inArray } from 'drizzle-orm';
-import { db } from '../database/databaseAccess.js';
-import { projects, projectMembers, users } from '../database/schema.js';
 
 export type ProjectRow = typeof projects.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -31,7 +31,7 @@ export class ProjectService {
       .select({ id: projectMembers.projectId })
       .from(projectMembers)
       .where(eq(projectMembers.userId, userId));
-    const projectIds = userProjectIds.map(row => row.id);
+    const projectIds = userProjectIds.map((row: { id: any; }) => row.id);
 
     const rows = projectIds.length === 0 ? [] : await db
       .select({
