@@ -132,7 +132,7 @@ export default function TasksPage() {
             <SelectItem value="all">All Tasks</SelectItem>
             <SelectItem value="personal">Personal Tasks</SelectItem>
             {/* Divider */}
-            <div className="h-px bg-gray-200 my-1 mx-2" role="separator" />
+            {projects.length > 0 && <div className="h-px bg-gray-200 my-1 mx-2" role="separator" />}
             {projects.map(project => (
               <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
             ))}

@@ -31,16 +31,17 @@ class TaskService {
 
   /**
    * Convert TaskCreateReqDto to a DB-ready object for insertion
+   * Custom types automatically handle all empty string to null conversions
    */
   private toTaskEntityForInsert(data: TaskCreateReqDto) {
     return {
       title: data.title,
-      description: data.description ?? '',
-      status: data.status ?? '',
-      assignedTo: data.assignedTo ?? '',
-      projectId: data.projectId ?? undefined,
+      description: data.description,
+      status: data.status || 'todo',
+      assignedTo: data.assignedTo || '',
+      projectId: data.projectId, // Custom nullableUuid handles empty string → null
       createdBy: data.createdBy,
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      dueDate: data.dueDate, // Custom nullableTimestamp handles empty string → null
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -51,7 +52,7 @@ class TaskService {
    * @param data TaskCreateReqDto
    */
   async createTask(data: TaskCreateReqDto): Promise<TaskEntity> {
-    // Convert DTO to DB-ready entity
+    // Convert DTO to DB-ready entity - custom types handle empty string conversion
     const insertValues = this.toTaskEntityForInsert(data);
     const [created] = await db
       .insert(tasks)
@@ -81,6 +82,7 @@ class TaskService {
       updatedAt: created.updatedAt ? created.updatedAt.toISOString() : '',
     };
   }
+
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
     const result = await db
       .select({
@@ -98,7 +100,7 @@ class TaskService {
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
       .where(eq(tasks.assignedTo, userId));
-    return result.map(task => ({
+    return result.map((task: any) => ({
       id: task.id,
       assignedTo: task.assignedTo,
       title: task.title,
@@ -120,7 +122,6 @@ class TaskService {
   async updateTask(taskId: string, updateData: TaskUpdateReqDto): Promise<TaskEntity> {
     const updates = {
       ...updateData,
-      dueDate: updateData.dueDate ? new Date(updateData.dueDate) : undefined,
       updatedAt: new Date(),
     };
 
