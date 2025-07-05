@@ -104,19 +104,32 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete,
                 {tasksByStatus[col.key].length === 0 ? (
                   <Label className="text-sm">No tasks</Label>
                 ) : (
-                  tasksByStatus[col.key].map((task, idx) => (
-                    <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
-                      <TaskCard
-                        title={task.title}
-                        description={task.description}
-                        dueDate={task.dueDate}
-                        projectName={task.projectName}
-                        status={task.status}
-                        onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
-                        onDelete={onTaskDelete ? () => onTaskDelete(task.id) : undefined}
-                      />
-                    </DraggableTaskCard>
-                  ))
+                  tasksByStatus[col.key]
+                    .slice() // avoid mutating original
+                    .sort((a, b) => {
+                      if (a.dueDate && b.dueDate) {
+                        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                      } else if (a.dueDate) {
+                        return -1;
+                      } else if (b.dueDate) {
+                        return 1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                    .map((task, idx) => (
+                      <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
+                        <TaskCard
+                          title={task.title}
+                          description={task.description}
+                          dueDate={task.dueDate}
+                          projectName={task.projectName}
+                          status={task.status}
+                          onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+                          onDelete={onTaskDelete ? () => onTaskDelete(task.id) : undefined}
+                        />
+                      </DraggableTaskCard>
+                    ))
                 )}
               </CardContent>
             </Card>

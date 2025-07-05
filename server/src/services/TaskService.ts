@@ -77,7 +77,11 @@ class TaskService {
       status: created.status,
       projectId: created.projectId ?? '',
       projectName,
-      dueDate: created.dueDate ? created.dueDate.toISOString() : '',
+      dueDate: typeof created.dueDate === 'string'
+        ? created.dueDate
+        : created.dueDate
+          ? created.dueDate.toLocaleDateString('en-CA')
+          : '',
       createdAt: created.createdAt ? created.createdAt.toISOString() : '',
       updatedAt: created.updatedAt ? created.updatedAt.toISOString() : '',
     };
@@ -108,7 +112,11 @@ class TaskService {
       status: task.status,
       projectId: task.projectId ?? '',
       projectName: task.projectName ?? '',
-      dueDate: task.dueDate ? task.dueDate.toISOString() : '',
+      dueDate: typeof task.dueDate === 'string'
+        ? task.dueDate
+        : task.dueDate
+          ? task.dueDate.toLocaleDateString('en-CA')
+          : '',
       createdAt: task.createdAt ? task.createdAt.toISOString() : '',
       updatedAt: task.updatedAt ? task.updatedAt.toISOString() : '',
     }));
@@ -148,7 +156,11 @@ class TaskService {
       status: updated.status,
       projectId: updated.projectId ?? '',
       projectName,
-      dueDate: updated.dueDate ? updated.dueDate.toISOString() : '',
+      dueDate: typeof updated.dueDate === 'string'
+        ? updated.dueDate
+        : updated.dueDate
+          ? updated.dueDate.toLocaleDateString('en-CA')
+          : '',
       createdAt: updated.createdAt ? updated.createdAt.toISOString() : '',
       updatedAt: updated.updatedAt ? updated.updatedAt.toISOString() : '',
     };

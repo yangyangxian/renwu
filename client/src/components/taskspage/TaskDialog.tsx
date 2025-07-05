@@ -199,7 +199,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                       <Calendar
                         mode="single"
                         selected={taskDueDate ? new Date(taskDueDate) : undefined}
-                        onSelect={d => d && setTaskDueDate(d.toISOString().slice(0, 10))}
+                        onSelect={d => d && setTaskDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)}
                       />
                     </PopoverContent>
                   </Popover>
