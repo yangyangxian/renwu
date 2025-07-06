@@ -139,6 +139,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   value={taskTitle}
                   onChange={e => setTaskTitle(e.target.value)}
                   required
+                  tabIndex={-1}
                 />
               </div>
 
