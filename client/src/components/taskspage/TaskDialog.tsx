@@ -96,7 +96,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 !max-w-[1200px] gap-0">
+      <DialogContent className="p-0 !max-w-[1200px] w-[75vw] gap-0">
         <VisuallyHidden>
           <DialogTitle></DialogTitle>. 
         </VisuallyHidden>
@@ -107,7 +107,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           </span>
           <span className="w-8" /> {/* Spacer for symmetry */}
         </nav>
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] w-full min-h-[400px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] w-full min-h-[300px]">
           {/* Main form */}
           <form
             onSubmit={e => {

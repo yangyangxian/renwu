@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarMenu,
@@ -12,9 +11,10 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { ListChecks, Folder, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, TASKS_PATH } from "@/routes/routeConfig";
+import { useState, useEffect } from "react";
 
-// Example: Replace this with your actual project fetching logic or props
-const projects = [
+// Mock data - replace with actual project fetching logic
+const mockProjects = [
   { id: "1", name: "Project Alpha" },
   { id: "2", name: "Project Beta" },
   { id: "3", name: "Project Gamma" },
@@ -37,71 +37,115 @@ const projects = [
   { id: "20", name: "Project Upsilon" },
 ];
 
+// Task menu item component
+function TaskMenuItem({ 
+  isActive, 
+  onClick, 
+  showText 
+}: { 
+  isActive: boolean; 
+  onClick: () => void;
+  showText: boolean;
+}) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={isActive}
+        onClick={onClick}
+        className="flex items-center cursor-pointer"
+      >
+        <ListChecks className="w-5 h-5 mr-2 flex-shrink-0" />
+        {showText && <span className="truncate">My Tasks</span>}
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+// Projects menu item component
+function ProjectsMenuItem({ 
+  showText,
+  isProjectActive 
+}: { 
+  showText: boolean; 
+  isProjectActive: (projectId: string) => boolean;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <SidebarMenuItem>
+      <Collapsible defaultOpen={false} className="group/collapsible">
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton className="relative flex items-center w-full min-w-0 group cursor-pointer">
+            <Folder className="w-5 h-5 mr-2 flex-shrink-0" />
+            {showText && (
+              <>
+                <span className="truncate transition-all duration-200">
+                  Projects
+                </span>
+                <span className="flex-1" />
+                <ChevronDown
+                  className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 flex-shrink-0 ml-2 absolute right-3 top-1/2 -translate-y-1/2"
+                  aria-hidden="true"
+                />
+              </>
+            )}
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {showText && mockProjects.map((project) => (
+              <SidebarMenuSubItem key={project.id}>
+                <SidebarMenuButton
+                  className="pl-8 cursor-pointer"
+                  isActive={isProjectActive(project.id)}
+                  onClick={() => navigate(`${PROJECTS_PATH}/${project.id}`)}
+                >
+                  {project.name}
+                </SidebarMenuButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  );
+}
+
 export function HomeSideBar({ expanded, setExpanded }: { expanded: boolean; setExpanded: (v: boolean) => void }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showText, setShowText] = useState(false);
+
+  // Navigation handlers
+  const handleTasksClick = () => navigate(TASKS_PATH);
+  const isTasksActive = location.pathname.startsWith(TASKS_PATH);
+  const isProjectActive = (projectId: string) => location.pathname === `${PROJECTS_PATH}/${projectId}`;
+
+  // Handle delayed text display after expansion animation
+  useEffect(() => {
+    if (expanded) {
+      // Delay showing text until after the sidebar expansion animation (400ms) completes
+      const timer = setTimeout(() => {
+        setShowText(true);
+      }, 300); 
+      return () => clearTimeout(timer);
+    } else {
+      // Hide text immediately when collapsing
+      setShowText(false);
+    }
+  }, [expanded]);
 
   return (
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
-        className="transition-all duration-200 overflow-y-auto bg-white dark:bg-muted shadow-md flex flex-col items-center gap-2 p-2 pt-3"
+        className="transition-all duration-300 h-full p-2 pt-3"
         onMouseEnter={() => setExpanded(true)}
         onMouseLeave={() => setExpanded(false)}
       >
-        <SidebarMenu className="bg-white flex-1 min-h-0 overflow-y-auto flex flex-col">
-          {/* Fix: Move Collapsible outside of SidebarMenuItem to avoid rendering issues */}
-          <SidebarMenuItem key="tasks-menu-item">
-            <SidebarMenuButton
-              isActive={location.pathname.startsWith(TASKS_PATH)}
-              onClick={() => navigate(TASKS_PATH)}
-              className="flex items-center"
-            >
-              <ListChecks className="w-5 h-5 mr-2" />
-              <span className="truncate">My Tasks</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem key="projects-menu-item" className="bg-white">
-            <Collapsible defaultOpen={false} className="group/collapsible">
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                  className="relative flex items-center w-full min-w-0 group"
-                >
-                  <Folder className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span
-                    className="truncate transition-all duration-200"
-                    style={{ maxWidth: expanded ? '120px' : '0', opacity: expanded ? 1 : 0 }}
-                  >
-                    {"Projects"}
-                  </span>
-                  <span className="flex-1" />
-                  {expanded && (
-                    <ChevronDown
-                      className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 flex-shrink-0 ml-2 absolute right-3 top-1/2 -translate-y-1/2"
-                      aria-hidden="true"
-                    />
-                  )}
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {projects.map((project) => (
-                    <SidebarMenuSubItem key={project.id}>
-                      <SidebarMenuButton
-                        className="pl-8"
-                        isActive={location.pathname === `${PROJECTS_PATH}/${project.id}`}
-                        onClick={() => navigate(`${PROJECTS_PATH}/${project.id}`)}
-                      >
-                        {project.name}
-                      </SidebarMenuButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-          </SidebarMenuItem>
-
+        <SidebarMenu className="bg-white-black">
+          <TaskMenuItem isActive={isTasksActive} onClick={handleTasksClick} showText={showText} />
+          <ProjectsMenuItem showText={showText} isProjectActive={isProjectActive} />
         </SidebarMenu>
       </Sidebar>
     </SidebarProvider>
