@@ -22,7 +22,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col pt-16">
+    <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col pt-15">
       {/* Top Navigation Bar */}
       <nav className="fixed top-0 left-0 w-full bg-primary-purple shadow-md z-50 flex justify-between items-center h-15 px-5">
         <div className="flex items-center gap-6">
