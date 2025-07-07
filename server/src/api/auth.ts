@@ -75,7 +75,8 @@ router.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<Use
         );
       }
 
-      const user = await userService.createUser({ name: email, email, password });
+      // Set name to empty string on signup; user must set it later
+      const user = await userService.createUser({ name: '', email, password });
       const token = createJWT({
         userId: user.id,
         email: user.email,
@@ -101,23 +102,29 @@ router.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<Use
 });
 
 // Get current user (auth status check) - Protected by global auth middleware
-router.get('/me', (req: Request, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
-    const user = req.user; // Global auth middleware sets this
-
-    // If user doesn't exist, something went wrong with authentication
-    if (!user) {
-        throw new CustomError(
-        'User authentication failed',
-        ErrorCodes.UNAUTHORIZED
-        );
+router.get('/me', async (req: Request, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
+    try {
+        const user = req.user; // Global auth middleware sets this
+        if (!user) {
+            throw new CustomError(
+                'User authentication failed',
+                ErrorCodes.UNAUTHORIZED
+            );
+        }
+        // Always fetch latest user info from DB
+        const dbUser = await userService.getUserByEmail(user.email);
+        if (!dbUser) {
+            throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
+        }
+        const userResDto: UserResDto = {
+            id: dbUser.id,
+            name: dbUser.name,
+            email: dbUser.email
+        };
+        res.json(createApiResponse<UserResDto>(userResDto));
+    } catch (err) {
+        next(err);
     }
-
-    const userResDto: UserResDto = {
-        id: user.userId,
-        name: user.name,
-        email: user.email
-    };
-    res.json(createApiResponse<UserResDto>(userResDto));
 });
 
 // Logout endpoint

@@ -18,7 +18,6 @@ export class UserEntity {
 }
 
 class UserService {
-
   async getUserByEmail(email: string): Promise<UserEntity | null> {
     const result = await db.select().from(users).where(eq(users.email, email));
     if (result.length === 0) return null;
@@ -43,6 +42,30 @@ class UserService {
       passwordHash,
     }).returning();
     const user = inserted[0];
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt?.toISOString?.() ?? '',
+    };
+  }
+
+  async updateUser(userId: string, fields: Partial<Omit<UserEntity, 'id' | 'createdAt' | 'password'>>): Promise<UserEntity> {
+    // Remove undefined fields
+    const updateFields: Record<string, any> = {};
+    (Object.keys(fields) as Array<keyof typeof fields>).forEach((key) => {
+      if (fields[key] !== undefined) {
+        updateFields[key] = fields[key];
+      }
+    });
+    if (Object.keys(updateFields).length === 0) {
+      throw new CustomError('No fields to update', ErrorCodes.VALIDATION_ERROR);
+    }
+    const updated = await db.update(users)
+      .set(updateFields)
+      .where(eq(users.id, userId))
+      .returning();
+    const user = updated[0];
     return {
       id: user.id,
       name: user.name,

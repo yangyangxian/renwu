@@ -36,11 +36,18 @@ export class UserResDto {
   email?: string = '';
 }
 
+
+// For GET by email
 export class UserReqDto {
-  email : string;
+  email: string;
   constructor(email: string) {
     this.email = email;
   }
+}
+
+// For PUT /api/users/me
+export class UpdateUserReqDto {
+  name: string = '';
 }
 
 export class HelloResDto {

@@ -6,6 +6,7 @@ import logger from '../utils/logger';
 interface IAuthContext {
   isAuthenticated: boolean;
   user: UserResDto | null;
+  setUser: React.Dispatch<React.SetStateAction<UserResDto | null>>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
@@ -96,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, signup }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, setUser, login, logout, signup }}>
       {isInitialAuthCheckComplete ? children : null}
     </AuthContext.Provider>
   );
