@@ -72,9 +72,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         options = [{ value: String(user.id), label: String(user.name || user.email || user.id) }];
       }
     } else {
-      // Project selected: show all project members
+      // Project selected: show all project members (force string compare)
       options = projectMembers
-        .filter(opt => opt.projectId === String(taskProjectId))
+        .filter(opt => String(opt.projectId) === String(taskProjectId))
         .map(opt => ({
           value: String(opt.id),
           label: String(opt.name || opt.id)

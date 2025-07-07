@@ -69,7 +69,7 @@ export default function HomePage() {
         </aside>
       )}
       {/* Main Landing Content or Outlet */}
-      <section className="flex w-full max-h-full justify-center pl-3 p-2 pt-3">
+      <section className="flex w-full max-h-full justify-center pl-3 p-2 pt-3 overflow-y-auto">
         {projectDialogOpen && (
           <ProjectDialog
             open={projectDialogOpen}

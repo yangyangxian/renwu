@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui-kit/Textarea";
 import { Label } from "@/components/ui-kit/Label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
+import { UserPlus } from "lucide-react";
 import { apiClient } from '@/utils/APIClient';
 import { ProjectResDto } from '@fullstack/common';
 import { ProjectRole } from '@fullstack/common';
@@ -48,7 +49,14 @@ export default function ProjectDetailPage() {
   };
   const handleDescClick = () => {
     setEditingDesc(true);
-    setTimeout(() => descInputRef.current?.focus(), 0);
+    setTimeout(() => {
+      if (descInputRef.current) {
+        descInputRef.current.focus();
+        // Move cursor to end
+        const val = descInputRef.current.value;
+        descInputRef.current.setSelectionRange(val.length, val.length);
+      }
+    }, 0);
   };
   const handleTitleBlur = async () => {
     setEditingTitle(false);
@@ -82,15 +90,15 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col gap-4 p-2">
+    <div className="h-full w-full flex flex-col gap-4 p-1">
       {/* Project Info Card */}
-      <Card className="flex flex-col w-1/3 shadow-2xs p-3">
+      <Card className="flex flex-col w-3/10 p-3 shadow-none">
         {loading ? (
           <Label className="text-slate-500">Loading project...</Label>
         ) : project ? (
           <>
-            {/* Project Header */}
-            <div className="flex items-center justify-between mb-2">
+            {/* Project Header (no icon) */}
+            <div className="flex items-center mb-2">
               {editingTitle ? (
                 <Input
                   ref={titleInputRef}
@@ -98,49 +106,55 @@ export default function ProjectDetailPage() {
                   onChange={e => setTitleInput(e.target.value)}
                   onBlur={handleTitleBlur}
                   onKeyDown={e => { if (e.key === 'Enter') { handleTitleBlur(); } }}
-                  className="!text-xl font-bold truncate px-2 py-1"
+                  className="!text-2xl font-bold px-2 py-1 flex-1"
                   maxLength={128}
                 />
               ) : (
                 <Label
-                  className="text-xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary px-2 py-1 rounded"
+                  className="text-2xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary px-2 py-1 rounded flex-1"
                   title={project.name}
                   onClick={handleTitleClick}
                 >
                   {project.name ? project.name.charAt(0).toUpperCase() + project.name.slice(1) : ''}
                 </Label>
               )}
-              {/* Placeholder for future delete button */}
             </div>
             {/* Project Description */}
-            <div>
+            <div className="flex items-center">
               {editingDesc ? (
                 <Textarea
                   ref={descInputRef}
                   value={descInput}
                   onChange={e => setDescInput(e.target.value)}
                   onBlur={handleDescBlur}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { handleDescBlur(); } }}
-                  className="text-slate-700 dark:text-slate-300 whitespace-pre-line min-h-[6rem] px-2 py-1"
-                  maxLength={256}
-                  rows={2}
+                  className="whitespace-pre-line min-h-[12rem] px-2 py-1 flex-1"
+                  maxLength={5000}
                 />
               ) : (
-                <Label
-                  className="whitespace-pre-line cursor-pointer hover:bg-secondary dark:hover:bg-secondary p-2 rounded"
-                  onClick={handleDescClick}
-                  title={project.description || undefined}
-                >
-                  {project.description || <span className="italic">No description</span>}
-                </Label>
+                <div className="max-h-120 overflow-auto">
+                  <Label
+                    className="font-normal whitespace-pre-line cursor-pointer hover:bg-secondary dark:hover:bg-secondary p-2 rounded leading-5 flex-1"
+                    onClick={handleDescClick}
+                    title={project.description || undefined}
+                  >
+                    {project.description || <span className="italic">No description</span>}
+                  </Label>
+                </div>
               )}
             </div>
           </>
         ) : null}
       </Card>
       {/* Team Members Card */}
-      <Card className="flex flex-col w-1/3 shadow-2xs px-5 py-3">
-        <Label className="text-md font-semibold mb-2">Team Members</Label>
+      <Card className="flex flex-col w-3/10 min-w-60 px-5 py-4 shadow-none">
+        <div className="flex items-center justify-between">
+          <Label className="text-md font-semibold">Team Members</Label>
+          <UserPlus
+            className="cursor-pointer hover:bg-secondary rounded mt-1 p-1"
+            aria-label="Add project member"
+            onClick={() => {/* TODO: open add member modal or trigger add logic */}}
+          />
+        </div>
         <Label className="text-muted-foreground mb-5">Invite your team members to collaborate.</Label>
         <div className="flex flex-col gap-4">
           {project?.members && project.members.length > 0 ? (
@@ -157,7 +171,7 @@ export default function ProjectDetailPage() {
                 </div>
                 {/* Role dropdown using UI kit Select, using real role if present */}
                 <Select value={member.role || ProjectRole.MEMBER}>
-                  <SelectTrigger className="px-3">
+                  <SelectTrigger className="py-1">
                     <SelectValue placeholder="Role" />
                   </SelectTrigger>
                   <SelectContent>

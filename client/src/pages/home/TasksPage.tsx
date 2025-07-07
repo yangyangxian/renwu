@@ -10,7 +10,6 @@ import { Plus } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
-import logger from "@/utils/logger";
 
 export default function TasksPage() {
   const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
@@ -170,7 +169,15 @@ export default function TasksPage() {
             variant="default"
             className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
              from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
-            onClick={() => { setEditingTask(null); setIsDialogOpen(true); }}
+            onClick={() => {
+              // If a project is selected (not 'all' or 'personal'), prefill projectId
+              if (selectedProject !== 'all' && selectedProject !== 'personal') {
+                setEditingTask({ projectId: selectedProject } as any);
+              } else {
+                setEditingTask(null);
+              }
+              setIsDialogOpen(true);
+            }}
           >
             <Plus className="w-5 h-5" />
             <span className="font-semibold">Add Task</span>
