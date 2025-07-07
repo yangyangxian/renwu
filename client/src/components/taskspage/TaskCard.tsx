@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Button } from "@/components/ui-kit/Button";
 import { Trash2 } from "lucide-react";
-import { formatDate } from "@/utils/dateUtils";
+import { formatDateSmart } from "@/utils/dateUtils";
 import { TaskStatus } from "@fullstack/common";
 import {
   Dialog,
@@ -87,13 +87,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
         </Dialog>
       )}
       {projectName && (
-        <div className={`text-xs mb-1 font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>{projectName}</div>
+        <div className={`text-xs lg:text-[13px] mb-1 font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>{projectName}</div>
       )}
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-xs line-clamp-3">{title}</h3>
+        <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
         {dueDate && (
-          <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap bg-transparent px-2 py-0.5 rounded font-sans">
-            {formatDate(dueDate)}
+          <span className="text-xs lg:text-[13px] text-muted-foreground ml-2 whitespace-nowrap bg-transparent px-2 py-0.5 rounded font-sans">
+            {formatDateSmart(dueDate)}
           </span>
         )}
       </div>

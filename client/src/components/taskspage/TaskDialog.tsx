@@ -101,7 +101,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           <DialogTitle></DialogTitle>. 
         </VisuallyHidden>
         {/* Navigation bar */}
-        <nav className="flex items-center justify-between h-15 border-b bg-white dark:bg-muted rounded-t-md">
+        <nav className="flex items-center justify-between h-15 border-b bg-white-black rounded-t-md">
           <span className="flex-1 text-center font-bold text-2xl text-secondary-foreground">
             {title}
           </span>
