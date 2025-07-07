@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { projectService } from '../services/ProjectService.js';
 import { CustomError } from '../classes/CustomError.js';
 import { createApiResponse } from '../utils/apiUtils.js';
@@ -44,5 +44,66 @@ router.get('/me', async (req, res) => {
   });
   res.json(createApiResponse<ProjectResDto[]>(data));
 });
+
+
+// GET /api/projects/:id - get a project by its ID (and members)
+router.get(
+  '/:id',
+  async (
+    req: Request<{ id: string }, {}, {}, {}>,
+    res: Response<ApiResponse<ProjectResDto>>
+  ) => {
+    const { id } = req.params;
+    if (!id) {
+      throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
+    }
+
+    // Fetch project by ID
+    const project = await projectService.getProjectById(id);
+    if (!project) {
+      // Return 200 with data: null (not an error, just not found)
+      return res.json(createApiResponse<ProjectResDto | null>(null));
+    }
+    const dto = mapObject(project, new ProjectResDto());
+    dto.members = project.members;
+    res.json(createApiResponse<ProjectResDto>(dto));
+  }
+);
+
+// PUT /api/projects/:id - update project details (name, description)
+router.put(
+  '/:id',
+  async (
+    req: Request<{ id: string }, {}, { name?: string; description?: string }>,
+    res: Response<ApiResponse<ProjectResDto>>,
+    next: NextFunction
+  ) => {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    if (!id) {
+      throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
+    }
+
+    if (name && (typeof name !== 'string' || !name.trim())) {
+      throw new CustomError('Project name must be a non-empty string', ErrorCodes.NO_DATA);
+    }
+
+    // Update project details
+    const updatedProject = await projectService.updateProject(id, {
+      name: name?.trim(),
+      description: description || undefined,
+    });
+
+    if (!updatedProject) {
+      throw new CustomError('Project not found or update failed', ErrorCodes.NOT_FOUND);
+    }
+
+    const dto = mapObject(updatedProject, new ProjectResDto());
+    dto.members = updatedProject.members;
+    res.json(createApiResponse<ProjectResDto>(dto));
+  }
+);
 
 export default router;

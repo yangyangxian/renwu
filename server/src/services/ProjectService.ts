@@ -1,6 +1,5 @@
 import { ProjectRole, ErrorCodes } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError.js';
-import { UserEntity } from './UserService.js';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../database/databaseAccess.js';
 import { projects, projectMembers, users } from '../database/schema.js';
@@ -12,9 +11,18 @@ export class ProjectEntity {
   createdAt: Date | null = null;
   updatedAt: Date | null = null;
   createdBy: string = '';
-  members: UserEntity[] = [];
-
+  members: ProjectMemberEntity[] = [];
   constructor(init?: Partial<ProjectEntity>) {
+    Object.assign(this, init);
+  }
+}
+
+export class ProjectMemberEntity {
+  id: string = '';
+  name: string = '';
+  email?: string = '';
+  role: ProjectRole = ProjectRole.MEMBER;
+  constructor(init?: Partial<ProjectMemberEntity>) {
     Object.assign(this, init);
   }
 }
@@ -27,6 +35,50 @@ export interface ProjectWithMembers extends ProjectRow {
 }
 
 export class ProjectService {
+  /**
+   * Get a project by its ID.
+   */
+  async getProjectById(projectId: string): Promise<ProjectEntity | null> {
+    // Get project and all members
+    const rows = await db
+      .select({
+        projectId: projects.id,
+        projectName: projects.name,
+        projectDescription: projects.description,
+        projectCreatedAt: projects.createdAt,
+        projectUpdatedAt: projects.updatedAt,
+        createdBy: projects.createdBy,
+        memberId: users.id,
+        memberName: users.name,
+        memberEmail: users.email,
+        memberRole: projectMembers.role,
+      })
+      .from(projects)
+      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+      .innerJoin(users, eq(projectMembers.userId, users.id))
+      .where(eq(projects.id, projectId));
+
+    if (!rows || rows.length === 0) return null;
+
+    const project = new ProjectEntity({
+      id: rows[0].projectId,
+      name: rows[0].projectName,
+      description: rows[0].projectDescription,
+      createdAt: rows[0].projectCreatedAt,
+      updatedAt: rows[0].projectUpdatedAt,
+      createdBy: rows[0].createdBy ?? '',
+      members: [],
+    });
+    for (const row of rows) {
+      project.members.push(new ProjectMemberEntity({
+        id: row.memberId,
+        name: row.memberName,
+        email: row.memberEmail,
+        role: row.memberRole,
+      }));
+    }
+    return project;
+  }
 
   /**
    * Creates a new project and adds the owner as a member with OWNER role.
@@ -52,7 +104,7 @@ export class ProjectService {
 
       // Fetch members (just the owner for now)
       const members = [
-        new UserEntity({
+        new ProjectMemberEntity({
           id: ownerId,
           // Optionally fetch name/email if needed, or leave blank for now
         })
@@ -69,6 +121,7 @@ export class ProjectService {
       });
     });
   }
+
   async getProjectsByUserId(userId: string): Promise<ProjectEntity[]> {
     // Get all project IDs for the user first
     const userProjectIds = await db
@@ -88,8 +141,7 @@ export class ProjectService {
         memberId: users.id,
         memberName: users.name,
         memberEmail: users.email,
-        memberPassword: users.passwordHash,
-        memberCreatedAt: users.createdAt,
+        memberRole: projectMembers.role,
       })
       .from(projects)
       .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
@@ -113,15 +165,43 @@ export class ProjectService {
       }
       const project = projectMap.get(pid)!;
       // Use UserEntity constructor for cleaner instantiation
-      project.members.push(new UserEntity({
+      project.members.push(new ProjectMemberEntity({
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        password: row.memberPassword,
-        createdAt: row.memberCreatedAt?.toISOString?.() ?? '',
+        role: row.memberRole,
       }));
     }
     return Array.from(projectMap.values());
+  }
+
+  /**
+   * Updates a project's details (name, description).
+   * @param projectId string
+   * @param updateData { name?: string; description?: string }
+   */
+  async updateProject(
+    projectId: string,
+    updateData: { name?: string; description?: string }
+  ): Promise<ProjectEntity | null> {
+    // Update the project details
+    const updates = {
+      ...updateData,
+      updatedAt: new Date(),
+    };
+
+    const [updatedProject] = await db
+      .update(projects)
+      .set(updates)
+      .where(eq(projects.id, projectId))
+      .returning();
+
+    if (!updatedProject) {
+      return null;
+    }
+
+    // Fetch updated project with members
+    return this.getProjectById(projectId);
   }
 }
 

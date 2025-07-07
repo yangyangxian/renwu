@@ -32,16 +32,20 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Dialog submit handler
-  const handleDialogSubmit = async (project: { name: string; description: string }) => {
+  const handleProjectSubmit = async (project: { name: string; description: string }) => {
     setLoading(true);
     setError(null);
     try {
-      await apiClient.post<typeof project, ProjectResDto>(`/api/projects`, project);
+      // Create the project and get the new project object (with id)
+      const newProject = await apiClient.post<typeof project, ProjectResDto>(`/api/projects`, project);
       // Refresh project list
       const updated = await apiClient.get<ProjectResDto[]>(`/api/projects/me`);
       setProjects(updated);
       setProjectDialogOpen(false);
+      // Navigate to the new project's page
+      if (newProject && newProject.id) {
+        navigate(`/projects/${newProject.id}`);
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to add project');
     } finally {
@@ -70,7 +74,7 @@ export default function HomePage() {
           <ProjectDialog
             open={projectDialogOpen}
             onOpenChange={setProjectDialogOpen}
-            onSubmit={handleDialogSubmit}
+            onSubmit={handleProjectSubmit}
           />
         )}
         {showLanding ? (

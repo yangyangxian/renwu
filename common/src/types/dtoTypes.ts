@@ -24,6 +24,12 @@ export class TaskCreateReqDto {
 /*
 * The reason why using classes instead of interfaces is to ensure that the fields of DTOs can be used for object mapping in api.
 */
+export class ProjectMemberResDto {
+  id: string = '';
+  name: string = '';
+  email?: string = '';
+  role: string = '';
+}
 export class UserResDto {
   id: string | undefined;
   name: string = '';
@@ -71,7 +77,7 @@ export class ProjectResDto {
   createdBy?: string = '';
   createdAt?: string = '';
   updatedAt?: string = '';
-  members?: UserResDto[] = [];
+  members?: ProjectMemberResDto[] = [];
 }
 
 export class ProjectCreateReqDto {
