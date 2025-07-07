@@ -74,3 +74,8 @@ export class ProjectResDto {
   members?: UserResDto[] = [];
 }
 
+export class ProjectCreateReqDto {
+  name: string = '';
+  description?: string = '';
+}
+

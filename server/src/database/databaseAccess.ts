@@ -24,17 +24,17 @@ function checkDbConnection() {
 const db = new Proxy(rawDb, {
   get(target: any, prop: string | symbol) {
     const originalValue = target[prop];
-    
+
     // Only check connection for main database operations
-    if (typeof originalValue === 'function' && 
-        ['select', 'insert', 'update', 'delete'].includes(prop as string)) {
-      
+    if (typeof originalValue === 'function' &&
+        ['select', 'insert', 'update', 'delete', 'transaction'].includes(prop as string)) {
       return function(...args: any[]) {
         checkDbConnection();
+        logger.info(`[DB] Called method: ${String(prop)}`);
         return originalValue.apply(target, args);
       };
     }
-    
+
     return originalValue;
   }
 });

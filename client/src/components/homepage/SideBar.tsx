@@ -8,34 +8,10 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui-kit/Sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui-kit/Collapsible";
-import { ListChecks, Folder, ChevronDown } from "lucide-react";
+import { ListChecks, Folder, ChevronDown, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, TASKS_PATH } from "@/routes/routeConfig";
 import { useState, useEffect } from "react";
-
-// Mock data - replace with actual project fetching logic
-const mockProjects = [
-  { id: "1", name: "Project Alpha" },
-  { id: "2", name: "Project Beta" },
-  { id: "3", name: "Project Gamma" },
-  { id: "4", name: "Project Delta" },
-  { id: "5", name: "Project Epsilon" },
-  { id: "6", name: "Project Zeta" },
-  { id: "7", name: "Project Eta" },
-  { id: "8", name: "Project Theta" },
-  { id: "9", name: "Project Iota" },
-  { id: "10", name: "Project Kappa" },
-  { id: "11", name: "Project Lambda" },
-  { id: "12", name: "Project Mu" },
-  { id: "13", name: "Project Nu" },
-  { id: "14", name: "Project Xi" },
-  { id: "15", name: "Project Omicron" },
-  { id: "16", name: "Project Pi" },
-  { id: "17", name: "Project Rho" },
-  { id: "18", name: "Project Sigma" },
-  { id: "19", name: "Project Tau" },
-  { id: "20", name: "Project Upsilon" },
-];
 
 // Task menu item component
 function TaskMenuItem({ 
@@ -64,12 +40,24 @@ function TaskMenuItem({
 // Projects menu item component
 function ProjectsMenuItem({ 
   showText,
-  isProjectActive 
+  isProjectActive,
+  setExpanded,
+  onAddProject,
+  projects
 }: { 
   showText: boolean; 
   isProjectActive: (projectId: string) => boolean;
+  setExpanded: (v: boolean) => void;
+  onAddProject?: () => void;
+  projects: { id: string; name: string }[];
 }) {
   const navigate = useNavigate();
+
+  const handleAddProject = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded(false);
+    onAddProject && onAddProject();
+  };
 
   return (
     <SidebarMenuItem>
@@ -83,20 +71,33 @@ function ProjectsMenuItem({
                   Projects
                 </span>
                 <span className="flex-1" />
-                <ChevronDown
-                  className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 flex-shrink-0 ml-2 absolute right-3 top-1/2 -translate-y-1/2"
-                  aria-hidden="true"
-                />
+                <span className="flex items-center gap-1 mr-1">
+                  <span
+                    role="button"
+                    aria-label="Add Project"
+                    tabIndex={0}
+                    onClick={handleAddProject}
+                    onMouseDown={e => e.stopPropagation()}
+                    onFocus={e => e.stopPropagation()}
+                    className="inline-flex items-center justify-center rounded-full cursor-pointer hover:bg-primary-purple/70 dark:hover:bg-primary-purple p-1 z-[1]"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </span>
+                  <ChevronDown
+                    className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                </span>
               </>
             )}
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <SidebarMenuSub>
-            {showText && mockProjects.map((project) => (
+          <SidebarMenuSub className="gap-[6px]">
+            {showText && projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuButton
-                  className="pl-8 cursor-pointer"
+                  className="pl-5 cursor-pointer"
                   isActive={isProjectActive(project.id)}
                   onClick={() => navigate(`${PROJECTS_PATH}/${project.id}`)}
                 >
@@ -111,7 +112,7 @@ function ProjectsMenuItem({
   );
 }
 
-export function HomeSideBar({ expanded, setExpanded }: { expanded: boolean; setExpanded: (v: boolean) => void }) {
+export function HomeSideBar({ expanded, setExpanded, onAddProject, projects }: { expanded: boolean; setExpanded: (v: boolean) => void; onAddProject?: () => void; projects: { id: string; name: string }[] }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showText, setShowText] = useState(false);
@@ -135,17 +136,32 @@ export function HomeSideBar({ expanded, setExpanded }: { expanded: boolean; setE
     }
   }, [expanded]);
 
+  // Prevent sidebar expand/collapse when dialog is open (if onAddProject is provided, assume dialog is managed by parent)
+  const handleSidebarMouseEnter = () => {
+    setExpanded(true);
+  };
+  const handleSidebarMouseLeave = () => {
+    setExpanded(false);
+  };
+
+
   return (
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
         className="transition-all duration-300 h-full p-2 pt-3"
-        onMouseEnter={() => setExpanded(true)}
-        onMouseLeave={() => setExpanded(false)}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
       >
-        <SidebarMenu className="bg-white-black">
+        <SidebarMenu className="bg-white-black gap-2">
           <TaskMenuItem isActive={isTasksActive} onClick={handleTasksClick} showText={showText} />
-          <ProjectsMenuItem showText={showText} isProjectActive={isProjectActive} />
+          <ProjectsMenuItem
+            showText={showText}
+            isProjectActive={isProjectActive}
+            setExpanded={setExpanded}
+            onAddProject={onAddProject}
+            projects={projects}
+          />
         </SidebarMenu>
       </Sidebar>
     </SidebarProvider>

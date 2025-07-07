@@ -35,7 +35,7 @@ function SignupPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]" style={{ minHeight: 'calc(100vh - 4rem)' }}>
+    <div className="flex flex-col items-center justify-center">
       <Card className="w-full max-w-sm p-8 flex flex-col gap-6 shadow-lg">
         <h2 className="text-2xl font-bold text-center">Sign Up</h2>
         {error && (

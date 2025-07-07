@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
@@ -9,12 +10,14 @@ import { Plus } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
+import logger from "@/utils/logger";
 
 export default function TasksPage() {
+  const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
+
   const [view, setView] = useState("board");
   const [selectedProject, setSelectedProject] = useState("all");
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
-  const [projects, setProjects] = useState<ProjectResDto[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   // Date range filter: '1m' = last 1 month, '3m' = last 3 months, '1y' = last 1 year, 'all' = no filter
@@ -31,9 +34,6 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks();
-    apiClient.get<ProjectResDto[]>(`/api/projects/me`)
-      .then(setProjects)
-      .catch(() => {});
   }, []);
 
   const filteredTasks = useMemo(() => {
@@ -59,15 +59,15 @@ export default function TasksPage() {
   }, [tasks, dateRange, selectedProject]);
 
   const allProjectMembers = useMemo(() => {
-    const allMembers = projects.flatMap(p =>
+    const allMembers = projects.flatMap((p: ProjectResDto) =>
       Array.isArray(p.members)
-        ? p.members.map(m => ({ ...m, projectId: p.id }))
+        ? p.members.map((m: any) => ({ ...m, projectId: p.id }))
         : []
     );
     const seen = new Set<string>();
     return allMembers
-      .filter(m => typeof m.id === 'string' && m.id && !seen.has(m.id) && !!seen.add(m.id))
-      .map(m => ({ id: m.id as string, name: m.name, projectId: m.projectId }));
+      .filter((m: any) => typeof m.id === 'string' && m.id && !seen.has(m.id) && !!seen.add(m.id))
+      .map((m: any) => ({ id: m.id as string, name: m.name, projectId: m.projectId }));
   }, [projects]);
 
   const handleTaskSubmit = async (task: any) => {
@@ -117,7 +117,6 @@ export default function TasksPage() {
       toast.error('Failed to delete task.');
     }
   };
-
   return (
     <div className="w-full h-full flex flex-col gap-3">
       <div id="menuBar" className="flex gap-3 items-center">
@@ -246,3 +245,4 @@ export default function TasksPage() {
     </div>
   );
 }
+

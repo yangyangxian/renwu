@@ -1,3 +1,5 @@
+import { ProjectRole, ErrorCodes } from '@fullstack/common';
+import { CustomError } from '../classes/CustomError.js';
 import { UserEntity } from './UserService.js';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../database/databaseAccess.js';
@@ -25,6 +27,48 @@ export interface ProjectWithMembers extends ProjectRow {
 }
 
 export class ProjectService {
+
+  /**
+   * Creates a new project and adds the owner as a member with OWNER role.
+   * @param params { name, description, ownerId }
+   */
+  async createProject({ name, description, ownerId }: { name: string; description?: string; ownerId: string }) {
+    // Use a transaction to ensure both inserts succeed or fail together
+    return await db.transaction(async (tx) => {
+      // Insert project
+      const [projectRow] = await tx.insert(projects).values({
+        name,
+        description,
+        createdBy: ownerId,
+      }).returning();
+      if (!projectRow) throw new CustomError('Failed to create project', ErrorCodes.INTERNAL_ERROR);
+
+      // Add owner as project member with OWNER role
+      await tx.insert(projectMembers).values({
+        projectId: projectRow.id,
+        userId: ownerId,
+        role: ProjectRole.OWNER,
+      });
+
+      // Fetch members (just the owner for now)
+      const members = [
+        new UserEntity({
+          id: ownerId,
+          // Optionally fetch name/email if needed, or leave blank for now
+        })
+      ];
+
+      return new ProjectEntity({
+        id: projectRow.id,
+        name: projectRow.name,
+        description: projectRow.description,
+        createdAt: projectRow.createdAt,
+        updatedAt: projectRow.updatedAt,
+        createdBy: projectRow.createdBy,
+        members,
+      });
+    });
+  }
   async getProjectsByUserId(userId: string): Promise<ProjectEntity[]> {
     // Get all project IDs for the user first
     const userProjectIds = await db
