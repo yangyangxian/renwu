@@ -4,8 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@import '@/styles/github-markdown-dark.css';
 @import '@/styles/github-markdown-light.css';
-@import '@/styles/github-markdown-dark.wrapped.css';
 /* global styles */
 *,
 *::before,

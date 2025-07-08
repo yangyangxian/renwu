@@ -143,7 +143,7 @@ export default function ProjectDetailPage() {
               ) : (
                 <span className="max-h-120 overflow-auto">
                   <Card
-                    className="markdown-body !text-[0.9rem] !bg-card p-4 cursor-pointer"
+                    className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer"
                     onClick={handleDescClick}
                     dangerouslySetInnerHTML={{__html : html}} />
                 </span>
