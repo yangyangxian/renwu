@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui-kit/Card";
@@ -12,6 +11,7 @@ import { apiClient } from '@/utils/APIClient';
 import { ProjectResDto } from '@fullstack/common';
 import { ProjectRole } from '@fullstack/common';
 import { toast } from "sonner";
+import { marked } from 'marked';
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -24,7 +24,8 @@ export default function ProjectDetailPage() {
   const [descInput, setDescInput] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descInputRef = useRef<HTMLTextAreaElement>(null);
-  // No need for error state, we use toast for user feedback
+
+  const html = marked.parse(project?.description?.toString() || '');
 
   useEffect(() => {
     if (!projectId) return;
@@ -52,7 +53,6 @@ export default function ProjectDetailPage() {
     setTimeout(() => {
       if (descInputRef.current) {
         descInputRef.current.focus();
-        // Move cursor to end
         const val = descInputRef.current.value;
         descInputRef.current.setSelectionRange(val.length, val.length);
       }
@@ -90,9 +90,9 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col gap-4 p-1">
+    <div className="h-full w-full flex gap-4 p-1">
       {/* Project Info Card */}
-      <Card className="flex flex-col w-3/10 p-3 shadow-none">
+      <Card className="flex flex-col self-start w-7/10 p-3 shadow-none">
         {loading ? (
           <Label className="text-slate-500">Loading project...</Label>
         ) : project ? (
@@ -127,26 +127,23 @@ export default function ProjectDetailPage() {
                   value={descInput}
                   onChange={e => setDescInput(e.target.value)}
                   onBlur={handleDescBlur}
-                  className="whitespace-pre-line min-h-[12rem] px-2 py-1 flex-1"
+                  className="whitespace-pre-line min-h-40 max-h-120 px-2 py-1 h-full flex-1"
                   maxLength={5000}
                 />
               ) : (
-                <div className="max-h-120 overflow-auto">
-                  <Label
-                    className="font-normal whitespace-pre-line cursor-pointer hover:bg-secondary dark:hover:bg-secondary p-2 rounded leading-5 flex-1"
+                <span className="max-h-120 overflow-auto">
+                  <div
+                    className="markdown-body dark:markdown-body-dark"
                     onClick={handleDescClick}
-                    title={project.description || undefined}
-                  >
-                    {project.description || <span className="italic">No description</span>}
-                  </Label>
-                </div>
+                    dangerouslySetInnerHTML={{__html : html}} />
+                </span>
               )}
             </div>
           </>
         ) : null}
       </Card>
       {/* Team Members Card */}
-      <Card className="flex flex-col w-3/10 min-w-60 px-5 py-4 shadow-none">
+      <Card className="flex flex-col w-3/10 min-w-50 self-start px-5 py-4 shadow-none">
         <div className="flex items-center justify-between">
           <Label className="text-md font-semibold">Team Members</Label>
           <UserPlus
@@ -166,8 +163,8 @@ export default function ProjectDetailPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <Label className="font-medium text-slate-900 dark:text-white truncate mb-[2px]">{member.name}</Label>
-                  <Label className="text-xs text-slate-500 truncate">{member.email}</Label>
+                  <Label className="font-medium text-slate-900 dark:text-white mb-[3px]">{member.name}</Label>
+                  <Label className="text-xs text-slate-500">{member.email}</Label>
                 </div>
                 {/* Role dropdown using UI kit Select, using real role if present */}
                 <Select value={member.role || ProjectRole.MEMBER}>

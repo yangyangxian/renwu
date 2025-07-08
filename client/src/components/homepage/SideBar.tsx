@@ -63,7 +63,7 @@ function ProjectsMenuItem({
     <SidebarMenuItem>
       <Collapsible defaultOpen={false} className="group/collapsible">
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="relative flex items-center w-full min-w-0 group cursor-pointer">
+          <SidebarMenuButton className="relative flex items-center w-full min-w-0 mb-1 group cursor-pointer">
             <Folder className="w-5 h-5 mr-2 flex-shrink-0" />
             {showText && (
               <>
