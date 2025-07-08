@@ -112,12 +112,12 @@ export default function ProjectDetailPage() {
                       setEditingTitle(false);
                     }
                   }}
-                  className="!text-2xl font-bold px-2 py-1 flex-1"
+                  className="!text-2xl font-bold flex-1"
                   maxLength={128}
                 />
               ) : (
                 <Label
-                  className="text-2xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary p-3 rounded flex-1"
+                  className="text-2xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded p-3 flex-1"
                   title={project.name}
                   onClick={handleTitleClick}
                 >
@@ -126,7 +126,10 @@ export default function ProjectDetailPage() {
               )}
             </div>
             {/* Project Description */}
-            <div className="flex items-center">
+
+            <hr className="border-t border-gray-200 dark:border-gray-700 mb-4" />
+            <div className="p-4">
+              <h2 className="text-md font-semibold mb-2">Project Description:</h2>
               {editingDesc ? (
                 <Textarea
                   ref={descInputRef}
@@ -136,16 +139,27 @@ export default function ProjectDetailPage() {
                   onCancel={() => {
                     setEditingDesc(false);
                   }}
-                  className="whitespace-pre-line p-4 flex-1 !text-[0.9rem] max-h-120"
+                  placeholder="Enter a project description…(Markdown supported!)"
+                  className="whitespace-pre-line p-4 flex-1 !text-[0.95rem] max-h-120"
                   autoSize={true}
                   maxLength={5000}
                 />
               ) : (
                 <span className="max-h-120 overflow-auto">
-                  <Card
-                    className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer"
-                    onClick={handleDescClick}
-                    dangerouslySetInnerHTML={{__html : html}} />
+                  {project?.description ? (
+                    <div
+                      className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer"
+                      onClick={handleDescClick}
+                      dangerouslySetInnerHTML={{ __html: html }}
+                    />
+                  ) : (
+                    <div
+                      className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer text-muted-foreground italic"
+                      onClick={handleDescClick}
+                    >
+                      Enter a project description… (Markdown supported!)
+                    </div>
+                  )}
                 </span>
               )}
             </div>
