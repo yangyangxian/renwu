@@ -105,13 +105,19 @@ export default function ProjectDetailPage() {
                   value={titleInput}
                   onChange={e => setTitleInput(e.target.value)}
                   onBlur={handleTitleBlur}
-                  onKeyDown={e => { if (e.key === 'Enter') { handleTitleBlur(); } }}
+                  onKeyDown={e => { 
+                    if (e.key === 'Enter') { 
+                      handleTitleBlur(); 
+                    } else if (e.key === 'Escape') {
+                      setEditingTitle(false);
+                    }
+                  }}
                   className="!text-2xl font-bold px-2 py-1 flex-1"
                   maxLength={128}
                 />
               ) : (
                 <Label
-                  className="text-2xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary px-2 py-1 rounded flex-1"
+                  className="text-2xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary p-3 rounded flex-1"
                   title={project.name}
                   onClick={handleTitleClick}
                 >
@@ -127,13 +133,17 @@ export default function ProjectDetailPage() {
                   value={descInput}
                   onChange={e => setDescInput(e.target.value)}
                   onBlur={handleDescBlur}
-                  className="whitespace-pre-line min-h-40 max-h-120 px-2 py-1 h-full flex-1"
+                  onCancel={() => {
+                    setEditingDesc(false);
+                  }}
+                  className="whitespace-pre-line p-4 flex-1 !text-[0.9rem] max-h-120"
+                  autoSize={true}
                   maxLength={5000}
                 />
               ) : (
                 <span className="max-h-120 overflow-auto">
-                  <div
-                    className="markdown-body dark:markdown-body-dark"
+                  <Card
+                    className="markdown-body !text-[0.9rem] !bg-card p-4 cursor-pointer"
                     onClick={handleDescClick}
                     dangerouslySetInnerHTML={{__html : html}} />
                 </span>

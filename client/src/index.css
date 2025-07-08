@@ -4,17 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Import GitHub markdown CSS for both light and dark mode */
-@import '@style/github-markdown-light.css';
-/* @import 'github-markdown-css/github-markdown-dark.css'; */
-.markdown-body ol {
-  list-style-type: decimal !important;
-  margin-left: 1.5em;
-}
-.markdown-body ul {
-  list-style-type: disc !important;
-  margin-left: 1.5em;
-}
+@import '@/styles/github-markdown-light.css';
+@import '@/styles/github-markdown-dark.wrapped.css';
 /* global styles */
 *,
 *::before,
