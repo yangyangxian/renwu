@@ -15,8 +15,8 @@ interface BoardViewProps {
 const statusColumns = [
   { key: TaskStatus.TODO, label: "To do", titleBg: "bg-amber-400 dark:bg-amber-600" },
   { key: TaskStatus.IN_PROGRESS, label: "In Progress", titleBg: "bg-blue-500 dark:bg-blue-700" },
-  { key: TaskStatus.DONE, label: "Done", titleBg: "bg-green-500 dark:bg-green-700" },
-  { key: TaskStatus.CLOSE, label: "Closed", titleBg: "bg-gray-400 dark:bg-gray-500" }
+  { key: TaskStatus.DONE, label: "In Review", titleBg: "bg-green-500 dark:bg-green-700" },
+  { key: TaskStatus.CLOSE, label: "Done", titleBg: "bg-gray-400 dark:bg-gray-500" }
 ];
 
 function DraggableTaskCard({ id, children }: { id: string; children: React.ReactNode }) {

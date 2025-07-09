@@ -41,7 +41,7 @@ export default function HomePage() {
     }
   };
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  // Sidebar expanded state is now managed internally by HomeSideBar
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   // Project list state
@@ -89,8 +89,6 @@ export default function HomePage() {
       {isAuthenticated && (
         <aside className="h-full max-h-full flex flex-shrink-0 overflow-y-auto overflow-x-hidden bg-white-black">
           <HomeSideBar
-            expanded={sidebarExpanded}
-            setExpanded={setSidebarExpanded}
             onAddProject={() => setProjectDialogOpen(true)}
             projects={projects}
           />

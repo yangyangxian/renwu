@@ -12,12 +12,10 @@ import { ListChecks, Folder, ChevronDown, Plus, Pin, PinOff } from "lucide-react
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, TASKS_PATH } from "@/routes/routeConfig";
-import { useState, useEffect, useLayoutEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Sidebar props interface
 export interface HomeSideBarProps {
-  expanded: boolean;
-  setExpanded: (v: boolean) => void;
   onAddProject?: () => void;
   projects: { id: string; name: string }[];
 }
@@ -33,11 +31,13 @@ function getInitialSidebarIsFixed(): boolean {
   return false;
 }
 
-export function HomeSideBar({ expanded, setExpanded, onAddProject, projects }: HomeSideBarProps) {
+export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showText, setShowText] = useState(false);
   const [sidebarIsFixed, setSidebarIsFixed] = useState<boolean>(getInitialSidebarIsFixed());
+  const [expanded, setExpanded] = useState<boolean>(sidebarIsFixed);
+  const [showText, setShowText] = useState(sidebarIsFixed); // show text immediately if fixed
+  const isFirstRender = useRef(true);
 
   // Navigation handlers
   const handleTasksClick = () => navigate(TASKS_PATH);
@@ -47,21 +47,19 @@ export function HomeSideBar({ expanded, setExpanded, onAddProject, projects }: H
   // Handle delayed text display after expansion animation
   useEffect(() => {
     if (expanded) {
-      const timer = setTimeout(() => {
+      if (isFirstRender.current) {
         setShowText(true);
-      }, 300);
-      return () => clearTimeout(timer);
+        isFirstRender.current = false;
+      } else {
+        const timer = setTimeout(() => {
+          setShowText(true);
+        }, 200);
+        return () => clearTimeout(timer);
+      }
     } else {
       setShowText(false);
     }
   }, [expanded]);
-
-  // On mount, set sidebar expanded if mode is fixed
-  useLayoutEffect(() => {
-    if (sidebarIsFixed) {
-      setExpanded(true);
-    }
-  }, [sidebarIsFixed, setExpanded]);
 
   // Prevent sidebar expand/collapse when dialog is open (if onAddProject is provided, assume dialog is managed by parent)
   const handleSidebarMouseEnter = () => {
