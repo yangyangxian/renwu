@@ -92,7 +92,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="h-full w-full flex gap-4 p-1">
       {/* Project Info Card */}
-      <Card className="flex flex-col self-start w-7/10 p-3 shadow-none">
+      <Card className="flex flex-col h-full w-7/10 p-3 shadow-none">
         {loading ? (
           <Label className="text-slate-500">Loading project...</Label>
         ) : project ? (
@@ -112,7 +112,7 @@ export default function ProjectDetailPage() {
                       setEditingTitle(false);
                     }
                   }}
-                  className="!text-2xl font-bold flex-1"
+                  className="!text-2xl font-bold flex-1 h-14"
                   maxLength={128}
                 />
               ) : (
@@ -126,9 +126,8 @@ export default function ProjectDetailPage() {
               )}
             </div>
             {/* Project Description */}
-
             <hr className="border-t border-gray-200 dark:border-gray-700 mb-4" />
-            <div className="p-4">
+            <div className="p-4 flex flex-col flex-1 overflow-auto">
               <h2 className="text-md font-semibold mb-2">Project Description:</h2>
               {editingDesc ? (
                 <Textarea
@@ -140,12 +139,12 @@ export default function ProjectDetailPage() {
                     setEditingDesc(false);
                   }}
                   placeholder="Enter a project description…(Markdown supported!)"
-                  className="whitespace-pre-line p-4 flex-1 !text-[0.95rem] max-h-120"
+                  className="flex-1 !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
                   autoSize={true}
                   maxLength={5000}
                 />
               ) : (
-                <span className="max-h-120 overflow-auto">
+                <div className="overflow-y-auto">
                   {project?.description ? (
                     <div
                       className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer"
@@ -160,7 +159,7 @@ export default function ProjectDetailPage() {
                       Enter a project description… (Markdown supported!)
                     </div>
                   )}
-                </span>
+                </div>
               )}
             </div>
           </>

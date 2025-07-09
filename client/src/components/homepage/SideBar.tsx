@@ -144,7 +144,7 @@ function TaskMenuItem({
         onClick={onClick}
         className="flex items-center cursor-pointer"
       >
-        <ListChecks className="w-5 h-5 mr-2 flex-shrink-0" />
+        <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
         {showText && <span className="truncate">My Tasks</span>}
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -175,17 +175,17 @@ function ProjectsMenuItem({
 
   return (
     <SidebarMenuItem>
-      <Collapsible defaultOpen={false} className="group/collapsible">
+      <Collapsible defaultOpen={true} className="group/collapsible">
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="relative flex items-center w-full min-w-0 mb-1 group cursor-pointer">
-            <Folder className="w-5 h-5 mr-2 flex-shrink-0" />
+            <Folder className="w-5 h-5 mr-1 flex-shrink-0" />
             {showText && (
               <>
                 <span className="truncate transition-all duration-200">
                   Projects
                 </span>
                 <span className="flex-1" />
-                <span className="flex items-center gap-1 mr-1">
+                <span className="flex items-center gap-1">
                   <span
                     role="button"
                     aria-label="Add Project"
@@ -211,7 +211,7 @@ function ProjectsMenuItem({
             {showText && projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuButton
-                  className="pl-5 cursor-pointer"
+                  className="pl-4 cursor-pointer"
                   isActive={isProjectActive(project.id)}
                   onClick={() => navigate(`${PROJECTS_PATH}/${project.id}`)}
                 >
