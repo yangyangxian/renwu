@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui-kit/Textarea";
 import { Label } from "@/components/ui-kit/Label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Info } from "lucide-react";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui-kit/Hover-card";
 import { apiClient } from '@/utils/APIClient';
 import { ProjectResDto } from '@fullstack/common';
 import { ProjectRole } from '@fullstack/common';
@@ -126,9 +127,28 @@ export default function ProjectDetailPage() {
               )}
             </div>
             {/* Project Description */}
-            <hr className="border-t border-gray-200 dark:border-gray-700 mb-4" />
+            <hr className="border-t border-gray-200 dark:border-gray-700 mb-3" />
             <div className="p-4 flex flex-col flex-1 overflow-auto">
-              <h2 className="text-md font-semibold mb-2">Project Description:</h2>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-md font-semibold">Project Description:</h2>
+              <HoverCard openDelay={0}>
+                <HoverCardTrigger asChild>
+                  <Info className="w-4 h-4" />
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 text-xs leading-relaxed">
+                  <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
+                  <ul className="list-disc pl-5">
+                    <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
+                    <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
+                    <li><b>Link:</b> <code>[title](url)</code></li>
+                    <li><b>List:</b> <code>* item</code></li>
+                    <li><b>Number List:</b> <code> 1. item</code></li>
+                    <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
+                    <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
+                  </ul>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
               {editingDesc ? (
                 <Textarea
                   ref={descInputRef}
@@ -139,7 +159,7 @@ export default function ProjectDetailPage() {
                     setEditingDesc(false);
                   }}
                   placeholder="Enter a project description…(Markdown supported!)"
-                  className="flex-1 !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
+                  className="!text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
                   autoSize={true}
                   maxLength={5000}
                 />
