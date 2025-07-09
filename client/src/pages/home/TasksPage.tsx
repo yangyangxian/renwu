@@ -6,7 +6,7 @@ import BoardView from "@/components/taskspage/BoardView";
 import { apiClient } from '@/utils/APIClient';
 import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
-import { Plus } from "lucide-react";
+import { Plus, Kanban, List } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
@@ -144,7 +144,7 @@ export default function TasksPage() {
               <SelectValue placeholder="Date range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1m">Last 1 month</SelectItem>
+              <SelectItem value="1m">Last 30 days</SelectItem>
               <SelectItem value="3m">Last 3 months</SelectItem>
               <SelectItem value="1y">Last 1 year</SelectItem>
               <SelectItem value="all">All</SelectItem>
@@ -155,11 +155,13 @@ export default function TasksPage() {
         {/* Tabs for Board/List/Calendar views */}
         <Tabs defaultValue={view} value={view} onValueChange={setView}>
           <TabsList className="bg-white dark:bg-muted">
-            <TabsTrigger value="board" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              Board
+            <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+              <Kanban className="w-4 h-4" />
+              <span>Board</span>
             </TabsTrigger>
-            <TabsTrigger value="list" className="px-4 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              List
+            <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+              <List className="w-4 h-4" />
+              <span>List</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
