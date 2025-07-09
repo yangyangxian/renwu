@@ -53,7 +53,7 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
       } else {
         const timer = setTimeout(() => {
           setShowText(true);
-        }, 200);
+        }, 300);
         return () => clearTimeout(timer);
       }
     } else {
@@ -85,7 +85,7 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
-        <SidebarMenu className="bg-white-black gap-2">
+        <SidebarMenu className="gap-2 bg-white-black">
           <TaskMenuItem isActive={isTasksActive} onClick={handleTasksClick} showText={showText} />
           <ProjectsMenuItem
             showText={showText}
@@ -179,7 +179,7 @@ function ProjectsMenuItem({
             <Folder className="w-5 h-5 mr-1 flex-shrink-0" />
             {showText && (
               <>
-                <span className="truncate transition-all duration-200">
+                <span>
                   Projects
                 </span>
                 <span className="flex-1" />

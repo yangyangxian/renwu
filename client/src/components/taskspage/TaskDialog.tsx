@@ -228,8 +228,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </Label>
                 <Textarea
                   id="description"
-                  className="bg-muted px-3 py-2 min-h-[150px] focus:ring-2 focus:ring-primary/30"
-                  placeholder="Task description (Markdown supported in future)"
+                  className="bg-muted min-h-[150px] focus:ring-2 focus:ring-primary/30"
+                  placeholder="Task description"
                   value={taskDescription}
                   onChange={e => setTaskDescription(e.target.value)}
                   rows={5}

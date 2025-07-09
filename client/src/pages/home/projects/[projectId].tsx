@@ -159,9 +159,9 @@ export default function ProjectDetailPage() {
                     setEditingDesc(false);
                   }}
                   placeholder="Enter a project description…(Markdown supported!)"
-                  className="!text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
+                  className="bg-secondary !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
                   autoSize={true}
-                  maxLength={5000}
+                  maxLength={10000}
                 />
               ) : (
                 <div className="overflow-y-auto">
