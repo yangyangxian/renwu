@@ -8,16 +8,15 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
 import { UserPlus, Info } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui-kit/Hover-card";
-import { apiClient } from '@/utils/APIClient';
-import { ProjectResDto } from '@fullstack/common';
 import { ProjectRole } from '@fullstack/common';
 import { toast } from "sonner";
 import { marked } from 'marked';
+import { useProject } from "@/hooks/useProject";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<ProjectResDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { project, loading, updateProject } = useProject(projectId);
+
   // UI state for editing
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
@@ -26,23 +25,14 @@ export default function ProjectDetailPage() {
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const html = marked.parse(project?.description?.toString() || '');
-
   useEffect(() => {
-    if (!projectId) return;
-    setLoading(true);
-    apiClient.get<ProjectResDto>(`/api/projects/${projectId}`)
-      .then((data) => {
-        setProject(data);
-        setTitleInput(data?.name || "");
-        setDescInput(data?.description || "");
-      })
-      .catch((err) => {
-        const msg = err?.message || 'Failed to load project';
-        toast.error(msg);
-      })
-      .finally(() => setLoading(false));
-  }, [projectId]);
+    if (project) {
+      setTitleInput(project.name || "");
+      setDescInput(project.description || "");
+    }
+  }, [project]);
+
+  const html = marked.parse(project?.description?.toString() || '');
 
   // Handlers for editing
   const handleTitleClick = () => {
@@ -63,12 +53,11 @@ export default function ProjectDetailPage() {
     setEditingTitle(false);
     if (project && titleInput.trim() && titleInput !== project.name) {
       try {
-        const updated = await apiClient.put(`/api/projects/${project.id}`, { name: titleInput });
-        setProject((p) => p ? { ...p, name: titleInput } : p);
+        await updateProject({ name: titleInput });
         toast.success('Project name updated');
       } catch {
         toast.error('Failed to update project name');
-        setTitleInput(project.name);
+        setTitleInput(project.name); // Revert on failure
       }
     } else if (project) {
       setTitleInput(project.name);
@@ -78,12 +67,11 @@ export default function ProjectDetailPage() {
     setEditingDesc(false);
     if (project && descInput !== (project.description || "")) {
       try {
-        const updated = await apiClient.put(`/api/projects/${project.id}`, { description: descInput });
-        setProject((p) => p ? { ...p, description: descInput } : p);
+        await updateProject({ description: descInput });
         toast.success('Project description updated');
       } catch {
         toast.error('Failed to update description');
-        setDescInput(project.description || "");
+        setDescInput(project.description || ""); // Revert on failure
       }
     } else if (project) {
       setDescInput(project.description || "");

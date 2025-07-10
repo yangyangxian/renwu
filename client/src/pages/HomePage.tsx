@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui-kit/Button";
 import { useAuth } from "@/providers/AuthProvider";
@@ -9,6 +8,7 @@ import { apiClient } from "@/utils/APIClient";
 import { ProjectResDto } from '@fullstack/common';
 import { Input } from "@/components/ui-kit/Input";
 import { Dialog, DialogContent } from "@/components/ui-kit/Dialog";
+import { getMyProjects, getProjects, updateMe } from "@/apiRequests/apiEndpoints";
 
 export default function HomePage() {
   // No longer using useOutlet, will use <Outlet context={...} />
@@ -31,7 +31,7 @@ export default function HomePage() {
     if (!pendingName.trim()) return;
     try {
       // Our API returns { data: { ...user } }
-      const response = await apiClient.put("/api/users/me", { name: pendingName.trim() });
+      const response = await apiClient.put(updateMe(), { name: pendingName.trim() });
       // Assume response is the updated user object
       const updatedUser = response as typeof user;
       setNameDialogOpen(false);
@@ -54,7 +54,7 @@ export default function HomePage() {
     if (!isAuthenticated) return;
     setLoading(true);
     setError(null);
-    apiClient.get<ProjectResDto[]>(`/api/projects/me`)
+    apiClient.get<ProjectResDto[]>(getMyProjects())
       .then(setProjects)
       .catch((err) => setError(err?.message || 'Failed to load projects'))
       .finally(() => setLoading(false));
@@ -65,9 +65,9 @@ export default function HomePage() {
     setError(null);
     try {
       // Create the project and get the new project object (with id)
-      const newProject = await apiClient.post<typeof project, ProjectResDto>(`/api/projects`, project);
+      const newProject = await apiClient.post<typeof project, ProjectResDto>(getProjects(), project);
       // Refresh project list
-      const updated = await apiClient.get<ProjectResDto[]>(`/api/projects/me`);
+      const updated = await apiClient.get<ProjectResDto[]>(getMyProjects());
       setProjects(updated);
       setProjectDialogOpen(false);
       // Navigate to the new project's page

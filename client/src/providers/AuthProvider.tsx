@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { ApiErrorResponse, LoginReqDto, UserResDto } from '@fullstack/common';
 import { apiClient } from '../utils/APIClient';
 import logger from '../utils/logger';
+import { authLogin, authLogout, authMe, authSignup } from '@/apiRequests/apiEndpoints';
 
 interface IAuthContext {
   isAuthenticated: boolean;
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkAuthStatus = () => {
-    apiClient.get<UserResDto>('/api/auth/me')
+    apiClient.get<UserResDto>(authMe())
       .then((userData: UserResDto) => {
         setUser(userData);
         setIsAuthenticated(true);
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (email: string, password: string): Promise<void> => {
     return apiClient.post<LoginReqDto, UserResDto>(
-      '/api/auth/login',
+      authLogin(),
       { email, password }
       )
       .then((userData: UserResDto) => {
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = (): Promise<void> => {
-    return apiClient.post('/api/auth/logout', {})
+    return apiClient.post(authLogout(), {})
       .then(() => {
         setUser(null);
         setIsAuthenticated(false);
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = (email: string, password: string): Promise<void> => {
     return apiClient.post<LoginReqDto, UserResDto>(
-      '/api/auth/signup',
+      authSignup(),
       { email, password }
     )
       .then((userData: UserResDto) => {

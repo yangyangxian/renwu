@@ -13,8 +13,6 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Pop
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/DropDownList";
 
-
-
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,10 +52,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
   const updateFromCode = React.useRef(false);
   
-  // Handler for assignedTo value change
   const handleAssignedToChange = (value: string) => {
     if (updateFromCode.current) {
-      // If this change is triggered by code (e.g. useEffect), skip dispatch
       updateFromCode.current = false;
       return;
     }
@@ -67,13 +63,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   // Utility: get assigned-to options for a given projectId, derived from projects prop
   const getAssignedToOptions = (projectId: string | undefined) => {
     if (!projectId) {
-      // No project selected: only current user is available
       if (user && user.id) {
         return [{ value: String(user.id), label: String(user.name) }];
       }
       return [];
     } else {
-      // Find the project and its members
       const project = projects.find(p => String(p.id) === String(projectId));
       if (!project || !Array.isArray(project.members)) return [];
       return project.members.map((m: any) => ({

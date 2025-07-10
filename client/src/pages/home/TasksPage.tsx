@@ -10,6 +10,7 @@ import { Plus, Kanban, List } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
+import { deleteTaskById, getMyTasks, getTasks, updateTaskById } from "@/apiRequests/apiEndpoints";
 
 export default function TasksPage() {
   const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
@@ -24,7 +25,7 @@ export default function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      const data = await apiClient.get<TaskResDto[]>(`/api/tasks/me`);
+      const data = await apiClient.get<TaskResDto[]>(getMyTasks());
       setTasks(data);
     } catch {
       toast.error('Failed to load tasks.');
@@ -69,7 +70,7 @@ export default function TasksPage() {
         projectId: task.projectId,
       };
       try {
-        await apiClient.put<TaskUpdateReqDto, TaskResDto>(`/api/tasks/${task.id}`, updatePayload);
+        await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskById(task.id), updatePayload);
         await fetchTasks();
         toast.success('Task updated!');
       } catch (e) {
@@ -86,7 +87,7 @@ export default function TasksPage() {
         createdBy: task.createdBy
       };
       try {
-        await apiClient.post<TaskCreateReqDto, TaskResDto>(`/api/tasks`, createPayload);
+        await apiClient.post<TaskCreateReqDto, TaskResDto>(getTasks(), createPayload);
         await fetchTasks();
         toast.success('Task added!');
       } catch (e) {
@@ -98,7 +99,7 @@ export default function TasksPage() {
 
   const handleDelete = async (taskId: string) => {
     try {
-      await apiClient.delete(`/api/tasks/${taskId}`);
+      await apiClient.delete(deleteTaskById(taskId));
       await fetchTasks();
       toast.success('Task deleted!');
     } catch (e) {
@@ -203,7 +204,7 @@ export default function TasksPage() {
               const task = tasks.find(t => String(t.id) === String(taskId));
               if (!task) return;
               try {
-                await apiClient.put(`/api/tasks/${taskId}`,
+                await apiClient.put(updateTaskById(taskId),
                   {
                     title: task.title,
                     description: task.description,

@@ -86,7 +86,7 @@ export class ProjectService {
    */
   async createProject({ name, description, ownerId }: { name: string; description?: string; ownerId: string }) {
     // Use a transaction to ensure both inserts succeed or fail together
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx:any) => {
       // Insert project
       const [projectRow] = await tx.insert(projects).values({
         name,

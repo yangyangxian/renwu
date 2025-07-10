@@ -45,14 +45,7 @@ router.get('/me', async (req, res) => {
   res.json(createApiResponse<ProjectResDto[]>(data));
 });
 
-
-// GET /api/projects/:id - get a project by its ID (and members)
-router.get(
-  '/:id',
-  async (
-    req: Request<{ id: string }, {}, {}, {}>,
-    res: Response<ApiResponse<ProjectResDto>>
-  ) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
     const { id } = req.params;
     if (!id) {
       throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
@@ -62,7 +55,8 @@ router.get(
     const project = await projectService.getProjectById(id);
     if (!project) {
       // Return 200 with data: null (not an error, just not found)
-      return res.json(createApiResponse<ProjectResDto | null>(null));
+      res.json(createApiResponse<ProjectResDto | null>(null));
+      return;
     }
     const dto = mapObject(project, new ProjectResDto());
     dto.members = project.members;

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { HelloResDto, UserResDto, ApiErrorResponse, ErrorCodes } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { getErrorMessage } from '@/resources/errorMessages';
+import { getHello, getUserByEmail } from '@/apiRequests/apiEndpoints';
 
 function APIDataExamplePage() {
   const [hello, setHello] = useState<HelloResDto | null>(null);
@@ -10,10 +11,10 @@ function APIDataExamplePage() {
   const [userError, setUserError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiClient.get<HelloResDto>('/api/hello')
+    apiClient.get<HelloResDto>(getHello())
       .then((data: HelloResDto) => setHello(data))
       .catch((apiError: ApiErrorResponse) => {
-        console.error('Error fetching /api/hello:', apiError);
+        console.error(`Error fetching ${getHello()}:`, apiError);
         const errorMessage = apiError?.code
           ? getErrorMessage(apiError.code as ErrorCodes)
           : 'Failed to load';
@@ -35,12 +36,12 @@ function APIDataExamplePage() {
     setUserError(null);
     setUserData(null);
 
-    apiClient.get<UserResDto>(`/api/users/email/${encodeURIComponent(userEmailInput)}`)
+    apiClient.get<UserResDto>(getUserByEmail(userEmailInput))
       .then((data: UserResDto) => {
         setUserData(data);
       })
       .catch((error: ApiErrorResponse) => {
-        console.error('Error fetching /api/users/email/:email', error);
+        console.error(`Error fetching ${getUserByEmail(userEmailInput)}`, error);
         if (error?.code) {
           setUserError(getErrorMessage(error.code as ErrorCodes));
         } else {
@@ -63,7 +64,7 @@ function APIDataExamplePage() {
           API Example
         </h3>
         <p className="text-gray-700 mb-4">
-          <strong><code>/api/hello</code>:</strong> {hello ? hello.message : 'Loading...'}
+          <strong><code>{getHello()}</code>:</strong> {hello ? hello.message : 'Loading...'}
         </p>
       </div>
 
@@ -101,7 +102,7 @@ function APIDataExamplePage() {
       </div>
 
       <p className="mt-12 text-gray-500 text-sm border-t border-gray-200 pt-8">
-        This page showcases fetching data from <code>/api/hello</code> and <code>/api/users/email/:email</code>.
+        This page showcases fetching data from <code>{getHello()}</code> and <code>{getUserByEmail(':email')}</code>.
       </p>
     </div>
   );
