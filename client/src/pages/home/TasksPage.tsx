@@ -57,17 +57,6 @@ export default function TasksPage() {
     });
   }, [tasks, dateRange, selectedProject]);
 
-  const allProjectMembers = useMemo(() => {
-    const allMembers = projects.flatMap((p: ProjectResDto) =>
-      Array.isArray(p.members)
-        ? p.members.map((m: any) => ({ ...m, projectId: p.id }))
-        : []
-    );
-    const seen = new Set<string>();
-    return allMembers
-      .filter((m: any) => typeof m.id === 'string' && m.id && !seen.has(m.id) && !!seen.add(m.id))
-      .map((m: any) => ({ id: m.id as string, name: m.name, projectId: m.projectId }));
-  }, [projects]);
 
   const handleTaskSubmit = async (task: any) => {
     if (task.id) {
@@ -194,7 +183,6 @@ export default function TasksPage() {
               onSubmit={handleTaskSubmit}
               title={editingTask ? "Edit Task" : "Add New Task"}
               projects={projects}
-              projectMembers={allProjectMembers}
               initialValues={editingTask || {}}
             />
           )}

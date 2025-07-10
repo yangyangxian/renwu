@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
+import { taskFormReducer, initialTaskFormState, TaskFormState, TaskFormAction } from "../../reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Textarea } from "@/components/ui-kit/Textarea";
@@ -12,11 +13,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Pop
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/DropDownList";
 
-interface ProjectMember {
-  id: string;
-  name?: string;
-  projectId?: string;
-}
+
 
 interface TaskDialogProps {
   open: boolean;
@@ -36,7 +33,7 @@ interface TaskDialogProps {
   };
   title?: string;
   projects: ProjectResDto[];
-  projectMembers?: ProjectMember[];
+  // projectMembers prop removed
 }
 
 const statusOptions = [
@@ -48,49 +45,58 @@ const statusOptions = [
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
   open, onOpenChange, onSubmit, initialValues = {}, title = "Add New Task", projects,
-  projectMembers = [],
 }) => {
-  console.log("initialValues" + JSON.stringify(initialValues));
-  const [taskId] = useState(initialValues.id || "");
-  const [taskTitle, setTaskTitle] = useState(initialValues.title || "");
-  const [taskDueDate, setTaskDueDate] = useState(initialValues.dueDate || "");
-  const [taskAssignedTo, setTaskAssignedTo] = useState(initialValues.assignedTo || "");
-  const [taskStatus, setTaskStatus] = useState<TaskStatus>(initialValues.status || TaskStatus.TODO);
-  const [taskDescription, setTaskDescription] = useState(initialValues.description || "");
-  const [taskProjectId, setTaskProjectId] = useState(initialValues.projectId || "");
-
-  const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
-
   const { user } = useAuth();
+  const [taskState, dispatch] = useReducer(
+    taskFormReducer,
+    { ...initialTaskFormState, ...initialValues }
+  );
+  const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
+  const updateFromCode = React.useRef(false);
+  
+  // Handler for assignedTo value change
+  const handleAssignedToChange = (value: string) => {
+    if (updateFromCode.current) {
+      // If this change is triggered by code (e.g. useEffect), skip dispatch
+      updateFromCode.current = false;
+      return;
+    }
+    dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
+  };
 
-  // Populate assigned-to options and ensure value is valid whenever project changes
-  useEffect(() => {
-    let options: { value: string; label: string }[] = [];
-    if (!taskProjectId) {
+  // Utility: get assigned-to options for a given projectId, derived from projects prop
+  const getAssignedToOptions = (projectId: string | undefined) => {
+    if (!projectId) {
       // No project selected: only current user is available
       if (user && user.id) {
-        options = [{ value: String(user.id), label: String(user.name || user.email || user.id) }];
+        return [{ value: String(user.id), label: String(user.name) }];
       }
+      return [];
     } else {
-      // Project selected: show all project members (force string compare)
-      options = projectMembers
-        .filter(opt => String(opt.projectId) === String(taskProjectId))
-        .map(opt => ({
-          value: String(opt.id),
-          label: String(opt.name || opt.id)
-        }));
+      // Find the project and its members
+      const project = projects.find(p => String(p.id) === String(projectId));
+      if (!project || !Array.isArray(project.members)) return [];
+      return project.members.map((m: any) => ({
+        value: String(m.id),
+        label: String(m.name || m.id)
+      }));
     }
+  };
+
+  useEffect(function populateAssignedTo(){
+    const options = getAssignedToOptions(taskState.projectId);
     setAssignedToSelectOptions(options);
-    // Ensure assignedTo value is always valid after options change
+    // to let the select component is updated by code
+    updateFromCode.current = true;
     if (options.length === 0) {
-      setTaskAssignedTo("");
-    } else if (!options.some(opt => opt.value === taskAssignedTo)) {
-      setTaskAssignedTo(options[0].value);
+      handleAssignedToChange('');
+    } else if (options.some(opt => opt.value === initialValues.assignedTo)) {
+      handleAssignedToChange(initialValues.assignedTo!);
     }
-  }, [taskProjectId, projectMembers, user]);
+  }, [taskState.projectId, projects, user]);
 
   const handleProjectChange = (value: string) => {
-    setTaskProjectId(value === "personal" ? "" : value);
+    dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });
     // Optionally reset assignedTo here if needed, but useEffect will handle the default
   };
 
@@ -98,7 +104,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 !max-w-[1200px] w-[75vw] gap-0">
         <VisuallyHidden>
-          <DialogTitle></DialogTitle>. 
+          <DialogTitle></DialogTitle>.
         </VisuallyHidden>
         {/* Navigation bar */}
         <nav className="flex items-center justify-between h-15 border-b bg-white-black rounded-t-md">
@@ -113,14 +119,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             onSubmit={e => {
               e.preventDefault();
               onSubmit({
-                id: taskId,
-                dueDate: taskDueDate,
-                assignedTo: taskAssignedTo,
-                status: taskStatus,
-                description: taskDescription,
-                projectId: taskProjectId || undefined,
+                ...taskState,
                 createdBy: user?.id || "",
-                title: taskTitle
               });
               onOpenChange(false);
             }}
@@ -136,8 +136,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 <Input
                   id="title"
                   placeholder="Task title"
-                  value={taskTitle}
-                  onChange={e => setTaskTitle(e.target.value)}
+                  value={taskState.title}
+                  onChange={e => dispatch({ type: 'SET_FIELD', field: 'title', value: e.target.value })}
                   required
                   tabIndex={-1}
                 />
@@ -151,7 +151,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     Project
                   </Label>
                   <DropDownList
-                    value={taskProjectId || "personal"}
+                    value={taskState.projectId || "personal"}
                     id="project-select"
                     className="min-w-[12rem] w-full"
                     onValueChange={handleProjectChange}
@@ -167,11 +167,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     Assigned to
                   </Label>
                   <DropDownList
-                    value={taskAssignedTo}
+                    value={taskState.assignedTo}
                     id="assigned-to"
                     className="min-w-[12rem] w-full"
-                    onValueChange={setTaskAssignedTo}
-                    disabled={!taskProjectId}
+                    onValueChange={handleAssignedToChange}
+                    disabled={!taskState.projectId}
                     options={assignedToSelectOptions}
                     placeholder="Select user"
                   />
@@ -192,15 +192,15 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         className="w-full min-w-[12rem] text-left justify-between text-secondary-foreground"
                         aria-label="Select due date"
                       >
-                        <span className="ml-1">{taskDueDate ? new Date(taskDueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>
+                        <span className="ml-1">{taskState.dueDate ? new Date(taskState.dueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>
                         <CalendarIcon className="size-4 ml-2" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={taskDueDate ? new Date(taskDueDate) : undefined}
-                        onSelect={d => d && setTaskDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)}
+                        selected={taskState.dueDate ? new Date(taskState.dueDate) : undefined}
+                        onSelect={d => d && dispatch({ type: 'SET_FIELD', field: 'dueDate', value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })}
                       />
                     </PopoverContent>
                   </Popover>
@@ -211,8 +211,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     Status
                   </Label>
                   <DropDownList
-                    value={taskStatus}
-                    onValueChange={v => setTaskStatus(v as TaskStatus)}
+                    value={taskState.status}
+                    onValueChange={v => dispatch({ type: 'SET_FIELD', field: 'status', value: v as TaskStatus })}
                     options={statusOptions}
                     id="status"
                     className="min-w-[12rem] w-full"
@@ -230,8 +230,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   id="description"
                   className="bg-muted min-h-[150px] focus:ring-2 focus:ring-primary/30"
                   placeholder="Task description"
-                  value={taskDescription}
-                  onChange={e => setTaskDescription(e.target.value)}
+                  value={taskState.description}
+                  onChange={e => dispatch({ type: 'SET_FIELD', field: 'description', value: e.target.value })}
                   rows={5}
                 />
               </div>
@@ -240,7 +240,17 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               <DialogClose asChild>
                 <Button type="button" variant="outline">Cancel</Button>
               </DialogClose>
-              <Button type="submit" variant="default">Save</Button>
+              <Button
+                type="submit"
+                variant="default"
+                disabled={
+                  !taskState.title.trim() ||
+                  !taskState.assignedTo ||
+                  !user?.id
+                }
+              >
+                Save
+              </Button>
             </div>
           </form>
           {/* Right panel for future content */}
