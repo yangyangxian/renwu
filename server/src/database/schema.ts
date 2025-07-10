@@ -12,7 +12,7 @@ import {
   primaryKey,
 } from 'drizzle-orm/pg-core';
 import { TaskStatus, ProjectRole } from '@fullstack/common';
-import { nullableUuid, nullableText, nullableTimestamp } from './customTypes';
+import { nullableUuid, nullableText, nullableTimestamp } from './customTypes.js';
 
 // ---------- ENUM: Task Status ----------
 export const taskStatusEnum = pgEnum('task_status', Object.values(TaskStatus) as [string, ...string[]]);
