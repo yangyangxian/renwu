@@ -81,7 +81,7 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
-        className="transition-all duration-300 h-full p-2 pt-3 relative"
+        className="transition-all duration-300 h-full p-2 pt-3 relative max-w-[14rem]"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
@@ -175,7 +175,7 @@ function ProjectsMenuItem({
     <SidebarMenuItem>
       <Collapsible defaultOpen={true} className="group/collapsible">
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="relative flex items-center w-full min-w-0 mb-1 group cursor-pointer">
+          <SidebarMenuButton className="relative flex items-center min-w-0 mb-1 group cursor-pointer">
             <Folder className="w-5 h-5 mr-1 flex-shrink-0" />
             {showText && (
               <>

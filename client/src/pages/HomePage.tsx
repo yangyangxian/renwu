@@ -84,10 +84,10 @@ export default function HomePage() {
   const showLanding = !isAuthenticated && location.pathname === "/";
 
   return (
-    <div className="flex w-full h-full pr-2">
+    <div className="flex w-full h-full">
       {/* Sidebar with icon and text */}
       {isAuthenticated && (
-        <aside className="h-full max-h-full flex flex-shrink-0 overflow-y-auto overflow-x-hidden bg-white-black">
+        <aside className="h-full max-h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
           <HomeSideBar
             onAddProject={() => setProjectDialogOpen(true)}
             projects={projects}

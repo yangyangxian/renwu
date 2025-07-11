@@ -2,16 +2,16 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Input } from "@/components/ui-kit/Input";
-import { Textarea } from "@/components/ui-kit/Textarea";
 import { Label } from "@/components/ui-kit/Label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
-import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
-import { UserPlus, Info } from "lucide-react";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui-kit/Hover-card";
-import { ProjectRole } from '@fullstack/common';
+import { ProjectOverviewTab } from "@/components/projectspage/ProjectDetailTabs/ProjectOverviewTab";
+import { ProjectTasksTab } from "@/components/projectspage/ProjectDetailTabs/ProjectTasksTab";
+import { ProjectTeamTab } from "@/components/projectspage/ProjectDetailTabs/ProjectTeamTab";
+import { ProjectSettingsTab } from "@/components/projectspage/ProjectDetailTabs/ProjectSettingsTab";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { marked } from 'marked';
 import { useProject } from "@/hooks/useProject";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -24,6 +24,7 @@ export default function ProjectDetailPage() {
   const [descInput, setDescInput] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descInputRef = useRef<HTMLTextAreaElement>(null);
+  const [activeTab, setActiveTab] = useState<'overview'|'tasks'|'team'|'settings'>('overview');
 
   useEffect(() => {
     if (project) {
@@ -79,143 +80,79 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="h-full w-full flex gap-4 p-1">
-      {/* Project Info Card */}
-      <Card className="flex flex-col h-full w-7/10 p-3 shadow-none">
-        {loading ? (
-          <Label className="text-slate-500">Loading project...</Label>
-        ) : project ? (
-          <>
-            {/* Project Header (no icon) */}
-            <div className="flex items-center mb-2">
-              {editingTitle ? (
-                <Input
-                  ref={titleInputRef}
-                  value={titleInput}
-                  onChange={e => setTitleInput(e.target.value)}
-                  onBlur={handleTitleBlur}
-                  onKeyDown={e => { 
-                    if (e.key === 'Enter') { 
-                      handleTitleBlur(); 
-                    } else if (e.key === 'Escape') {
-                      setEditingTitle(false);
-                    }
-                  }}
-                  className="!text-2xl font-bold flex-1 h-14"
-                  maxLength={128}
-                />
-              ) : (
-                <Label
-                  className="text-2xl font-black truncate cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded p-3 flex-1"
-                  title={project.name}
-                  onClick={handleTitleClick}
-                >
-                  {project.name ? project.name.charAt(0).toUpperCase() + project.name.slice(1) : ''}
-                </Label>
-              )}
-            </div>
-            {/* Project Description */}
-            <hr className="border-t border-gray-200 dark:border-gray-700 mb-3" />
-            <div className="p-4 flex flex-col flex-1 overflow-auto">
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-md font-semibold">Project Description:</h2>
-              <HoverCard openDelay={0}>
-                <HoverCardTrigger asChild>
-                  <Info className="w-4 h-4" />
-                </HoverCardTrigger>
-                <HoverCardContent className="w-80 text-xs leading-relaxed">
-                  <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
-                  <ul className="list-disc pl-5">
-                    <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
-                    <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
-                    <li><b>Link:</b> <code>[title](url)</code></li>
-                    <li><b>List:</b> <code>* item</code></li>
-                    <li><b>Number List:</b> <code> 1. item</code></li>
-                    <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
-                    <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
-                  </ul>
-                </HoverCardContent>
-              </HoverCard>
-            </div>
-              {editingDesc ? (
-                <Textarea
-                  ref={descInputRef}
-                  value={descInput}
-                  onChange={e => setDescInput(e.target.value)}
-                  onBlur={handleDescBlur}
-                  onCancel={() => {
-                    setEditingDesc(false);
-                  }}
-                  placeholder="Enter a project description…(Markdown supported!)"
-                  className="bg-secondary !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
-                  autoSize={true}
-                  maxLength={10000}
-                />
-              ) : (
-                <div className="overflow-y-auto">
-                  {project?.description ? (
-                    <div
-                      className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer"
-                      onClick={handleDescClick}
-                      dangerouslySetInnerHTML={{ __html: html }}
-                    />
-                  ) : (
-                    <div
-                      className="markdown-body !text-[0.95rem] !bg-card p-4 cursor-pointer text-muted-foreground italic"
-                      onClick={handleDescClick}
-                    >
-                      Enter a project description… (Markdown supported!)
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </>
-        ) : null}
-      </Card>
-      {/* Team Members Card */}
-      <Card className="flex flex-col w-3/10 min-w-50 self-start px-5 py-4 shadow-none">
-        <div className="flex items-center justify-between">
-          <Label className="text-md font-semibold">Team Members</Label>
-          <UserPlus
-            className="cursor-pointer hover:bg-secondary rounded mt-1 p-1"
-            aria-label="Add project member"
-            onClick={() => {/* TODO: open add member modal or trigger add logic */}}
+    <div className="h-full w-full flex flex-col gap-2 p-1">
+      {/* Project Name at the top */}
+      <div className="flex items-center mb-2">
+        {editingTitle ? (
+          <Input
+            ref={titleInputRef}
+            value={titleInput}
+            onChange={e => setTitleInput(e.target.value)}
+            onBlur={handleTitleBlur}
+            onKeyDown={e => { 
+              if (e.key === 'Enter') { 
+                handleTitleBlur(); 
+              } else if (e.key === 'Escape') {
+                setEditingTitle(false);
+              }
+            }}
+            className="!text-[22px] font-black flex-1 h-[35px] rounded pl-2"
+            maxLength={128}
           />
-        </div>
-        <Label className="text-muted-foreground mb-5">Invite your team members to collaborate.</Label>
-        <div className="flex flex-col gap-4">
-          {project?.members && project.members.length > 0 ? (
-            project.members.map((member, idx) => (
-              <div key={member.id || idx} className="flex items-center gap-4">
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="text-lg font-bold text-slate-500 bg-slate-200">
-                    {member.name?.[0] || '?'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <Label className="font-medium text-slate-900 dark:text-white mb-[3px]">{member.name}</Label>
-                  <Label className="text-xs text-slate-500">{member.email}</Label>
-                </div>
-                {/* Role dropdown using UI kit Select, using real role if present */}
-                <Select value={member.role || ProjectRole.MEMBER}>
-                  <SelectTrigger className="py-1">
-                    <SelectValue placeholder="Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ProjectRole).map(([key, value]) => (
-                      <SelectItem key={value} value={value}>{key.charAt(0) + key.slice(1).toLowerCase()}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))
-          ) : (
-            <Label className="text-slate-400 italic">No team members yet.</Label>
-          )}
-        </div>
-      </Card>
-      {/* Other cards can be added below here in the future */}
+        ) : (
+      <div className="flex items-center gap-2">
+        <Label
+          className="pl-1 text-[22px] font-black cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
+          title={project?.name}
+          onClick={handleTitleClick}
+        >
+          {project?.name ? project.name.charAt(0).toUpperCase() + project.name.slice(1) : ''}
+        </Label>
+        <span className="cursor-pointer flex items-center" title="Edit project name" onClick={handleTitleClick}>
+          <Pencil className="ml-2 h-3 w-3 text-muted-foreground hover:text-primary" />
+        </span>
+      </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={val => setActiveTab(val as typeof activeTab)}
+        className="mb-2"
+      >
+        <TabsList className="bg-white dark:bg-muted">
+          <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            Tasks
+          </TabsTrigger>
+          <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            Team Activities
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            Settings
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <ProjectOverviewTab
+          project={project}
+          editingDesc={editingDesc}
+          descInput={descInput}
+          descInputRef={descInputRef}
+          handleDescClick={handleDescClick}
+          handleDescBlur={handleDescBlur}
+          setEditingDesc={setEditingDesc}
+          setDescInput={setDescInput}
+        />
+      )}
+      {activeTab === 'tasks' && <ProjectTasksTab />}
+      {activeTab === 'team' && <ProjectTeamTab project={project} />}
+      {activeTab === 'settings' && <ProjectSettingsTab />}
     </div>
   );
 }

@@ -106,92 +106,100 @@ export default function TasksPage() {
       toast.error('Failed to delete task.');
     }
   };
+
   return (
     <div className="w-full h-full flex flex-col gap-3">
-      <div id="menuBar" className="flex gap-3 items-center">
-        <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
-          <SelectTrigger
-            className="min-w-[9rem] px-3 bg-white dark:text-slate-200"
-            id="project-select"
-          >
-            <SelectValue placeholder="Select project..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tasks</SelectItem>
-            <SelectItem value="personal">Personal Tasks</SelectItem>
-            {/* Divider */}
-            {projects.length > 0 && <div className="h-px bg-gray-200 my-1 mx-2" role="separator" />}
-            {projects.map(project => (
-              <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Responsive menu bar: all controls in one row on all devices */}
+      <div id="menuBar" className="w-full">
+        <div className="flex flex-row w-full gap-3 items-start sm:items-center flex-wrap">
+          {/* Selects */}
+          <div className="flex gap-3 items-center">
+            <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
+              <SelectTrigger
+                className="min-w-[9rem] px-3 bg-white dark:text-slate-200"
+                id="project-select"
+              >
+                <SelectValue placeholder="Select project..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tasks</SelectItem>
+                <SelectItem value="personal">Personal Tasks</SelectItem>
+                {/* Divider */}
+                {projects.length > 0 && <div className="h-px bg-gray-200 my-1 mx-2" role="separator" />}
+                {projects.map(project => (
+                  <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        {/* Date range dropdown */}
-        <div className="flex items-center">
-          <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
-            <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200" id="date-range-select">
-              <SelectValue placeholder="Date range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1m">Last 30 days</SelectItem>
-              <SelectItem value="3m">Last 3 months</SelectItem>
-              <SelectItem value="1y">Last 1 year</SelectItem>
-              <SelectItem value="all">All</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Tabs for Board/List/Calendar views */}
-        <Tabs defaultValue={view} value={view} onValueChange={setView}>
-          <TabsList className="bg-white dark:bg-muted">
-            <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              <Kanban className="w-4 h-4" />
-              <span>Board</span>
-            </TabsTrigger>
-            <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              <List className="w-4 h-4" />
-              <span>List</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <div className="ml-auto">
-          <Button
-            variant="default"
-            className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
-             from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
-            onClick={() => {
-              // If a project is selected (not 'all' or 'personal'), prefill projectId
-              if (selectedProject !== 'all' && selectedProject !== 'personal') {
-                setEditingTask({ projectId: selectedProject } as any);
-              } else {
-                setEditingTask(null);
-              }
-              setIsDialogOpen(true);
-            }}
-          >
-            <Plus className="w-5 h-5" />
-            <span className="">Add Task</span>
-          </Button>
-          {isDialogOpen && (
-            <TaskDialog
-              open={isDialogOpen}
-              onOpenChange={open => {
-                setIsDialogOpen(open);
-                if (!open) setEditingTask(null);
+            <div className="flex items-center">
+              <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
+                <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200" id="date-range-select">
+                  <SelectValue placeholder="Date range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1m">Last 30 days</SelectItem>
+                  <SelectItem value="3m">Last 3 months</SelectItem>
+                  <SelectItem value="1y">Last 1 year</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {/* Tabs: always inline */}
+          <div className="flex items-center">
+            <Tabs defaultValue={view} value={view} onValueChange={setView}>
+              <TabsList
+                className="bg-white dark:bg-muted flex flex-row gap-0"
+              >
+                <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <Kanban className="w-4 h-4" />
+                  <span>Board</span>
+                </TabsTrigger>
+                <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <List className="w-4 h-4" />
+                  <span>List</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          {/* Add Task button always at end of row, never wraps */}
+          <div className="ml-auto flex items-center">
+            <Button
+              variant="default"
+              className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
+               from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
+              onClick={() => {
+                if (selectedProject !== 'all' && selectedProject !== 'personal') {
+                  setEditingTask({ projectId: selectedProject } as any);
+                } else {
+                  setEditingTask(null);
+                }
+                setIsDialogOpen(true);
               }}
-              onSubmit={handleTaskSubmit}
-              title={editingTask ? "Edit Task" : "Add New Task"}
-              projects={projects}
-              initialValues={editingTask || {}}
-            />
-          )}
+            >
+              <Plus className="w-5 h-5" />
+              <span className="">Add Task</span>
+            </Button>
+          </div>
         </div>
+        {isDialogOpen && (
+          <TaskDialog
+            open={isDialogOpen}
+            onOpenChange={open => {
+              setIsDialogOpen(open);
+              if (!open) setEditingTask(null);
+            }}
+            onSubmit={handleTaskSubmit}
+            title={editingTask ? "Edit Task" : "Add New Task"}
+            projects={projects}
+            initialValues={editingTask || {}}
+          />
+        )}
       </div>
 
       {view === 'board' && (
-        <div className="flex-1 overflow-auto pb-1">
+        <div className="flex-1 overflow-auto pb-1 rounded-xl">
           <BoardView
             tasks={filteredTasks}
             onTaskClick={taskId => {
