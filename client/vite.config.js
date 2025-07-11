@@ -37,4 +37,29 @@ export default defineConfig({
       ],
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Group major dependencies into their own chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react-router-dom') || id.includes('react-router')) {
+              return 'vendor-router';
+            }
+            if (id.includes('react-dom')) {
+              return 'vendor-react-dom';
+            }
+            if (id.includes('react')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide';
+            }
+            // All other dependencies go into a generic vendor chunk
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
 })
