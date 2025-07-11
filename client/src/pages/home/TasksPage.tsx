@@ -181,6 +181,7 @@ export default function TasksPage() {
                   value={searchTerm}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   placeholder="Search"
+                  className="bg-white-black transition-colors duration-50"
                 />
               </div>
               <Button

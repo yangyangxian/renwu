@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui-kit/Dropdown-menu";
 import { useDarkMode } from "@/hooks/useDarkMode";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -47,13 +47,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="User menu">
+                <Button variant="ghost" size="icon" aria-label="User menu" className="hover:border-none group">
                   <span className="sr-only">Open user menu</span>
-                  <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
+                  <User className="w-5 h-5 text-white group-hover:text-black dark:text-white" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={logout} variant="destructive">
+                  <DropdownMenuItem onClick={logout} variant="destructive" className="cursor-pointer">
                     Log Out
                   </DropdownMenuItem>             
               </DropdownMenuContent>

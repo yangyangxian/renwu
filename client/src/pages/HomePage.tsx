@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui-kit/Button";
+import LandingPage from "./LandingPage";
 import { useAuth } from "@/providers/AuthProvider";
 import { HomeSideBar } from "@/components/homepage/SideBar";
 import { ProjectDialog } from "@/components/projectspage/ProjectDialog";
@@ -81,8 +82,20 @@ export default function HomePage() {
     }
   };
 
+  // Determine if we are on login or signup page (unauthenticated routes)
+  const isAuthPage = ["/login", "/signup", "/home/login", "/home/signup"].includes(location.pathname);
   const showLanding = !isAuthenticated && location.pathname === "/";
 
+  if (showLanding) {
+    return <LandingPage />;
+  }
+
+  if (isAuthPage) {
+    // Render only the child route (Outlet) for login/signup, no HomePage layout
+    return <Outlet />;
+  }
+
+  // ...existing code...
   return (
     <div className="flex w-full h-full">
       {/* Sidebar with icon and text */}
@@ -94,7 +107,7 @@ export default function HomePage() {
           />
         </aside>
       )}
-      {/* Main Landing Content or Outlet */}
+      {/* Main Content or Outlet */}
       <section className="flex w-full max-h-full justify-center pl-3 p-2 pt-3 overflow-y-auto">
         {/* Name Dialog */}
         <Dialog open={nameDialogOpen} modal>
@@ -127,20 +140,7 @@ export default function HomePage() {
             onSubmit={handleProjectSubmit}
           />
         )}
-        {showLanding ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
-            <span className="mb-4 text-center font-bold text-4xl">Welcome to Task Manager</span>
-            <p className="text-lg text-muted-foreground mb-8 text-center max-w-xl">
-              Organize your tasks, manage your projects, and boost your productivity with a modern, collaborative task management app.
-            </p>
-            <div className="flex gap-4">
-              <Button onClick={() => navigate('/login')} size="lg">Log In</Button>
-              <Button onClick={() => navigate('/signup')} size="lg" variant="outline">Sign Up</Button>
-            </div>
-          </div>
-        ) : (
-          <Outlet context={{ projects }} />
-        )}
+        <Outlet context={{ projects }} />
       </section>
     </div>
   );

@@ -36,47 +36,51 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <Card className="w-full max-w-sm p-8 flex flex-col gap-6 shadow-lg">
-        <h2 className="text-2xl font-bold text-center">Log In</h2>
-        {error && (
-          <div className="text-sm mb-2 p-2 bg-destructive/10 border border-destructive text-destructive rounded">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-            required
-            disabled={isLoggingIn}
-            autoFocus
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            required
-            disabled={isLoggingIn}
-          />
-          <Button type="submit" disabled={isLoggingIn} className="w-full">
-            {isLoggingIn ? 'Logging in...' : 'Log In'}
+    <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-cover bg-center bg-no-repeat overflow-hidden" style={{ backgroundImage: 'url(/backgroundImages/landing.webp)' }}>
+      <div className="absolute inset-0 bg-black/30" />
+      <div className="relative z-10 flex flex-col items-center justify-center w-full px-4">
+        <Card className="w-full max-w-sm p-8 flex flex-col gap-6 shadow-lg">
+          <h2 className="text-2xl font-bold text-center">Log In</h2>
+          {error && (
+            <div className="text-sm mb-2 p-2 bg-destructive/10 border border-destructive text-destructive rounded">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              required
+              disabled={isLoggingIn}
+              autoFocus
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              required
+              disabled={isLoggingIn}
+            />
+            <Button type="submit" disabled={isLoggingIn} className="w-full">
+              {isLoggingIn ? 'Logging in...' : 'Log In'}
+            </Button>
+          </form>
+          <Button
+            variant="link"
+            className="w-full text-center text-primary mt-2"
+            type="button"
+            onClick={() => navigate(SIGNUP_PATH)}
+          >
+            Don&apos;t have an account? Sign Up
           </Button>
-        </form>
-        <Button
-          variant="link"
-          className="w-full text-center text-primary mt-2"
-          type="button"
-          onClick={() => navigate(SIGNUP_PATH)}
-        >
-          Don&apos;t have an account? Sign Up
-        </Button>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
+// Removed duplicate JSX block
 }
 
 export default LoginPage;

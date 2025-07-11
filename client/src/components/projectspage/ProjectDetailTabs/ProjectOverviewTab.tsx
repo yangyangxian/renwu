@@ -29,61 +29,64 @@ export function ProjectOverviewTab({
 }: ProjectOverviewTabProps) {
   const html = marked.parse(project?.description?.toString() || '');
   return (
-    <Card className="flex flex-col h-full w-full p-3 overflow-y-auto shadow-none">
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h2 className="text-md font-semibold">Project Description:</h2>
-          <HoverCard openDelay={0}>
-            <HoverCardTrigger asChild>
-              <Info className="w-4 h-4" />
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80 text-xs leading-relaxed">
-              <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
-              <ul className="list-disc pl-5">
-                <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
-                <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
-                <li><b>Link:</b> <code>[title](url)</code></li>
-                <li><b>List:</b> <code>* item</code></li>
-                <li><b>Number List:</b> <code> 1. item</code></li>
-                <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
-                <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
-              </ul>
-            </HoverCardContent>
-          </HoverCard>
-        </div>
-        {editingDesc ? (
-          <Textarea
-            ref={descInputRef}
-            value={descInput}
-            onChange={e => setDescInput(e.target.value)}
-            onBlur={handleDescBlur}
-            onCancel={() => {
-              setEditingDesc(false);
-            }}
-            placeholder="Enter a project description…(Markdown supported!)"
-            className="bg-secondary !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
-            autoSize={true}
-            maxLength={10000}
-          />
-        ) : (
-          <>
-            {project?.description ? (
-              <div
-                className="markdown-body !text-[0.95rem] !bg-card p-3 h-full cursor-pointer"
-                onClick={handleDescClick}
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
+    <div className="flex gap-3 h-full overflow-y-auto">
+        <Card className="flex h-full shadow-none p-3 w-1/2">
+            dashboard
+        </Card>
+        <Card className="flex flex-col h-full w-1/2 p-3 overflow-y-auto shadow-none">
+            <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-md font-semibold">Project Description:</h2>
+            <HoverCard openDelay={0}>
+                <HoverCardTrigger asChild>
+                <Info className="w-4 h-4" />
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 text-xs leading-relaxed">
+                <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
+                <ul className="list-disc pl-5">
+                    <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
+                    <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
+                    <li><b>Link:</b> <code>[title](url)</code></li>
+                    <li><b>List:</b> <code>* item</code></li>
+                    <li><b>Number List:</b> <code> 1. item</code></li>
+                    <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
+                    <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
+                </ul>
+                </HoverCardContent>
+            </HoverCard>
+            </div>
+            {editingDesc ? (
+            <Textarea
+                ref={descInputRef}
+                value={descInput}
+                onChange={e => setDescInput(e.target.value)}
+                onBlur={handleDescBlur}
+                onCancel={() => {
+                setEditingDesc(false);
+                }}
+                placeholder="Enter a project description…(Markdown supported!)"
+                className="bg-secondary !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
+                autoSize={true}
+                maxLength={10000}
+            />
             ) : (
-              <div
-                className="markdown-body !text-[0.95rem] !bg-card p-3 cursor-pointer text-muted-foreground italic"
-                onClick={handleDescClick}
-              >
-                Enter a project description… (Markdown supported!)
-              </div>
+            <>
+                {project?.description ? (
+                <div
+                    className="markdown-body !text-[0.95rem] !bg-card p-3 h-full cursor-pointer"
+                    onClick={handleDescClick}
+                    dangerouslySetInnerHTML={{ __html: html }}
+                />
+                ) : (
+                <div
+                    className="markdown-body !text-[0.95rem] !bg-card p-3 cursor-pointer text-muted-foreground italic"
+                    onClick={handleDescClick}
+                >
+                    Enter a project description… (Markdown supported!)
+                </div>
+                )}
+            </>
             )}
-          </>
-        )}
-      </div>
-    </Card>
+        </Card>
+    </div>
   );
 }

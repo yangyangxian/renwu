@@ -8,6 +8,7 @@ import { ProjectTasksTab } from "@/components/projectspage/ProjectDetailTabs/Pro
 import { ProjectTeamTab } from "@/components/projectspage/ProjectDetailTabs/ProjectTeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/ProjectDetailTabs/ProjectSettingsTab";
 import { Pencil } from "lucide-react";
+import { LayoutDashboard, List, Users, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { marked } from 'marked';
 import { useProject } from "@/hooks/useProject";
@@ -123,15 +124,19 @@ export default function ProjectDetailPage() {
       >
         <TabsList className="bg-white dark:bg-muted">
           <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <LayoutDashboard className="w-4 h-4" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <List className="w-4 h-4" />
             Tasks
           </TabsTrigger>
           <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <Users className="w-4 h-4" />
             Team Activities
           </TabsTrigger>
           <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+            <Settings className="w-4 h-4" />
             Settings
           </TabsTrigger>
         </TabsList>
