@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Button } from "@/components/ui-kit/Button";
 import { Trash2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { formatDateSmart } from "@/utils/dateUtils";
 import { TaskStatus } from "@fullstack/common";
 import {
@@ -34,9 +35,14 @@ const statusToColor: Record<TaskStatus, string> = {
 
 const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete, onClick, description, className }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Show overdue icon only for TODO and IN_PROGRESS
+  const isOverdue = dueDate
+    ? (new Date(dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0)) &&
+      (status === TaskStatus.TODO || status === TaskStatus.IN_PROGRESS)
+    : false;
   return (
     <Card
-      className={`group bg-muted dark:bg-black p-3 shadow transition hover:shadow-lg hover:scale-102 cursor-pointer duration-200 relative ${className || ''}`}
+      className={`group bg-muted dark:bg-black p-3 shadow transition hover:shadow-lg hover:scale-101 cursor-pointer duration-300 relative ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}
@@ -92,8 +98,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
         {dueDate && (
-          <span className="text-xs lg:text-[13px] text-muted-foreground ml-2 whitespace-nowrap bg-transparent px-2 py-0.5 rounded font-sans">
+          <span className="text-xs lg:text-[13px] text-muted-foreground ml-2 whitespace-nowrap bg-transparent px-2 py-0.5 rounded font-sans flex items-center gap-1">
             {formatDateSmart(dueDate)}
+            {isOverdue && (
+              <span title="Overdue">
+                <AlertCircle className="w-3 h-3 text-red-500" />
+              </span>
+            )}
           </span>
         )}
       </div>

@@ -7,6 +7,7 @@ import { apiClient } from '@/utils/APIClient';
 import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
+import { Calendar, Folder } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
@@ -116,9 +117,10 @@ export default function TasksPage() {
           <div className="flex gap-3 items-center">
             <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
               <SelectTrigger
-                className="min-w-[9rem] px-3 bg-white dark:text-slate-200"
+                className="px-3 bg-white dark:text-slate-200 flex items-center min-w-[9rem]"
                 id="project-select"
               >
+                <Folder className="w-4 h-4" />
                 <SelectValue placeholder="Select project..." />
               </SelectTrigger>
               <SelectContent>
@@ -134,7 +136,8 @@ export default function TasksPage() {
 
             <div className="flex items-center">
               <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
-                <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200" id="date-range-select">
+                <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200 flex items-center gap-2" id="date-range-select">
+                  <Calendar className="w-4 h-4 mr-1" />
                   <SelectValue placeholder="Date range" />
                 </SelectTrigger>
                 <SelectContent>
