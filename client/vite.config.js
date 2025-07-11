@@ -41,19 +41,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Group major dependencies into their own chunks
           if (id.includes('node_modules')) {
-            if (id.includes('react-router-dom') || id.includes('react-router')) {
-              return 'vendor-router';
+            // Split out react-day-picker
+            if (id.includes('react-day-picker')) {
+              return 'vendor-react-day-picker';
             }
-            if (id.includes('react-dom')) {
-              return 'vendor-react-dom';
+            // Split out marked
+            if (id.includes('marked')) {
+              return 'vendor-marked';
             }
-            if (id.includes('react')) {
-              return 'vendor-react';
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-lucide';
+            // Split out all @radix-ui/* packages
+            if (id.match(/node_modules\/(@radix-ui\/)/)) {
+              return 'vendor-radix';
             }
             // All other dependencies go into a generic vendor chunk
             return 'vendor';
