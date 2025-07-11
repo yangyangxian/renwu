@@ -11,9 +11,11 @@ import { Calendar, Folder } from "lucide-react";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
+import { Input } from "@/components/ui-kit/Input";
 import { deleteTaskById, getMyTasks, getTasks, updateTaskById } from "@/apiRequests/apiEndpoints";
 
 export default function TasksPage() {
+  const [searchTerm, setSearchTerm] = useState("");
   const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
 
   const [view, setView] = useState("board");
@@ -52,12 +54,15 @@ export default function TasksPage() {
       const dateOk = !threshold || (updatedAt && updatedAt >= threshold);
       // If projectId is null/undefined, treat as 'personal'.
       const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
-      if (selectedProject === 'all') return dateOk;
-      if (selectedProject === 'personal') return dateOk && isPersonal;
-      // Compare projectId loosely (number or string, allow for type coercion)
-      return dateOk && t.projectId == selectedProject;
+      let projectOk = false;
+      if (selectedProject === 'all') projectOk = true;
+      else if (selectedProject === 'personal') projectOk = isPersonal;
+      else projectOk = t.projectId == selectedProject;
+      // Blur search on title
+      const searchOk = t.title.toLowerCase().includes(searchTerm.trim().toLowerCase());
+      return dateOk && projectOk && searchOk;
     });
-  }, [tasks, dateRange, selectedProject]);
+  }, [tasks, dateRange, selectedProject, searchTerm]);
 
 
   const handleTaskSubmit = async (task: any) => {
@@ -155,11 +160,11 @@ export default function TasksPage() {
               <TabsList
                 className="bg-white dark:bg-muted flex flex-row gap-0"
               >
-                <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <Kanban className="w-4 h-4" />
                   <span>Board</span>
                 </TabsTrigger>
-                <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <List className="w-4 h-4" />
                   <span>List</span>
                 </TabsTrigger>
@@ -168,22 +173,33 @@ export default function TasksPage() {
           </div>
           {/* Add Task button always at end of row, never wraps */}
           <div className="ml-auto flex items-center">
-            <Button
-              variant="default"
-              className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
-               from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
-              onClick={() => {
-                if (selectedProject !== 'all' && selectedProject !== 'personal') {
-                  setEditingTask({ projectId: selectedProject } as any);
-                } else {
-                  setEditingTask(null);
-                }
-                setIsDialogOpen(true);
-              }}
-            >
-              <Plus className="w-5 h-5" />
-              <span className="">Add Task</span>
-            </Button>
+            {/* Search input to the left of Add Task button */}
+            <div className="flex items-center gap-2">
+              <div className="w-full max-w-xs">
+                <Input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                  placeholder="Search"
+                />
+              </div>
+              <Button
+                variant="default"
+                className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
+                 from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
+                onClick={() => {
+                  if (selectedProject !== 'all' && selectedProject !== 'personal') {
+                    setEditingTask({ projectId: selectedProject } as any);
+                  } else {
+                    setEditingTask(null);
+                  }
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="w-5 h-5" />
+                <span className="">Add Task</span>
+              </Button>
+            </div>
           </div>
         </div>
         {isDialogOpen && (
