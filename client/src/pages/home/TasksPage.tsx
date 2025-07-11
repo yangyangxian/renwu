@@ -172,7 +172,7 @@ export default function TasksPage() {
             }}
           >
             <Plus className="w-5 h-5" />
-            <span className="font-semibold">Add Task</span>
+            <span className="">Add Task</span>
           </Button>
           {isDialogOpen && (
             <TaskDialog
