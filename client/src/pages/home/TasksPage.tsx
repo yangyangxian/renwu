@@ -1,39 +1,29 @@
 import { useState, useEffect } from "react";
+import { useTasks } from '@/hooks/useTasks';
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
-import { apiClient } from '@/utils/APIClient';
 import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
-import { deleteTaskById, getMyTasks, getTasks, updateTaskById } from "@/apiRequests/apiEndpoints";
 
 export default function TasksPage() {
   const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
 
   const [view, setView] = useState("board");
-  const [tasks, setTasks] = useState<TaskResDto[]>([]);
+  const {
+    tasks,
+    addTask,
+    updateTask,
+    deleteTask,
+  } = useTasks();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
-
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
-
-  const fetchTasks = async () => {
-    try {
-      const data = await apiClient.get<TaskResDto[]>(getMyTasks());
-      setTasks(data);
-    } catch {
-      toast.error('Failed to load tasks.');
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   const handleTaskSubmit = async (task: any) => {
     if (task.id) {
@@ -46,8 +36,7 @@ export default function TasksPage() {
         projectId: task.projectId,
       };
       try {
-        await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskById(task.id), updatePayload);
-        await fetchTasks();
+        await updateTask(task.id, updatePayload);
         toast.success('Task updated!');
       } catch (e) {
         toast.error('Failed to update task.');
@@ -63,11 +52,9 @@ export default function TasksPage() {
         createdBy: task.createdBy
       };
       try {
-        await apiClient.post<TaskCreateReqDto, TaskResDto>(getTasks(), createPayload);
-        await fetchTasks();
+        await addTask(createPayload);
         toast.success('Task added!');
       } catch (e) {
-        // error handled by toast
         toast.error('Failed to create task.');
       }
     }
@@ -75,8 +62,7 @@ export default function TasksPage() {
 
   const handleDelete = async (taskId: string) => {
     try {
-      await apiClient.delete(deleteTaskById(taskId));
-      await fetchTasks();
+      await deleteTask(taskId);
       toast.success('Task deleted!');
     } catch (e) {
       toast.error('Failed to delete task.');
@@ -154,17 +140,14 @@ export default function TasksPage() {
               const task = tasks.find(t => String(t.id) === String(taskId));
               if (!task) return;
               try {
-                await apiClient.put(updateTaskById(taskId),
-                  {
-                    title: task.title,
-                    description: task.description,
-                    dueDate: task.dueDate,
-                    status: newStatus,
-                    assignedTo: task.assignedTo,
-                    projectId: task.projectId,
-                  }
-                );
-                await fetchTasks();
+                await updateTask(taskId, {
+                  title: task.title,
+                  description: task.description,
+                  dueDate: task.dueDate,
+                  status: newStatus,
+                  assignedTo: task.assignedTo,
+                  projectId: task.projectId,
+                });
                 toast.success('Task status updated!');
               } catch (e) {
                 toast.error('Failed to update task status.');
