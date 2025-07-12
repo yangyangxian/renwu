@@ -43,7 +43,7 @@ function SignupPage() {
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-cover bg-center bg-no-repeat overflow-hidden" style={{ backgroundImage: 'url(/backgroundImages/landing.webp)' }}>
       <div className="absolute inset-0 bg-black/30" />
       <div className="relative z-10 flex flex-col items-center justify-center w-full px-4">
-        <Card className="w-full max-w-sm p-8 flex flex-col gap-6 shadow-lg">
+        <Card className="w-full max-w-sm p-5 flex flex-col gap-6 shadow-lg">
           <h2 className="text-2xl font-bold text-center">Sign Up</h2>
           {error && (
             <div className="text-sm mb-2 p-2 bg-destructive/10 border border-destructive text-destructive rounded">
@@ -82,7 +82,7 @@ function SignupPage() {
           </form>
           <Button
             variant="link"
-            className="w-full text-center text-primary mt-2"
+            className="w-full text-center text-primary"
             type="button"
             onClick={() => navigate('/home/login')}
           >

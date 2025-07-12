@@ -1,4 +1,4 @@
-# Task Manager
+# Renwu - a task manager
 
 ## Why I started the project
 

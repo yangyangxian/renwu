@@ -34,7 +34,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             tabIndex={0}
           >
             <LayoutDashboard className="w-6 h-6 text-white" />
-            Task manager
+            Renwu
           </Button>
         </div>
         <div className="flex items-center gap-4">
