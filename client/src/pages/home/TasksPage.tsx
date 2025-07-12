@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { Card } from "@/components/ui-kit/Card";
@@ -7,24 +7,20 @@ import { apiClient } from '@/utils/APIClient';
 import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
-import { Calendar, Folder } from "lucide-react";
+import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
-import { Input } from "@/components/ui-kit/Input";
 import { deleteTaskById, getMyTasks, getTasks, updateTaskById } from "@/apiRequests/apiEndpoints";
 
 export default function TasksPage() {
-  const [searchTerm, setSearchTerm] = useState("");
   const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
 
   const [view, setView] = useState("board");
-  const [selectedProject, setSelectedProject] = useState("all");
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
-  // Date range filter: '1m' = last 1 month, '3m' = last 3 months, '1y' = last 1 year, 'all' = no filter
-  const [dateRange, setDateRange] = useState<'1m' | '3m' | '1y' | 'all'>('1m');
+
+  const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
 
   const fetchTasks = async () => {
     try {
@@ -38,32 +34,6 @@ export default function TasksPage() {
   useEffect(() => {
     fetchTasks();
   }, []);
-
-  const filteredTasks = useMemo(() => {
-    // Calculate threshold date based on dateRange
-    let threshold: Date | null = null;
-    if (dateRange !== 'all') {
-      threshold = new Date();
-      if (dateRange === '1m') threshold.setMonth(threshold.getMonth() - 1);
-      if (dateRange === '3m') threshold.setMonth(threshold.getMonth() - 3);
-      if (dateRange === '1y') threshold.setFullYear(threshold.getFullYear() - 1);
-      threshold.setHours(0, 0, 0, 0);
-    }
-    return tasks.filter(t => {
-      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : null;
-      const dateOk = !threshold || (updatedAt && updatedAt >= threshold);
-      // If projectId is null/undefined, treat as 'personal'.
-      const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
-      let projectOk = false;
-      if (selectedProject === 'all') projectOk = true;
-      else if (selectedProject === 'personal') projectOk = isPersonal;
-      else projectOk = t.projectId == selectedProject;
-      // Blur search on title
-      const searchOk = t.title.toLowerCase().includes(searchTerm.trim().toLowerCase());
-      return dateOk && projectOk && searchOk;
-    });
-  }, [tasks, dateRange, selectedProject, searchTerm]);
-
 
   const handleTaskSubmit = async (task: any) => {
     if (task.id) {
@@ -114,60 +84,23 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-3">
+    <div className="w-full h-full flex flex-col pt-1 gap-2">
       {/* Responsive menu bar: all controls in one row on all devices */}
       <div id="menuBar" className="w-full px-2">
         <div className="flex flex-row w-full gap-3 items-start sm:items-center flex-wrap">
-          {/* Left group: selects and search */}
-          <div className="flex gap-3 items-center flex-grow">
-            <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
-              <SelectTrigger
-                className="px-3 bg-white dark:text-slate-200 flex items-center min-w-[9rem]"
-                id="project-select"
-              >
-                <Folder className="w-4 h-4" />
-                <SelectValue placeholder="Select project..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tasks</SelectItem>
-                <SelectItem value="personal">Personal Tasks</SelectItem>
-                {/* Divider */}
-                {projects.length > 0 && <div className="h-px bg-gray-200 my-1 mx-2" role="separator" />}
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex items-center">
-              <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
-                <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200 flex items-center gap-2" id="date-range-select">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  <SelectValue placeholder="Date range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1m">Last 30 days</SelectItem>
-                  <SelectItem value="3m">Last 3 months</SelectItem>
-                  <SelectItem value="1y">Last 1 year</SelectItem>
-                  <SelectItem value="all">All</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="min-w-[9rem]">
-              <Input
-                type="text"
-                value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                placeholder="Search"
-                className="bg-white-black transition-colors duration-50 text-sm"
-              />
-            </div>
-          </div>
-          {/* Right group: tabs and add task button */}
+          {/* TaskFilterMenu now owns filter state and logic */}
+          <TaskFilterMenu
+            showDateRange={true}
+            showProjectSelect={true}
+            showSearch={true}
+            projects={projects}
+            tasks={tasks}
+            onFilter={setFilteredTasks}
+          />
+          {/* View mode tabs and add task button */}
           <div className="flex items-center gap-2">
             <Tabs defaultValue={view} value={view} onValueChange={setView}>
-              <TabsList
-                className="bg-white dark:bg-muted flex flex-row gap-0"
-              >
+              <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
                 <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <Kanban className="w-4 h-4" />
                   <span>Board</span>
@@ -183,11 +116,7 @@ export default function TasksPage() {
               className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
                from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
               onClick={() => {
-                if (selectedProject !== 'all' && selectedProject !== 'personal') {
-                  setEditingTask({ projectId: selectedProject } as any);
-                } else {
-                  setEditingTask(null);
-                }
+                setEditingTask(null);
                 setIsDialogOpen(true);
               }}
             >
