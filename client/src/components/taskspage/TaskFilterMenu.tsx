@@ -113,7 +113,7 @@ export function TaskFilterMenu({
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search"
-            className="bg-white-black transition-colors duration-50 text-sm"
+            className="bg-white-black text-sm"
           />
         </div>
       )}

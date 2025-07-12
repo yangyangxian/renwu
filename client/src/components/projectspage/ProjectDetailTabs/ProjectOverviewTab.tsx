@@ -11,9 +11,10 @@ import { toast } from 'sonner';
 interface ProjectOverviewTabProps {
   project: any;
   projectId: string;
+  tasks: any[];
 }
 
-export function ProjectOverviewTab({ project, projectId }: ProjectOverviewTabProps) {
+export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOverviewTabProps) {
   const { updateProject } = useProjects(projectId);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
@@ -57,7 +58,8 @@ export function ProjectOverviewTab({ project, projectId }: ProjectOverviewTabPro
   return (
     <div className="flex gap-3 h-full overflow-y-auto p-2">
         <Card className="flex h-full shadow-none p-3 w-1/2">
-            dashboard
+            {/* Example usage: dashboard with tasks count */}
+            <div>Tasks: {tasks?.length ?? 0}</div>
         </Card>
         <Card className="flex flex-col h-full w-1/2 p-3 overflow-y-auto shadow-none">
             <div className="flex items-center gap-2 mb-1">

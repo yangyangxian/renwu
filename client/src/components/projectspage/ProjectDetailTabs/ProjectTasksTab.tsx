@@ -1,29 +1,23 @@
-import { useTasks } from '@/hooks/useTasks';
-import { TaskFilterMenu } from '@/components/taskspage/TaskFilterMenu';
 import BoardView from '@/components/taskspage/BoardView';
-import React, { useState, useEffect } from 'react';
 import { TaskResDto } from '@fullstack/common';
 
-export function ProjectTasksTab({ projectId }: { projectId: string }) {
-  const { tasks, submitTask, deleteTask } = useTasks(projectId);
+interface ProjectTasksTabProps {
+  projectId: string;
+  tasks: TaskResDto[];
+  onTaskDelete: (taskId: string) => void;
+  onTaskStatusChange: (taskId: string, newStatus: string) => void;
+  onTaskClick: (taskId: string) => void;
+}
 
+export function ProjectTasksTab({ projectId, tasks, onTaskDelete, onTaskStatusChange, onTaskClick }: ProjectTasksTabProps) {
   return (
     <div className="w-full h-full flex flex-col overflow-auto p-2">
-      {/* <div className="flex-1 overflow-y-auto rounded-xl"> */}
-        <BoardView
-          tasks={tasks}
-          onTaskClick={taskId => {}}
-          onTaskDelete={deleteTask}
-          onTaskStatusChange={async (taskId, newStatus) => {
-            const task = tasks.find(t => String(t.id) === String(taskId));
-            if (!task) return;
-            await submitTask({
-              ...task,
-              status: newStatus,
-            });
-          }}
-        />
-      {/* </div> */}
+      <BoardView
+        tasks={tasks}
+        onTaskClick={onTaskClick}
+        onTaskDelete={onTaskDelete}
+        onTaskStatusChange={onTaskStatusChange}
+      />
     </div>
   );
 }
