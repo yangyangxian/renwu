@@ -26,28 +26,45 @@ export function TaskFilterMenu({
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
-    // Filtering logic
-    let threshold: Date | null = null;
-    if (dateRange !== 'all') {
-      threshold = new Date();
-      if (dateRange === '1m') threshold.setMonth(threshold.getMonth() - 1);
-      if (dateRange === '3m') threshold.setMonth(threshold.getMonth() - 3);
-      if (dateRange === '1y') threshold.setFullYear(threshold.getFullYear() - 1);
-      threshold.setHours(0, 0, 0, 0);
-    }
     const filtered = tasks.filter(t => {
-      const updatedAt = t.updatedAt ? new Date(t.updatedAt) : null;
-      const dateOk = !threshold || (updatedAt && updatedAt >= threshold);
-      const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
-      let projectOk = false;
-      if (selectedProject === 'all') projectOk = true;
-      else if (selectedProject === 'personal') projectOk = isPersonal;
-      else projectOk = t.projectId == selectedProject;
-      const searchOk = t.title.toLowerCase().includes(searchTerm.trim().toLowerCase());
+      // Date filter
+      let dateOk = true;
+      if (showDateRange) {
+        let threshold: Date | null = null;
+        if (dateRange !== 'all') {
+          threshold = new Date();
+          if (dateRange === '1m') threshold.setMonth(threshold.getMonth() - 1);
+          if (dateRange === '3m') threshold.setMonth(threshold.getMonth() - 3);
+          if (dateRange === '1y') threshold.setFullYear(threshold.getFullYear() - 1);
+          threshold.setHours(0, 0, 0, 0);
+        }
+        const updatedAt = t.updatedAt ? new Date(t.updatedAt) : null;
+        dateOk = !threshold || (updatedAt ? updatedAt >= threshold : false);
+      }
+
+      // Project filter
+      let projectOk = true;
+      if (showProjectSelect) {
+        const isPersonal = t.projectId === null || t.projectId === undefined || t.projectId === '';
+        if (selectedProject === 'all') {
+          projectOk = true;
+        } else if (selectedProject === 'personal') {
+          projectOk = isPersonal;
+        } else {
+          projectOk = t.projectId == selectedProject;
+        }
+      }
+      
+      // Search filter
+      let searchOk = true;
+      if (showSearch) {
+        searchOk = t.title.toLowerCase().includes(searchTerm.trim().toLowerCase()) || (t.description || '').toLowerCase().includes(searchTerm.trim().toLowerCase());
+      }
+
       return dateOk && projectOk && searchOk;
     });
     onFilter(filtered);
-  }, [tasks, dateRange, selectedProject, searchTerm, onFilter]);
+  }, [tasks, dateRange, selectedProject, searchTerm, onFilter, showProjectSelect, showDateRange, showSearch]);
 
   return (
     <div className="flex gap-3 items-center flex-grow">

@@ -10,7 +10,6 @@ import { ProjectSettingsTab } from "@/components/projectspage/ProjectDetailTabs/
 import { Pencil } from "lucide-react";
 import { LayoutDashboard, List, Users, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { marked } from 'marked';
 import { useProjects } from "@/hooks/useProjects";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 
@@ -23,37 +22,20 @@ export default function ProjectDetailPage() {
     return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
   }
 
-  // UI state for editing
   const [editingTitle, setEditingTitle] = useState(false);
-  const [editingDesc, setEditingDesc] = useState(false);
   const [titleInput, setTitleInput] = useState("");
-  const [descInput, setDescInput] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const descInputRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState<'overview'|'tasks'|'team'|'settings'>('overview');
   
-  const html = marked.parse(project?.description?.toString() || '');
-
   useEffect(() => {
     if (project) {
       setTitleInput(project.name || "");
-      setDescInput(project.description || "");
     }
   }, [project]);
 
   const handleTitleClick = () => {
     setEditingTitle(true);
     setTimeout(() => titleInputRef.current?.focus(), 0);
-  };
-  const handleDescClick = () => {
-    setEditingDesc(true);
-    setTimeout(() => {
-      if (descInputRef.current) {
-        descInputRef.current.focus();
-        const val = descInputRef.current.value;
-        descInputRef.current.setSelectionRange(val.length, val.length);
-      }
-    }, 0);
   };
 
   const handleTitleBlur = async () => {
@@ -72,26 +54,10 @@ export default function ProjectDetailPage() {
     }
   };
   
-  const handleDescBlur = async () => {
-    setEditingDesc(false);
-    if (!project) return;
-    if (descInput !== (project.description || "")) {
-      try {
-        await updateProject(projectId, { description: descInput });
-        toast.success('Project description updated');
-      } catch {
-        toast.error('Failed to update description');
-        setDescInput(project.description || ""); // Revert on failure
-      }
-    } else {
-      setDescInput(project.description || "");
-    }
-  };
-
   return (
-    <div className="h-full w-full flex flex-col gap-2 p-1">
+    <div className="h-full w-full flex flex-col gap-2">
       {/* Project Name at the top */}
-      <div className="flex items-center mb-2">
+      <div className="flex items-center p-2">
         {editingTitle ? (
           <Input
             ref={titleInputRef}
@@ -125,10 +91,10 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Tabs */}
+      <div className="px-2">
       <Tabs
         value={activeTab}
         onValueChange={val => setActiveTab(val as typeof activeTab)}
-        className="mb-2"
       >
         <TabsList className="bg-white dark:bg-muted">
           <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
@@ -149,21 +115,18 @@ export default function ProjectDetailPage() {
           </TabsTrigger>
         </TabsList>
       </Tabs>
+      </div>
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <ProjectOverviewTab
           project={project}
-          editingDesc={editingDesc}
-          descInput={descInput}
-          descInputRef={descInputRef}
-          handleDescClick={handleDescClick}
-          handleDescBlur={handleDescBlur}
-          setEditingDesc={setEditingDesc}
-          setDescInput={setDescInput}
+          projectId={projectId}
         />
       )}
-      {activeTab === 'tasks' && <ProjectTasksTab />}
+      {activeTab === 'tasks' && projectId && (
+        <ProjectTasksTab projectId={projectId} />
+      )}
       {activeTab === 'team' && <ProjectTeamTab project={project} />}
       {activeTab === 'settings' && <ProjectSettingsTab />}
     </div>

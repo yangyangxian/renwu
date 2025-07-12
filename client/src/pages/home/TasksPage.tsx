@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTasks } from '@/hooks/useTasks';
 import { useOutletContext } from "react-router-dom";
-import { withToast } from "@/utils/toastUtils";
 import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
 import { TaskResDto, ProjectResDto } from '@fullstack/common';
@@ -23,26 +22,6 @@ export default function TasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
-
-  const handleTaskSubmit = async (task: any) => {
-    await withToast(
-      () => submitTask(task),
-      {
-        success: task.id ? 'Task updated!' : 'Task added!',
-        error: task.id ? 'Failed to update task.' : 'Failed to create task.'
-      }
-    );
-  };
-
-  const handleDelete = async (taskId: string) => {
-    await withToast(
-      () => deleteTask(taskId),
-      {
-        success: 'Task deleted!',
-        error: 'Failed to delete task.'
-      }
-    );
-  };
 
   return (
     <div className="w-full h-full flex flex-col pt-1 gap-2">
@@ -93,7 +72,7 @@ export default function TasksPage() {
               setIsDialogOpen(open);
               if (!open) setEditingTask(null);
             }}
-            onSubmit={handleTaskSubmit}
+            onSubmit={submitTask}
             title={editingTask ? "Edit Task" : "Add New Task"}
             projects={projects}
             initialValues={editingTask || {}}
@@ -110,20 +89,14 @@ export default function TasksPage() {
               setEditingTask(fullTask);
               setIsDialogOpen(true);
             }}
-            onTaskDelete={handleDelete}
+            onTaskDelete={deleteTask}
             onTaskStatusChange={async (taskId, newStatus) => {
               const task = tasks.find(t => String(t.id) === String(taskId));
               if (!task) return;
-              await withToast(
-                () => handleTaskSubmit({
-                  ...task,
-                  status: newStatus,
-                }),
-                {
-                  success: 'Task status updated!',
-                  error: 'Failed to update task status.'
-                }
-              );
+              await submitTask({
+                ...task,
+                status: newStatus,
+              });
             }}
           />
         </div>

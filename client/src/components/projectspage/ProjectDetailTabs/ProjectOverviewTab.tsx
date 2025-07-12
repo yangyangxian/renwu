@@ -4,32 +4,58 @@ import { Label } from '@/components/ui-kit/Label';
 import { Info } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui-kit/Hover-card';
 import { marked } from 'marked';
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useProjects } from '@/hooks/useProjects';
+import { toast } from 'sonner';
 
 interface ProjectOverviewTabProps {
   project: any;
-  editingDesc: boolean;
-  descInput: string;
-  descInputRef: React.RefObject<HTMLTextAreaElement | null>;
-  handleDescClick: () => void;
-  handleDescBlur: () => void;
-  setEditingDesc: (v: boolean) => void;
-  setDescInput: (v: string) => void;
+  projectId: string;
 }
 
-export function ProjectOverviewTab({
-  project,
-  editingDesc,
-  descInput,
-  descInputRef,
-  handleDescClick,
-  handleDescBlur,
-  setEditingDesc,
-  setDescInput,
-}: ProjectOverviewTabProps) {
-  const html = marked.parse(project?.description?.toString() || '');
+export function ProjectOverviewTab({ project, projectId }: ProjectOverviewTabProps) {
+  const { updateProject } = useProjects(projectId);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descInput, setDescInput] = useState("");
+  const descInputRef = useRef<HTMLTextAreaElement>(null);
+  // Use descInput for live preview after editing
+  const html = marked.parse(descInput || '');
+
+  useEffect(() => {
+    if (project) {
+      setDescInput(project.description || "");
+    }
+  }, [project]);
+
+  const handleDescClick = () => {
+    setEditingDesc(true);
+    setTimeout(() => {
+      if (descInputRef.current) {
+        descInputRef.current.focus();
+        const val = descInputRef.current.value;
+        descInputRef.current.setSelectionRange(val.length, val.length);
+      }
+    }, 0);
+  };
+
+  const handleDescBlur = async () => {
+    setEditingDesc(false);
+    if (!project) return;
+    if (descInput !== (project.description || "")) {
+      try {
+        await updateProject(projectId, { description: descInput });
+        toast.success('Project description updated');
+      } catch {
+        toast.error('Failed to update description');
+        setDescInput(project.description || "");
+      }
+    } else {
+      setDescInput(project.description || "");
+    }
+  };
+
   return (
-    <div className="flex gap-3 h-full overflow-y-auto">
+    <div className="flex gap-3 h-full overflow-y-auto p-2">
         <Card className="flex h-full shadow-none p-3 w-1/2">
             dashboard
         </Card>
@@ -60,17 +86,13 @@ export function ProjectOverviewTab({
                 value={descInput}
                 onChange={e => setDescInput(e.target.value)}
                 onBlur={handleDescBlur}
-                onCancel={() => {
-                setEditingDesc(false);
-                }}
-                placeholder="Enter a project description…(Markdown supported!)"
-                className="bg-secondary !text-[0.95rem] min-h-[15rem] leading-relaxed px-4 mt-3"
-                autoSize={true}
-                maxLength={10000}
+                onKeyDown={e => { if (e.key === 'Escape') setEditingDesc(false); }}
+                className="w-full h-full p-2 border rounded-md"
+                maxLength={1024}
             />
             ) : (
             <>
-                {project?.description ? (
+                {descInput ? (
                 <div
                     className="markdown-body !text-[0.95rem] !bg-card p-3 h-full cursor-pointer"
                     onClick={handleDescClick}

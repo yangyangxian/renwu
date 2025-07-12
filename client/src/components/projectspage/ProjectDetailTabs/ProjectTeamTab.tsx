@@ -12,7 +12,7 @@ interface ProjectTeamTabProps {
 
 export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
   return (
-    <div className="flex gap-4 w-full">
+    <div className="flex gap-4 w-full p-2">
       {/* Team Activities Card (left) */}
       <Card className="flex flex-col w-2/3 min-w-64 self-start px-5 py-4 shadow-none">
         <Label className="text-md font-semibold mb-2">Team Activities</Label>
