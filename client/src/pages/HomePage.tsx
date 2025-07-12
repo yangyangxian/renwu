@@ -12,7 +12,6 @@ import { Dialog, DialogContent } from "@/components/ui-kit/Dialog";
 import { getMyProjects, getProjects, updateMe } from "@/apiRequests/apiEndpoints";
 
 export default function HomePage() {
-  // No longer using useOutlet, will use <Outlet context={...} />
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, setUser } = useAuth();
@@ -31,7 +30,6 @@ export default function HomePage() {
     e.preventDefault();
     if (!pendingName.trim()) return;
     try {
-      // Our API returns { data: { ...user } }
       const response = await apiClient.put(updateMe(), { name: pendingName.trim() });
       // Assume response is the updated user object
       const updatedUser = response as typeof user;
@@ -82,20 +80,12 @@ export default function HomePage() {
     }
   };
 
-  // Determine if we are on login or signup page (unauthenticated routes)
-  const isAuthPage = ["/login", "/signup", "/home/login", "/home/signup"].includes(location.pathname);
   const showLanding = !isAuthenticated && location.pathname === "/";
 
   if (showLanding) {
     return <LandingPage />;
   }
 
-  if (isAuthPage) {
-    // Render only the child route (Outlet) for login/signup, no HomePage layout
-    return <Outlet />;
-  }
-
-  // ...existing code...
   return (
     <div className="flex w-full h-full">
       {/* Sidebar with icon and text */}

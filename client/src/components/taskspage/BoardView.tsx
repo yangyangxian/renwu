@@ -38,8 +38,8 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-xl transition-all duration-200 ${className ?? ''} ${isOver ? 'shadow-2xl' : ""} `}
-      style={{}}
+      className={`rounded-xl transition-all duration-200 ${className ?? ''} 
+      ${isOver ? 'scale-101 shadow-even-purple' : ""} `}
     >
       {children}
     </div>

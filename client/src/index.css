@@ -22,3 +22,8 @@ body {
   color: #333;
 }
 
+@layer utilities {
+  .shadow-even-purple {
+    box-shadow: 0 0 6px rgba(183, 3, 233, 0.969);
+  }
+}

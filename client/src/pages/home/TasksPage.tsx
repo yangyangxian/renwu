@@ -116,10 +116,10 @@ export default function TasksPage() {
   return (
     <div className="w-full h-full flex flex-col gap-3">
       {/* Responsive menu bar: all controls in one row on all devices */}
-      <div id="menuBar" className="w-full">
+      <div id="menuBar" className="w-full px-2">
         <div className="flex flex-row w-full gap-3 items-start sm:items-center flex-wrap">
-          {/* Selects */}
-          <div className="flex gap-3 items-center">
+          {/* Left group: selects and search */}
+          <div className="flex gap-3 items-center flex-grow">
             <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
               <SelectTrigger
                 className="px-3 bg-white dark:text-slate-200 flex items-center min-w-[9rem]"
@@ -138,7 +138,6 @@ export default function TasksPage() {
                 ))}
               </SelectContent>
             </Select>
-
             <div className="flex items-center">
               <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
                 <SelectTrigger className="min-w-[8rem] px-3 bg-white dark:text-slate-200 flex items-center gap-2" id="date-range-select">
@@ -153,9 +152,18 @@ export default function TasksPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="min-w-[9rem]">
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                placeholder="Search"
+                className="bg-white-black transition-colors duration-50 text-sm"
+              />
+            </div>
           </div>
-          {/* Tabs: always inline */}
-          <div className="flex items-center">
+          {/* Right group: tabs and add task button */}
+          <div className="flex items-center gap-2">
             <Tabs defaultValue={view} value={view} onValueChange={setView}>
               <TabsList
                 className="bg-white dark:bg-muted flex flex-row gap-0"
@@ -170,37 +178,22 @@ export default function TasksPage() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-          </div>
-          {/* Add Task button always at end of row, never wraps */}
-          <div className="ml-auto flex items-center">
-            {/* Search input to the left of Add Task button */}
-            <div className="flex items-center gap-2">
-              <div className="w-full max-w-xs">
-                <Input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                  placeholder="Search"
-                  className="bg-white-black transition-colors duration-50"
-                />
-              </div>
-              <Button
-                variant="default"
-                className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
-                 from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
-                onClick={() => {
-                  if (selectedProject !== 'all' && selectedProject !== 'personal') {
-                    setEditingTask({ projectId: selectedProject } as any);
-                  } else {
-                    setEditingTask(null);
-                  }
-                  setIsDialogOpen(true);
-                }}
-              >
-                <Plus className="w-5 h-5" />
-                <span className="">Add Task</span>
-              </Button>
-            </div>
+            <Button
+              variant="default"
+              className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
+               from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
+              onClick={() => {
+                if (selectedProject !== 'all' && selectedProject !== 'personal') {
+                  setEditingTask({ projectId: selectedProject } as any);
+                } else {
+                  setEditingTask(null);
+                }
+                setIsDialogOpen(true);
+              }}
+            >
+              <Plus className="w-5 h-5" />
+              <span className="">Add Task</span>
+            </Button>
           </div>
         </div>
         {isDialogOpen && (
@@ -219,7 +212,7 @@ export default function TasksPage() {
       </div>
 
       {view === 'board' && (
-        <div className="flex-1 overflow-auto pb-1 rounded-xl">
+        <div className="flex-1 overflow-y-auto p-2 rounded-xl">
           <BoardView
             tasks={filteredTasks}
             onTaskClick={taskId => {
