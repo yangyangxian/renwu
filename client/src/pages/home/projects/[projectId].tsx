@@ -11,12 +11,17 @@ import { Pencil } from "lucide-react";
 import { LayoutDashboard, List, Users, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { marked } from 'marked';
-import { useProject } from "@/hooks/useProject";
+import { useProjects } from "@/hooks/useProjects";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { project, loading, updateProject } = useProject(projectId);
+  const { project, updateProject } = useProjects(projectId);
+
+  // If projectId is missing, show error
+  if (!projectId) {
+    return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
+  }
 
   // UI state for editing
   const [editingTitle, setEditingTitle] = useState(false);
@@ -26,6 +31,8 @@ export default function ProjectDetailPage() {
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descInputRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState<'overview'|'tasks'|'team'|'settings'>('overview');
+  
+  const html = marked.parse(project?.description?.toString() || '');
 
   useEffect(() => {
     if (project) {
@@ -34,9 +41,6 @@ export default function ProjectDetailPage() {
     }
   }, [project]);
 
-  const html = marked.parse(project?.description?.toString() || '');
-
-  // Handlers for editing
   const handleTitleClick = () => {
     setEditingTitle(true);
     setTimeout(() => titleInputRef.current?.focus(), 0);
@@ -51,31 +55,35 @@ export default function ProjectDetailPage() {
       }
     }, 0);
   };
+
   const handleTitleBlur = async () => {
     setEditingTitle(false);
-    if (project && titleInput.trim() && titleInput !== project.name) {
+    if (!project) return;
+    if (titleInput.trim() && titleInput !== project.name) {
       try {
-        await updateProject({ name: titleInput });
+        await updateProject(projectId, { name: titleInput });
         toast.success('Project name updated');
       } catch {
         toast.error('Failed to update project name');
         setTitleInput(project.name); // Revert on failure
       }
-    } else if (project) {
+    } else {
       setTitleInput(project.name);
     }
   };
+  
   const handleDescBlur = async () => {
     setEditingDesc(false);
-    if (project && descInput !== (project.description || "")) {
+    if (!project) return;
+    if (descInput !== (project.description || "")) {
       try {
-        await updateProject({ description: descInput });
+        await updateProject(projectId, { description: descInput });
         toast.success('Project description updated');
       } catch {
         toast.error('Failed to update description');
         setDescInput(project.description || ""); // Revert on failure
       }
-    } else if (project) {
+    } else {
       setDescInput(project.description || "");
     }
   };
@@ -101,18 +109,18 @@ export default function ProjectDetailPage() {
             maxLength={128}
           />
         ) : (
-      <div className="flex items-center gap-2">
-        <Label
-          className="pl-1 text-[22px] font-black cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
-          title={project?.name}
-          onClick={handleTitleClick}
-        >
-          {project?.name ? project.name.charAt(0).toUpperCase() + project.name.slice(1) : ''}
-        </Label>
-        <span className="cursor-pointer flex items-center" title="Edit project name" onClick={handleTitleClick}>
-          <Pencil className="ml-2 h-3 w-3 text-muted-foreground hover:text-primary" />
-        </span>
-      </div>
+          <div className="flex items-center gap-2">
+            <Label
+              className="pl-1 text-[22px] font-black cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
+              title={project?.name}
+              onClick={handleTitleClick}
+            >
+              {project?.name ? project.name.charAt(0).toUpperCase() + project.name.slice(1) : ''}
+            </Label>
+            <span className="cursor-pointer flex items-center" title="Edit project name" onClick={handleTitleClick}>
+              <Pencil className="ml-2 h-3 w-3 text-muted-foreground hover:text-primary" />
+            </span>
+          </div>
         )}
       </div>
 

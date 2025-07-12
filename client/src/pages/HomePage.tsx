@@ -6,10 +6,10 @@ import { HomeSideBar } from "@/components/homepage/SideBar";
 import { ProjectDialog } from "@/components/projectspage/ProjectDialog";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { apiClient } from "@/utils/APIClient";
-import { ProjectResDto } from '@fullstack/common';
+import { useProjects } from '@/hooks/useProjects';
 import { Input } from "@/components/ui-kit/Input";
 import { Dialog, DialogContent } from "@/components/ui-kit/Dialog";
-import { getMyProjects, getProjects, updateMe } from "@/apiRequests/apiEndpoints";
+import { updateMe } from "@/apiRequests/apiEndpoints";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -43,45 +43,26 @@ export default function HomePage() {
   // Sidebar expanded state is now managed internally by HomeSideBar
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
-  // Project list state
-  const [projects, setProjects] = useState<ProjectResDto[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch projects for current user
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-    setError(null);
-    apiClient.get<ProjectResDto[]>(getMyProjects())
-      .then(setProjects)
-      .catch((err) => setError(err?.message || 'Failed to load projects'))
-      .finally(() => setLoading(false));
-  }, []);
+  // Use custom hook for project logic
+  const {
+    projects,
+    addProject,
+    setProjects,
+  } = useProjects();
 
   const handleProjectSubmit = async (project: { name: string; description: string }) => {
-    setLoading(true);
-    setError(null);
     try {
-      // Create the project and get the new project object (with id)
-      const newProject = await apiClient.post<typeof project, ProjectResDto>(getProjects(), project);
-      // Refresh project list
-      const updated = await apiClient.get<ProjectResDto[]>(getMyProjects());
-      setProjects(updated);
+      const newProject = await addProject(project);
       setProjectDialogOpen(false);
-      // Navigate to the new project's page
       if (newProject && newProject.id) {
         navigate(`/projects/${newProject.id}`);
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to add project');
-    } finally {
-      setLoading(false);
+      // Optionally handle error
     }
   };
 
   const showLanding = !isAuthenticated && location.pathname === "/";
-
   if (showLanding) {
     return <LandingPage />;
   }

@@ -167,7 +167,6 @@ function ProjectsMenuItem({
 
   const handleAddProject = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpanded(false);
     onAddProject && onAddProject();
   };
 
