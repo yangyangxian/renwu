@@ -7,12 +7,8 @@ export function useTasks() {
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
 
   const fetchTasks = useCallback(async () => {
-    try {
       const data = await apiClient.get<TaskResDto[]>(getMyTasks());
       setTasks(data);
-    } catch {
-      // Optionally handle error
-    }
   }, []);
 
   // Fetch tasks on mount
@@ -20,14 +16,31 @@ export function useTasks() {
     fetchTasks();
   }, [fetchTasks]);
 
-  const addTask = async (task: TaskCreateReqDto) => {
-    await apiClient.post<TaskCreateReqDto, TaskResDto>(getTasks(), task);
-    await fetchTasks();
-  };
-
-  const updateTask = async (taskId: string, updatePayload: TaskUpdateReqDto) => {
-    await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskById(taskId), updatePayload);
-    await fetchTasks();
+  const submitTask = async (task: any) => {
+    if (task.id) {
+      const updatePayload: TaskUpdateReqDto = {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        status: task.status,
+        assignedTo: task.assignedTo,
+        projectId: task.projectId,
+      };
+      await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskById(task.id), updatePayload);
+      await fetchTasks();
+    } else {
+      const createPayload: TaskCreateReqDto = {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        status: task.status,
+        assignedTo: task.assignedTo,
+        projectId: task.projectId,
+        createdBy: task.createdBy
+      };
+      await apiClient.post<TaskCreateReqDto, TaskResDto>(getTasks(), createPayload);
+      await fetchTasks();
+    }
   };
 
   const deleteTask = async (taskId: string) => {
@@ -39,8 +52,7 @@ export function useTasks() {
     tasks,
     setTasks,
     fetchTasks,
-    addTask,
-    updateTask,
+    submitTask,
     deleteTask,
   };
 }

@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTasks } from '@/hooks/useTasks';
 import { useOutletContext } from "react-router-dom";
-import { toast } from "sonner";
+import { withToast } from "@/utils/toastUtils";
 import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
-import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
+import { TaskResDto, ProjectResDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
@@ -17,8 +17,7 @@ export default function TasksPage() {
   const [view, setView] = useState("board");
   const {
     tasks,
-    addTask,
-    updateTask,
+    submitTask,
     deleteTask,
   } = useTasks();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,47 +25,23 @@ export default function TasksPage() {
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
 
   const handleTaskSubmit = async (task: any) => {
-    if (task.id) {
-      const updatePayload: TaskUpdateReqDto = {
-        title: task.title,
-        description: task.description,
-        dueDate: task.dueDate,
-        status: task.status,
-        assignedTo: task.assignedTo,
-        projectId: task.projectId,
-      };
-      try {
-        await updateTask(task.id, updatePayload);
-        toast.success('Task updated!');
-      } catch (e) {
-        toast.error('Failed to update task.');
+    await withToast(
+      () => submitTask(task),
+      {
+        success: task.id ? 'Task updated!' : 'Task added!',
+        error: task.id ? 'Failed to update task.' : 'Failed to create task.'
       }
-    } else {
-      const createPayload: TaskCreateReqDto = {
-        title: task.title,
-        description: task.description,
-        dueDate: task.dueDate,
-        status: task.status,
-        assignedTo: task.assignedTo,
-        projectId: task.projectId,
-        createdBy: task.createdBy
-      };
-      try {
-        await addTask(createPayload);
-        toast.success('Task added!');
-      } catch (e) {
-        toast.error('Failed to create task.');
-      }
-    }
+    );
   };
 
   const handleDelete = async (taskId: string) => {
-    try {
-      await deleteTask(taskId);
-      toast.success('Task deleted!');
-    } catch (e) {
-      toast.error('Failed to delete task.');
-    }
+    await withToast(
+      () => deleteTask(taskId),
+      {
+        success: 'Task deleted!',
+        error: 'Failed to delete task.'
+      }
+    );
   };
 
   return (
@@ -139,19 +114,16 @@ export default function TasksPage() {
             onTaskStatusChange={async (taskId, newStatus) => {
               const task = tasks.find(t => String(t.id) === String(taskId));
               if (!task) return;
-              try {
-                await updateTask(taskId, {
-                  title: task.title,
-                  description: task.description,
-                  dueDate: task.dueDate,
+              await withToast(
+                () => handleTaskSubmit({
+                  ...task,
                   status: newStatus,
-                  assignedTo: task.assignedTo,
-                  projectId: task.projectId,
-                });
-                toast.success('Task status updated!');
-              } catch (e) {
-                toast.error('Failed to update task status.');
-              }
+                }),
+                {
+                  success: 'Task status updated!',
+                  error: 'Failed to update task status.'
+                }
+              );
             }}
           />
         </div>
