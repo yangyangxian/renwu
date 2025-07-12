@@ -3,6 +3,7 @@ import { tasks, projects } from '../database/schema.js';
 import { eq } from 'drizzle-orm';
 import { CustomError } from '../classes/CustomError.js';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
+import logger from '../utils/logger.js';
 
 export class TaskEntity {
   id: string = '';
@@ -36,14 +37,12 @@ class TaskService {
   private toTaskEntityForInsert(data: TaskCreateReqDto) {
     return {
       title: data.title,
-      description: data.description,
+      description: data.description || '',
       status: data.status || 'todo',
       assignedTo: data.assignedTo || '',
-      projectId: data.projectId, // Custom nullableUuid handles empty string → null
+      projectId: data.projectId || null,
       createdBy: data.createdBy,
-      dueDate: data.dueDate, // Custom nullableTimestamp handles empty string → null
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      dueDate: data.dueDate ? new Date(data.dueDate).toISOString(): null,
     };
   }
 
@@ -54,6 +53,8 @@ class TaskService {
   async createTask(data: TaskCreateReqDto): Promise<TaskEntity> {
     // Convert DTO to DB-ready entity - custom types handle empty string conversion
     const insertValues = this.toTaskEntityForInsert(data);
+    logger.debug('insertValues insert:', insertValues);
+    
     const [created] = await db
       .insert(tasks)
       .values(insertValues)
@@ -80,7 +81,7 @@ class TaskService {
       dueDate: typeof created.dueDate === 'string'
         ? created.dueDate
         : created.dueDate
-          ? created.dueDate.toLocaleDateString('en-CA')
+          ? created.dueDate.toISOString()
           : '',
       createdAt: created.createdAt ? created.createdAt.toISOString() : '',
       updatedAt: created.updatedAt ? created.updatedAt.toISOString() : '',
@@ -115,7 +116,7 @@ class TaskService {
       dueDate: typeof task.dueDate === 'string'
         ? task.dueDate
         : task.dueDate
-          ? task.dueDate.toLocaleDateString('en-CA')
+          ? task.dueDate.toISOString()
           : '',
       createdAt: task.createdAt ? task.createdAt.toISOString() : '',
       updatedAt: task.updatedAt ? task.updatedAt.toISOString() : '',
@@ -159,7 +160,7 @@ class TaskService {
       dueDate: typeof updated.dueDate === 'string'
         ? updated.dueDate
         : updated.dueDate
-          ? updated.dueDate.toLocaleDateString('en-CA')
+          ? updated.dueDate.toISOString()
           : '',
       createdAt: updated.createdAt ? updated.createdAt.toISOString() : '',
       updatedAt: updated.updatedAt ? updated.updatedAt.toISOString() : '',

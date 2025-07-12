@@ -31,7 +31,6 @@ interface TaskDialogProps {
   };
   title?: string;
   projects: ProjectResDto[];
-  // projectMembers prop removed
 }
 
 const statusOptions = [
@@ -46,8 +45,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const [taskState, dispatch] = useReducer(
-    taskFormReducer,
-    { ...initialTaskFormState, ...initialValues }
+    taskFormReducer, { ...initialTaskFormState, ...initialValues }
   );
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
   const updateFromCode = React.useRef(false);
@@ -60,27 +58,26 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
   };
 
-  // Utility: get assigned-to options for a given projectId, derived from projects prop
   const getAssignedToOptions = (projectId: string | undefined) => {
-    if (!projectId) {
-      if (user && user.id) {
-        return [{ value: String(user.id), label: String(user.name) }];
-      }
-      return [];
-    } else {
       const project = projects.find(p => String(p.id) === String(projectId));
       if (!project || !Array.isArray(project.members)) return [];
       return project.members.map((m: any) => ({
         value: String(m.id),
         label: String(m.name || m.id)
-      }));
-    }
+      }));  
   };
 
   useEffect(function populateAssignedTo(){
+    if (!taskState.projectId) {
+      // If no project is selected, default to the current user
+      setAssignedToSelectOptions([{ value: String(user?.id || ""), label: String(user?.name || "Me") }]);
+      handleAssignedToChange(String(user?.id || ""));
+      return;
+    }
+
     const options = getAssignedToOptions(taskState.projectId);
     setAssignedToSelectOptions(options);
-    // to let the select component is updated by code
+
     updateFromCode.current = true;
     if (options.length === 0) {
       handleAssignedToChange('');
@@ -133,7 +130,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   value={taskState.title}
                   onChange={e => dispatch({ type: 'SET_FIELD', field: 'title', value: e.target.value })}
                   required
-                  tabIndex={-1}
                 />
               </div>
 

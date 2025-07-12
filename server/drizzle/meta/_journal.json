@@ -43,6 +43,13 @@
       "when": 1751355703960,
       "tag": "0005_changefieldname",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1752290956906,
+      "tag": "0006_updateduedate",
+      "breakpoints": true
     }
   ]
 }

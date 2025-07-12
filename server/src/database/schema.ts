@@ -10,9 +10,9 @@ import {
   timestamp,
   pgEnum,
   primaryKey,
+  date,
 } from 'drizzle-orm/pg-core';
 import { TaskStatus, ProjectRole } from '@fullstack/common';
-import { nullableUuid, nullableText, nullableTimestamp } from './customTypes.js';
 
 // ---------- ENUM: Task Status ----------
 export const taskStatusEnum = pgEnum('task_status', Object.values(TaskStatus) as [string, ...string[]]);
@@ -34,10 +34,10 @@ export const users = pgTable('users', {
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
-  description: nullableText('description'),
-  createdBy: nullableUuid('created_by').references(() => users.id, {
+  description: text('description'), // nullable by default
+  createdBy: uuid('created_by').references(() => users.id, {
     onDelete: 'set null',
-  }),
+  }), // nullable by default
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -46,9 +46,9 @@ export const projects = pgTable('projects', {
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
-  description: nullableText('description'),
+  description: text('description'), // nullable by default
   status: taskStatusEnum('status').notNull().default('todo'),
-  dueDate: nullableTimestamp('due_date'),
+  dueDate: date('due_date'), // nullable by default
 
   createdBy: uuid('created_by')
     .notNull()
@@ -56,9 +56,9 @@ export const tasks = pgTable('tasks', {
   assignedTo: uuid('assigned_to')
     .notNull()
     .references(() => users.id),
-  projectId: nullableUuid('project_id').references(() => projects.id, {
+  projectId: uuid('project_id').references(() => projects.id, {
     onDelete: 'set null',
-  }),
+  }), // nullable by default
 
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
