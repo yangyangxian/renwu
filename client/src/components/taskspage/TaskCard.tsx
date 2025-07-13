@@ -42,7 +42,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
     : false;
   return (
     <Card
-      className={`group bg-muted dark:bg-black p-3 shadow hover:shadow-lg hover:scale-101 cursor-pointer relative ${className || ''}`}
+      className={`group bg-muted dark:bg-black p-3 shadow hover:scale-104 transition-transform duration-200 cursor-pointer relative ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}
@@ -92,9 +92,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
           </DialogContent>
         </Dialog>
       )}
-      {projectName && (
-        <div className={`text-xs lg:text-[13px] mb-1 font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>{projectName}</div>
-      )}
+      <div className={`text-xs lg:text-[13px] mb-1 font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>{!projectName || projectName === "" ? "Personal" : projectName}</div>
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
         {dueDate && (

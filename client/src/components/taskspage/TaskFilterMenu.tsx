@@ -1,6 +1,7 @@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Input } from "@/components/ui-kit/Input";
 import { Calendar, Folder } from "lucide-react";
+import { Search } from "lucide-react";
 import { ProjectResDto, TaskResDto } from "@fullstack/common";
 
 interface TaskFilterMenuProps {
@@ -71,7 +72,7 @@ export function TaskFilterMenu({
       {showProjectSelect && (
         <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
           <SelectTrigger
-            className="px-3 bg-white dark:text-primary flex items-center min-w-[10rem]"
+            className="px-3 bg-white dark:text-primary flex items-center min-w-[9rem]"
             id="project-select"
           >
             <Folder className="w-4 h-4" />
@@ -107,13 +108,14 @@ export function TaskFilterMenu({
       )}
 
       {showSearch && (
-        <div className="min-w-[9rem]">
+        <div className="min-w-[9rem] relative flex items-center">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search"
-            className="bg-white-black text-sm"
+            className="bg-white-black text-sm pl-9 max-w-[10rem]"
           />
         </div>
       )}

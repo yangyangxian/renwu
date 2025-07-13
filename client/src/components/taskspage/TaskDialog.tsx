@@ -93,7 +93,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 !max-w-[1200px] w-[75vw] gap-0">
+      <DialogContent 
+        className="p-0 !max-w-[1200px] w-[75vw] gap-0"
+        onInteractOutside={e => e.preventDefault()}
+      >
         <VisuallyHidden>
           <DialogTitle></DialogTitle>.
         </VisuallyHidden>

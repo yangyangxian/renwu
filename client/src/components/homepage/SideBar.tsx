@@ -81,7 +81,7 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
-        className="transition-all duration-300 h-full p-2 pt-3 relative max-w-[14rem]"
+        className="transition-all duration-300 h-full p-2 pt-3 pr-3 relative max-w-[14rem]"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
@@ -109,7 +109,7 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSidebarIsFixed(); } }}
                 >
                   {sidebarIsFixed ? (
-                    <Pin className="w-4 h-4" />
+                    <Pin className="w-4 h-4 text-primary-purple" />
                   ) : (
                     <PinOff className="w-4 h-4 text-primary-purple" />
                   )}
