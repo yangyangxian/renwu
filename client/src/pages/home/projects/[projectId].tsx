@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
+import { useTabHash } from "@/hooks/useTabHash";
 import { useEffect, useState, useRef } from "react";
-import { Card } from "@/components/ui-kit/Card";
 import { Input } from "@/components/ui-kit/Input";
 import { Label } from "@/components/ui-kit/Label";
 import { ProjectOverviewTab } from "@/components/projectspage/ProjectDetailTabs/ProjectOverviewTab";
@@ -30,7 +30,10 @@ export default function ProjectDetailPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState<'overview'|'tasks'|'team'|'settings'>('overview');
+  const [activeTab, handleTabChange] = useTabHash(
+    ['overview', 'tasks', 'team', 'settings'],
+    'overview'
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   
@@ -101,7 +104,7 @@ export default function ProjectDetailPage() {
       <div className="flex items-center px-2 gap-2">
         <Tabs
           value={activeTab}
-          onValueChange={val => setActiveTab(val as typeof activeTab)}
+          onValueChange={val => handleTabChange(val as typeof activeTab)}
         >
           <TabsList className="bg-white dark:bg-muted">
             <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
