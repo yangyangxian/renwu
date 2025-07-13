@@ -14,6 +14,7 @@ export const getMyTasks = () => '/api/tasks/me';
 export const getTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const updateTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const deleteTaskById = (taskId: string) => `/api/tasks/${taskId}`;
+export const getTasksByProjectId = (projectId: string) => `/api/tasks/project/${projectId}`;
 
 // --- Projects ---
 export const getProjects = () => '/api/projects';

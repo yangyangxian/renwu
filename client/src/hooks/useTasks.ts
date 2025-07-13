@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { apiClient } from "@/utils/APIClient";
 import { TaskResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
-import { getMyTasks, getTasks, updateTaskById, deleteTaskById } from "@/apiRequests/apiEndpoints";
+import { getMyTasks, getTasks, updateTaskById, deleteTaskById, getTasksByProjectId } from "@/apiRequests/apiEndpoints";
 import { withToast } from "@/utils/toastUtils";
 import logger from "@/utils/logger";
 
@@ -9,13 +9,14 @@ export function useTasks(projectId?: string) {
   const [tasks, setTasks] = useState<TaskResDto[]>([]);
 
   const fetchTasks = useCallback(async () => {
-    const allTasks = await apiClient.get<TaskResDto[]>(getMyTasks());
-    logger.debug('Fetched tasks:', allTasks);
+    let fetchedTasks: TaskResDto[] = [];
     if (projectId) {
-      setTasks(allTasks.filter(task => String(task.projectId) === String(projectId)));
+      fetchedTasks = await apiClient.get<TaskResDto[]>(getTasksByProjectId(projectId));
     } else {
-      setTasks(allTasks);
+      fetchedTasks = await apiClient.get<TaskResDto[]>(getMyTasks());
     }
+    logger.debug('Fetched tasks:', fetchedTasks);
+    setTasks(fetchedTasks);
   }, [projectId]);
 
   useEffect(() => {

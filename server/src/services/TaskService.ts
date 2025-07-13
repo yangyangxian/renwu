@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { CustomError } from '../classes/CustomError.js';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
 import logger from '../utils/logger.js';
+import { mapDbToEntity } from '../utils/mappers.js';
 
 export class TaskEntity {
   id: string = '';
@@ -54,7 +55,7 @@ class TaskService {
     // Convert DTO to DB-ready entity - custom types handle empty string conversion
     const insertValues = this.toTaskEntityForInsert(data);
     logger.debug('insertValues insert:', insertValues);
-    
+
     const [created] = await db
       .insert(tasks)
       .values(insertValues)
@@ -70,22 +71,9 @@ class TaskService {
       projectName = project?.name || '';
     }
 
-    return {
-      id: created.id,
-      assignedTo: created.assignedTo,
-      title: created.title,
-      description: created.description ?? '',
-      status: created.status,
-      projectId: created.projectId ?? '',
-      projectName,
-      dueDate: typeof created.dueDate === 'string'
-        ? created.dueDate
-        : created.dueDate
-          ? created.dueDate.toISOString()
-          : '',
-      createdAt: created.createdAt ? created.createdAt.toISOString() : '',
-      updatedAt: created.updatedAt ? created.updatedAt.toISOString() : '',
-    };
+    const entity = mapDbToEntity(created, new TaskEntity());
+    entity.projectName = projectName;
+    return entity;
   }
 
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
@@ -105,22 +93,37 @@ class TaskService {
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
       .where(eq(tasks.assignedTo, userId));
-    return result.map((task: any) => ({
-      id: task.id,
-      assignedTo: task.assignedTo,
-      title: task.title,
-      description: task.description ?? '',
-      status: task.status,
-      projectId: task.projectId ?? '',
-      projectName: task.projectName ?? '',
-      dueDate: typeof task.dueDate === 'string'
-        ? task.dueDate
-        : task.dueDate
-          ? task.dueDate.toISOString()
-          : '',
-      createdAt: task.createdAt ? task.createdAt.toISOString() : '',
-      updatedAt: task.updatedAt ? task.updatedAt.toISOString() : '',
-    }));
+    return result.map((task: any) =>
+      mapDbToEntity(
+        task,
+        new TaskEntity()
+      )
+    );
+  }
+
+  async getTasksByProjectId(projectId: string): Promise<TaskEntity[]> {
+    const result = await db
+      .select({
+        id: tasks.id,
+        assignedTo: tasks.assignedTo,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        projectId: tasks.projectId,
+        dueDate: tasks.dueDate,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+        projectName: projects.name,
+      })
+      .from(tasks)
+      .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .where(eq(tasks.projectId, projectId));
+    return result.map((task: any) =>
+      mapDbToEntity(
+        task,
+        new TaskEntity()
+      )
+    );
   }
 
   /**
@@ -149,22 +152,9 @@ class TaskService {
       projectName = project?.name || '';
     }
 
-    return {
-      id: updated.id,
-      assignedTo: updated.assignedTo,
-      title: updated.title,
-      description: updated.description ?? '',
-      status: updated.status,
-      projectId: updated.projectId ?? '',
-      projectName,
-      dueDate: typeof updated.dueDate === 'string'
-        ? updated.dueDate
-        : updated.dueDate
-          ? updated.dueDate.toISOString()
-          : '',
-      createdAt: updated.createdAt ? updated.createdAt.toISOString() : '',
-      updatedAt: updated.updatedAt ? updated.updatedAt.toISOString() : '',
-    };
+    const entity = mapDbToEntity(updated, new TaskEntity());
+    entity.projectName = projectName;
+    return entity;
   }
 }
 

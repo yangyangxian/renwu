@@ -126,7 +126,7 @@ export default function ProjectDetailPage() {
         {activeTab === 'tasks' && (
           <Button
             variant="default"
-            className="px-3 py-2 flex items-center ml-auto gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-200 duration-200 hover:scale-105"
+            className="px-3 py-2 flex items-center ml-auto gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
             onClick={() => {
               setEditingTask(null);
               setIsDialogOpen(true);
