@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui-kit/Card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui-kit/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui-kit/Chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Label } from '@/components/ui-kit/Label';
 
@@ -80,8 +80,8 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 				  {entry.label}
 				</Label>
 			  </div>
-			  <Label className="tabular-nums text-muted-foreground w-1/3 justify-center">
-				{entry.value}
+			  <Label className="tabular-nums text-primary w-1/3 justify-center">
+				{entry.value}<span className='ml-1'>tasks</span>
 			  </Label>
 			  <Label className="tabular-nums text-primary ml-auto">
 				{percent}%

@@ -7,7 +7,7 @@ import { marked } from 'marked';
 import { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/hooks/useProjects';
 import { toast } from 'sonner';
-import { RadioChartCard } from '@/components/ui-kit/RadioChartCard';
+import { RadioChartCard } from '@/components/RadioChartCard';
 import { TaskStatus } from '@fullstack/common';
 
 interface ProjectOverviewTabProps {
@@ -143,13 +143,13 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
             onBlur={handleDescBlur}
             onKeyDown={e => { if (e.key === 'Escape') setEditingDesc(false); }}
             className="w-full h-full p-2 m-2 border rounded-md overflow-y-auto"
-            maxLength={1024}
+            maxLength={10000}
           />
         ) : (
           <>
             {descInput ? (
               <div
-                className="markdown-body !text-[0.95rem] !bg-card p-4 pt-5 h-full cursor-pointer overflow-auto"
+                className="markdown-body !text-[1rem] !leading-5 !bg-card p-4 pt-5 h-full cursor-pointer overflow-auto"
                 onClick={handleDescClick}
                 dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
               />
