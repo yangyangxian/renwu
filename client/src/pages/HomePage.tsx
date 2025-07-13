@@ -8,13 +8,14 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { apiClient } from "@/utils/APIClient";
 import { useProjects } from '@/hooks/useProjects';
 import { Input } from "@/components/ui-kit/Input";
-import { Dialog, DialogContent } from "@/components/ui-kit/Dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui-kit/Dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { updateMe } from "@/apiRequests/apiEndpoints";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user, setUser } = useAuth();
+  const { isAuthenticated, user, setUser, logout } = useAuth();
   // Name dialog state
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [pendingName, setPendingName] = useState("");
@@ -27,9 +28,12 @@ export default function HomePage() {
   }, [isAuthenticated, user]);
 
   const handleNameSubmit = async (e: React.FormEvent) => {
+          console.log("Updating user name:", pendingName.trim());
     e.preventDefault();
+          console.log("Updating user name:", pendingName.trim());
     if (!pendingName.trim()) return;
     try {
+      console.log("Updating user name:", pendingName.trim());
       const response = await apiClient.put(updateMe(), { name: pendingName.trim() });
       // Assume response is the updated user object
       const updatedUser = response as typeof user;
@@ -89,6 +93,9 @@ export default function HomePage() {
             onInteractOutside={e => e.preventDefault()}
             onEscapeKeyDown={e => e.preventDefault()}
           >
+            <DialogTitle>
+              <VisuallyHidden>Set your name</VisuallyHidden>
+            </DialogTitle>
             <span className="font-bold text-lg">Welcome! Please tell us your name.</span>
             <span className="text-sm text-muted-foreground text-center mb-5">Your friends will find you by your name.</span>
             <form onSubmit={handleNameSubmit} className="w-full flex flex-col gap-3">
@@ -102,6 +109,14 @@ export default function HomePage() {
               />
               <Button type="submit" className="mt-5">Save</Button>
             </form>
+            {/* Log out button for stuck users */}
+            <Button
+              variant="outline"
+              className="mt-2 w-full"
+              onClick={logout}
+            >
+              Log out
+            </Button>
           </DialogContent>
         </Dialog>
         {projectDialogOpen && (

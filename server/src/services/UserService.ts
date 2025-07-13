@@ -4,6 +4,7 @@ import { ErrorCodes } from '@fullstack/common';
 import { db } from '../database/databaseAccess.js';
 import { users } from '../database/schema.js';
 import { eq } from 'drizzle-orm';
+import logger from '../utils/logger.js';
 
 export class UserEntity {
   id: string = '';
@@ -51,7 +52,8 @@ class UserService {
   }
 
   async updateUser(userId: string, fields: Partial<Omit<UserEntity, 'id' | 'createdAt' | 'password'>>): Promise<UserEntity> {
-    // Remove undefined fields
+    logger.debug('Updating user with fields:', fields + userId);
+
     const updateFields: Record<string, any> = {};
     (Object.keys(fields) as Array<keyof typeof fields>).forEach((key) => {
       if (fields[key] !== undefined) {
@@ -61,17 +63,24 @@ class UserService {
     if (Object.keys(updateFields).length === 0) {
       throw new CustomError('No fields to update', ErrorCodes.VALIDATION_ERROR);
     }
-    const updated = await db.update(users)
-      .set(updateFields)
-      .where(eq(users.id, userId))
-      .returning();
-    const user = updated[0];
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt?.toISOString?.() ?? '',
-    };
+    try {
+      const updated = await db.update(users)
+        .set(updateFields)
+        .where(eq(users.id, userId))
+        .returning();
+
+      const user = updated[0];
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt?.toISOString?.() ?? '',
+      };
+    } catch (error) {
+      logger.error('Error updating user:', error);
+      throw new CustomError('Failed to update user', ErrorCodes.INTERNAL_ERROR);
+    }
+
   }
 }
 
