@@ -117,7 +117,7 @@ export default function ProjectDetailPage() {
             </TabsTrigger>
             <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Users className="w-4 h-4" />
-              Team Activities
+              Activities
             </TabsTrigger>
             <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Settings className="w-4 h-4" />

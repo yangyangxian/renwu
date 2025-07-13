@@ -24,7 +24,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="bg-gray-100 dark:bg-black flex flex-col pt-15">
       {/* Top Navigation Bar */}
-      <nav className="fixed top-0 left-0 w-full bg-primary-purple shadow-md z-50 flex justify-between items-center h-15 px-5">
+      <nav className="fixed top-0 left-0 w-full bg-primary-purple shadow-md z-50 flex justify-between items-center h-15 px-2">
         <div className="flex items-center gap-6">
           <Button
             variant='default'
@@ -37,7 +37,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             Renwu
           </Button>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1">
           {/* Dark mode toggle button */}
           <Button variant="ghost" size="icon" onClick={toggleDark} aria-label="Toggle dark mode">
             <svg className="w-5 h-5 dark:hidden" fill="none" stroke="#f59e42" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.95l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.05l-.71-.71" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="5"/></svg>

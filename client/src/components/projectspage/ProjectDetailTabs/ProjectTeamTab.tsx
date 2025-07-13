@@ -20,7 +20,7 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
         <Label className="text-slate-400 italic">No activities yet.</Label>
       </Card>
       {/* Team Members Card (right, smaller) */}
-      <Card className="flex flex-col w-1/3 min-w-48 self-start px-5 py-4 shadow-none">
+      <Card className="flex flex-col w-1/3 min-w-[340px] self-start px-5 py-4 shadow-none">
         <div className="flex items-center justify-between">
           <Label className="text-md font-semibold">Team Members</Label>
           <UserPlus
