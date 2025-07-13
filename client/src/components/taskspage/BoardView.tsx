@@ -3,7 +3,7 @@ import { DndContext, closestCorners, useDraggable, useDroppable, DragOverlay, us
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Card";
 import TaskCard from "@/components/taskspage/TaskCard";
 import { TaskResDto, TaskStatus } from "@fullstack/common";
-import { Label } from "@/components/ui-kit/Label";
+import { ClipboardList } from "lucide-react";
 
 interface BoardViewProps {
   tasks: TaskResDto[];
@@ -102,7 +102,10 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete,
               </CardHeader>
               <CardContent className="p-3 flex flex-col overflow-y-auto gap-3">
                 {tasksByStatus[col.key].length === 0 ? (
-                  <Label className="text-sm">No tasks</Label>
+                  <Card className="flex flex-col items-center justify-center text-muted-foreground py-3 rounded-lg border border-dashed">
+                    <ClipboardList className="w-5 h-5 mb-2" />
+                    <span className="text-sm">No tasks here yet.</span>
+                  </Card>
                 ) : (
                   tasksByStatus[col.key]
                     .slice() // avoid mutating original
