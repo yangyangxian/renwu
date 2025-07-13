@@ -1,14 +1,14 @@
-import * as React from "react"
 import { cn } from "@/lib/utils"
+import { useState, useEffect, useLayoutEffect } from "react";
 
 function Textarea({ className, onChange, onBlur, autoSize = false, onCancel, ...props }: React.ComponentProps<"textarea"> & {
   autoSize?: boolean;
   onCancel?: () => void;
 }) {
-  const [originalValue, setOriginalValue] = React.useState<string>("");
+  const [originalValue, setOriginalValue] = useState<string>("");
 
   // Store original value when component mounts or value prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setOriginalValue(props.value?.toString() || "");
   }, [props.value]);
 
@@ -19,7 +19,7 @@ function Textarea({ className, onChange, onBlur, autoSize = false, onCancel, ...
   };
 
   // Auto-grow on mount and when value changes (before paint)
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (props.ref?.current) {
       autoGrow(props.ref?.current);
     }

@@ -67,7 +67,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="h-full w-full flex flex-col gap-2">
       {/* Project Name at the top */}
-      <div className="flex items-center p-2">
+      <div className="flex items-center px-2 pb-2">
         {editingTitle ? (
           <Input
             ref={titleInputRef}
@@ -87,7 +87,7 @@ export default function ProjectDetailPage() {
         ) : (
           <div className="flex items-center gap-2">
             <Label
-              className="pl-1 text-[22px] font-black cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
+              className="pl-1 text-[24px] cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
               title={project?.name}
               onClick={handleTitleClick}
             >
