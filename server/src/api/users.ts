@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { userService } from '../services/UserService.js';
+import { userService } from '../services/UserService';
 import { UserReqDto, UserResDto, ApiResponse, ErrorCodes, UpdateUserReqDto} from '@fullstack/common';
-import { mapObject } from '../utils/mappers.js';
-import { createApiResponse } from '../utils/apiUtils.js';
-import { CustomError } from '../classes/CustomError.js';
+import { mapObject } from '../utils/mappers';
+import { createApiResponse } from '../utils/apiUtils';
+import { CustomError } from '../classes/CustomError';
 
 const router = Router();
 

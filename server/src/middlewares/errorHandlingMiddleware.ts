@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger';
 import { ApiErrorResponse, ErrorCodes, HttpStatusCode } from '@fullstack/common';
-import { CustomError } from '../classes/CustomError.js';
-import configs from '../appConfig.js';
-import { createApiResponse } from '../utils/apiUtils.js';
+import { CustomError } from '../classes/CustomError';
+import configs from '../appConfig';
+import { createApiResponse } from '../utils/apiUtils';
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {

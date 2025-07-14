@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import configs from '../appConfig.js';
-import { CustomError } from '../classes/CustomError.js';
+import configs from '../appConfig';
+import { CustomError } from '../classes/CustomError';
 import { ErrorCodes } from '@fullstack/common';
 
 export interface JWTPayload {

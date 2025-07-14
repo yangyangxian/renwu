@@ -1,10 +1,10 @@
-import { db } from '../database/databaseAccess.js';
-import { tasks, projects } from '../database/schema.js';
+import { db } from '../database/databaseAccess';
+import { tasks, projects } from '../database/schema';
 import { eq } from 'drizzle-orm';
-import { CustomError } from '../classes/CustomError.js';
+import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
-import logger from '../utils/logger.js';
-import { mapDbToEntity } from '../utils/mappers.js';
+import logger from '../utils/logger';
+import { mapDbToEntity } from '../utils/mappers';
 
 export class TaskEntity {
   id: string = '';

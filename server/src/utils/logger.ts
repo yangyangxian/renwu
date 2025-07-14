@@ -1,6 +1,6 @@
 import winston, { Logger } from 'winston';
-import config from '../appConfig.js';
-import { serverRootDir } from './path.js';
+import config from '../appConfig';
+import { serverRootDir } from './path';
 import path from 'path';
 
 const { combine, timestamp, printf, colorize } = winston.format;

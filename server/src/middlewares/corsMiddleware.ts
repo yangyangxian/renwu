@@ -1,6 +1,6 @@
 import cors from 'cors';
-import configs from '../appConfig.js';
-import logger from '../utils/logger.js';
+import configs from '../appConfig';
+import logger from '../utils/logger';
 
 /**
  * CORS Configuration Middleware

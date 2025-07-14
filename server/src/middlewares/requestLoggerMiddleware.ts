@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger';
 import { hrtime } from 'node:process';
 
 const requestLogger = (req: Request, res: Response, next: NextFunction) => {

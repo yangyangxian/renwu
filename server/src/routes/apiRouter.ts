@@ -2,8 +2,8 @@ import { Router } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { pathToFileURL } from 'url';
-import { serverRootDir } from '../utils/path.js';
-import logger from '../utils/logger.js';
+import { serverRootDir } from '../utils/path';
+import logger from '../utils/logger';
 
 /**
  * API Routes Auto-Discovery Router

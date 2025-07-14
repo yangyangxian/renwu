@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
-import { staticDistDir } from '../utils/path.js';
-import logger from '../utils/logger.js';
+import { staticDistDir } from '../utils/path';
+import logger from '../utils/logger';
 
 /**
  * Static Files Router

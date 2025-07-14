@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
-import { CustomError } from '../classes/CustomError.js';
+import { CustomError } from '../classes/CustomError';
 import { ErrorCodes } from '@fullstack/common';
-import { db } from '../database/databaseAccess.js';
-import { users } from '../database/schema.js';
+import { db } from '../database/databaseAccess';
+import { users } from '../database/schema';
 import { eq } from 'drizzle-orm';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger';
 
 export class UserEntity {
   id: string = '';

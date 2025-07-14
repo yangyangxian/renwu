@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import { createJWT } from '../utils/jwt.js';
-import { createApiResponse } from '../utils/apiUtils.js';
-import { CustomError } from '../classes/CustomError.js';
+import { createJWT } from '../utils/jwt';
+import { createApiResponse } from '../utils/apiUtils';
+import { CustomError } from '../classes/CustomError';
 import { 
   ApiResponse, 
   UserResDto, 

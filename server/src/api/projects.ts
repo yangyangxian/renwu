@@ -1,8 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { projectService } from '../services/ProjectService.js';
-import { CustomError } from '../classes/CustomError.js';
-import { createApiResponse } from '../utils/apiUtils.js';
-import { mapObject } from '../utils/mappers.js';
+import { projectService } from '../services/ProjectService';
+import { CustomError } from '../classes/CustomError';
+import { createApiResponse } from '../utils/apiUtils';
+import { mapObject } from '../utils/mappers';
 import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes } from '@fullstack/common';
 
 
@@ -28,7 +28,7 @@ router.post(
     });
     const dto = mapObject(project, new ProjectResDto());
     dto.members = project.members;
-    res.status(201).json(createApiResponse<ProjectResDto>(dto));
+    res.json(createApiResponse<ProjectResDto>(dto));
   }
 );
 

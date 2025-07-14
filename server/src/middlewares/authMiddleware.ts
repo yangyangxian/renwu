@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyJWT, JWTPayload } from '../utils/jwt.js';
+import { verifyJWT, JWTPayload } from '../utils/jwt';
 import { ErrorCodes } from '@fullstack/common';
-import { CustomError } from '../classes/CustomError.js';
+import { CustomError } from '../classes/CustomError';
 
 // Extend Request type to include user
 declare global {

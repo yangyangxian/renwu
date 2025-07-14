@@ -1,8 +1,8 @@
 import express from 'express';
-import { taskService } from '../services/TaskService.js';
+import { taskService } from '../services/TaskService';
 import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse } from '@fullstack/common';
-import { mapObject } from '../utils/mappers.js';
-import { createApiResponse } from '../utils/apiUtils.js';
+import { mapObject } from '../utils/mappers';
+import { createApiResponse } from '../utils/apiUtils';
 
 const router = express.Router();
 

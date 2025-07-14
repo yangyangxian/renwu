@@ -1,8 +1,8 @@
 import { ProjectRole, ErrorCodes } from '@fullstack/common';
-import { CustomError } from '../classes/CustomError.js';
+import { CustomError } from '../classes/CustomError';
 import { eq, inArray } from 'drizzle-orm';
-import { db } from '../database/databaseAccess.js';
-import { projects, projectMembers, users } from '../database/schema.js';
+import { db } from '../database/databaseAccess';
+import { projects, projectMembers, users } from '../database/schema';
 
 export class ProjectEntity {
   id: string = '';

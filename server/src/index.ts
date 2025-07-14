@@ -1,14 +1,14 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { Server } from 'http';
-import configs from './appConfig.js';
-import logger from './utils/logger.js';
-import apiRouter from './routes/apiRouter.js';
-import staticRouter from './routes/staticRouter.js';
-import requestLoggerMiddleware from './middlewares/requestLoggerMiddleware.js';
-import errorHandlingMiddleware from './middlewares/errorHandlingMiddleware.js';
-import corsMiddleware from './middlewares/corsMiddleware.js';
-import { globalAuthMiddleware } from './middlewares/authMiddleware.js';
+import configs from './appConfig';
+import logger from './utils/logger';
+import apiRouter from './routes/apiRouter';
+import staticRouter from './routes/staticRouter';
+import requestLoggerMiddleware from './middlewares/requestLoggerMiddleware';
+import errorHandlingMiddleware from './middlewares/errorHandlingMiddleware';
+import corsMiddleware from './middlewares/corsMiddleware';
+import { globalAuthMiddleware } from './middlewares/authMiddleware';
 
 const app = express();
 
@@ -36,6 +36,8 @@ app.use(errorHandlingMiddleware); // Error handling must be the last middleware
 // Start the server
 // ********************************************************
 StartServer(configs.port);
+
+export default app;
 
 // ********************************************************
 // Private functions

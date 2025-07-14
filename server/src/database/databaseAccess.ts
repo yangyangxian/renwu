@@ -1,9 +1,9 @@
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import configs from '../appConfig.js';
-import { CustomError } from '../classes/CustomError.js';
+import configs from '../appConfig';
+import { CustomError } from '../classes/CustomError';
 import { ErrorCodes } from '@fullstack/common';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger';
 
 if (!configs.dbUrl || configs.dbUrl.trim() === '') {
   logger.error('DATABASE_URL is not set or is empty. Database operations will fail. Please check your environment variables.');
