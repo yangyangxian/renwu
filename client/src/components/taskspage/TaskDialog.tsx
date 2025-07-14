@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer } from "react";
-import { taskFormReducer, initialTaskFormState, TaskFormState, TaskFormAction } from "../../reducers/taskFormReducer";
+import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Textarea } from "@/components/ui-kit/Textarea";
@@ -48,13 +48,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     taskFormReducer, { ...initialTaskFormState, ...initialValues }
   );
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
-  const updateFromCode = React.useRef(false);
   
   const handleAssignedToChange = (value: string) => {
-    if (updateFromCode.current) {
-      updateFromCode.current = false;
-      return;
-    }
+    console.log("Assigned to changed:", value);
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
   };
 
@@ -69,7 +65,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   useEffect(function populateAssignedTo(){
     if (!taskState.projectId) {
-      // If no project is selected, default to the current user
       setAssignedToSelectOptions([{ value: String(user?.id || ""), label: String(user?.name || "Me") }]);
       handleAssignedToChange(String(user?.id || ""));
       return;
@@ -78,12 +73,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const options = getAssignedToOptions(taskState.projectId);
     setAssignedToSelectOptions(options);
 
-    updateFromCode.current = true;
-    if (options.length === 0) {
-      handleAssignedToChange('');
-    } else if (options.some(opt => opt.value === initialValues.assignedTo)) {
-      handleAssignedToChange(initialValues.assignedTo!);
+    let assignedUser = "";
+    if (options.some(opt => opt.value === initialValues.assignedTo)) {
+      assignedUser = initialValues.assignedTo!;
+    } else if (options.length >0){
+      assignedUser = options[0].value;
     }
+    dispatch({ type: 'SET_FIELD', field: 'assignedTo', value : assignedUser });
   }, [taskState.projectId, projects, user]);
 
   const handleProjectChange = (value: string) => {

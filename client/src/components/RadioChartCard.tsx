@@ -27,7 +27,7 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 	: safeData;
 
   return (
-	<Card className={`w-full shadow-md p-4 flex flex-col min-w-80 ${className ? ` ${className}` : ''}`}>
+	<Card className={`w-full shadow-md p-4 pb-3 flex flex-col min-w-80 ${className ? ` ${className}` : ''}`}>
 	  <div className="w-full flex items-center justify-between">
 		<span className="font-semibold text-md">Task Status</span>
 	  </div>
@@ -70,7 +70,7 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 		  return (
 			<div
 			  key={entry.key}
-			  className="flex items-center py-2 text-sm w-full"
+			  className="flex items-center py-1 text-sm w-full"
 			>
 			  <div className="flex items-center gap-2 w-1/3">
 				<span
@@ -80,8 +80,8 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 				  {entry.label}
 				</Label>
 			  </div>
-			  <Label className="tabular-nums text-primary w-1/3 justify-center">
-				{entry.value}<span className='ml-1'>tasks</span>
+			  <Label className="tabular-nums text-primary text-[1rem] w-1/3 justify-end pr-5">
+				{entry.value}
 			  </Label>
 			  <Label className="tabular-nums text-primary ml-auto">
 				{percent}%

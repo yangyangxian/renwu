@@ -80,7 +80,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
       dotClass: 'bg-blue-600',
     },
     [TaskStatus.DONE]: {
-      label: 'Done',
+      label: 'In Review',
       color: '#10b981',
       dotClass: 'bg-emerald-500',
     },
