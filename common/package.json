@@ -18,5 +18,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./*": "./dist/*.js"
+  },
+  "dependencies": {
+    "zod": "^4.0.5"
   }
 }

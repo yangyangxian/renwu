@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { getErrorMessage } from '@/resources/errorMessages';
-import { ApiErrorResponse, ErrorCodes } from '@fullstack/common';
+import { ApiErrorResponse, ErrorCodes, LoginReqSchema } from '@fullstack/common';
 import { Button } from '@/components/ui-kit/Button';
 import { Input } from '@/components/ui-kit/Input';
 import { Card } from '@/components/ui-kit/Card';
@@ -20,6 +20,14 @@ function LoginPage() {
     e.preventDefault();
     setIsLoggingIn(true);
     setError('');
+
+    const result = LoginReqSchema.safeParse({ email, password });
+    if (!result.success) {
+      setError(result.error.issues.map(issue => issue.message).join('<br>'));
+      setIsLoggingIn(false);
+      return;
+    }
+
     try {
       await login(email, password);
       navigate('/');
@@ -42,11 +50,10 @@ function LoginPage() {
         <Card className="w-full max-w-sm p-5 flex flex-col gap-6 shadow-lg">
           <h2 className="text-2xl font-bold text-center">Log In</h2>
           {error && (
-            <div className="text-sm mb-2 p-2 bg-destructive/10 border border-destructive text-destructive rounded">
-              {error}
+            <div dangerouslySetInnerHTML={{__html: error || ''}} className="text-sm p-2 bg-destructive/10 border border-destructive text-destructive rounded">
             </div>
           )}
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form onSubmit={handleLogin} noValidate className="flex flex-col gap-4">
             <Input
               type="email"
               placeholder="Email"

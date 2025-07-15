@@ -1,28 +1,18 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import app from '../index';
-
-const baseURL = 'http://localhost:3001';
-let server: any;
+import { describe, it, beforeAll, expect } from 'vitest';
+import { baseURL } from './globalSetup';
 
 describe('Projects API', () => {
   let cookie: string;
   let projectId: string;
 
   beforeAll(async () => {
-    server = app.listen(3001);
-    
     const res = await fetch(`${baseURL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: '135729229@163.com', password: '1yypoizmkm' })
     });
-    
     const setCookieHeader = res.headers.get('set-cookie');
     cookie = setCookieHeader ? setCookieHeader.split(';')[0] : '';
-  });
-
-  afterAll(() => {
-    server.close();
   });
 
   it('should create a new project', async () => {

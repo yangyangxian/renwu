@@ -8,7 +8,8 @@ import {
   UserResDto, 
   LoginReqDto, 
   LogoutResDto, 
-  ErrorCodes
+  ErrorCodes,
+  LoginReqSchema
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService.js';
@@ -19,21 +20,20 @@ const router = Router();
 router.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const loginHandler = async () => {
     try {
-      const { email, password }: LoginReqDto = req.body;
-      if (!email || !password) {
-        throw new CustomError(
-          'Email and password are required',
-          ErrorCodes.MISSING_CREDENTIALS
-        );
+      const credentials : LoginReqDto = req.body;
+      const result = LoginReqSchema.safeParse(credentials);
+      if (!result.success) {
+          throw new CustomError(result.error.issues.join(';'), ErrorCodes.INVALID_INPUT);
       }
-      const user = await userService.getUserByEmail(email);
+
+      const user = await userService.getUserByEmail(credentials.email);
       if (!user || !user.password) {
         throw new CustomError(
           'Invalid credentials',
           ErrorCodes.INVALID_CREDENTIALS
         );
       }
-      const isValidPassword = await bcrypt.compare(password, user.password!);
+      const isValidPassword = await bcrypt.compare(credentials.password, user.password!);
       if (!isValidPassword) {
         throw new CustomError(
           'Invalid credentials',
@@ -133,7 +133,6 @@ router.get('/me', async (req: Request, res: Response<ApiResponse<UserResDto>>, n
 // Logout endpoint
 router.post('/logout', (req: Request, res: Response<ApiResponse<LogoutResDto>>, next: NextFunction) => {
 
-    // Clear the auth cookie
     res.clearCookie('auth-token', {
         httpOnly: true,
         secure: appConfig.envMode === 'production',

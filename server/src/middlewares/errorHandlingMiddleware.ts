@@ -37,7 +37,7 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
   };
 
   let errorLog = isDevelopment
-    ? `[${req.method} ${req.originalUrl}] API Error(status code:${statusCode}): ${apiErrorResponse.stack}`
+    ? `[${req.method} ${req.originalUrl}] API Error(status code:${statusCode}) | Error Code: ${apiErrorResponse.code} | ${apiErrorResponse.stack}`
     : `[${req.method} ${req.originalUrl}] API Error(status code:${statusCode}): ${apiErrorResponse.code} | ${apiErrorResponse.message}`;
   logger.error(errorLog);
 
