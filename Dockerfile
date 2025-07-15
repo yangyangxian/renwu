@@ -12,8 +12,11 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
 COPY client/ ./
-COPY --from=common-build /app/common/dist ../common/dist
+COPY --from=common-build /app/common/src ../common/src
 COPY --from=common-build /app/common/package.json /app/common/package.json
+WORKDIR /app/common
+RUN npm install
+WORKDIR /app/client
 RUN npm run build:alone
 
 # ----------- Stage 3: Build server (backend) -----------
@@ -25,6 +28,7 @@ COPY server/ ./
 COPY --from=common-build /app/common/dist ../common/dist
 COPY --from=common-build /app/common/package.json /app/common/package.json
 RUN npm run build:alone
+RUN npm run postbuild
 
 # ----------- Stage 4: Production image -----------
 FROM node:22-alpine AS production
@@ -39,12 +43,15 @@ COPY --from=server-build /app/server/.env.production ./server/.env.production
 # Copy client build into server static directory
 COPY --from=client-build /app/client/dist ./client/dist
 
+WORKDIR /app/common
+RUN npm install --omit=dev
+
 WORKDIR /app/server
 RUN npm install --omit=dev
 
-# Create a symlink to the common/dist directory
+# Create a symlink to the common directory inside server's node_modules
 RUN mkdir -p node_modules/@fullstack && \
     ln -s /app/common node_modules/@fullstack/common
 
 EXPOSE 5055
-CMD ["node", "dist/index.js"] 
+CMD ["node", "dist/index.js"]

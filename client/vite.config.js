@@ -14,7 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src').replace(/\\/g, '/'),
-      '@fullstack/common': path.resolve(__dirname, '../common/dist').replace(/\\/g, '/')
+      '@fullstack/common': path.resolve(__dirname, '../common/src').replace(/\\/g, '/'),
     },
   },
   server: {
@@ -42,15 +42,12 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // Split out react-day-picker
             if (id.includes('react-day-picker')) {
               return 'vendor-react-day-picker';
             }
-            // Split out marked
             if (id.includes('marked')) {
               return 'vendor-marked';
             }
-            // Split out all @radix-ui/* packages
             if (id.match(/node_modules\/(@radix-ui\/)/)) {
               return 'vendor-radix';
             }
