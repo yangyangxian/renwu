@@ -42,11 +42,14 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react-day-picker')) {
-              return 'vendor-react-day-picker';
-            }
             if (id.includes('marked')) {
               return 'vendor-marked';
+            }
+            if (id.includes('recharts')) {
+              return 'recharts';
+            }         
+            if (id.includes('framer-motion')) {
+              return 'framer-motion';
             }
             if (id.match(/node_modules\/(@radix-ui\/)/)) {
               return 'vendor-radix';

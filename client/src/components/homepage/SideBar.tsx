@@ -48,7 +48,9 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
   useEffect(() => {
     if (expanded) {
       if (isFirstRender.current) {
-        setShowText(true);
+        const timer = setTimeout(() => {
+          setShowText(true);
+        }, 300);
         isFirstRender.current = false;
       } else {
         const timer = setTimeout(() => {

@@ -9,6 +9,7 @@ import { Plus, Kanban, List } from "lucide-react";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
+import { motion } from "framer-motion";
 
 export default function TasksPage() {
   const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
@@ -24,7 +25,13 @@ export default function TasksPage() {
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
 
   return (
-    <div className="w-full h-full flex flex-col pt-1 gap-2">
+    <motion.div
+      className="w-full h-full flex flex-col pt-1 gap-2"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.8 }}
+    >
       {/* Responsive menu bar: all controls in one row on all devices */}
       <div id="menuBar" className="w-full px-2">
         <div className="flex flex-row w-full gap-3 items-start sm:items-center flex-wrap">
@@ -118,7 +125,7 @@ export default function TasksPage() {
           </div>
         )
       )}
-    </div>
+    </motion.div>
   );
 }
 
