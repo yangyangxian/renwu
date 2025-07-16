@@ -23,14 +23,15 @@ export default function TasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   return (
     <motion.div
       className="w-full h-full flex flex-col pt-1 gap-2"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.8 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6 }}
     >
       {/* Responsive menu bar: all controls in one row on all devices */}
       <div id="menuBar" className="w-full px-2">
@@ -43,6 +44,7 @@ export default function TasksPage() {
             projects={projects}
             tasks={tasks}
             onFilter={setFilteredTasks}
+            onProjectSelect={setSelectedProjectId}
           />
           {/* View mode tabs and add task button */}
           <div className="flex items-center gap-2">
@@ -82,7 +84,7 @@ export default function TasksPage() {
             onSubmit={submitTask}
             title={editingTask ? "Edit Task" : "Add New Task"}
             projects={projects}
-            initialValues={editingTask || {}}
+            initialValues={editingTask || (selectedProjectId ? { projectId: selectedProjectId } : {})}
           />
         )}
       </div>

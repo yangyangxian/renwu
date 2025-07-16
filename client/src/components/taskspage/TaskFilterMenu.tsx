@@ -11,6 +11,7 @@ interface TaskFilterMenuProps {
   projects: ProjectResDto[];
   tasks: TaskResDto[];
   onFilter: (filtered: TaskResDto[]) => void;
+  onProjectSelect?: (projectId: string) => void;
 }
 
 import { useState, useEffect } from "react";
@@ -21,6 +22,7 @@ export function TaskFilterMenu({
   projects,
   tasks,
   onFilter,
+  onProjectSelect,
 }: TaskFilterMenuProps) {
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const [dateRange, setDateRange] = useState<'1m' | '3m' | '1y' | 'all'>("1m");
@@ -70,7 +72,14 @@ export function TaskFilterMenu({
   return (
     <div className="flex gap-3 items-center flex-grow">
       {showProjectSelect && (
-        <Select value={selectedProject} onValueChange={setSelectedProject} defaultValue="all">
+        <Select
+          value={selectedProject}
+          onValueChange={v => {
+            setSelectedProject(v);
+            if (onProjectSelect) onProjectSelect(v);
+          }}
+          defaultValue="all"
+        >
           <SelectTrigger
             className="px-3 bg-white dark:text-primary flex items-center min-w-[9rem]"
             id="project-select"

@@ -80,11 +80,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       assignedUser = options[0].value;
     }
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value : assignedUser });
-  }, [taskState.projectId, projects, user]);
+    }, [taskState.projectId, projects, user]);
 
-  const handleProjectChange = (value: string) => {
-    dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });
-    // Optionally reset assignedTo here if needed, but useEffect will handle the default
+    const handleProjectChange = (value: string) => {
+      dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });
+      // Optionally reset assignedTo here if needed, but useEffect will handle the default
   };
 
   return (
