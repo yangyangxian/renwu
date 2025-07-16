@@ -65,7 +65,7 @@ export default function ProjectDetailPage() {
   };
   
   return (
-    <div className="h-full w-full flex flex-col gap-2">
+    <div className="h-full w-full flex flex-col gap-1">
       {/* Project Name at the top */}
       <div className="flex items-center px-2 pb-2">
         {editingTitle ? (

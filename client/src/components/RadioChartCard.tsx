@@ -27,7 +27,7 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 	: safeData;
 
   return (
-	<Card className={`w-full shadow-md p-4 pb-3 flex flex-col min-w-80 ${className ? ` ${className}` : ''}`}>
+	<Card className={`w-full shadow-md p-4 py-3 flex flex-col min-w-80 ${className ? ` ${className}` : ''}`}>
 	  <div className="w-full flex items-center justify-between">
 		<span className="font-semibold text-md">Task Status</span>
 	  </div>

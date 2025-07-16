@@ -112,9 +112,9 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
   }));
 
   return (
-    <div className="flex gap-3 h-full overflow-y-auto p-2 items-start">
-      <RadioChartCard data={chartData} className='w-1/3'/>
-      <Card className="flex flex-col h-full w-2/3 shadow-md pb-3">
+    <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
+      <RadioChartCard data={chartData} className='w-1/3 lg:w-1/4'/>
+      <Card className="flex flex-1 flex-col h-full shadow-md pb-3">
         <div className="flex items-center gap-2 p-3 border-b-1">
           <Label className="text-md font-semibold">Project Description:</Label>
           <HoverCard openDelay={0}>
@@ -142,7 +142,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
             onChange={e => setDescInput(e.target.value)}
             onBlur={handleDescBlur}
             onKeyDown={e => { if (e.key === 'Escape') setEditingDesc(false); }}
-            className="w-full h-full p-2 m-2 border rounded-md overflow-y-auto"
+            className="w-9.5/10 p-2 m-4 mb-1 border rounded-md overflow-y-auto min-h-50"
             maxLength={10000}
           />
         ) : (

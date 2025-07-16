@@ -83,7 +83,7 @@ export default function HomePage() {
         </aside>
       )}
       {/* Main Content or Outlet */}
-      <section className="flex w-full max-h-full justify-center pl-3 p-2 pt-3 overflow-y-auto">
+      <section className="flex w-full max-h-full pl-3 p-2 pt-3">
         {/* Name Dialog */}
         <Dialog open={nameDialogOpen} modal>
           <DialogContent 
