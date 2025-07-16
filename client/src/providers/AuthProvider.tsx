@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ApiErrorResponse, LoginReqDto, UserResDto } from '@fullstack/common';
+import { ApiErrorResponse, LoginReqDto, UserResDto, LoginResDto } from '@fullstack/common';
 import { apiClient } from '../utils/APIClient';
 import logger from '../utils/logger';
 import { authLogin, authLogout, authMe, authSignup } from '@/apiRequests/apiEndpoints';
@@ -51,14 +51,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (email: string, password: string): Promise<void> => {
-    return apiClient.post<LoginReqDto, UserResDto>(
+    return apiClient.post<LoginReqDto, LoginResDto>(
       authLogin(),
       { email, password }
-      )
-      .then((userData: UserResDto) => {
-        setUser(userData);
+    )
+      .then((loginData: LoginResDto) => {
+        // Optionally, you can store the token in memory or localStorage if needed
+        const { token, ...userFields } = loginData;
+        setUser(userFields);
         setIsAuthenticated(true);
-        logger.info('Login successful:', userData);
+        logger.info('Login successful:', loginData);
       })
       .catch((error : ApiErrorResponse) => {
         logger.error('Login failed:', error);

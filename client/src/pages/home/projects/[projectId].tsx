@@ -87,7 +87,7 @@ export default function ProjectDetailPage() {
         ) : (
           <div className="flex items-center gap-2">
             <Label
-              className="pl-1 text-[24px] cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
+              className="pl-1 font-black text-[24px] cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
               title={project?.name}
               onClick={handleTitleClick}
             >

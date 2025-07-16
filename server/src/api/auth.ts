@@ -9,7 +9,8 @@ import {
   LoginReqDto, 
   LogoutResDto, 
   ErrorCodes,
-  LoginReqSchema
+  LoginReqSchema,
+  LoginResDto
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService.js';
@@ -52,12 +53,13 @@ router.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<User
         sameSite: 'strict',
         maxAge: appConfig.jwtMaxAge
       });
-      const userResDto: UserResDto = {
+      const loginResDto = new LoginResDto({
         id: user.id,
         name: user.name,
-        email: user.email
-      };
-      res.json(createApiResponse<UserResDto>(userResDto));
+        email: user.email,
+        token
+      });
+      res.json(createApiResponse(loginResDto));
     } catch (error) {
       next(error);
     }
