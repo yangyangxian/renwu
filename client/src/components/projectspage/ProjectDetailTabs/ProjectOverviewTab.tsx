@@ -1,9 +1,6 @@
 import React, { useMemo } from 'react';
 import { Card } from '@/components/ui-kit/Card';
 import { Textarea } from '@/components/ui-kit/Textarea';
-import { Label } from '@/components/ui-kit/Label';
-import { Info } from 'lucide-react';
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui-kit/Hover-card';
 import { marked } from 'marked';
 import { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/hooks/useProjects';
@@ -79,17 +76,11 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
     setEditingDesc(false);
     setDescInput(newValue);
     if (!project) return;
-    const prev = normalizeDesc(project.description || "");
-    const next = normalizeDesc(newValue);
-    if (next !== prev) {
-      try {
-        await updateProject(projectId, { description: newValue });
-        toast.success('Project description updated');
-      } catch {
-        toast.error('Failed to update description');
-        setDescInput(project.description || "");
-      }
-    } else {
+    try {
+      await updateProject(projectId, { description: newValue });
+      toast.success('Project description updated');
+    } catch {
+      toast.error('Failed to update description');
       setDescInput(project.description || "");
     }
   };
@@ -119,7 +110,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
   return (
     <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
       <MemoRadioChartCard data={chartData} className='w-1/3 lg:w-1/4'/>
-      <Card className="flex flex-1 flex-col h-full shadow-md p-3">
+      <Card className="flex flex-1 flex-col h-full shadow-md px-4">
         {editingDesc ? (
           <Textarea
             ref={descInputRef}
@@ -133,7 +124,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
           <>
             {descInput ? (
               <div
-                className="markdown-body !text-[1rem] !leading-5 !bg-card p-4 pt-5 h-full cursor-pointer overflow-auto"
+                className="markdown-body !text-[1rem] !leading-5 !bg-card !py-3 h-full cursor-pointer overflow-auto"
                 onClick={handleDescClick}
                 dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
               />
