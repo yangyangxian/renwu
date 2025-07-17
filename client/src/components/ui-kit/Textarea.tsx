@@ -1,8 +1,9 @@
+
 import { cn } from "@/lib/utils"
 import { Button } from "./Button";
-import { Info } from "lucide-react";
+import { Info, Pencil } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "./Hover-card";
-import { useState, useEffect, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRef } from "react";
 
 type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "onSubmit" | "onCancel"> & {
@@ -10,9 +11,10 @@ type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange"
   onCancel?: () => void;
   onSubmit?: (value: string) => void;
   initialValue?: string;
+  showButtons?: boolean;
 };
 
-function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", ...props }: TextareaProps) {
+function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, ...props }: TextareaProps) {
   const [editedValue, setEditedValue] = useState<string>(initialValue);
   const localRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -20,6 +22,9 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
   useEffect(() => {
     setEditedValue(initialValue);
   }, [initialValue]);
+
+  // Detect unsaved changes
+  const hasChanges = editedValue !== initialValue;
 
   // Handle changes: update local editedValue only
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,6 +78,12 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
       />
       {(onSubmit || onCancel) && (
         <div className="flex items-center justify-end gap-2 mt-2 mr-4">
+          {hasChanges && (
+            <span className="flex items-center gap-1 text-sm text-primary/80 select-none">
+              <Pencil className="w-4 h-4" aria-label="You have unsaved changes" />
+              <span className="font-medium text-xs text-primary/70">Unsaved changes</span>
+            </span>
+          )}
           <HoverCard openDelay={0}>
             <HoverCardTrigger asChild>
               <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
@@ -90,12 +101,12 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
               </ul>
             </HoverCardContent>
           </HoverCard>
-          {onCancel && (
+          {showButtons && onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
           )}
-          {onSubmit && (
+          {showButtons && onSubmit && (
             <Button type="button" onClick={() => onSubmit(editedValue)}>
               Save
             </Button>

@@ -133,7 +133,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
           <>
             {descInput ? (
               <div
-                className="markdown-body !text-[1rem] !leading-5 !bg-card p-5 pt-5 h-full cursor-pointer overflow-auto"
+                className="markdown-body !text-[1rem] !leading-5 !bg-card p-4 pt-5 h-full cursor-pointer overflow-auto"
                 onClick={handleDescClick}
                 dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
               />
