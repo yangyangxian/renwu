@@ -119,41 +119,21 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
   return (
     <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
       <MemoRadioChartCard data={chartData} className='w-1/3 lg:w-1/4'/>
-      <Card className="flex flex-1 flex-col h-full shadow-md pb-3">
-        <div className="flex items-center gap-2 p-3 border-b-1">
-          <Label className="text-md font-semibold">Project Description:</Label>
-          <HoverCard openDelay={0}>
-            <HoverCardTrigger asChild>
-              <Info className="w-4 h-4" />
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80 text-xs leading-relaxed">
-              <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
-              <ul className="list-disc pl-5">
-                <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
-                <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
-                <li><b>Link:</b> <code>[title](url)</code></li>
-                <li><b>List:</b> <code>* item</code></li>
-                <li><b>Number List:</b> <code> 1. item</code></li>
-                <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
-                <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
-              </ul>
-            </HoverCardContent>
-          </HoverCard>
-        </div>
+      <Card className="flex flex-1 flex-col h-full shadow-md p-3">
         {editingDesc ? (
           <Textarea
             ref={descInputRef}
             initialValue={descInput}
             onSubmit={handleSubmitDes}
             onCancel={() => setEditingDesc(false)}
-            className="w-9.5/10 p-2 m-4 mb-1 overflow-y-auto min-h-40"
+            className="overflow-y-auto min-h-40"
             maxLength={10000}
           />
         ) : (
           <>
             {descInput ? (
               <div
-                className="markdown-body !text-[1rem] !leading-5 !bg-card p-4 pt-5 h-full cursor-pointer overflow-auto"
+                className="markdown-body !text-[1rem] !leading-5 !bg-card p-5 pt-5 h-full cursor-pointer overflow-auto"
                 onClick={handleDescClick}
                 dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
               />
