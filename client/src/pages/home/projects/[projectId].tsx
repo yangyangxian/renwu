@@ -79,6 +79,7 @@ export default function ProjectDetailPage() {
                 handleTitleBlur(); 
               } else if (e.key === 'Escape') {
                 setEditingTitle(false);
+                setTitleInput(project?.name || "");
               }
             }}
             className="!text-[22px] font-black flex-1 h-[35px] rounded pl-2"
