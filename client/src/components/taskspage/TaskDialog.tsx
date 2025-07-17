@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useRef } from "react";
 import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
@@ -87,6 +87,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       // Optionally reset assignedTo here if needed, but useEffect will handle the default
   };
 
+  // Ref for Textarea
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
@@ -110,6 +113,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               e.preventDefault();
               onSubmit({
                 ...taskState,
+                description: descriptionRef.current?.value || "",
                 createdBy: user?.id || "",
               });
               onOpenChange(false);
@@ -217,15 +221,16 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </Label>
                 <Textarea
                   id="description"
-                  className="bg-muted min-h-[150px] focus:ring-2 focus:ring-primary/30"
+                  className="min-h-[200px]"
                   placeholder="Task description"
-                  value={taskState.description}
-                  onChange={e => dispatch({ type: 'SET_FIELD', field: 'description', value: e.target.value })}
+                  initialValue={taskState.description}
+                  ref={descriptionRef}
                   rows={5}
+                  showButtons={false}
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-4 border-t pt-6">
+            <div className="flex justify-end gap-3 border-t pt-6">
               <DialogClose asChild>
                 <Button type="button" variant="outline">Cancel</Button>
               </DialogClose>

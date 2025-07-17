@@ -44,9 +44,6 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
   const descInputRef = useRef<HTMLTextAreaElement>(null);
-  // Use descInput for live preview after editing
-  //const html = marked.parse(descInput || '');
-  console.log("ProjectOverviewTab rendered with project.");
 
   useEffect(() => {
     if (project) {
@@ -64,13 +61,6 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
       }
     }, 0);
   };
-
-  // Helper to normalize description for comparison
-  const normalizeDesc = (str: string) =>
-    (str || "")
-      .replace(/\r\n/g, "\n") // normalize line endings
-      .replace(/\s+$/gm, "")    // trim trailing spaces per line
-      .trim();
 
   const handleSubmitDes = async (newValue: string) => {
     setEditingDesc(false);
@@ -110,14 +100,14 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
   return (
     <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
       <MemoRadioChartCard data={chartData} className='w-1/3 lg:w-1/4'/>
-      <Card className="flex flex-1 flex-col h-full shadow-md px-4">
+      <Card className="flex flex-1 flex-col h-full shadow-md p-4">
         {editingDesc ? (
           <Textarea
             ref={descInputRef}
             initialValue={descInput}
             onSubmit={handleSubmitDes}
             onCancel={() => setEditingDesc(false)}
-            className="overflow-y-auto min-h-40"
+            className="min-h-40"
             maxLength={10000}
           />
         ) : (

@@ -16,7 +16,6 @@ type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange"
 
 function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, ...props }: TextareaProps) {
   const [editedValue, setEditedValue] = useState<string>(initialValue);
-  const localRef = useRef<HTMLTextAreaElement | null>(null);
 
   // If initialValue changes (e.g. new project), update state
   useEffect(() => {
@@ -66,10 +65,9 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
   };
 
   return (
-    <div className={cn("flex flex-col h-full p-2", className)}>
+    <div className={cn("flex flex-col h-full", className)}>
       <textarea
         data-slot="textarea"
-        ref={localRef}
         value={editedValue}
         className="flex-1 resize-none border-input text-primary placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 w-full rounded-md border bg-transparent p-3 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-32"
         onKeyDown={handleKeyDown}
