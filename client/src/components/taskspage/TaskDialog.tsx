@@ -225,6 +225,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   placeholder="Task description"
                   initialValue={taskState.description}
                   ref={descriptionRef}
+                  storageKey={taskState.id}
                   rows={5}
                   showButtons={false}
                 />

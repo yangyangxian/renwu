@@ -3,8 +3,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "./Button";
 import { Info, Pencil } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "./Hover-card";
-import { useState, useEffect } from "react";
-import { useRef } from "react";
+import { useWebStorage } from "@/hooks/useWebStorage";
 
 type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "onSubmit" | "onCancel"> & {
   autoSize?: boolean;
@@ -12,18 +11,31 @@ type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange"
   onSubmit?: (value: string) => void;
   initialValue?: string;
   showButtons?: boolean;
+  storageKey?: string; // unique key for localStorage, required for unique drafts
 };
 
-function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, ...props }: TextareaProps) {
-  const [editedValue, setEditedValue] = useState<string>(initialValue);
+function getStorageKey(props: any) {
+  // Only use localStorage if storageKey is provided
+  if (props.storageKey) return `textarea-draft-${props.storageKey}`;
+  return null;
+}
 
-  // If initialValue changes (e.g. new project), update state
-  useEffect(() => {
-    setEditedValue(initialValue);
-  }, [initialValue]);
+function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, storageKey: storageKeyProp, ...props }: TextareaProps) {
+  // Compute storage key for this instance
+  const storageKey = getStorageKey({ ...props, storageKey: storageKeyProp });
 
-  // Detect unsaved changes
-  const hasChanges = editedValue !== initialValue;
+  // Use generic localStorage hook for draft logic
+  const [editedValue, setEditedValue] = useWebStorage(
+    storageKey,
+    initialValue,
+    storageKey ? { storageType: 'session' } : undefined
+  );
+
+  // Detect unsaved changes: only if editedValue is different from initialValue and not empty
+  const hasChanges = (
+    editedValue !== initialValue &&
+    editedValue.trim() !== ''
+  );
 
   // Handle changes: update local editedValue only
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -74,43 +86,47 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
         onChange={handleChange}
         {...props}
       />
-      {(onSubmit || onCancel) && (
-        <div className="flex items-center justify-end gap-2 mt-2 mr-4">
-          {hasChanges && (
-            <span className="flex items-center gap-1 text-sm text-primary/80 select-none">
-              <Pencil className="w-4 h-4" aria-label="You have unsaved changes" />
-              <span className="font-medium text-xs text-primary/70">Unsaved changes</span>
-            </span>
-          )}
-          <HoverCard openDelay={0}>
-            <HoverCardTrigger asChild>
-              <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80 text-xs leading-relaxed">
-              <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
-              <ul className="list-disc pl-5">
-                <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
-                <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
-                <li><b>Link:</b> <code>[title](url)</code></li>
-                <li><b>List:</b> <code>* item</code></li>
-                <li><b>Number List:</b> <code> 1. item</code></li>
-                <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
-                <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
-              </ul>
-            </HoverCardContent>
-          </HoverCard>
-          {showButtons && onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          {showButtons && onSubmit && (
-            <Button type="button" onClick={() => onSubmit(editedValue)}>
-              Save
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="flex items-center justify-end gap-2 mt-2 mr-4">
+        {hasChanges && (
+          <span className="flex items-center gap-1 text-sm text-primary/80 select-none">
+            <Pencil className="w-4 h-4" aria-label="You have unsaved changes" />
+            <span className="font-medium text-xs text-primary/70">Unsaved changes</span>
+          </span>
+        )}
+        <HoverCard openDelay={0}>
+          <HoverCardTrigger asChild>
+            <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80 text-xs leading-relaxed">
+            <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
+            <ul className="list-disc pl-5">
+              <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
+              <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
+              <li><b>Link:</b> <code>[title](url)</code></li>
+              <li><b>List:</b> <code>* item</code></li>
+              <li><b>Number List:</b> <code> 1. item</code></li>
+              <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
+              <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
+            </ul>
+          </HoverCardContent>
+        </HoverCard>
+        {showButtons && onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        {showButtons && onSubmit && (
+          <Button type="button" onClick={() => {
+            // On save, clear the draft from storage
+            if (typeof window !== 'undefined' && storageKey) {
+              window.localStorage.removeItem(storageKey);
+            }
+            onSubmit(editedValue);
+          }}>
+            Save
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

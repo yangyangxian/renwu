@@ -49,7 +49,8 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
     if (project) {
       setDescInput(project.description || "");
     }
-  }, [project]);
+    setEditingDesc(false);
+  }, [projectId, project]);
 
   const handleDescClick = () => {
     setEditingDesc(true);
@@ -109,6 +110,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
             onCancel={() => setEditingDesc(false)}
             className="min-h-40"
             maxLength={10000}
+            storageKey={projectId}
           />
         ) : (
           <>
