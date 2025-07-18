@@ -1,6 +1,6 @@
 # Renwu - a task manager
 
-![Uploading image.png…]()
+<img width="2940" height="1546" alt="image" src="https://github.com/user-attachments/assets/7b22e403-dc8d-4811-8f97-fd15b561d5c1" />
 
 ## Why I started the project
 
