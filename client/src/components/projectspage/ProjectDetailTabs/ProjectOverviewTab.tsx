@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { UpcomingDeadlinesCard } from './UpcomingDeadlinesCard';
 import { Card } from '@/components/ui-kit/Card';
 import { Textarea } from '@/components/ui-kit/Textarea';
 import { marked } from 'marked';
@@ -6,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/hooks/useProjects';
 import { toast } from 'sonner';
 import { RadioChartCard } from '@/components/RadioChartCard';
-import { TaskStatus } from '@fullstack/common';
+import { TaskResDto, TaskStatus } from '@fullstack/common';
 
 const statusConfig: Record<string, { label: string; color: string; dotClass: string }> = {
   [TaskStatus.TODO]: {
@@ -34,7 +35,7 @@ const statusConfig: Record<string, { label: string; color: string; dotClass: str
 interface ProjectOverviewTabProps {
   project: any;
   projectId: string;
-  tasks: any[];
+  tasks: TaskResDto[];
 }
 
 const MemoRadioChartCard = React.memo(RadioChartCard);
@@ -100,15 +101,18 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
 
   return (
     <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
-      <MemoRadioChartCard data={chartData} className='w-1/3 lg:w-1/4'/>
-      <Card className="flex flex-1 flex-col h-full shadow-md p-4">
+      <div className="flex flex-col w-1/3 lg:w-29/100 gap-3 h-full">
+        <MemoRadioChartCard data={chartData} />
+        <UpcomingDeadlinesCard tasks={tasks} />
+      </div>
+      <Card className="flex flex-1 flex-col h-full shadow-md px-4">
         {editingDesc ? (
           <Textarea
             ref={descInputRef}
             initialValue={descInput}
             onSubmit={handleSubmitDes}
             onCancel={() => setEditingDesc(false)}
-            className="min-h-40"
+            className="min-h-40 my-4"
             maxLength={10000}
             storageKey={projectId}
           />
@@ -116,7 +120,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
           <>
             {descInput ? (
               <div
-                className="markdown-body !text-[1rem] !leading-5 !bg-card !py-3 h-full cursor-pointer overflow-auto"
+                className="markdown-body !text-[0.95rem] !leading-5 !bg-card !py-3 h-full cursor-pointer overflow-auto"
                 onClick={handleDescClick}
                 dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
               />

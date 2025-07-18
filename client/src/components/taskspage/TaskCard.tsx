@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Button } from "@/components/ui-kit/Button";
-import { Trash2 } from "lucide-react";
-import { AlertCircle } from "lucide-react";
+import { Trash2, AlertCircle, ArrowRight, TriangleRight, ArrowBigRightIcon, FileText, ChevronRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { formatDateSmart } from "@/utils/dateUtils";
 import { TaskStatus } from "@fullstack/common";
 import {
@@ -52,7 +52,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
         variant="ghost"
         size="icon"
         className="absolute top-1.5 right-1.5 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 transition-opacity duration-150 p-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 focus-visible:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto focus:pointer-events-auto focus-visible:pointer-events-auto dark:bg-black/60 dark:hover:bg-red-900"
-        style={{ width: 26, height: 26, minWidth: 0 }}
+        style={{ width: 24, height: 24, minWidth: 0 }}
         tabIndex={0}
         aria-label="Delete task"
         type="button"
@@ -94,7 +94,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
       )}
       <div className={`text-xs lg:text-[13px] mb-1 font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>{!projectName || projectName === "" ? "Personal" : projectName}</div>
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
+        <div className="flex items-center">
+          <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
+          {description && description.trim() !== "" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ChevronRight className="w-3 h-3 flex-shrink-0 text-muted-foreground" aria-label="Has description" />
+              </TooltipTrigger>
+              <TooltipContent side="top" align="center">
+                See description
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         {dueDate && (
           <span className="text-xs lg:text-[13px] text-muted-foreground ml-2 whitespace-nowrap bg-transparent px-2 py-0.5 rounded font-sans flex items-center gap-1">
             {formatDateSmart(dueDate)}

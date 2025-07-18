@@ -27,44 +27,44 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 	: safeData;
 
   return (
-	<Card className={`w-full shadow-md p-4 py-3 flex flex-col min-w-80 ${className ? ` ${className}` : ''}`}>
+	<Card className={`w-full shadow-sm p-4 py-3 pb-2 flex flex-col ${className ? ` ${className}` : ''}`}>
 	  <div className="w-full flex items-center justify-between">
-		<span className="font-semibold text-md">Task Status</span>
+		<span className="font-bold text-md">Task Status</span>
 	  </div>
 	  <ChartContainer
 		config={Object.fromEntries(
 		  pieData.map(entry => [entry.key, { label: entry.label, color: entry.color }])
 		)}
-		className="min-h-[200px] w-full flex flex-col items-center"
+		className="my-2 w-full flex flex-col items-center"
 	  >
-	<ResponsiveContainer>
-	  <PieChart>
-		<Pie
-		  data={pieData}
-		  dataKey="value"
-		  nameKey="key"
-		  cx="50%"
-		  cy="50%"
-		  innerRadius={48}
-		  outerRadius={70}
-		  paddingAngle={2}
-		  stroke="none"
-		  animationDuration={800}
-          animationBegin={0}
-		>
-		  {pieData.map(entry => (
-			<Cell
-			  key={entry.key}
-			  fill={entry.color}
-			/>
-		  ))}
-		</Pie>
-		<ChartTooltip content={<ChartTooltipContent nameKey="key" />} />
-	  </PieChart>
-	</ResponsiveContainer>
+		<ResponsiveContainer>
+		<PieChart>
+			<Pie
+			data={pieData}
+			dataKey="value"
+			nameKey="key"
+			cx="50%"
+			cy="50%"
+			innerRadius={48}
+			outerRadius={70}
+			paddingAngle={2}
+			stroke="none"
+			animationDuration={800}
+			animationBegin={0}
+			>
+			{pieData.map(entry => (
+				<Cell
+				key={entry.key}
+				fill={entry.color}
+				/>
+			))}
+			</Pie>
+			<ChartTooltip content={<ChartTooltipContent nameKey="key" />} />
+		</PieChart>
+		</ResponsiveContainer>
 	  </ChartContainer>
 	  {/* Data summary below the chart, matching the layout style */}
-	  <div className="w-full divide-y divide-border min-h-[120px] flex flex-col justify-center">
+	  <div className="w-full divide-y divide-border flex flex-col justify-center">
 		{safeData.map(entry => {
 		  const percent = total === 0 ? '0' : ((entry.value / total) * 100).toFixed(0);
 		  return (
@@ -72,7 +72,7 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 			  key={entry.key}
 			  className="flex items-center py-1 text-sm w-full"
 			>
-			  <div className="flex items-center gap-2 w-1/3">
+			  <div className="flex items-center gap-1 w-1/3">
 				<span
 				  className={`inline-block w-3 h-3 rounded-sm ${entry.dotClass ?? ''}`}
 				/>
@@ -80,7 +80,7 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 				  {entry.label}
 				</Label>
 			  </div>
-			  <Label className="tabular-nums text-primary text-[1rem] w-1/3 justify-end pr-5">
+			  <Label className="tabular-nums text-primary text-[1rem] w-1/3 justify-end pr-6">
 				{entry.value}
 			  </Label>
 			  <Label className="tabular-nums text-primary ml-auto">

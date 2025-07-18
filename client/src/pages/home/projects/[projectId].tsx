@@ -32,7 +32,7 @@ export default function ProjectDetailPage() {
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, handleTabChange] = useTabHash(
     ['overview', 'tasks', 'team', 'settings'],
-    'overview'
+    'tasks'
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
@@ -108,13 +108,13 @@ export default function ProjectDetailPage() {
           onValueChange={val => handleTabChange(val as typeof activeTab)}
         >
           <TabsList className="bg-white dark:bg-muted">
-            <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              <LayoutDashboard className="w-4 h-4" />
-              Overview
-            </TabsTrigger>
             <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-              <List className="w-4 h-4" />
+              <LayoutDashboard className="w-4 h-4" />
               Tasks
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+              <List className="w-4 h-4" />
+              Overview
             </TabsTrigger>
             <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Users className="w-4 h-4" />

@@ -19,7 +19,7 @@ const requestLogger = (req: Request, res: Response, next: NextFunction) => {
     if (req.method == 'GET') {
       requestLog = requestLog + `| Param: ${JSON.stringify(req.params)} `;
     }
-    if (req.method == 'POST') {
+    if (req.method == 'POST' || req.method == 'PUT') {
       requestLog = requestLog + `| Body: ${JSON.stringify(req.body)} `;
     }
     logger.info(requestLog); 

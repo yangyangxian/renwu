@@ -28,9 +28,7 @@ export default function HomePage() {
   }, [isAuthenticated, user]);
 
   const handleNameSubmit = async (e: React.FormEvent) => {
-          console.log("Updating user name:", pendingName.trim());
     e.preventDefault();
-          console.log("Updating user name:", pendingName.trim());
     if (!pendingName.trim()) return;
     try {
       console.log("Updating user name:", pendingName.trim());

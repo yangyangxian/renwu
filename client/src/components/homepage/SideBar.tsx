@@ -38,6 +38,7 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
   const [expanded, setExpanded] = useState<boolean>(sidebarIsFixed);
   const [showText, setShowText] = useState(sidebarIsFixed); // show text immediately if fixed
   const isFirstRender = useRef(true);
+  const [mouseCooldown, setMouseCooldown] = useState(false);
 
   // Navigation handlers
   const handleTasksClick = () => navigate(TASKS_PATH);
@@ -65,25 +66,29 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
 
   // Prevent sidebar expand/collapse when dialog is open (if onAddProject is provided, assume dialog is managed by parent)
   const handleSidebarMouseEnter = () => {
-    if (!sidebarIsFixed) setExpanded(true);
+    if (!sidebarIsFixed && !mouseCooldown) setExpanded(true);
   };
   const handleSidebarMouseLeave = () => {
-    if (!sidebarIsFixed) setExpanded(false);
+    if (!sidebarIsFixed && !mouseCooldown) setExpanded(false);
   };
 
   const toggleSidebarIsFixed = () => {
     const newIsFixed = !sidebarIsFixed;
+    if (!newIsFixed) {
+      setExpanded(false); // Collapse immediately when unpinning
+      setMouseCooldown(true);
+      setTimeout(() => setMouseCooldown(false), 300);
+    }
     setSidebarIsFixed(newIsFixed);
     localStorage.setItem(SIDEBAR_MODE_KEY, String(newIsFixed));
     if (newIsFixed) setExpanded(true);
-    else setExpanded(false);
   };
 
   return (
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
-        className="transition-all duration-300 h-full p-2 pt-3 pr-3 relative max-w-[14rem]"
+        className="h-full p-2 pt-3 pr-3 relative max-w-[14rem]"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
