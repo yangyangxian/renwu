@@ -1,5 +1,7 @@
 # Renwu - a task manager
 
+![Uploading image.png…]()
+
 ## Why I started the project
 
 有了AI，这是编程者最好的时代。
