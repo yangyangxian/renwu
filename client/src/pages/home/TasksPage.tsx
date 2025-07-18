@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useTasks } from '@/hooks/useTasks';
+import { useState, useEffect } from "react";
+import { useTaskStore } from '@/stores/useTaskStore';
 import { useOutletContext } from "react-router-dom";
 import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
-import { TaskResDto, ProjectResDto } from '@fullstack/common';
+import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto, TaskStatus } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
@@ -17,9 +17,17 @@ export default function TasksPage() {
   const [view, setView] = useState("board");
   const {
     tasks,
-    submitTask,
-    deleteTask,
-  } = useTasks();
+    loading,
+    error,
+    fetchMyTasks,
+    updateTaskById,
+  } = useTaskStore();
+  
+  // Fetch tasks when component mounts
+  useEffect(() => {
+    fetchMyTasks();
+  }, [fetchMyTasks]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
@@ -81,7 +89,6 @@ export default function TasksPage() {
               setIsDialogOpen(open);
               if (!open) setEditingTask(null);
             }}
-            onSubmit={submitTask}
             title={editingTask ? "Edit Task" : "Add New Task"}
             projects={projects}
             initialValues={editingTask || (selectedProjectId ? { projectId: selectedProjectId } : {})}
@@ -97,15 +104,6 @@ export default function TasksPage() {
               const fullTask = tasks.find(t => t.id === taskId) || null;
               setEditingTask(fullTask);
               setIsDialogOpen(true);
-            }}
-            onTaskDelete={deleteTask}
-            onTaskStatusChange={async (taskId, newStatus) => {
-              const task = tasks.find(t => String(t.id) === String(taskId));
-              if (!task) return;
-              await submitTask({
-                ...task,
-                status: newStatus,
-              });
             }}
           />
         </div>

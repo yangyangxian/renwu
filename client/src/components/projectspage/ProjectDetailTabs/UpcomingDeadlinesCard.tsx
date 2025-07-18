@@ -56,7 +56,7 @@ export function UpcomingDeadlinesCard({ tasks }: { tasks: TaskResDto[] }) {
                     <span className="text-sm text-primary truncate">{task.title}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                    Assigned to: {task.assignedTo}
+                    Assigned to: {task.assignedTo?.name}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''}

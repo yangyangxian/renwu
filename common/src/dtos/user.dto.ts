@@ -1,5 +1,5 @@
 export class UserResDto {
-  id: string | undefined;
+  id: string = '';
   name: string = '';
   email?: string = '';
 }

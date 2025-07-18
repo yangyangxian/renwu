@@ -32,7 +32,7 @@ export function useTasks(projectId?: string) {
             description: task.description,
             dueDate: task.dueDate,
             status: task.status,
-            assignedTo: task.assignedTo,
+            assignedTo: typeof task.assignedTo === 'object' ? task.assignedTo?.id : task.assignedTo,
             projectId: task.projectId,
           };
           await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskById(task.id), updatePayload);
@@ -51,7 +51,7 @@ export function useTasks(projectId?: string) {
             description: task.description,
             dueDate: task.dueDate,
             status: task.status,
-            assignedTo: task.assignedTo,
+            assignedTo: typeof task.assignedTo === 'object' ? task.assignedTo?.id : task.assignedTo,
             projectId: task.projectId,
             createdBy: task.createdBy
           };

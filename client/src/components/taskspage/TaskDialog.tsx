@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useReducer, useRef } from "react";
 import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTaskStore } from "@/stores/useTaskStore";
+import { withToast } from "@/utils/toastUtils";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Textarea } from "@/components/ui-kit/Textarea";
 import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
-import { TaskStatus, ProjectResDto } from "@fullstack/common";
+import { TaskStatus, ProjectResDto, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
 import { CheckCircle, Square, Loader2, XCircle, Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -16,14 +18,14 @@ import { DropDownList } from "@/components/DropDownList";
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (task: { id?: string; title: string; dueDate: string; assignedTo: string; 
+  onSubmit?: (task: { id?: string; title: string; dueDate: string; assignedTo: string; 
     status: TaskStatus; description: string; projectId?: string,
     createdBy: string }) => void;
   initialValues?: {
     id?: string;
     title?: string;
     dueDate?: string;
-    assignedTo?: string;
+    assignedTo?: UserResDto; // Only new format (user object)
     status?: TaskStatus;
     description?: string;
     projectId?: string;
@@ -44,14 +46,51 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   open, onOpenChange, onSubmit, initialValues = {}, title = "Add New Task", projects,
 }) => {
   const { user } = useAuth();
+  const { createTask, updateTaskById } = useTaskStore();
+  
+  // Convert initialValues to ensure assignedTo is a string
+  const processedInitialValues = {
+    ...initialValues,
+    assignedTo: initialValues.assignedTo?.id || ''
+  };
+  
   const [taskState, dispatch] = useReducer(
-    taskFormReducer, { ...initialTaskFormState, ...initialValues }
+    taskFormReducer, { ...initialTaskFormState, ...processedInitialValues }
   );
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
   
   const handleAssignedToChange = (value: string) => {
     console.log("Assigned to changed:", value);
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
+  };
+
+  const handleSubmit = async (taskData: any) => {
+    const isEditMode = !!taskData.id;
+    
+    await withToast(
+      async () => {
+        if (isEditMode) {
+          // For edit mode, filter out all read-only fields
+          const { id, createdAt, updatedAt, projectName, createdBy, ...updateData } = taskData;
+          await updateTaskById(id, updateData);
+        } else {
+          // For create mode, only send the fields that are part of TaskCreateReqDto
+          const { id, createdAt, updatedAt, projectName, ...createData } = taskData;
+          await createTask(createData);
+        }
+      },
+      {
+        success: isEditMode ? 'Task updated successfully!' : 'Task created successfully!',
+        error: isEditMode ? 'Failed to update task.' : 'Failed to create task.'
+      }
+    );
+    
+    // Call the optional onSubmit callback if provided (for backward compatibility)
+    if (onSubmit) {
+      onSubmit(taskData);
+    }
+    
+    onOpenChange(false);
   };
 
   const getAssignedToOptions = (projectId: string | undefined) => {
@@ -74,8 +113,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     setAssignedToSelectOptions(options);
 
     let assignedUser = "";
-    if (options.some(opt => opt.value === initialValues.assignedTo)) {
-      assignedUser = initialValues.assignedTo!;
+    // Get user ID from the UserResDto object
+    const initialAssignedTo = initialValues.assignedTo?.id;
+    
+    if (options.some(opt => opt.value === initialAssignedTo)) {
+      assignedUser = initialAssignedTo!;
     } else if (options.length >0){
       assignedUser = options[0].value;
     }
@@ -111,12 +153,15 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           <form
             onSubmit={e => {
               e.preventDefault();
-              onSubmit({
+              const taskData: any = {
                 ...taskState,
                 description: descriptionRef.current?.value || "",
-                createdBy: user?.id || "",
-              });
-              onOpenChange(false);
+              };
+              // Only add createdBy for create mode
+              if (!taskState.id) {
+                taskData.createdBy = user?.id || "";
+              }
+              handleSubmit(taskData);
             }}
             className="flex flex-col gap-6 px-10 py-6"
           >
@@ -223,9 +268,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   id="description"
                   className="min-h-[200px]"
                   placeholder="Task description"
-                  initialValue={taskState.description}
+                  initialValue={taskState.description || ""}
                   ref={descriptionRef}
-                  storageKey={taskState.id}
+                  storageKey={taskState.id || "new-task"}
                   rows={5}
                   showButtons={false}
                 />

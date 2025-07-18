@@ -4,12 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Ca
 import TaskCard from "@/components/taskspage/TaskCard";
 import { TaskResDto, TaskStatus } from "@fullstack/common";
 import { ClipboardList } from "lucide-react";
+import { useTaskStore } from "@/stores/useTaskStore";
+import { withToast } from "@/utils/toastUtils";
 
 interface BoardViewProps {
   tasks: TaskResDto[];
   onTaskClick?: (taskId: string) => void;
-  onTaskDelete?: (taskId: string) => void;
-  onTaskStatusChange?: (taskId: string, newStatus: TaskStatus) => void;
 }
 
 const statusColumns = [
@@ -46,7 +46,24 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
   );
 }
 
-const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete, onTaskStatusChange }) => {
+const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
+  const { updateTaskById } = useTaskStore();
+
+  const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find(t => String(t.id) === String(taskId));
+    if (!task) return;
+    
+    await withToast(
+      async () => {
+        await updateTaskById(task.id, { ...task, status: newStatus });
+      },
+      {
+        success: 'Task status updated!',
+        error: 'Failed to update task status.'
+      }
+    );
+  };
+
   // Group tasks by status
   const tasksByStatus: Record<string, TaskResDto[]> = {};
   statusColumns.forEach(col => {
@@ -70,8 +87,8 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete,
     // Find the current status of the task
     const currentTask = tasks.find(t => String(t.id) === taskId);
     if (!currentTask) return;
-    if (currentTask.status !== newStatus && onTaskStatusChange) {
-      onTaskStatusChange(taskId, newStatus);
+    if (currentTask.status !== newStatus) {
+      handleTaskStatusChange(taskId, newStatus);
     }
   };
   const handleDragCancel = () => setActiveId(null);
@@ -123,13 +140,14 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete,
                     .map((task, idx) => (
                       <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
                         <TaskCard
+                          taskId={task.id}
                           title={task.title}
                           description={task.description}
                           dueDate={task.dueDate}
                           projectName={task.projectName}
+                          assignedTo={task.assignedTo}
                           status={task.status}
                           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
-                          onDelete={onTaskDelete ? () => onTaskDelete(task.id) : undefined}
                         />
                       </DraggableTaskCard>
                     ))
@@ -142,10 +160,12 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, onTaskDelete,
       <DragOverlay dropAnimation={null}>
         {activeTask ? (
           <TaskCard
+            taskId={activeTask.id}
             title={activeTask.title}
             description={activeTask.description}
             dueDate={activeTask.dueDate}
             projectName={activeTask.projectName}
+            assignedTo={activeTask.assignedTo}
             status={activeTask.status}
           />
         ) : null}

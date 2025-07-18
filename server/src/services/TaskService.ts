@@ -1,14 +1,15 @@
 import { db } from '../database/databaseAccess';
-import { tasks, projects } from '../database/schema';
+import { tasks, projects, users } from '../database/schema';
 import { eq } from 'drizzle-orm';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
 import logger from '../utils/logger';
 import { mapDbToEntity } from '../utils/mappers';
+import { UserEntity } from './UserService';
 
 export class TaskEntity {
   id: string = '';
-  assignedTo: string = '';
+  assignedTo?: UserEntity;
   title: string = '';
   description: string = '';
   status: string = '';
@@ -64,23 +65,18 @@ class TaskService {
       throw new CustomError('Failed to create task', ErrorCodes.INTERNAL_ERROR);
     }
 
-    // Optionally, join project for projectName
-    let projectName = '';
-    if (created.projectId) {
-      const [project] = await db.select().from(projects).where(eq(projects.id, created.projectId));
-      projectName = project?.name || '';
-    }
-
-    const entity = mapDbToEntity(created, new TaskEntity());
-    entity.projectName = projectName;
-    return entity;
+    // Use the common getTaskById function to fetch the created task with details
+    return await this.getTaskById(created.id);
   }
 
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
     const result = await db
       .select({
         id: tasks.id,
-        assignedTo: tasks.assignedTo,
+        assignedToId: tasks.assignedTo,
+        assignedToName: users.name,
+        assignedToEmail: users.email,
+        assignedToCreatedAt: users.createdAt,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -92,20 +88,32 @@ class TaskService {
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .leftJoin(users, eq(tasks.assignedTo, users.id))
       .where(eq(tasks.assignedTo, userId));
-    return result.map((task: any) =>
-      mapDbToEntity(
-        task,
-        new TaskEntity()
-      )
-    );
+    
+    return result.map((task: any) => {
+      const entity = mapDbToEntity(task, new TaskEntity());
+      // Map user information to assignedTo object
+      if (task.assignedToId) {
+        entity.assignedTo = new UserEntity({
+          id: task.assignedToId,
+          name: task.assignedToName || '',
+          email: task.assignedToEmail || '',
+          createdAt: task.assignedToCreatedAt?.toISOString() || '',
+        });
+      }
+      return entity;
+    });
   }
 
   async getTasksByProjectId(projectId: string): Promise<TaskEntity[]> {
     const result = await db
       .select({
         id: tasks.id,
-        assignedTo: tasks.assignedTo,
+        assignedToId: tasks.assignedTo,
+        assignedToName: users.name,
+        assignedToEmail: users.email,
+        assignedToCreatedAt: users.createdAt,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -117,13 +125,22 @@ class TaskService {
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .leftJoin(users, eq(tasks.assignedTo, users.id))
       .where(eq(tasks.projectId, projectId));
-    return result.map((task: any) =>
-      mapDbToEntity(
-        task,
-        new TaskEntity()
-      )
-    );
+    
+    return result.map((task: any) => {
+      const entity = mapDbToEntity(task, new TaskEntity());
+      // Map user information to assignedTo object
+      if (task.assignedToId) {
+        entity.assignedTo = new UserEntity({
+          id: task.assignedToId,
+          name: task.assignedToName || '',
+          email: task.assignedToEmail || '',
+          createdAt: task.assignedToCreatedAt?.toISOString() || '',
+        });
+      }
+      return entity;
+    });
   }
 
   /**
@@ -146,14 +163,53 @@ class TaskService {
       throw new CustomError('Failed to update task', ErrorCodes.INTERNAL_ERROR);
     }
 
-    let projectName = '';
-    if (updated.projectId) {
-      const [project] = await db.select().from(projects).where(eq(projects.id, updated.projectId));
-      projectName = project?.name || '';
+    // Use the common getTaskById function to fetch the updated task with details
+    return await this.getTaskById(taskId);
+  }
+
+    /**
+   * Get a task by ID with user and project information
+   * @param taskId string
+   * @returns TaskEntity
+   */
+  async getTaskById(taskId: string): Promise<TaskEntity> {
+    const [taskWithDetails] = await db
+      .select({
+        id: tasks.id,
+        assignedToId: tasks.assignedTo,
+        assignedToName: users.name,
+        assignedToEmail: users.email,
+        assignedToCreatedAt: users.createdAt,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        projectId: tasks.projectId,
+        dueDate: tasks.dueDate,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+        projectName: projects.name,
+      })
+      .from(tasks)
+      .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .leftJoin(users, eq(tasks.assignedTo, users.id))
+      .where(eq(tasks.id, taskId));
+
+    if (!taskWithDetails) {
+      throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
     }
 
-    const entity = mapDbToEntity(updated, new TaskEntity());
-    entity.projectName = projectName;
+    const entity = mapDbToEntity(taskWithDetails, new TaskEntity());
+    
+    // Map user information to assignedTo object
+    if (taskWithDetails.assignedToId) {
+      entity.assignedTo = new UserEntity({
+        id: taskWithDetails.assignedToId,
+        name: taskWithDetails.assignedToName || '',
+        email: taskWithDetails.assignedToEmail || '',
+        createdAt: taskWithDetails.assignedToCreatedAt?.toISOString() || '',
+      });
+    }
+    
     return entity;
   }
 }

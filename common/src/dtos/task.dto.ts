@@ -1,4 +1,5 @@
 import { TaskStatus } from '../emuns/taskStatus.js';
+import { UserResDto } from './user.dto.js';
 
 export class TaskResDto {
   id: string = '';
@@ -6,7 +7,7 @@ export class TaskResDto {
   description: string = '';
   dueDate?: string = '';
   status: TaskStatus = TaskStatus.TODO;
-  assignedTo?: string = '';
+  assignedTo?: UserResDto = new UserResDto();
   createdAt?: string = '';
   updatedAt?: string = '';
   projectId?: string = '';

@@ -11,7 +11,7 @@ import { Pencil } from "lucide-react";
 import { LayoutDashboard, List, Users, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/useProjects";
-import { useTasks } from "@/hooks/useTasks";
+import { useTaskStore } from "@/stores/useTaskStore";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
@@ -20,12 +20,23 @@ import { TaskResDto } from '@fullstack/common';
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { project, updateProject } = useProjects(projectId);
-  const { tasks, submitTask, deleteTask } = useTasks(projectId);
+  const { 
+    projectTasks: tasks, 
+    fetchProjectTasks, 
+    updateTaskById,
+  } = useTaskStore();
 
   // If projectId is missing, show error
   if (!projectId) {
     return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
   }
+
+  // Fetch project tasks when component mounts or projectId changes
+  useEffect(() => {
+    if (projectId) {
+      fetchProjectTasks(projectId);
+    }
+  }, [projectId, fetchProjectTasks]);
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
@@ -151,10 +162,6 @@ export default function ProjectDetailPage() {
             setIsDialogOpen(open);
             if (!open) setEditingTask(null);
           }}
-          onSubmit={async (task: any) => {
-            await submitTask({ ...task, projectId });
-            setIsDialogOpen(false);
-          }}
           title={editingTask ? "Edit Task" : "Add New Task"}
           projects={project ? [project] : []}
           initialValues={editingTask || { projectId }}
@@ -173,12 +180,6 @@ export default function ProjectDetailPage() {
         <ProjectTasksTab
           projectId={projectId}
           tasks={tasks}
-          onTaskDelete={deleteTask}
-          onTaskStatusChange={async (taskId, newStatus) => {
-            const task = tasks.find(t => String(t.id) === String(taskId));
-            if (!task) return;
-            await submitTask({ ...task, status: newStatus });
-          }}
           onTaskClick={taskId => {
             const fullTask = tasks.find(t => t.id === taskId) || null;
             setEditingTask(fullTask);

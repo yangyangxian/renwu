@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Button } from "@/components/ui-kit/Button";
-import { Trash2, AlertCircle, ArrowRight, TriangleRight, ArrowBigRightIcon, FileText, ChevronRight } from "lucide-react";
+import { Trash2, AlertCircle, ArrowRight, TriangleRight, ArrowBigRightIcon, FileText, ChevronRight, User } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { formatDateSmart } from "@/utils/dateUtils";
-import { TaskStatus } from "@fullstack/common";
+import { TaskStatus, UserResDto } from "@fullstack/common";
+import { useTaskStore } from "@/stores/useTaskStore";
+import { withToast } from "@/utils/toastUtils";
 import {
   Dialog,
   DialogContent,
@@ -16,14 +18,16 @@ import {
 } from "@/components/ui-kit/Dialog";
 
 interface TaskCardProps {
+  taskId: string; // Add taskId prop for deletion
   title: string;
   description: string;
   dueDate?: string;
   projectName?: string;
+  assignedTo?: UserResDto;
   status?: TaskStatus;
-  onDelete?: () => void;
   onClick?: () => void;
   className?: string;
+  // Remove onDelete prop - we'll handle it internally
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -33,8 +37,22 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status, onDelete, onClick, description, className }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, status, onClick, description, className }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { deleteTaskById } = useTaskStore();
+
+  const handleDeleteTask = async () => {
+    await withToast(
+      async () => {
+        await deleteTaskById(taskId);
+      },
+      {
+        success: 'Task deleted successfully!',
+        error: 'Failed to delete task.'
+      }
+    );
+  };
+  
   // Show overdue icon only for TODO and IN_PROGRESS
   const isOverdue = dueDate
     ? (new Date(dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0)) &&
@@ -83,7 +101,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
                 onClick={e => {
                   e.stopPropagation();
                   setDialogOpen(false);
-                  onDelete && onDelete();
+                  handleDeleteTask();
                 }}
               >
                 Delete
@@ -92,10 +110,24 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
           </DialogContent>
         </Dialog>
       )}
-      <div className={`text-xs lg:text-[13px] mb-1 font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>{!projectName || projectName === "" ? "Personal" : projectName}</div>
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center w-3/4 mb-2">
+          <div className={`text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
+            {!projectName || projectName === "" ? "Personal" : projectName}
+          </div>
+          {/* Assigned to user info - moved next to project name */}
+          {assignedTo && (
+            <div className="flex items-center gap-1 ml-3">
+              <User className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{assignedTo.name}</span>
+            </div>
+          )}
+      </div>
+      
+      <div className="flex items-center justify-between">
         <div className="flex items-center">
           <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
+        </div>
+        <div className="flex flex-col items-end gap-1">
           {description && description.trim() !== "" && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -106,17 +138,17 @@ const TaskCard: React.FC<TaskCardProps> = ({ title, dueDate, projectName, status
               </TooltipContent>
             </Tooltip>
           )}
+          {dueDate && (
+            <span className="text-xs lg:text-[13px] text-muted-foreground whitespace-nowrap bg-transparent px-1 py-0.5 rounded font-sans flex items-center gap-1">
+              {isOverdue && (
+                <span title="Overdue">
+                  <AlertCircle className="w-3 h-3 text-red-500" />
+                </span>
+              )}
+              {formatDateSmart(dueDate)}
+            </span>
+          )}
         </div>
-        {dueDate && (
-          <span className="text-xs lg:text-[13px] text-muted-foreground ml-2 whitespace-nowrap bg-transparent px-2 py-0.5 rounded font-sans flex items-center gap-1">
-            {formatDateSmart(dueDate)}
-            {isOverdue && (
-              <span title="Overdue">
-                <AlertCircle className="w-3 h-3 text-red-500" />
-              </span>
-            )}
-          </span>
-        )}
       </div>
     </Card>
   );

@@ -1,7 +1,7 @@
 import express from 'express';
 import { taskService } from '../services/TaskService';
 import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse } from '@fullstack/common';
-import { mapObject } from '../utils/mappers';
+import { mapObjectDeep } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
 
 const router = express.Router();
@@ -16,12 +16,13 @@ router.post('/',
     try {
       const userId = req.user!.userId;
       const createdTask = await taskService.createTask({ ...req.body, createdBy: userId });
-      res.json(createApiResponse<TaskResDto>(mapObject(createdTask, new TaskResDto())));
+      res.json(createApiResponse<TaskResDto>(mapObjectDeep(createdTask, new TaskResDto())));
     } catch (err) {
       next(err);
     }
   }
 );
+
 // Update a task by ID
 router.put('/:taskId',
   async (
@@ -32,7 +33,7 @@ router.put('/:taskId',
       const { taskId } = req.params;
       const updatedTask = await taskService.updateTask(taskId, req.body);
       // Map to DTO for type safety
-      res.json(createApiResponse<TaskResDto>(mapObject(updatedTask, new TaskResDto())));
+      res.json(createApiResponse<TaskResDto>(mapObjectDeep(updatedTask, new TaskResDto())));
   }
 );
 
@@ -56,7 +57,7 @@ router.delete('/:taskId',
 router.get('/me', async (req, res, next) => {
     const userId = req.user!.userId;
     const tasks = await taskService.getTasksByUserId(userId);
-    const data: TaskResDto[] = tasks.map(task => mapObject(task, new TaskResDto()));
+    const data: TaskResDto[] = tasks.map(task => mapObjectDeep(task, new TaskResDto()));
     res.json(createApiResponse<TaskResDto[]>(data));
 });
 
@@ -68,7 +69,7 @@ router.get('/project/:projectId',
   ) => {
     const { projectId } = req.params;
     const tasks = await taskService.getTasksByProjectId(projectId);
-    const data: TaskResDto[] = tasks.map(task => mapObject(task, new TaskResDto()));
+    const data: TaskResDto[] = tasks.map(task => mapObjectDeep(task, new TaskResDto()));
     res.json(createApiResponse<TaskResDto[]>(data));
   }
 );
