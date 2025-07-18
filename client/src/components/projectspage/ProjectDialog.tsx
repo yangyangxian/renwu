@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Input } from "@/components/ui-kit/Input";
 import { Textarea } from "@/components/ui-kit/Textarea";
@@ -25,12 +25,16 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   title = "Add New Project",
 }) => {
   const [name, setName] = useState(initialValues.name || "");
-  const [description, setDescription] = useState(initialValues.description || "");
   const [loading, setLoading] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Get the current value from the textarea ref
+    const description = textareaRef.current?.value || "";
+    
     await onSubmit({ name, description });
     setLoading(false);
     onOpenChange(false);
@@ -61,12 +65,13 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               Description
             </Label>
             <Textarea
+              ref={textareaRef}
               id="project-description"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
+              initialValue={initialValues.description || ""}
               placeholder="Enter project description"
               rows={6}
               className="min-h-[150px]"
+              showButtons={false}
             />
           </div>
           <div className="flex justify-end gap-3 mt-3">

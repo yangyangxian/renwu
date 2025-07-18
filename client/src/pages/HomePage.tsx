@@ -3,17 +3,16 @@ import { Button } from "@/components/ui-kit/Button";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/providers/AuthProvider";
 import { HomeSideBar } from "@/components/homepage/SideBar";
-import { ProjectDialog } from "@/components/projectspage/ProjectDialog";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { apiClient } from "@/utils/APIClient";
-import { useProjects } from '@/hooks/useProjects';
 import { Input } from "@/components/ui-kit/Input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui-kit/Dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { updateMe } from "@/apiRequests/apiEndpoints";
+import logger from "@/utils/logger";
 
 export default function HomePage() {
-  const navigate = useNavigate();
+  logger.debug("HomePage component is being rendered");
   const location = useLocation();
   const { isAuthenticated, user, setUser, logout } = useAuth();
   // Name dialog state
@@ -41,29 +40,7 @@ export default function HomePage() {
       // Optionally show error
     }
   };
-
-  // Sidebar expanded state is now managed internally by HomeSideBar
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
-
-  // Use custom hook for project logic
-  const {
-    projects,
-    addProject,
-    setProjects,
-  } = useProjects();
-
-  const handleProjectSubmit = async (project: { name: string; description: string }) => {
-    try {
-      const newProject = await addProject(project);
-      setProjectDialogOpen(false);
-      if (newProject && newProject.id) {
-        navigate(`/projects/${newProject.id}`);
-      }
-    } catch (err: any) {
-      // Optionally handle error
-    }
-  };
-
+  
   const showLanding = !isAuthenticated && location.pathname === "/";
   if (showLanding) {
     return <LandingPage />;
@@ -74,10 +51,7 @@ export default function HomePage() {
       {/* Sidebar with icon and text */}
       {isAuthenticated && (
         <aside className="h-full max-h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
-          <HomeSideBar
-            onAddProject={() => setProjectDialogOpen(true)}
-            projects={projects}
-          />
+          <HomeSideBar />
         </aside>
       )}
       {/* Main Content or Outlet */}
@@ -117,14 +91,7 @@ export default function HomePage() {
             </Button>
           </DialogContent>
         </Dialog>
-        {projectDialogOpen && (
-          <ProjectDialog
-            open={projectDialogOpen}
-            onOpenChange={setProjectDialogOpen}
-            onSubmit={handleProjectSubmit}
-          />
-        )}
-        <Outlet context={{ projects }} />
+        <Outlet />
       </section>
     </div>
   );

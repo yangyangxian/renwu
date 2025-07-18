@@ -4,10 +4,11 @@ import { Card } from '@/components/ui-kit/Card';
 import { Textarea } from '@/components/ui-kit/Textarea';
 import { marked } from 'marked';
 import { useState, useRef, useEffect } from 'react';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjectStore } from '@/stores/useProjectStore';
+import { useTaskStore } from '@/stores/useTaskStore';
 import { toast } from 'sonner';
 import { RadioChartCard } from '@/components/RadioChartCard';
-import { TaskResDto, TaskStatus } from '@fullstack/common';
+import { TaskStatus, ProjectResDto } from '@fullstack/common';
 
 const statusConfig: Record<string, { label: string; color: string; dotClass: string }> = {
   [TaskStatus.TODO]: {
@@ -33,15 +34,14 @@ const statusConfig: Record<string, { label: string; color: string; dotClass: str
 };
 
 interface ProjectOverviewTabProps {
-  project: any;
-  projectId: string;
-  tasks: TaskResDto[];
+  project: ProjectResDto;
 }
 
 const MemoRadioChartCard = React.memo(RadioChartCard);
 
-export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOverviewTabProps) {
-  const { updateProject } = useProjects(projectId);
+export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
+  const { updateProject } = useProjectStore();
+  const { projectTasks: tasks } = useTaskStore();
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
   const descInputRef = useRef<HTMLTextAreaElement>(null);
@@ -51,7 +51,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
       setDescInput(project.description || "");
     }
     setEditingDesc(false);
-  }, [projectId, project]);
+  }, [project]);
 
   const handleDescClick = () => {
     setEditingDesc(true);
@@ -69,7 +69,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
     setDescInput(newValue);
     if (!project) return;
     try {
-      await updateProject(projectId, { description: newValue });
+      await updateProject(project.id, { description: newValue });
       toast.success('Project description updated');
     } catch {
       toast.error('Failed to update description');
@@ -114,7 +114,7 @@ export function ProjectOverviewTab({ project, projectId, tasks }: ProjectOvervie
             onCancel={() => setEditingDesc(false)}
             className="min-h-40 my-4"
             maxLength={10000}
-            storageKey={projectId}
+            storageKey={project?.id}
           />
         ) : (
           <>

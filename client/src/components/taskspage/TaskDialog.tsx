@@ -2,12 +2,13 @@ import React, { useState, useEffect, useReducer, useRef } from "react";
 import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTaskStore } from "@/stores/useTaskStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { withToast } from "@/utils/toastUtils";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Textarea } from "@/components/ui-kit/Textarea";
 import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
-import { TaskStatus, ProjectResDto, UserResDto } from "@fullstack/common";
+import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
 import { CheckCircle, Square, Loader2, XCircle, Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -32,7 +33,7 @@ interface TaskDialogProps {
     projectName?: string;
   };
   title?: string;
-  projects: ProjectResDto[];
+  // Removed projects prop - now using store directly
 }
 
 const statusOptions = [
@@ -43,10 +44,11 @@ const statusOptions = [
 ];
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
-  open, onOpenChange, onSubmit, initialValues = {}, title = "Add New Task", projects,
+  open, onOpenChange, onSubmit, initialValues = {}, title = "Add New Task",
 }) => {
   const { user } = useAuth();
   const { createTask, updateTaskById } = useTaskStore();
+  const { projects } = useProjectStore();
   
   // Convert initialValues to ensure assignedTo is a string
   const processedInitialValues = {

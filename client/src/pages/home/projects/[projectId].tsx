@@ -10,7 +10,7 @@ import { ProjectSettingsTab } from "@/components/projectspage/ProjectDetailTabs/
 import { Pencil } from "lucide-react";
 import { LayoutDashboard, List, Users, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 import { Button } from "@/components/ui-kit/Button";
@@ -19,11 +19,10 @@ import { TaskResDto } from '@fullstack/common';
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { project, updateProject } = useProjects(projectId);
+  const { currentProject : project, updateProject, fetchCurrentProject } = useProjectStore();
   const { 
     projectTasks: tasks, 
     fetchProjectTasks, 
-    updateTaskById,
   } = useTaskStore();
 
   // If projectId is missing, show error
@@ -31,12 +30,13 @@ export default function ProjectDetailPage() {
     return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
   }
 
-  // Fetch project tasks when component mounts or projectId changes
+  // Fetch project data and tasks when component mounts or projectId changes
   useEffect(() => {
     if (projectId) {
+      fetchCurrentProject(projectId);
       fetchProjectTasks(projectId);
     }
-  }, [projectId, fetchProjectTasks]);
+  }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
@@ -163,7 +163,6 @@ export default function ProjectDetailPage() {
             if (!open) setEditingTask(null);
           }}
           title={editingTask ? "Edit Task" : "Add New Task"}
-          projects={project ? [project] : []}
           initialValues={editingTask || { projectId }}
         />
       )}
@@ -171,15 +170,11 @@ export default function ProjectDetailPage() {
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <ProjectOverviewTab
-          project={project}
-          projectId={projectId}
-          tasks={tasks}
+          project={project!}
         />
       )}
       {activeTab === 'tasks' && projectId && (
         <ProjectTasksTab
-          projectId={projectId}
-          tasks={tasks}
           onTaskClick={taskId => {
             const fullTask = tasks.find(t => t.id === taskId) || null;
             setEditingTask(fullTask);

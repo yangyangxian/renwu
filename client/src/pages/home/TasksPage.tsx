@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useTaskStore } from '@/stores/useTaskStore';
-import { useOutletContext } from "react-router-dom";
+import { useProjectStore } from '@/stores/useProjectStore';
 import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
-import { TaskResDto, ProjectResDto, TaskCreateReqDto, TaskUpdateReqDto, TaskStatus } from '@fullstack/common';
+import { TaskResDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
@@ -12,8 +12,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
 
 export default function TasksPage() {
-  const { projects } = useOutletContext<{ projects: ProjectResDto[] }>();
-
   const [view, setView] = useState("board");
   const {
     tasks,
@@ -22,8 +20,11 @@ export default function TasksPage() {
     fetchMyTasks,
     updateTaskById,
   } = useTaskStore();
-  
-  // Fetch tasks when component mounts
+
+  // Use project store instead of outlet context
+  const { projects } = useProjectStore();
+
+  // Fetch tasks when component mounts (route-specific data)
   useEffect(() => {
     fetchMyTasks();
   }, [fetchMyTasks]);
@@ -90,7 +91,6 @@ export default function TasksPage() {
               if (!open) setEditingTask(null);
             }}
             title={editingTask ? "Edit Task" : "Add New Task"}
-            projects={projects}
             initialValues={editingTask || (selectedProjectId ? { projectId: selectedProjectId } : {})}
           />
         )}

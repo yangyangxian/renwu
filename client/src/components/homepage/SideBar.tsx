@@ -13,12 +13,13 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, TASKS_PATH } from "@/routes/routeConfig";
 import { useState, useEffect, useRef } from "react";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { ProjectDialog } from "@/components/projectspage/ProjectDialog";
+import { withToast } from "@/utils/toastUtils";
+import logger from "@/utils/logger";
 
-// Sidebar props interface
-export interface HomeSideBarProps {
-  onAddProject?: () => void;
-  projects: { id: string; name: string }[];
-}
+// Sidebar props interface - no longer needs any props!
+export interface HomeSideBarProps {}
 
 // Sidebar mode: true (fixed) or false (auto)
 const SIDEBAR_MODE_KEY = 'sidebarIsFixed';
@@ -31,7 +32,8 @@ function getInitialSidebarIsFixed(): boolean {
   return false;
 }
 
-export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
+export function HomeSideBar() {
+  logger.debug("Rendering HomeSideBar component");
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarIsFixed, setSidebarIsFixed] = useState<boolean>(getInitialSidebarIsFixed());
@@ -39,6 +41,32 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
   const [showText, setShowText] = useState(sidebarIsFixed); // show text immediately if fixed
   const isFirstRender = useRef(true);
   const [mouseCooldown, setMouseCooldown] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+
+  // Use project store
+  const { projects, loading, fetchProjects, createProject } = useProjectStore();
+
+  // Fetch projects on mount
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  // Handle project creation
+  const handleProjectSubmit = async (project: { name: string; description: string }) => {
+    await withToast(
+      async () => {
+        const newProject = await createProject(project);
+        setProjectDialogOpen(false);
+        if (newProject && newProject.id) {
+          navigate(`/projects/${newProject.id}`);
+        }
+      },
+      {
+        success: 'Project created successfully!',
+        error: 'Failed to create project.'
+      }
+    );
+  };
 
   // Navigation handlers
   const handleTasksClick = () => navigate(TASKS_PATH);
@@ -98,8 +126,9 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
             showText={showText}
             isProjectActive={isProjectActive}
             setExpanded={setExpanded}
-            onAddProject={onAddProject}
+            onAddProject={() => setProjectDialogOpen(true)}
             projects={projects}
+            loading={loading}
           />
         </SidebarMenu>
         {/* Pin/Unpin button at bottom right: only show when expanded */}
@@ -127,6 +156,14 @@ export function HomeSideBar({ onAddProject, projects }: HomeSideBarProps) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        )}
+        {/* Project Dialog */}
+        {projectDialogOpen && (
+          <ProjectDialog
+            open={projectDialogOpen}
+            onOpenChange={setProjectDialogOpen}
+            onSubmit={handleProjectSubmit}
+          />
         )}
       </Sidebar>
     </SidebarProvider>
@@ -162,13 +199,15 @@ function ProjectsMenuItem({
   isProjectActive,
   setExpanded,
   onAddProject,
-  projects
+  projects,
+  loading
 }: { 
   showText: boolean; 
   isProjectActive: (projectId: string) => boolean;
   setExpanded: (v: boolean) => void;
   onAddProject?: () => void;
   projects: { id: string; name: string }[];
+  loading: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -212,7 +251,14 @@ function ProjectsMenuItem({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub className="gap-[6px]">
-            {showText && projects.map((project) => (
+            {showText && loading && (
+              <SidebarMenuSubItem>
+                <SidebarMenuButton className="pl-4 cursor-default">
+                  Loading...
+                </SidebarMenuButton>
+              </SidebarMenuSubItem>
+            )}
+            {showText && !loading && projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuButton
                   className="pl-4 cursor-pointer"
