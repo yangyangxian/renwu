@@ -1,12 +1,10 @@
 import React from 'react';
-import { AlertTriangle, Clock, CheckCircle2, Loader2, Circle } from 'lucide-react';
-import { Label } from '@/components/ui-kit/Label';
+import { TASK_STATUS_CONFIG } from './taskStatusConfig';
+import { TaskStatus } from '@fullstack/common';
 import { Card } from '@/components/ui-kit/Card';
 import { TaskResDto } from '@fullstack/common';
 import logger from '@/utils/logger';
 
-
-// Helper to get days left from today
 function getDaysLeft(dueDate: string | Date): number {
   const now = new Date();
   const due = new Date(dueDate);
@@ -15,20 +13,18 @@ function getDaysLeft(dueDate: string | Date): number {
   return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-// Status icon mapping (match task dialog select)
-const statusIconConfig: Record<string, { icon: any; color: string; title: string }> = {
-  TODO: { icon: Circle, color: 'text-amber-400', title: 'To Do' },
-  IN_PROGRESS: { icon: Loader2, color: 'text-blue-500 animate-spin', title: 'In Progress' },
-  DONE: { icon: CheckCircle2, color: 'text-emerald-500', title: 'Done' },
-  CLOSE: { icon: AlertTriangle, color: 'text-gray-400', title: 'Closed' },
-};
 
-export function UpcomingDeadlinesCard({ tasks }: { tasks: TaskResDto[] }) {
+interface UpcomingDeadlinesCardProps {
+  tasks: TaskResDto[];
+  className?: string;
+}
+
+export const UpcomingDeadlinesCard: React.FC<UpcomingDeadlinesCardProps> = ({ tasks, className }) => {
   const now = new Date();
   logger.debug('UpcomingDeadlinesCard is rendering:');
   const sortedTasks = React.useMemo(() => {
-    const validStatuses = ['TODO', 'IN_PROGRESS'];
-    const allTasks = Array.isArray(tasks) ? tasks.filter(t => t.dueDate && validStatuses.includes((t.status || '').toUpperCase())) : [];
+    const validStatuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
+    const allTasks = Array.isArray(tasks) ? tasks.filter(t => t.dueDate && validStatuses.includes(t.status)) : [];
     const overdue = allTasks.filter(t => new Date(t.dueDate!) < now);
     const upcoming = allTasks.filter(t => new Date(t.dueDate!) >= now);
     return [
@@ -38,7 +34,7 @@ export function UpcomingDeadlinesCard({ tasks }: { tasks: TaskResDto[] }) {
   }, [tasks]);
 
   return (
-    <Card className={"!p-3 flex-1 flex-col gap-2 overflow-y-auto"}>
+    <Card className={` flex-1 flex-col gap-3 overflow-y-auto${className ? ` ${className}` : ''}`}>
       <div className="font-bold text-md pl-1">Upcoming Deadlines</div>
       <div className="flex flex-col gap-2 justify-center">
         {sortedTasks.length === 0 ? (
@@ -46,8 +42,8 @@ export function UpcomingDeadlinesCard({ tasks }: { tasks: TaskResDto[] }) {
         ) : (
           sortedTasks.map((task) => {
             const daysLeft = getDaysLeft(task.dueDate!);
-            const statusKey = (task.status || '').toUpperCase();
-            const statusIcon = statusIconConfig[statusKey] || statusIconConfig.TODO;
+            const statusKey = task.status as TaskStatus;
+            const statusIcon = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG[TaskStatus.TODO];
             const isOverdue = new Date(task.dueDate!) < now;
             return (
               <div key={task.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 bg-white-black">
@@ -63,7 +59,7 @@ export function UpcomingDeadlinesCard({ tasks }: { tasks: TaskResDto[] }) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end min-w-[60px] gap-1">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusIcon.color} bg-muted/60`}>{statusIcon.title}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize text-white ${statusIcon.dotClass}`}>{statusIcon.label}</span>
                   <span className="text-xs text-muted-foreground">
                     {isOverdue
                       ? `${Math.abs(daysLeft)} days overdue`

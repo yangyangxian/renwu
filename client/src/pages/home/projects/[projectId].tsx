@@ -1,15 +1,11 @@
 import { useParams } from "react-router-dom";
 import { useTabHash } from "@/hooks/useTabHash";
 import { useEffect, useState, useRef } from "react";
-import { Input } from "@/components/ui-kit/Input";
-import { Label } from "@/components/ui-kit/Label";
-import { ProjectOverviewTab } from "@/components/projectspage/ProjectDetailTabs/ProjectOverviewTab";
-import { ProjectTasksTab } from "@/components/projectspage/ProjectDetailTabs/ProjectTasksTab";
-import { ProjectTeamTab } from "@/components/projectspage/ProjectDetailTabs/ProjectTeamTab";
-import { ProjectSettingsTab } from "@/components/projectspage/ProjectDetailTabs/ProjectSettingsTab";
-import { Pencil } from "lucide-react";
+import { ProjectOverviewTab } from "@/components/projectspage/ProjectOverviewTab";
+import { ProjectTasksTab } from "@/components/projectspage/ProjectTasksTab";
+import { ProjectTeamTab } from "@/components/projectspage/ProjectTeamTab";
+import { ProjectSettingsTab } from "@/components/projectspage/ProjectSettingsTab";
 import { LayoutDashboard, List, Users, Settings } from "lucide-react";
-import { toast } from "sonner";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
@@ -38,9 +34,6 @@ export default function ProjectDetailPage() {
     }
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleInput, setTitleInput] = useState("");
-  const titleInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, handleTabChange] = useTabHash(
     ['overview', 'tasks', 'team', 'settings'],
     'tasks'
@@ -48,72 +41,10 @@ export default function ProjectDetailPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   
-  useEffect(() => {
-    if (project) {
-      setTitleInput(project.name || "");
-    }
-  }, [project]);
-
-  const handleTitleClick = () => {
-    setEditingTitle(true);
-    setTimeout(() => titleInputRef.current?.focus(), 0);
-  };
-
-  const handleTitleBlur = async () => {
-    setEditingTitle(false);
-    if (!project) return;
-    if (titleInput.trim() && titleInput !== project.name) {
-      try {
-        await updateProject(projectId, { name: titleInput });
-        toast.success('Project name updated');
-      } catch {
-        toast.error('Failed to update project name');
-        setTitleInput(project.name); // Revert on failure
-      }
-    } else {
-      setTitleInput(project.name);
-    }
-  };
-  
   return (
     <div className="h-full w-full flex flex-col gap-1">
-      {/* Project Name at the top */}
-      <div className="flex items-center px-2 pb-2">
-        {editingTitle ? (
-          <Input
-            ref={titleInputRef}
-            value={titleInput}
-            onChange={e => setTitleInput(e.target.value)}
-            onBlur={handleTitleBlur}
-            onKeyDown={e => { 
-              if (e.key === 'Enter') { 
-                handleTitleBlur(); 
-              } else if (e.key === 'Escape') {
-                setEditingTitle(false);
-                setTitleInput(project?.name || "");
-              }
-            }}
-            className="!text-[22px] font-black flex-1 h-[35px] rounded pl-2"
-            maxLength={128}
-          />
-        ) : (
-          <div className="flex items-center gap-2">
-            <Label
-              className="pl-1 font-black text-[24px] cursor-pointer hover:bg-secondary dark:hover:bg-secondary rounded"
-              title={project?.name}
-              onClick={handleTitleClick}
-            >
-              {project?.name ? project.name.charAt(0).toUpperCase() + project.name.slice(1) : ''}
-            </Label>
-            <span className="cursor-pointer flex items-center" title="Edit project name" onClick={handleTitleClick}>
-              <Pencil className="ml-2 h-3 w-3 text-muted-foreground hover:text-primary" />
-            </span>
-          </div>
-        )}
-      </div>
-
       {/* Tabs and Add Task Button in one row */}
-      <div className="flex items-center px-2 gap-2">
+      <div className="flex items-center px-2 gap-2 mt-1">
         <Tabs
           value={activeTab}
           onValueChange={val => handleTabChange(val as typeof activeTab)}

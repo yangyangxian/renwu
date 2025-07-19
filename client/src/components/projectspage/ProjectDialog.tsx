@@ -70,11 +70,10 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               initialValue={initialValues.description || ""}
               placeholder="Enter project description"
               rows={6}
-              className="min-h-[150px]"
               showButtons={false}
             />
           </div>
-          <div className="flex justify-end gap-3 mt-3">
+          <div className="flex justify-end gap-3">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
