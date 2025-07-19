@@ -10,6 +10,7 @@ import { withToast } from "@/utils/toastUtils";
 interface BoardViewProps {
   tasks: TaskResDto[];
   onTaskClick?: (taskId: string) => void;
+  showAssignedTo?: boolean;
 }
 
 const statusColumns = [
@@ -46,7 +47,7 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
   );
 }
 
-const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
+const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedTo }) => {
   const { updateTaskById } = useTaskStore();
 
   const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
@@ -145,7 +146,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick }) => {
                           description={task.description}
                           dueDate={task.dueDate}
                           projectName={task.projectName}
-                          assignedTo={task.assignedTo}
+                          assignedTo={showAssignedTo ? task.assignedTo : undefined}
                           status={task.status}
                           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
                         />

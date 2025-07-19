@@ -13,6 +13,7 @@ export function ProjectTasksTab({ onTaskClick }: ProjectTasksTabProps) {
       <BoardView
         tasks={tasks}
         onTaskClick={onTaskClick}
+        showAssignedTo={true}
       />
     </div>
   );
