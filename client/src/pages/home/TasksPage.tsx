@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { useTabHash } from "@/hooks/useTabHash";
 import { useTaskStore } from '@/stores/useTaskStore';
 import { useProjectStore } from '@/stores/useProjectStore';
-import { Card } from "@/components/ui-kit/Card";
 import BoardView from "@/components/taskspage/BoardView";
+import TaskListView from "@/components/taskspage/TaskListView";
 import { TaskResDto } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
@@ -12,7 +13,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
 
 export default function TasksPage() {
-  const [view, setView] = useState("board");
+  const tabOptions = ["board", "list"] as const;
+  const [view, setView] = useTabHash(tabOptions, "board");
   const {
     tasks,
     loading,
@@ -110,20 +112,7 @@ export default function TasksPage() {
       )}
 
       {view === 'list' && (
-        filteredTasks.length === 0 ? (
-          <div className="text-slate-500 dark:text-slate-400 my-8">No tasks found.</div>
-        ) : (
-          <div className="flex flex-col gap-2 w-full">
-            {filteredTasks.map((task, idx) => (
-              <Card key={idx} className="bg-slate-50 dark:bg-slate-900 dark:border-slate-700 rounded-md px-4 py-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                  <span className="font-medium text-slate-800 dark:text-white text-sm">{task.title}</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-300 mt-1 sm:mt-0">{task.description}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )
+        <TaskListView tasks={filteredTasks} />
       )}
     </motion.div>
   );
