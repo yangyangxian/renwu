@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Button } from "@/components/ui-kit/Button";
-import { Trash2, AlertCircle, ArrowRight, TriangleRight, ArrowBigRightIcon, FileText, ChevronRight, User } from "lucide-react";
+import { Trash2, AlertCircle, ChevronRight, User } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { formatDateSmart } from "@/utils/dateUtils";
 import { TaskStatus, UserResDto } from "@fullstack/common";

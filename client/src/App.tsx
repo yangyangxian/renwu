@@ -1,6 +1,6 @@
 import { useRoutes, RouteObject } from 'react-router-dom'; 
 import { getDynamicRoutes } from '@/routes/pageRouteGenerator';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import ProtectedRoute from '@/components/common/ProtectedRoute';
 import MainLayout from '@/layout/MainLayout';
 import NotFoundPage from '@/pages/NotFoundPage';
 

@@ -14,7 +14,7 @@ import { CheckCircle, Square, Loader2, XCircle, Calendar as CalendarIcon, Tag, F
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
 import { Calendar } from "@/components/ui-kit/Calendar";
-import { DropDownList } from "@/components/DropDownList";
+import { DropDownList } from "@/components/common/DropDownList";
 
 interface TaskDialogProps {
   open: boolean;

@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
 
 export default function TasksPage() {
-  const tabOptions = ["board", "list"] as const;
+  const tabOptions = ["board", "list"];
   const [view, setView] = useTabHash(tabOptions, "board");
   const {
     tasks,
@@ -59,7 +59,7 @@ export default function TasksPage() {
           />
           {/* View mode tabs and add task button */}
           <div className="flex items-center gap-2">
-            <Tabs defaultValue={view} value={view} onValueChange={setView}>
+            <Tabs defaultValue={view} value={view} onValueChange={v => setView(v as typeof tabOptions[number])}>
               <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
                 <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <Kanban className="w-4 h-4" />
@@ -112,7 +112,10 @@ export default function TasksPage() {
       )}
 
       {view === 'list' && (
-        <TaskListView tasks={filteredTasks} />
+        <TaskListView 
+          tasks={filteredTasks} 
+          onUpdateTask={updateTaskById}
+        />
       )}
     </motion.div>
   );

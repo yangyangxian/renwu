@@ -59,11 +59,13 @@ export const UpcomingDeadlinesCard: React.FC<UpcomingDeadlinesCardProps> = ({ ta
                   </div>
                 </div>
                 <div className="flex flex-col items-end min-w-[60px] gap-1">
-                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize text-white ${statusIcon.dotClass}`}>{statusIcon.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {isOverdue
-                      ? `${Math.abs(daysLeft)} days overdue`
-                      : `${daysLeft} days left`}
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize text-white ${statusIcon.dotClass}`}>{statusIcon.label}</span>                
+                  <span className="text-xs mt-1 text-muted-foreground">
+                    {daysLeft === 0
+                      ? 'Today'
+                      : isOverdue
+                        ? `${Math.abs(daysLeft)} days overdue`
+                        : `${daysLeft} days left`}
                   </span>
                 </div>
               </div>
