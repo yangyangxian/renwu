@@ -33,6 +33,8 @@ coverage/
 # Ignore local .env files
 client/.env.local*
 server/.env.local*
+.env.local*
+.env.mcp
 client/package-lock.json
 client/server/package-lock.json
 package-lock.json

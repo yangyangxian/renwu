@@ -32,7 +32,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
             <Button
               type="button"
               variant="outline"
-              className={`h-7 text-left justify-between text-secondary-foreground text-[13px] ${buttonClassName}`}
+              className={`h-7 text-left justify-between transition-none text-secondary-foreground text-[13px] ${buttonClassName}`}
               aria-label="Select due date"
               onClick={() => setOpen(true)}
             >

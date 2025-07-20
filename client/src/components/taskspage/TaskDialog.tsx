@@ -10,7 +10,9 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { CheckCircle, Square, Loader2, XCircle, Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
+import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
+import { statusLabels, statusIcons } from "@/components/taskspage/taskStatusConfig";
+import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
 import { Calendar } from "@/components/ui-kit/Calendar";
@@ -37,10 +39,10 @@ interface TaskDialogProps {
 }
 
 const statusOptions = [
-  { value: TaskStatus.TODO, label: "To Do", icon: <Square className="text-yellow-500 ml-2" /> },
-  { value: TaskStatus.IN_PROGRESS, label: "In Progress", icon: <Loader2 className="text-blue-500 ml-2 animate-spin-slow" /> },
-  { value: TaskStatus.DONE, label: "Done", icon: <CheckCircle className="text-green-500 ml-2" /> },
-  { value: TaskStatus.CLOSE, label: "Closed", icon: <XCircle className="text-red-400 ml-2" /> },
+  { value: TaskStatus.TODO, label: statusLabels["todo"], icon: statusIcons["todo"] },
+  { value: TaskStatus.IN_PROGRESS, label: statusLabels["in-progress"], icon: statusIcons["in-progress"] },
+  { value: TaskStatus.DONE, label: statusLabels["done"], icon: statusIcons["done"] },
+  { value: TaskStatus.CLOSE, label: statusLabels["close"], icon: statusIcons["close"] },
 ];
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
@@ -170,7 +172,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             <div className="flex flex-col gap-6">
               {/* Title row */}
               <div className="flex flex-col gap-2">
-                <Label className="text-base mb-1 flex items-center gap-3">
+                <Label className="mb-1 flex items-center gap-3">
                   <Tag className="size-4" />
                   Title
                 </Label>
@@ -186,7 +188,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/* Project and Assigned to */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base flex items-center gap-3">
+                  <Label className="flex items-center gap-3">
                     <FolderOpen className="size-4" />
                     Project
                   </Label>
@@ -202,7 +204,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   />
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base flex items-center gap-3">
+                  <Label className="flex items-center gap-3">
                     <User className="size-4" />
                     Assigned to
                   </Label>
@@ -220,7 +222,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/*  Due date and Status */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base flex items-center gap-3" htmlFor="due-date">
+                  <Label className="flex items-center gap-3" htmlFor="due-date">
                     <Clock className="size-4" />
                     Due date
                   </Label>
@@ -246,7 +248,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   </Popover>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="text-base flex items-center gap-3">
+                  <Label className="flex items-center gap-3">
                     <CheckCircle className="size-4" />
                     Status
                   </Label>
@@ -255,14 +257,14 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     onValueChange={v => dispatch({ type: 'SET_FIELD', field: 'status', value: v as TaskStatus })}
                     options={statusOptions}
                     id="status"
-                    className="min-w-[12rem] w-full"
+                    className="min-w-[12rem] w-full pl-4"
                   />
                 </div>
               </div>
 
               {/* Description row */}
               <div className="flex flex-col gap-2">
-                <Label className="text-base mb-1 flex items-center gap-3">
+                <Label className="mb-1 flex items-center gap-3">
                   <FileText className="size-4" />
                   Description
                 </Label>

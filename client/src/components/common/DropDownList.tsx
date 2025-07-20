@@ -26,7 +26,7 @@ export const DropDownList: React.FC<DropDownListProps> = ({
     </SelectTrigger>
     <SelectContent>
       {options.map(opt => (
-        <SelectItem key={opt.value} value={opt.value} className="p-1">
+        <SelectItem key={opt.value} value={opt.value} className="p-2">
           <span className="flex flex-row items-center justify-between w-full text-secondary-foreground">           
             {opt.icon && <span className="ml-[-4px] translate-y-[-1px]">{opt.icon}</span>}
             <span className={opt.icon ? "ml-2" : "ml-1"}>{opt.label}</span>
