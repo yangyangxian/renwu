@@ -17,6 +17,9 @@ interface TaskDetailProps {
   taskId: string;
 }
 
+const fieldLabelContainerClass = "flex items-center gap-3 h-7";
+const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2";
+
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const { tasks, updateTaskById } = useTaskStore();
   const task = tasks.find(t => t.id === taskId);
@@ -72,7 +75,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         <div className="flex flex-col gap-4">
           {/* Description */}
           <div className="flex flex-col gap-3 min-h-[48px]">
-            <Label className="font-medium min-w-[120px] flex items-center gap-2">
+            <Label className={fieldLabelClass}>
               <FileText className="size-4" />
               Description:
             </Label>
@@ -110,8 +113,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         <div className="flex flex-col gap-6">
           {/* Assigned User */}
           {task.assignedTo && (
-            <div className="flex items-center gap-2 h-8">
-              <Label className="font-medium min-w-[120px] flex items-center gap-2">
+            <div className={fieldLabelContainerClass}>
+              <Label className={fieldLabelClass}>
                 <User className="size-4" />
                 Assigned to:
               </Label>
@@ -124,8 +127,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             </div>
           )}
           {/* Due Date */}
-          <div className="flex items-center gap-3 h-8">
-            <Label className="font-medium min-w-[120px] flex items-center gap-2">
+          <div className={fieldLabelContainerClass}>
+            <Label className={fieldLabelClass}>
               <Clock className="size-4" />
               Due date:
             </Label>
@@ -142,8 +145,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             />
           </div>
           {/* Status (Badge Dropdown Trigger) */}
-          <div className="flex items-center gap-3 h-8">
-            <Label className="font-medium min-w-[120px] flex items-center gap-2">
+          <div className={fieldLabelContainerClass}>
+            <Label className={fieldLabelClass}>
               <CheckCircle className="size-4" />
               Status:
             </Label>
@@ -182,8 +185,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             </DropdownMenu>
           </div>
           {/* Created By */}
-          <div className="flex items-center gap-2 h-8">
-            <Label className="font-medium min-w-[120px] flex items-center gap-2">
+          <div className={fieldLabelContainerClass}>
+            <Label className={fieldLabelClass}>
               <User className="size-4" />
               Created by:
             </Label>
@@ -201,8 +204,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             )}
           </div>
           {/* Created At */}
-          <div className="flex items-center gap-3 h-8">
-            <Label className="font-medium min-w-[120px] flex items-center gap-2">
+          <div className={fieldLabelContainerClass}>
+            <Label className={fieldLabelClass}>
               <FolderOpen className="size-4" />
               Created:
             </Label>
@@ -213,8 +216,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             </Label>
           </div>
           {/* Updated At */}
-          <div className="flex items-center gap-3 h-8">
-            <Label className="font-medium min-w-[120px] flex items-center gap-2">
+          <div className={fieldLabelContainerClass}>
+            <Label className={fieldLabelClass}>
               <RefreshCw className="size-4" />
               Updated:
             </Label>

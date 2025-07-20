@@ -45,7 +45,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="h-full w-full flex flex-col gap-1">
       {/* Tabs and Add Task Button in one row */}
-      <div className="flex items-center px-2 gap-2 mt-1">
+      <div className="flex items-center px-2 gap-2 my-1">
         <Tabs
           value={activeTab}
           onValueChange={val => handleTabChange(val as typeof activeTab)}
