@@ -11,6 +11,7 @@ import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
+import { Label } from "@/components/ui-kit/Label";
 
 export default function TasksPage() {
   const tabOptions = ["board", "list"];
@@ -63,11 +64,11 @@ export default function TasksPage() {
               <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
                 <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <Kanban className="w-4 h-4" />
-                  <span>Board</span>
+                  Board
                 </TabsTrigger>
                 <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <List className="w-4 h-4" />
-                  <span>List</span>
+                  List
                 </TabsTrigger>
               </TabsList>
             </Tabs>

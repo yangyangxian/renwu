@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { TaskResDto } from '@fullstack/common';
+import { Label } from "@/components/ui-kit/Label";
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();

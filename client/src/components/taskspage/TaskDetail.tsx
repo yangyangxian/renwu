@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { TaskStatus } from "@fullstack/common";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioItem } from "@/components/ui-kit/Dropdown-menu";
 import { Badge } from "@/components/ui-kit/Badge";
 import { Label } from "@/components/ui-kit/Label";
+import { Textarea } from "@/components/ui-kit/Textarea";
 import { Tag, FolderOpen, User, Clock, FileText, CheckCircle, Check, RefreshCw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
 import DateSelector from "@/components/common/DateSelector";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { statusLabels, statusColors, statusIcons, allStatuses } from "@/components/taskspage/taskStatusConfig";
+import { marked } from 'marked';
+import { toast } from 'sonner';
 
 interface TaskDetailProps {
   taskId: string;
@@ -18,10 +21,41 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const { tasks, updateTaskById } = useTaskStore();
   const task = tasks.find(t => t.id === taskId);
   const [localDueDate, setLocalDueDate] = useState<string | undefined>(task?.dueDate);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descInput, setDescInput] = useState("");
+  const descInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setLocalDueDate(task?.dueDate);
-  }, [task?.dueDate]);
+    if (task) {
+      setDescInput(task.description || "");
+    }
+    setEditingDesc(false);
+  }, [task?.dueDate, task]);
+
+  const handleDescClick = () => {
+    setEditingDesc(true);
+    setTimeout(() => {
+      if (descInputRef.current) {
+        descInputRef.current.focus();
+        const val = descInputRef.current.value;
+        descInputRef.current.setSelectionRange(val.length, val.length);
+      }
+    }, 0);
+  };
+
+  const handleSubmitDesc = async (newValue: string) => {
+    setEditingDesc(false);
+    setDescInput(newValue);
+    if (!task) return;
+    try {
+      await updateTaskById(taskId, { description: newValue });
+      toast.success('Task description updated');
+    } catch {
+      toast.error('Failed to update description');
+      setDescInput(task.description || "");
+    }
+  };
 
   if (!task) return <div className="text-muted-foreground">Select a task to view details.</div>;
   return (
@@ -42,9 +76,34 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <FileText className="size-4" />
               Description:
             </Label>
-            <div className="text-base whitespace-pre-line text-foreground bg-muted/40 rounded p-3">
-              {task.description || <Label className="text-muted-foreground">No description provided.</Label>}
-            </div>
+            {editingDesc ? (
+              <Textarea
+                ref={descInputRef}
+                initialValue={descInput}
+                onSubmit={handleSubmitDesc}
+                onCancel={() => setEditingDesc(false)}
+                className="min-h-[200px] resize-none"
+                maxLength={10000}
+                storageKey={taskId}
+              />
+            ) : (
+              <>
+                {descInput ? (
+                  <div
+                    className="markdown-body min-h-[200px] !text-[0.9rem] !leading-5 !bg-muted/40 !p-3 rounded cursor-pointer overflow-auto border border-transparent hover:border-muted-foreground/20 transition-colors"
+                    onClick={handleDescClick}
+                    dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
+                  />
+                ) : (
+                  <div
+                    className="markdown-body min-h-[200px] !text-[0.9rem] !bg-muted/40 !p-3 rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start pt-3"
+                    onClick={handleDescClick}
+                  >
+                    Enter a task description… (Markdown supported!)
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
         {/* Right column: Fields */}

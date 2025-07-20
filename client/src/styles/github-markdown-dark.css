@@ -318,7 +318,7 @@
 .dark .markdown-body ol {
   margin-top: 0;
   margin-bottom: 0;
-  padding-left: 2em;
+  padding-left: 0.6em;
 }
 
 .dark .markdown-body ol ol,

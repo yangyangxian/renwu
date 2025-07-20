@@ -172,7 +172,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             <div className="flex flex-col gap-6">
               {/* Title row */}
               <div className="flex flex-col gap-2">
-                <Label className="mb-1 flex items-center gap-3">
+                <Label className="mb-1 flex items-center gap-3 font-medium">
                   <Tag className="size-4" />
                   Title
                 </Label>
@@ -188,7 +188,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/* Project and Assigned to */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3">
+                  <Label className="flex items-center gap-3 font-medium">
                     <FolderOpen className="size-4" />
                     Project
                   </Label>
@@ -204,7 +204,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   />
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3">
+                  <Label className="flex items-center gap-3 font-medium">
                     <User className="size-4" />
                     Assigned to
                   </Label>
@@ -222,7 +222,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/*  Due date and Status */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3" htmlFor="due-date">
+                  <Label className="flex items-center gap-3 font-medium" htmlFor="due-date">
                     <Clock className="size-4" />
                     Due date
                   </Label>
@@ -248,7 +248,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   </Popover>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3">
+                  <Label className="flex items-center gap-3 font-medium">
                     <CheckCircle className="size-4" />
                     Status
                   </Label>
@@ -264,7 +264,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
               {/* Description row */}
               <div className="flex flex-col gap-2">
-                <Label className="mb-1 flex items-center gap-3">
+                <Label className="mb-1 flex items-center gap-3 font-medium">
                   <FileText className="size-4" />
                   Description
                 </Label>
