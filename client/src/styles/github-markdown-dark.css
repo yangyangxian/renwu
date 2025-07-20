@@ -314,11 +314,18 @@
   border-left: .25em solid #3d444d;
 }
 
-.dark .markdown-body ul,
-.dark .markdown-body ol {
+.dark .markdown-body ul{
+  list-style-type: disc;
   margin-top: 0;
   margin-bottom: 0;
-  padding-left: 0.6em;
+  padding-left: 1.5em;
+}
+
+.dark .markdown-body ol {
+  list-style-type: decimal;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 1.5em;
 }
 
 .dark .markdown-body ol ol,

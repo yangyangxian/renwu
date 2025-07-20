@@ -25,7 +25,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {label && <span className="font-medium text-sm">{label}</span>}
+      {label && <span className="text-sm">{label}</span>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           {value ? (

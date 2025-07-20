@@ -85,7 +85,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 initialValue={descInput}
                 onSubmit={handleSubmitDesc}
                 onCancel={() => setEditingDesc(false)}
-                className="min-h-[200px] resize-none"
+                className="min-h-[300px]"
                 maxLength={10000}
                 storageKey={taskId}
               />

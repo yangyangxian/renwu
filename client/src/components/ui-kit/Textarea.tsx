@@ -86,7 +86,7 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
         onChange={handleChange}
         {...props}
       />
-      <div className="flex items-center justify-end gap-2 mt-2 mr-4">
+      <div className="flex items-center justify-end gap-2 mt-4 mr-4">
         {hasChanges && (
           <span className="flex items-center gap-1 text-sm text-primary/80 select-none">
             <Pencil className="w-4 h-4" aria-label="You have unsaved changes" />

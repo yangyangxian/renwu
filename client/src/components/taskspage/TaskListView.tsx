@@ -17,7 +17,6 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, onUpdateTask }) => {
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
   const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE];
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>(defaultStatuses);
-  const selectedTask = tasks?.find(t => t.id === selectedTaskId);
 
   // Filter by status (multi-select)
   const filteredTasks = useMemo(() => {
@@ -40,7 +39,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, onUpdateTask }) => {
   // Select the first task by default when tasks change
   useEffect(() => {
     if (sortedTasks && sortedTasks.length > 0) {
-      setSelectedTaskId(sortedTasks[0].id);
+      // Only auto-select the first task if none is currently selected or the selected task is not in the list
+      if (!selectedTaskId || !sortedTasks.some(t => t.id === selectedTaskId)) {
+        setSelectedTaskId(sortedTasks[0].id);
+      }
     } else {
       setSelectedTaskId(null);
     }
