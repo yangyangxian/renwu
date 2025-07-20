@@ -85,6 +85,7 @@ class TaskService {
         createdById: tasks.createdBy,
         createdByName: creatorUser.name,
         createdByEmail: creatorUser.email,
+        createdByCreatedAt: creatorUser.createdAt,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -115,7 +116,8 @@ class TaskService {
         entity.createdBy = {
           id: task.createdById,
           name: task.createdByName || '',
-          email: task.createdByEmail || ''
+          email: task.createdByEmail || '',
+          createdAt: task.createdByCreatedAt?.toISOString() || '',
         };
       }
       return entity;
@@ -136,6 +138,7 @@ class TaskService {
         createdById: tasks.createdBy,
         createdByName: creatorUser.name,
         createdByEmail: creatorUser.email,
+        createdByCreatedAt: creatorUser.createdAt,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -166,7 +169,8 @@ class TaskService {
         entity.createdBy = {
           id: task.createdById,
           name: task.createdByName || '',
-          email: task.createdByEmail || ''
+          email: task.createdByEmail || '',
+          createdAt: task.createdByCreatedAt?.toISOString() || '',
         };
       }
       return entity;
@@ -216,6 +220,7 @@ class TaskService {
         createdById: tasks.createdBy,
         createdByName: creatorUser.name,
         createdByEmail: creatorUser.email,
+        createdByCreatedAt: creatorUser.createdAt,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -249,7 +254,8 @@ class TaskService {
       entity.createdBy = {
         id: taskWithDetails.createdById,
         name: taskWithDetails.createdByName || '',
-        email: taskWithDetails.createdByEmail || ''
+        email: taskWithDetails.createdByEmail || '',
+        createdAt: taskWithDetails.createdByCreatedAt?.toISOString() || '',
       };
     }
     return entity;
