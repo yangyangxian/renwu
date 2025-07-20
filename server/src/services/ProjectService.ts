@@ -7,6 +7,7 @@ import { projects, projectMembers, users } from '../database/schema';
 export class ProjectEntity {
   id: string = '';
   name: string = '';
+  slug: string = '';
   description: string | null = null;
   createdAt: Date | null = null;
   updatedAt: Date | null = null;
@@ -44,6 +45,7 @@ export class ProjectService {
       .select({
         projectId: projects.id,
         projectName: projects.name,
+        projectSlug: projects.slug,
         projectDescription: projects.description,
         projectCreatedAt: projects.createdAt,
         projectUpdatedAt: projects.updatedAt,
@@ -63,6 +65,54 @@ export class ProjectService {
     const project = new ProjectEntity({
       id: rows[0].projectId,
       name: rows[0].projectName,
+      slug: rows[0].projectSlug,
+      description: rows[0].projectDescription,
+      createdAt: rows[0].projectCreatedAt,
+      updatedAt: rows[0].projectUpdatedAt,
+      createdBy: rows[0].createdBy ?? '',
+      members: [],
+    });
+    for (const row of rows) {
+      project.members.push(new ProjectMemberEntity({
+        id: row.memberId,
+        name: row.memberName,
+        email: row.memberEmail,
+        role: row.memberRole,
+      }));
+    }
+    return project;
+  }
+
+  /**
+   * Get a project by its slug.
+   */
+  async getProjectBySlug(projectSlug: string): Promise<ProjectEntity | null> {
+    // Get project and all members
+    const rows = await db
+      .select({
+        projectId: projects.id,
+        projectName: projects.name,
+        projectSlug: projects.slug,
+        projectDescription: projects.description,
+        projectCreatedAt: projects.createdAt,
+        projectUpdatedAt: projects.updatedAt,
+        createdBy: projects.createdBy,
+        memberId: users.id,
+        memberName: users.name,
+        memberEmail: users.email,
+        memberRole: projectMembers.role,
+      })
+      .from(projects)
+      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+      .innerJoin(users, eq(projectMembers.userId, users.id))
+      .where(eq(projects.slug, projectSlug));
+
+    if (!rows || rows.length === 0) return null;
+
+    const project = new ProjectEntity({
+      id: rows[0].projectId,
+      name: rows[0].projectName,
+      slug: rows[0].projectSlug,
       description: rows[0].projectDescription,
       createdAt: rows[0].projectCreatedAt,
       updatedAt: rows[0].projectUpdatedAt,
@@ -84,12 +134,13 @@ export class ProjectService {
    * Creates a new project and adds the owner as a member with OWNER role.
    * @param params { name, description, ownerId }
    */
-  async createProject({ name, description, ownerId }: { name: string; description?: string; ownerId: string }) {
+  async createProject({ name, slug, description, ownerId }: { name: string; slug: string; description?: string; ownerId: string }) {
     // Use a transaction to ensure both inserts succeed or fail together
     return await db.transaction(async (tx:any) => {
-      // Insert project
+      // Insert project with user-provided slug
       const [projectRow] = await tx.insert(projects).values({
         name,
+        slug,
         description,
         createdBy: ownerId,
       }).returning();
@@ -113,6 +164,7 @@ export class ProjectService {
       return new ProjectEntity({
         id: projectRow.id,
         name: projectRow.name,
+        slug: projectRow.slug,
         description: projectRow.description,
         createdAt: projectRow.createdAt,
         updatedAt: projectRow.updatedAt,
@@ -134,6 +186,7 @@ export class ProjectService {
       .select({
         projectId: projects.id,
         projectName: projects.name,
+        projectSlug: projects.slug,
         projectDescription: projects.description,
         projectCreatedAt: projects.createdAt,
         projectUpdatedAt: projects.updatedAt,
@@ -156,6 +209,7 @@ export class ProjectService {
         projectMap.set(pid, new ProjectEntity({
           id: row.projectId,
           name: row.projectName,
+          slug: row.projectSlug,
           description: row.projectDescription,
           createdAt: row.projectCreatedAt,
           updatedAt: row.projectUpdatedAt,

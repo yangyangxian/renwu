@@ -52,13 +52,13 @@ export function HomeSideBar() {
   }, [fetchProjects]);
 
   // Handle project creation
-  const handleProjectSubmit = async (project: { name: string; description: string }) => {
+  const handleProjectSubmit = async (project: { name: string; slug: string; description: string }) => {
     await withToast(
       async () => {
         const newProject = await createProject(project);
         setProjectDialogOpen(false);
-        if (newProject && newProject.id) {
-          navigate(`/projects/${newProject.id}`);
+        if (newProject && newProject.slug) {
+          navigate(`/projects/${newProject.slug}`);
         }
       },
       {
@@ -71,7 +71,11 @@ export function HomeSideBar() {
   // Navigation handlers
   const handleTasksClick = () => navigate(TASKS_PATH);
   const isTasksActive = location.pathname.startsWith(TASKS_PATH);
-  const isProjectActive = (projectId: string) => location.pathname === `${PROJECTS_PATH}/${projectId}`;
+  const isProjectActive = (projectId: string) => {
+    // Check if current URL matches this project's slug
+    const project = projects.find(p => p.id === projectId);
+    return project ? location.pathname === `${PROJECTS_PATH}/${project.slug}` : false;
+  };
 
   // Handle delayed text display after expansion animation
   useEffect(() => {
@@ -116,7 +120,7 @@ export function HomeSideBar() {
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
-        className="h-full p-2 pt-3 pr-3 relative max-w-[14rem]"
+        className="h-full pt-3 p-3 relative max-w-[14rem]"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
@@ -206,7 +210,7 @@ function ProjectsMenuItem({
   isProjectActive: (projectId: string) => boolean;
   setExpanded: (v: boolean) => void;
   onAddProject?: () => void;
-  projects: { id: string; name: string }[];
+  projects: { id: string; name: string; slug: string }[];
   loading: boolean;
 }) {
   const navigate = useNavigate();
@@ -261,9 +265,9 @@ function ProjectsMenuItem({
             {showText && !loading && projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuButton
-                  className="pl-4 cursor-pointer"
+                  className="pl-3 cursor-pointer"
                   isActive={isProjectActive(project.id)}
-                  onClick={() => navigate(`${PROJECTS_PATH}/${project.id}`)}
+                  onClick={() => navigate(`${PROJECTS_PATH}/${project.slug}`)}
                 >
                   {project.name}
                 </SidebarMenuButton>

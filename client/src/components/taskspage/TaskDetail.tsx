@@ -93,13 +93,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <>
                 {descInput ? (
                   <div
-                    className="markdown-body min-h-[200px] !text-[0.9rem] !leading-5 !bg-muted/40 !p-3 rounded cursor-pointer overflow-auto border border-transparent hover:border-muted-foreground/20 transition-colors"
+                    className="markdown-body min-h-[200px] !text-sm !leading-6 !bg-muted/40 dark:!bg-muted/65 !p-3 rounded-lg cursor-pointer overflow-auto border border-transparent hover:border-muted-foreground/20 transition-colors"
                     onClick={handleDescClick}
                     dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
                   />
                 ) : (
                   <div
-                    className="markdown-body min-h-[200px] !text-[0.9rem] !bg-muted/40 !p-3 rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start pt-3"
+                    className="markdown-body min-h-[200px] !text-sm !bg-muted/40 dark:!bg-muted/65 !p-3 rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start pt-3"
                     onClick={handleDescClick}
                   >
                     Enter a task description… (Markdown supported!)

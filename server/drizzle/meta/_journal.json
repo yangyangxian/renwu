@@ -50,6 +50,27 @@
       "when": 1752290956906,
       "tag": "0006_updateduedate",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753018526728,
+      "tag": "0007_addslugfield",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1753018782264,
+      "tag": "0008_addprojectslug",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1753019039940,
+      "tag": "0009_addprojecctslug",
+      "breakpoints": true
     }
   ]
 }

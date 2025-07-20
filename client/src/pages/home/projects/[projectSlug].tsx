@@ -15,25 +15,25 @@ import { TaskResDto } from '@fullstack/common';
 import { Label } from "@/components/ui-kit/Label";
 
 export default function ProjectDetailPage() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectSlug } = useParams<{ projectSlug: string }>();
   const { currentProject : project, updateProject, fetchCurrentProject } = useProjectStore();
   const { 
     projectTasks: tasks, 
     fetchProjectTasks, 
   } = useTaskStore();
 
-  // If projectId is missing, show error
-  if (!projectId) {
+  // If projectSlug is missing, show error
+  if (!projectSlug) {
     return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
   }
 
-  // Fetch project data and tasks when component mounts or projectId changes
+  // Fetch project data and tasks when component mounts or projectSlug changes
   useEffect(() => {
-    if (projectId) {
-      fetchCurrentProject(projectId);
-      fetchProjectTasks(projectId);
+    if (projectSlug) {
+      fetchCurrentProject(projectSlug);
+      fetchProjectTasks(projectSlug);
     }
-  }, [projectId, fetchCurrentProject, fetchProjectTasks]);
+  }, [projectSlug, fetchCurrentProject, fetchProjectTasks]);
 
   const [activeTab, handleTabChange] = useTabHash(
     ['overview', 'tasks', 'team', 'settings'],
@@ -41,7 +41,7 @@ export default function ProjectDetailPage() {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
-  
+
   return (
     <div className="h-full w-full flex flex-col gap-1">
       {/* Tabs and Add Task Button in one row */}
@@ -95,7 +95,7 @@ export default function ProjectDetailPage() {
             if (!open) setEditingTask(null);
           }}
           title={editingTask ? "Edit Task" : "Add New Task"}
-          initialValues={editingTask || { projectId }}
+          initialValues={editingTask || (project ? { projectId: project.id } : {})}
         />
       )}
 
@@ -105,7 +105,7 @@ export default function ProjectDetailPage() {
           project={project!}
         />
       )}
-      {activeTab === 'tasks' && projectId && (
+      {activeTab === 'tasks' && projectSlug && (
         <ProjectTasksTab
           onTaskClick={taskId => {
             const fullTask = tasks.find(t => t.id === taskId) || null;

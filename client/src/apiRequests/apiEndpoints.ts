@@ -14,12 +14,12 @@ export const getMyTasks = () => '/api/tasks/me';
 export const getTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const updateTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const deleteTaskById = (taskId: string) => `/api/tasks/${taskId}`;
-export const getTasksByProjectId = (projectId: string) => `/api/tasks/project/${projectId}`;
+export const getTasksByProjectSlug = (projectSlug: string) => `/api/tasks/project/${projectSlug}`;
 
 // --- Projects ---
 export const getProjects = () => '/api/projects';
 export const getMyProjects = () => '/api/projects/me';
-export const getProjectById = (projectId: string) => `/api/projects/${projectId}`;
+export const getProjectBySlug = (projectSlug: string) => `/api/projects/${projectSlug}`;
 export const updateProjectById = (projectId: string) => `/api/projects/${projectId}`;
 export const addProjectMember = (projectId: string) => `/api/projects/${projectId}/members`;
 export const removeProjectMember = (projectId: string, userId: string) => `/api/projects/${projectId}/members/${userId}`;

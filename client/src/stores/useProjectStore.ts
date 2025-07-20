@@ -5,7 +5,7 @@ import { apiClient } from '@/utils/APIClient';
 import { 
   getMyProjects, 
   getProjects, 
-  getProjectById as getProjectByIdEndpoint, 
+  getProjectBySlug as getProjectBySlugEndpoint, 
   updateProjectById as updateProjectByIdEndpoint,
   addProjectMember
 } from '@/apiRequests/apiEndpoints';
@@ -70,16 +70,15 @@ export function useProjectStore() {
     }
   }, [setLoading, setError, setProjects]);
 
-  const fetchCurrentProject = useCallback(async (projectId: string): Promise<ProjectResDto | null> => {
+    const fetchCurrentProject = useCallback(async (projectSlug: string): Promise<ProjectResDto | null> => {
     setProjectLoading(true);
     setProjectError(null);
     try {
-      const data = await apiClient.get<ProjectResDto>(getProjectByIdEndpoint(projectId));
+      const data = await apiClient.get<ProjectResDto>(getProjectBySlugEndpoint(projectSlug));
       setCurrentProject(data);
       return data;
     } catch (err: any) {
       setProjectError(err?.message || 'Failed to fetch project');
-      setCurrentProject(null);
       return null;
     } finally {
       setProjectLoading(false);
@@ -130,8 +129,8 @@ export function useProjectStore() {
     try {
       await apiClient.post(addProjectMember(projectId), memberData);
       // Refresh the current project to get updated members
-      if (currentProject?.id === projectId) {
-        await fetchCurrentProject(projectId);
+      if (currentProject?.id === projectId && currentProject?.slug) {
+        await fetchCurrentProject(currentProject.slug);
       }
     } catch (error) {
       console.error('Failed to add member to project:', error);

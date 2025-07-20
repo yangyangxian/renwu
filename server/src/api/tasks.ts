@@ -61,14 +61,14 @@ router.get('/me', async (req, res, next) => {
     res.json(createApiResponse<TaskResDto[]>(data));
 });
 
-router.get('/project/:projectId',
+router.get('/project/:projectSlug',
   async (
-    req: express.Request<{ projectId: string }, {}, {}, {}>,
+    req: express.Request<{ projectSlug: string }, {}, {}, {}>,
     res: express.Response<ApiResponse<TaskResDto[]>>,
     next: express.NextFunction
   ) => {
-    const { projectId } = req.params;
-    const tasks = await taskService.getTasksByProjectId(projectId);
+    const { projectSlug } = req.params;
+    const tasks = await taskService.getTasksByProjectSlug(projectSlug);
     const data: TaskResDto[] = tasks.map(task => mapObjectDeep(task, new TaskResDto()));
     res.json(createApiResponse<TaskResDto[]>(data));
   }

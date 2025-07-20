@@ -4,6 +4,7 @@ import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
 import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes } from '@fullstack/common';
+import { ProjectCreateReqSchema } from '@fullstack/common';
 
 
 const router = express.Router();
@@ -16,13 +17,17 @@ router.post(
     res: Response<ApiResponse<ProjectResDto>>
   ) => {
     const userId = req.user!.userId;
-    const { name, description } = req.body;
-    if (!name || typeof name !== 'string' || !name.trim()) {
-      throw new CustomError('Project name is required', ErrorCodes.NO_DATA);
+    // Validate request body using Zod schema
+    const parseResult = ProjectCreateReqSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const errorMsg = parseResult.error.issues.map((e: { message: string }) => e.message).join(', ');
+      throw new CustomError(errorMsg, ErrorCodes.INVALID_INPUT);
     }
+    const { name, slug, description } = parseResult.data;
     // Create project and add user as owner/member
     const project = await projectService.createProject({
       name: name.trim(),
+      slug: slug.trim(),
       description: description || '',
       ownerId: userId,
     });
@@ -45,14 +50,14 @@ router.get('/me', async (req, res) => {
   res.json(createApiResponse<ProjectResDto[]>(data));
 });
 
-router.get('/:id', async (req: Request<{ id: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
-    const { id } = req.params;
-    if (!id) {
-      throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
+router.get('/:slug', async (req: Request<{ slug: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
+    const { slug } = req.params;
+    if (!slug) {
+      throw new CustomError('Project slug is required', ErrorCodes.NO_DATA);
     }
 
-    // Fetch project by ID
-    const project = await projectService.getProjectById(id);
+    // Fetch project by slug
+    const project = await projectService.getProjectBySlug(slug);
     if (!project) {
       // Return 200 with data: null (not an error, just not found)
       res.json(createApiResponse<ProjectResDto | null>(null));

@@ -35,6 +35,7 @@ export const users = pgTable('users', {
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
   description: text('description'), // nullable by default
   createdBy: uuid('created_by').references(() => users.id, {
     onDelete: 'set null',
