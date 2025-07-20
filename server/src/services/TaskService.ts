@@ -1,6 +1,7 @@
 import { db } from '../database/databaseAccess';
 import { tasks, projects, users } from '../database/schema';
 import { eq } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
 import logger from '../utils/logger';
@@ -10,6 +11,7 @@ import { UserEntity } from './UserService';
 export class TaskEntity {
   id: string = '';
   assignedTo?: UserEntity;
+  createdBy?: UserEntity;
   title: string = '';
   description: string = '';
   status: string = '';
@@ -70,13 +72,19 @@ class TaskService {
   }
 
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
+    const assignedUser = alias(users, 'assigned_user');
+    const creatorUser = alias(users, 'creator_user');
+    
     const result = await db
       .select({
         id: tasks.id,
         assignedToId: tasks.assignedTo,
-        assignedToName: users.name,
-        assignedToEmail: users.email,
-        assignedToCreatedAt: users.createdAt,
+        assignedToName: assignedUser.name,
+        assignedToEmail: assignedUser.email,
+        assignedToCreatedAt: assignedUser.createdAt,
+        createdById: tasks.createdBy,
+        createdByName: creatorUser.name,
+        createdByEmail: creatorUser.email,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -88,12 +96,13 @@ class TaskService {
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
-      .leftJoin(users, eq(tasks.assignedTo, users.id))
+      .leftJoin(assignedUser, eq(tasks.assignedTo, assignedUser.id))
+      .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
       .where(eq(tasks.assignedTo, userId));
     
     return result.map((task: any) => {
       const entity = mapDbToEntity(task, new TaskEntity());
-      // Map user information to assignedTo object
+      // Set assignedTo and createdBy manually to avoid recursion
       if (task.assignedToId) {
         entity.assignedTo = new UserEntity({
           id: task.assignedToId,
@@ -102,18 +111,31 @@ class TaskService {
           createdAt: task.assignedToCreatedAt?.toISOString() || '',
         });
       }
+      if (task.createdById) {
+        entity.createdBy = {
+          id: task.createdById,
+          name: task.createdByName || '',
+          email: task.createdByEmail || ''
+        };
+      }
       return entity;
     });
   }
 
   async getTasksByProjectId(projectId: string): Promise<TaskEntity[]> {
+    const assignedUser = alias(users, 'assigned_user');
+    const creatorUser = alias(users, 'creator_user');
+    
     const result = await db
       .select({
         id: tasks.id,
         assignedToId: tasks.assignedTo,
-        assignedToName: users.name,
-        assignedToEmail: users.email,
-        assignedToCreatedAt: users.createdAt,
+        assignedToName: assignedUser.name,
+        assignedToEmail: assignedUser.email,
+        assignedToCreatedAt: assignedUser.createdAt,
+        createdById: tasks.createdBy,
+        createdByName: creatorUser.name,
+        createdByEmail: creatorUser.email,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -125,12 +147,13 @@ class TaskService {
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
-      .leftJoin(users, eq(tasks.assignedTo, users.id))
+      .leftJoin(assignedUser, eq(tasks.assignedTo, assignedUser.id))
+      .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
       .where(eq(tasks.projectId, projectId));
     
     return result.map((task: any) => {
       const entity = mapDbToEntity(task, new TaskEntity());
-      // Map user information to assignedTo object
+      // Set assignedTo and createdBy manually to avoid recursion
       if (task.assignedToId) {
         entity.assignedTo = new UserEntity({
           id: task.assignedToId,
@@ -138,6 +161,13 @@ class TaskService {
           email: task.assignedToEmail || '',
           createdAt: task.assignedToCreatedAt?.toISOString() || '',
         });
+      }
+      if (task.createdById) {
+        entity.createdBy = {
+          id: task.createdById,
+          name: task.createdByName || '',
+          email: task.createdByEmail || ''
+        };
       }
       return entity;
     });
@@ -173,13 +203,19 @@ class TaskService {
    * @returns TaskEntity
    */
   async getTaskById(taskId: string): Promise<TaskEntity> {
+    const assignedUser = alias(users, 'assigned_user');
+    const creatorUser = alias(users, 'creator_user');
+    
     const [taskWithDetails] = await db
       .select({
         id: tasks.id,
         assignedToId: tasks.assignedTo,
-        assignedToName: users.name,
-        assignedToEmail: users.email,
-        assignedToCreatedAt: users.createdAt,
+        assignedToName: assignedUser.name,
+        assignedToEmail: assignedUser.email,
+        assignedToCreatedAt: assignedUser.createdAt,
+        createdById: tasks.createdBy,
+        createdByName: creatorUser.name,
+        createdByEmail: creatorUser.email,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -191,7 +227,8 @@ class TaskService {
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
-      .leftJoin(users, eq(tasks.assignedTo, users.id))
+      .leftJoin(assignedUser, eq(tasks.assignedTo, assignedUser.id))
+      .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
       .where(eq(tasks.id, taskId));
 
     if (!taskWithDetails) {
@@ -199,8 +236,7 @@ class TaskService {
     }
 
     const entity = mapDbToEntity(taskWithDetails, new TaskEntity());
-    
-    // Map user information to assignedTo object
+    // Set assignedTo and createdBy manually to avoid recursion
     if (taskWithDetails.assignedToId) {
       entity.assignedTo = new UserEntity({
         id: taskWithDetails.assignedToId,
@@ -209,7 +245,13 @@ class TaskService {
         createdAt: taskWithDetails.assignedToCreatedAt?.toISOString() || '',
       });
     }
-    
+    if (taskWithDetails.createdById) {
+      entity.createdBy = {
+        id: taskWithDetails.createdById,
+        name: taskWithDetails.createdByName || '',
+        email: taskWithDetails.createdByEmail || ''
+      };
+    }
     return entity;
   }
 }

@@ -63,13 +63,13 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
         <>
           {descInput ? (
             <div
-              className="markdown-body !text-[0.95rem] !leading-5 !bg-card !py-3 h-full cursor-pointer overflow-auto"
+              className="markdown-body !text-[0.9rem] !leading-5 !bg-card !py-3 h-full cursor-pointer overflow-auto"
               onClick={handleDescClick}
               dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
             />
           ) : (
             <div
-              className="markdown-body !text-[0.95rem] !bg-card p-4 pt-5 cursor-pointer text-muted-foreground italic"
+              className="markdown-body !text-[0.9rem] !bg-card p-4 pt-5 cursor-pointer text-muted-foreground italic"
               onClick={handleDescClick}
             >
               Enter a project description… (Markdown supported!)

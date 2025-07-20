@@ -17,7 +17,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   value,
   onChange,
   label = "",
-  clearLabel = "Clear Date",
+  clearLabel = "Clear",
   className = "",
   buttonClassName = "",
 }) => {

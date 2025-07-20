@@ -124,7 +124,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       </div>
       
       <div className="flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center mr-2">
           <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
         </div>
         <div className="flex flex-col items-end gap-1">
