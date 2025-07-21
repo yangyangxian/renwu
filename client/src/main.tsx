@@ -8,14 +8,14 @@ import { Toaster } from '@/components/ui-kit/Sonner';
 
 const rootElement = document.getElementById('root') as HTMLElement;
 createRoot(rootElement).render(
-  <StrictMode>
-    <AuthProvider>
+  <StrictMode>  
       <BrowserRouter>
-        <>
           <Toaster position="top-center" richColors closeButton />
-          <App />
-        </>
+          <AuthProvider>
+            <>
+              <App />
+            </>
+          </AuthProvider>
       </BrowserRouter>
-    </AuthProvider>
   </StrictMode>
 );

@@ -119,7 +119,7 @@ router.get('/me', async (req: Request, res: Response<ApiResponse<UserResDto>>, n
         // Always fetch latest user info from DB
         const dbUser = await userService.getUserByEmail(user.email);
         if (!dbUser) {
-            throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
+            throw new CustomError('User not found', ErrorCodes.UNAUTHORIZED);
         }
         const userResDto: UserResDto = {
             id: dbUser.id,

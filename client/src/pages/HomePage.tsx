@@ -40,11 +40,6 @@ export default function HomePage() {
       // Optionally show error
     }
   };
-  
-  const showLanding = !isAuthenticated && location.pathname === "/";
-  if (showLanding) {
-    return <LandingPage />;
-  }
 
   return (
     <div className="flex w-full h-full">

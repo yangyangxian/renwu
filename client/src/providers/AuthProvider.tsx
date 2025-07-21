@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ApiErrorResponse, LoginReqDto, UserResDto, LoginResDto } from '@fullstack/common';
+import { useNavigate } from 'react-router-dom';
+import { ApiErrorResponse, LoginReqDto, UserResDto, LoginResDto, ErrorCodes } from '@fullstack/common';
 import { apiClient } from '../utils/APIClient';
 import logger from '../utils/logger';
 import { authLogin, authLogout, authMe, authSignup } from '@/apiRequests/apiEndpoints';
 
 interface IAuthContext {
   isAuthenticated: boolean;
+  authServerError: boolean;
   user: UserResDto | null;
   setUser: React.Dispatch<React.SetStateAction<UserResDto | null>>;
   login: (email: string, password: string) => Promise<void>;
@@ -26,7 +28,9 @@ export function useAuth(): IAuthContext {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<UserResDto | null>(null);
+  const [authServerError, setAuthServerError] = useState(false);
   const [isInitialAuthCheckComplete, setIsInitialAuthCheckComplete] = useState(false);
+  const navigate = useNavigate();
 
   // Check authentication status on mount
   useEffect(() => {
@@ -34,16 +38,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkAuthStatus = () => {
+    setAuthServerError(false);
     apiClient.get<UserResDto>(authMe())
       .then((userData: UserResDto) => {
         setUser(userData);
         setIsAuthenticated(true);
         logger.info('User authenticated:', userData);
       })
-      .catch(() => {
-        setUser(null);
-        setIsAuthenticated(false);
-        logger.info('User not authenticated');
+      .catch((error: ApiErrorResponse) => {
+        if (error?.code === ErrorCodes.UNAUTHORIZED) {
+          setUser(null);
+          setIsAuthenticated(false);
+          logger.info('User not authenticated (unauthorized)');
+        } else {
+          logger.error('Auth check failed, but not unauthorized:', error);
+          setIsAuthenticated(false);
+          setAuthServerError(true);
+        }
       })
       .finally(() => {
         setIsInitialAuthCheckComplete(true);
@@ -73,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(() => {
         setUser(null);
         setIsAuthenticated(false);
+        navigate('/login', { replace: true });
         logger.info('Logout successful');
       })
       .catch((error : ApiErrorResponse) => {
@@ -100,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, setUser, login, logout, signup }}>
+    <AuthContext.Provider value={{ isAuthenticated,authServerError, user, setUser, login, logout, signup }}>
       {isInitialAuthCheckComplete ? children : null}
     </AuthContext.Provider>
   );

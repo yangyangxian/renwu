@@ -2,6 +2,10 @@ import { ApiResponse, ApiErrorResponse, ErrorCodes } from '@fullstack/common';
 import { API_BASE_URL } from '../appConfig.js';
 import logger from '../utils/logger.js';
 import { getErrorMessage } from '../resources/errorMessages.js';
+import { toast } from 'sonner';
+
+// Prevent multiple concurrent internal error toasts
+let internalErrorToastActive = false;
 
 export class APIClient {
   private baseURL: string;
@@ -67,7 +71,17 @@ export class APIClient {
     }
 
     return fetch(url, requestOptions).then(
-      response => this.handleResponse<TResponse>(response),
+      async response => {
+        // Show toast for internal server error
+        if (response.status === 500 && !internalErrorToastActive) {
+          internalErrorToastActive = true;
+          toast.error(getErrorMessage(ErrorCodes.INTERNAL_ERROR, "Internal server error. Please try again later."));
+          setTimeout(() => {
+            internalErrorToastActive = false;
+          }, 2000); // 2 seconds, adjust as needed
+        }
+        return this.handleResponse<TResponse>(response);
+      },
       error => {
         // Handle network errors (server down, no internet, CORS, etc.)
         logger.error(`Network error for ${method} ${url}:`, error);
