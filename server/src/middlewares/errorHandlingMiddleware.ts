@@ -17,13 +17,7 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
   let errorStack = err.stack;
 
   if (err instanceof CustomError) {
-    statusCode = HttpStatusCode.UNPROCESSABLE_ENTITY; // Default status code for business errors caught by CustomError
-    if (err.errorCode == ErrorCodes.UNAUTHORIZED
-      || err.errorCode == ErrorCodes.MISSING_CREDENTIALS
-      || err.errorCode == ErrorCodes.INVALID_CREDENTIALS
-    ) {
-      statusCode = HttpStatusCode.UNAUTHORIZED;
-    }
+    statusCode = HttpStatusCode.UNPROCESSABLE_ENTITY;
 
     errorCode = err.errorCode;
     errorMessage = err.message;

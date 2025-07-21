@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setIsAuthenticated(false);
           logger.info('User not authenticated (unauthorized)');
+          navigate('/login', { replace: true });
         } else {
           logger.error('Auth check failed, but not unauthorized:', error);
           setIsAuthenticated(false);
