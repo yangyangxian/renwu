@@ -48,7 +48,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
   };
 
   return (
-    <Card className={`flex flex-1 flex-col h-full${className ? ` ${className}` : ''}`}>
+    <Card className={`flex-1 h-full${className ? ` ${className}` : ''}`}>
       {editingDesc ? (
         <Textarea
           ref={descInputRef}
@@ -63,13 +63,13 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
         <>
           {descInput ? (
             <div
-              className="markdown-body !text-[0.9rem] !leading-5 !bg-card !py-3 h-full cursor-pointer overflow-auto"
+              className="markdown-body !bg-transparent !text-[0.9rem] !leading-5 !py-3 h-full cursor-pointer overflow-auto"
               onClick={handleDescClick}
               dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
             />
           ) : (
             <div
-              className="markdown-body !text-[0.9rem] !bg-card p-4 pt-5 cursor-pointer text-muted-foreground italic"
+              className="markdown-body !text-[0.9rem] !bg-transparent p-4 pt-5 cursor-pointer text-muted-foreground italic"
               onClick={handleDescClick}
             >
               Enter a project description… (Markdown supported!)

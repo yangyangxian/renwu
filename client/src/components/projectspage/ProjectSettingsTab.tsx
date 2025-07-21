@@ -178,8 +178,8 @@ export function ProjectSettingsTab() {
   };
 
   return (
-    <Card className="flex flex-col shadow-none m-2 p-3">
-      <Card className="w-full max-w-2xl py-1 px-4 shadow-none border border-input">
+    <Card className="shadow-none m-2 p-3">
+      <div className="flex flex-col w-full max-w-2xl py-1 px-4 shadow-none">
         <div className="flex items-center gap-2 mb-2">
           <Label className="text-lg font-semibold">General Settings</Label>
           {hasUnsavedChanges && (
@@ -284,7 +284,7 @@ export function ProjectSettingsTab() {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     </Card>
   );
 }

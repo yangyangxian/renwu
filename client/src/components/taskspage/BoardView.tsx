@@ -116,7 +116,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
               <CardHeader
                 className={`py-[10px] px-3 flex items-center ${col.titleBg} sticky top-0 z-10`}
               >
-                <CardTitle className="font-extralight text-white">{col.label}</CardTitle>
+                <CardTitle className="font-light text-white">{col.label}</CardTitle>
               </CardHeader>
               <CardContent className="p-3 flex flex-col overflow-y-auto gap-3">
                 {tasksByStatus[col.key].length === 0 ? (
