@@ -2,7 +2,7 @@ import { ProjectRole, ErrorCodes } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../database/databaseAccess';
-import { projects, projectMembers, users } from '../database/schema';
+import { projects, projectMembers, users, tasks } from '../database/schema';
 
 export class ProjectEntity {
   id: string = '';
@@ -135,6 +135,17 @@ export class ProjectService {
    * @param params { name, description, ownerId }
    */
   async createProject({ name, slug, description, ownerId }: { name: string; slug: string; description?: string; ownerId: string }) {
+    // Check if slug already exists
+    const existingProject = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.slug, slug))
+      .limit(1);
+    
+    if (existingProject.length > 0) {
+      throw new CustomError('Project slug already exists. Please choose a different one.', ErrorCodes.VALIDATION_ERROR);
+    }
+
     // Use a transaction to ensure both inserts succeed or fail together
     return await db.transaction(async (tx:any) => {
       // Insert project with user-provided slug
@@ -236,8 +247,22 @@ export class ProjectService {
    */
   async updateProject(
     projectId: string,
-    updateData: { name?: string; description?: string }
+    updateData: { name?: string; description?: string; slug?: string }
   ): Promise<ProjectEntity | null> {
+    // If slug is being updated, check for uniqueness
+    if (updateData.slug) {
+      const existingProject = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.slug, updateData.slug))
+        .limit(1);
+      
+      // If a project with this slug exists and it's not the current project
+      if (existingProject.length > 0 && existingProject[0].id !== projectId) {
+        throw new CustomError('Project slug already exists. Please choose a different one.', ErrorCodes.VALIDATION_ERROR);
+      }
+    }
+
     // Update the project details
     const updates = {
       ...updateData,
@@ -256,6 +281,37 @@ export class ProjectService {
 
     // Fetch updated project with members
     return this.getProjectById(projectId);
+  }
+
+  /**
+   * Delete a project and all its associated data.
+   * This will cascade delete project members and tasks.
+   */
+  async deleteProject(projectId: string): Promise<boolean> {
+    // Check if project exists
+    const existingProject = await this.getProjectById(projectId);
+    if (!existingProject) {
+      throw new CustomError('Project not found', ErrorCodes.NOT_FOUND);
+    }
+
+    try {
+      // Delete all tasks associated with this project first
+      await db.delete(tasks).where(eq(tasks.projectId, projectId));
+
+      // Delete project members (this will also be handled by cascade, but explicit is clearer)
+      await db.delete(projectMembers).where(eq(projectMembers.projectId, projectId));
+
+      // Delete the project
+      const [deletedProject] = await db
+        .delete(projects)
+        .where(eq(projects.id, projectId))
+        .returning();
+
+      return !!deletedProject;
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      throw new CustomError('Failed to delete project', ErrorCodes.INTERNAL_ERROR);
+    }
   }
 }
 

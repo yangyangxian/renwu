@@ -234,7 +234,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         className="w-full min-w-[12rem] text-left justify-between text-secondary-foreground"
                         aria-label="Select due date"
                       >
-                        <span className="ml-1">{taskState.dueDate ? new Date(taskState.dueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</span>
+                        <Label className="ml-1 font-normal">{taskState.dueDate ? new Date(taskState.dueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</Label>
                         <CalendarIcon className="size-4 ml-2" />
                       </Button>
                     </PopoverTrigger>

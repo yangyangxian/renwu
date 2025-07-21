@@ -21,6 +21,8 @@ export const getProjects = () => '/api/projects';
 export const getMyProjects = () => '/api/projects/me';
 export const getProjectBySlug = (projectSlug: string) => `/api/projects/${projectSlug}`;
 export const updateProjectById = (projectId: string) => `/api/projects/${projectId}`;
+export const deleteProjectById = (projectId: string) => `/api/projects/${projectId}`;
+export const checkSlugAvailability = (slug: string) => `/api/projects/check-slug/${slug}`;
 export const addProjectMember = (projectId: string) => `/api/projects/${projectId}/members`;
 export const removeProjectMember = (projectId: string, userId: string) => `/api/projects/${projectId}/members/${userId}`;
 

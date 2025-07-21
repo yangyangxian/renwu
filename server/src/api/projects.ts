@@ -69,17 +69,17 @@ router.get('/:slug', async (req: Request<{ slug: string }>, res: Response<ApiRes
   }
 );
 
-// PUT /api/projects/:id - update project details (name, description)
+// PUT /api/projects/:id - update project details (name, description, slug)
 router.put(
   '/:id',
   async (
-    req: Request<{ id: string }, {}, { name?: string; description?: string }>,
+    req: Request<{ id: string }, {}, { name?: string; description?: string; slug?: string }>,
     res: Response<ApiResponse<ProjectResDto>>,
     next: NextFunction
   ) => {
     const userId = req.user!.userId;
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, slug } = req.body;
 
     if (!id) {
       throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
@@ -89,10 +89,15 @@ router.put(
       throw new CustomError('Project name must be a non-empty string', ErrorCodes.NO_DATA);
     }
 
+    if (slug && (typeof slug !== 'string' || !slug.trim())) {
+      throw new CustomError('Project slug must be a non-empty string', ErrorCodes.NO_DATA);
+    }
+
     // Update project details
     const updatedProject = await projectService.updateProject(id, {
       name: name?.trim(),
       description: description || undefined,
+      slug: slug?.trim(),
     });
 
     if (!updatedProject) {
@@ -102,6 +107,68 @@ router.put(
     const dto = mapObject(updatedProject, new ProjectResDto());
     dto.members = updatedProject.members;
     res.json(createApiResponse<ProjectResDto>(dto));
+  }
+);
+
+// GET /api/projects/check-slug/:slug - check if slug is available
+router.get(
+  '/check-slug/:slug',
+  async (
+    req: Request<{ slug: string }>,
+    res: Response<ApiResponse<{ available: boolean }>>,
+    next: NextFunction
+  ) => {
+    const { slug } = req.params;
+
+    if (!slug) {
+      throw new CustomError('Slug is required', ErrorCodes.NO_DATA);
+    }
+
+    try {
+      const existingProject = await projectService.getProjectBySlug(slug);
+      res.json(createApiResponse<{ available: boolean }>({ 
+        available: !existingProject 
+      }));
+    } catch (error) {
+      console.error('Failed to check slug availability:', error);
+      throw new CustomError('Failed to check slug availability', ErrorCodes.INTERNAL_ERROR);
+    }
+  }
+);
+
+// DELETE /api/projects/:id - delete project
+router.delete(
+  '/:id',
+  async (
+    req: Request<{ id: string }>,
+    res: Response<ApiResponse<{ success: boolean }>>,
+    next: NextFunction
+  ) => {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+
+    if (!id) {
+      throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
+    }
+
+    // Check if user has permission to delete this project (project owner)
+    const project = await projectService.getProjectById(id);
+    if (!project) {
+      throw new CustomError('Project not found', ErrorCodes.NOT_FOUND);
+    }
+
+    if (project.createdBy !== userId) {
+      throw new CustomError('Only project owners can delete projects', ErrorCodes.UNAUTHORIZED);
+    }
+
+    // Delete the project
+    const success = await projectService.deleteProject(id);
+    
+    if (!success) {
+      throw new CustomError('Failed to delete project', ErrorCodes.INTERNAL_ERROR);
+    }
+
+    res.json(createApiResponse<{ success: boolean }>({ success: true }));
   }
 );
 

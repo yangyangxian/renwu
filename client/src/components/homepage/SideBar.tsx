@@ -58,7 +58,8 @@ export function HomeSideBar() {
         const newProject = await createProject(project);
         setProjectDialogOpen(false);
         if (newProject && newProject.slug) {
-          navigate(`/projects/${newProject.slug}`);
+          const currentHash = location.hash;
+          navigate(`/projects/${newProject.slug}${currentHash}`);
         }
       },
       {
@@ -72,7 +73,7 @@ export function HomeSideBar() {
   const handleTasksClick = () => navigate(TASKS_PATH);
   const isTasksActive = location.pathname.startsWith(TASKS_PATH);
   const isProjectActive = (projectId: string) => {
-    // Check if current URL matches this project's slug
+    // Check if current URL matches this project's slug (ignore hash for active state)
     const project = projects.find(p => p.id === projectId);
     return project ? location.pathname === `${PROJECTS_PATH}/${project.slug}` : false;
   };
@@ -267,7 +268,10 @@ function ProjectsMenuItem({
                 <SidebarMenuButton
                   className="pl-3 cursor-pointer"
                   isActive={isProjectActive(project.id)}
-                  onClick={() => navigate(`${PROJECTS_PATH}/${project.slug}`)}
+                  onClick={() => {
+                    const currentHash = location.hash;
+                    navigate(`${PROJECTS_PATH}/${project.slug}${currentHash}`);
+                  }}
                 >
                   {project.name}
                 </SidebarMenuButton>

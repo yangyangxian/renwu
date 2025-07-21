@@ -7,6 +7,7 @@ import {
   getProjects, 
   getProjectBySlug as getProjectBySlugEndpoint, 
   updateProjectById as updateProjectByIdEndpoint,
+  deleteProjectById as deleteProjectByIdEndpoint,
   addProjectMember
 } from '@/apiRequests/apiEndpoints';
 
@@ -109,9 +110,9 @@ export function useProjectStore() {
     }
   }, [addProject]);
 
-  const updateProject = useCallback(async (projectId: string, updateData: Partial<Pick<ProjectResDto, 'name' | 'description'>>): Promise<ProjectResDto> => {
+  const updateProject = useCallback(async (projectId: string, updateData: Partial<Pick<ProjectResDto, 'name' | 'description' | 'slug'>>): Promise<ProjectResDto> => {
     try {
-      const updatedProject = await apiClient.put<Partial<Pick<ProjectResDto, 'name' | 'description'>>, ProjectResDto>(updateProjectByIdEndpoint(projectId), updateData);
+      const updatedProject = await apiClient.put<Partial<Pick<ProjectResDto, 'name' | 'description' | 'slug'>>, ProjectResDto>(updateProjectByIdEndpoint(projectId), updateData);
       // Update projects list
       setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
       // Update current project if it matches
@@ -138,6 +139,17 @@ export function useProjectStore() {
     }
   }, [currentProject, fetchCurrentProject]);
 
+  const deleteProject = useCallback(async (projectId: string): Promise<void> => {
+    try {
+      await apiClient.delete<{ success: boolean }>(deleteProjectByIdEndpoint(projectId));
+      // Remove project from local state
+      removeProject(projectId);
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      throw error;
+    }
+  }, [removeProject]);
+
   return {
     projects,
     currentProject,
@@ -152,5 +164,6 @@ export function useProjectStore() {
     createProject,
     updateProject,
     addMemberToProject,
+    deleteProject,
   };
 }
