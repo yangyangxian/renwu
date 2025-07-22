@@ -12,7 +12,7 @@ export function useWebStorage<T = string>(
   key: string | null,
   initialValue: T,
   options?: { expireMs?: number; storageType?: 'local' | 'session' }
-): [T, Dispatch<SetStateAction<T>>, { expired: boolean }] {
+): [T, Dispatch<SetStateAction<T>>, { expired: boolean; remove: () => void }] {
   const expireMs = options?.expireMs;
   const storageType = options?.storageType || 'local';
   const storage = typeof window === 'undefined'
@@ -69,5 +69,11 @@ export function useWebStorage<T = string>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, key, expireMs, storageType]);
 
-  return [value, setValue, { expired }];
+  const remove = () => {
+    if (storage && key) {
+      storage.removeItem(key);
+    }
+  };
+
+  return [value, setValue, { expired, remove }];
 }

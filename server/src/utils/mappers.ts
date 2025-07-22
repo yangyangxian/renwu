@@ -1,29 +1,29 @@
-export function mapObject<TSource extends object, TTarget extends object>(
-  source: TSource,
-  target: TTarget,
-  mapRules?: Record<string, string>
-): TTarget {
-  const targetKeys = Object.keys(target);
+// export function mapObject<TSource extends object, TTarget extends object>(
+//   source: TSource,
+//   target: TTarget,
+//   mapRules?: Record<string, string>
+// ): TTarget {
+//   const targetKeys = Object.keys(target);
 
-  for (const sourceKey in source) {
-    if (mapRules && sourceKey in mapRules) {
-      const targetKey = mapRules[sourceKey];
-      if (targetKeys.includes(targetKey)) {
-        (target as any)[targetKey] = (source as any)[sourceKey];
-      }
-    } else {
-      // If no mapRules or sourceKey not mapped, try direct matching
-      if (targetKeys.includes(sourceKey)) {
-        (target as any)[sourceKey] = (source as any)[sourceKey];
-      }
-    }
-  }
+//   for (const sourceKey in source) {
+//     if (mapRules && sourceKey in mapRules) {
+//       const targetKey = mapRules[sourceKey];
+//       if (targetKeys.includes(targetKey)) {
+//         (target as any)[targetKey] = (source as any)[sourceKey];
+//       }
+//     } else {
+//       // If no mapRules or sourceKey not mapped, try direct matching
+//       if (targetKeys.includes(sourceKey)) {
+//         (target as any)[sourceKey] = (source as any)[sourceKey];
+//       }
+//     }
+//   }
 
-  return target;
-}
+//   return target;
+// }
 
 // Generic deep mapping function
-export function mapObjectDeep<TSource extends object, TTarget extends object>(
+export function mapObject<TSource extends object, TTarget extends object>(
   source: TSource,
   target: TTarget,
   mapRules?: Record<string, string>
@@ -55,7 +55,7 @@ export function mapObjectDeep<TSource extends object, TTarget extends object>(
           // Create a new instance of the target object type and recursively map
           const TargetConstructor = targetValue.constructor;
           const newTargetInstance = new TargetConstructor();
-          (target as any)[targetKey] = mapObjectDeep(sourceValue, newTargetInstance);
+          (target as any)[targetKey] = mapObject(sourceValue, newTargetInstance);
         } else {
           // If no target template exists, just assign the source value
           (target as any)[targetKey] = sourceValue;

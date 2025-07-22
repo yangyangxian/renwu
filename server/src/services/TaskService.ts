@@ -1,3 +1,5 @@
+// ...existing code...
+import { normalizeNullableString } from '../utils/stringHelpers';
 import { db } from '../database/databaseAccess';
 import { tasks, projects, users } from '../database/schema';
 import { eq } from 'drizzle-orm';
@@ -38,17 +40,30 @@ class TaskService {
    * Convert TaskCreateReqDto to a DB-ready object for insertion
    * Custom types automatically handle all empty string to null conversions
    */
-  private toTaskEntityForInsert(data: TaskCreateReqDto) {
-    return {
+  /**
+   * Convert TaskCreateReqDto or TaskUpdateReqDto to a DB-ready object for insert/update
+   * @param data TaskCreateReqDto or TaskUpdateReqDto
+   * @param isUpdate If true, do not include createdBy (for update)
+   */
+  private toTaskEntityForDb(data: Partial<TaskCreateReqDto>, isUpdate: boolean = false) {
+
+
+    const base = {
       title: data.title,
       description: data.description || '',
       status: data.status || 'todo',
       assignedTo: data.assignedTo || '',
       projectId: data.projectId || null,
-      createdBy: data.createdBy,
-      dueDate: data.dueDate ? new Date(data.dueDate).toISOString(): null,
+      dueDate: normalizeNullableString(data.dueDate)
+        ? new Date(data.dueDate as string).toISOString()
+        : null,
     };
+    if (!isUpdate && data.createdBy) {
+      return { ...base, createdBy: data.createdBy };
+    }
+    return base;
   }
+    
 
   /**
    * Create a new task
@@ -56,7 +71,7 @@ class TaskService {
    */
   async createTask(data: TaskCreateReqDto): Promise<TaskEntity> {
     // Convert DTO to DB-ready entity - custom types handle empty string conversion
-    const insertValues = this.toTaskEntityForInsert(data);
+    const insertValues = this.toTaskEntityForDb(data, false);
     logger.debug('insertValues insert:', insertValues);
 
     const [created] = await db
@@ -236,25 +251,16 @@ class TaskService {
    * @param updateData TaskUpdateReqDto
    */
   async updateTask(taskId: string, updateData: TaskUpdateReqDto): Promise<TaskEntity> {
-    const updates = {
-      ...updateData,
-      updatedAt: new Date(),
-    };
-
-    const [updated] = await db
-      .update(tasks)
-      .set(updates)
-      .where(eq(tasks.id, taskId))
-      .returning();
-    if (!updated) {
-      throw new CustomError('Failed to update task', ErrorCodes.INTERNAL_ERROR);
-    }
-
+    // Reuse toTaskEntityForDb for normalization, do not include createdBy
+    const updateValues = this.toTaskEntityForDb(updateData, true);
+    await db.update(tasks)
+      .set(updateValues)
+      .where(eq(tasks.id, taskId));
     // Use the common getTaskById function to fetch the updated task with details
     return await this.getTaskById(taskId);
   }
 
-    /**
+  /**
    * Get a task by ID with user and project information
    * @param taskId string
    * @returns TaskEntity

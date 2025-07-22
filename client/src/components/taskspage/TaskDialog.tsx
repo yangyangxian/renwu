@@ -51,6 +51,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const { user } = useAuth();
   const { createTask, updateTaskById } = useTaskStore();
   const { projects } = useProjectStore();
+  // Ref for Textarea imperative handle
+  const descriptionRef = useRef<any>(null);
   
   // Convert initialValues to ensure assignedTo is a string
   const processedInitialValues = {
@@ -70,7 +72,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   const handleSubmit = async (taskData: any) => {
     const isEditMode = !!taskData.id;
-    
+    let submitSuccess = false;
     await withToast(
       async () => {
         if (isEditMode) {
@@ -82,19 +84,27 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           const { id, createdAt, updatedAt, projectName, ...createData } = taskData;
           await createTask(createData);
         }
+        submitSuccess = true;
       },
       {
         success: isEditMode ? 'Task updated successfully!' : 'Task created successfully!',
         error: isEditMode ? 'Failed to update task.' : 'Failed to create task.'
       }
     );
-    
-    // Call the optional onSubmit callback if provided (for backward compatibility)
-    if (onSubmit) {
-      onSubmit(taskData);
+
+    // Only clear cache if submit was successful
+    if (submitSuccess && descriptionRef.current && descriptionRef.current.clearUnsavedCache) {
+      descriptionRef.current.clearUnsavedCache();     
     }
-    
-    onOpenChange(false);
+    if (submitSuccess) {
+      onOpenChange(false);
+    }
+
+    // Call the optional onSubmit callback if provided (for backward compatibility)
+    // if (onSubmit) {
+    //   onSubmit(taskData);
+    // }
+
   };
 
   const getAssignedToOptions = (projectId: string | undefined) => {
@@ -132,9 +142,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });
       // Optionally reset assignedTo here if needed, but useEffect will handle the default
   };
-
-  // Ref for Textarea
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -242,7 +249,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                       <Calendar
                         mode="single"
                         selected={taskState.dueDate ? new Date(taskState.dueDate) : undefined}
-                        onSelect={d => d && dispatch({ type: 'SET_FIELD', field: 'dueDate', value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })}
+                        onSelect={d => {
+                          if (d) {
+                            dispatch({ type: 'SET_FIELD', field: 'dueDate', value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` });
+                          } else {
+                            dispatch({ type: 'SET_FIELD', field: 'dueDate', value: null });
+                          }
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
@@ -273,10 +286,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   className="min-h-[200px]"
                   placeholder="Task description"
                   initialValue={taskState.description || ""}
-                  ref={descriptionRef}
                   storageKey={taskState.id || "new-task"}
-                  rows={5}
+                  rows={8}
                   showButtons={false}
+                  ref={descriptionRef}
                 />
               </div>
             </div>

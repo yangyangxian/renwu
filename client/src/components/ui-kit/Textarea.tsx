@@ -4,6 +4,7 @@ import { Button } from "./Button";
 import { Info, Pencil } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "./Hover-card";
 import { useWebStorage } from "@/hooks/useWebStorage";
+import { useImperativeHandle, useRef } from "react";
 
 type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "onSubmit" | "onCancel"> & {
   autoSize?: boolean;
@@ -20,16 +21,33 @@ function getStorageKey(props: any) {
   return null;
 }
 
-function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, storageKey: storageKeyProp, ...props }: TextareaProps) {
+function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, storageKey: storageKeyProp, ...props }: TextareaProps) {
   // Compute storage key for this instance
   const storageKey = getStorageKey({ ...props, storageKey: storageKeyProp });
 
   // Use generic localStorage hook for draft logic
-  const [editedValue, setEditedValue] = useWebStorage(
+  const [editedValue, setEditedValue, storage] = useWebStorage(
     storageKey,
     initialValue,
     storageKey ? { storageType: 'session' } : undefined
   );
+
+  useImperativeHandle(ref, () => {
+    return {
+      get value() {
+        return editedValue;
+      },
+      clearUnsavedCache() {
+        clearCache();
+      }
+    };
+  }, [editedValue]);
+
+  function clearCache() {
+    if (typeof window !== 'undefined' && storageKey) {
+      storage.remove();
+    }
+  };
 
   // Detect unsaved changes: only if editedValue is different from initialValue and not empty
   const hasChanges = (
@@ -117,10 +135,7 @@ function Textarea({ className, onBlur, autoSize = false, onCancel, onSubmit, ini
         )}
         {showButtons && onSubmit && (
           <Button type="button" onClick={() => {
-            // On save, clear the draft from storage
-            if (typeof window !== 'undefined' && storageKey) {
-              window.localStorage.removeItem(storageKey);
-            }
+            clearCache();
             onSubmit(editedValue);
           }}>
             Save
