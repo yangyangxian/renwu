@@ -19,6 +19,8 @@ interface ProjectDialogProps {
   title?: string;
 }
 
+const defaultDescriptionTemplate = `### Summary\n\n### Links\n\n### Stories`;
+  
 export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   open,
   onOpenChange,
@@ -112,7 +114,11 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
             <Textarea
               ref={textareaRef}
               id="project-description"
-              initialValue={initialValues.description || ""}
+              initialValue={
+                typeof initialValues.description === 'string' && initialValues.description.trim() !== ''
+                  ? initialValues.description
+                  : defaultDescriptionTemplate
+              }
               placeholder="Enter project description"
               rows={6}
               showButtons={false}
