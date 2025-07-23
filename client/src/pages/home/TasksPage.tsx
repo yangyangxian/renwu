@@ -39,7 +39,7 @@ export default function TasksPage() {
 
   return (
     <motion.div
-      className="w-full h-full flex flex-col pt-1 gap-2"
+      className="w-full h-full flex flex-col pt-1 gap-1"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

@@ -24,7 +24,7 @@ function getStorageKey(props: any) {
 function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, storageKey: storageKeyProp, ...props }: TextareaProps) {
   // Compute storage key for this instance
   const storageKey = getStorageKey({ ...props, storageKey: storageKeyProp });
-
+  const refTextarea = useRef<HTMLTextAreaElement>(null);
   // Use generic localStorage hook for draft logic
   const [editedValue, setEditedValue, storage] = useWebStorage(
     storageKey,
@@ -33,15 +33,11 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
   );
 
   useImperativeHandle(ref, () => {
-    return {
-      get value() {
-        return editedValue;
-      },
-      clearUnsavedCache() {
-        clearCache();
-      }
-    };
-  }, [editedValue]);
+    const node = refTextarea.current;
+    (node as any).clearUnsavedCache = clearCache;
+
+    return node;
+  }, [clearCache]);
 
   function clearCache() {
     if (typeof window !== 'undefined' && storageKey) {
@@ -103,6 +99,7 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
         onKeyDown={handleKeyDown}
         onChange={handleChange}
         {...props}
+        ref={refTextarea}
       />
       <div className="flex items-center justify-end gap-2 mt-4 mr-4">
         {hasChanges && (

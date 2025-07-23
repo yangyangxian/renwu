@@ -81,6 +81,7 @@ export function TaskFilterMenu({
           defaultValue="all"
         >
           <SelectTrigger
+            size="sm"
             className="px-3 bg-white dark:text-primary flex items-center min-w-[9rem]"
             id="project-select"
           >
@@ -102,7 +103,7 @@ export function TaskFilterMenu({
       {showDateRange && (
         <div className="flex items-center">
           <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
-            <SelectTrigger className="min-w-[10rem] px-2 bg-white dark:text-primary flex gap-2" id="date-range-select">
+            <SelectTrigger size="sm" className="min-w-[10rem] px-2 bg-white dark:text-primary flex gap-2" id="date-range-select">
               <Calendar className="w-4 h-4" />
               <SelectValue placeholder="Date range" />
             </SelectTrigger>
@@ -124,7 +125,7 @@ export function TaskFilterMenu({
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search"
-            className="bg-white-black text-sm pl-9 max-w-[10rem]"
+            className="bg-white-black text-sm pl-9 max-w-[10rem] h-[31px]"
           />
         </div>
       )}

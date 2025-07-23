@@ -46,25 +46,23 @@ class TaskService {
    * @param isUpdate If true, do not include createdBy (for update)
    */
   private toTaskEntityForDb(data: Partial<TaskCreateReqDto>, isUpdate: boolean = false) {
-
-
-    const base = {
-      title: data.title,
-      description: data.description || '',
-      status: data.status || 'todo',
-      assignedTo: data.assignedTo || '',
-      projectId: data.projectId || null,
-      dueDate: normalizeNullableString(data.dueDate)
+    const result: Record<string, any> = {};
+    if (data.title !== undefined) result.title = data.title;
+    if (data.description !== undefined) result.description = data.description;
+    if (data.status !== undefined) result.status = data.status;
+    if (data.assignedTo !== undefined) result.assignedTo = data.assignedTo;
+    if (data.projectId !== undefined) result.projectId = data.projectId;
+    if (data.dueDate !== undefined) {
+      result.dueDate = normalizeNullableString(data.dueDate)
         ? new Date(data.dueDate as string).toISOString()
-        : null,
-    };
-    if (!isUpdate && data.createdBy) {
-      return { ...base, createdBy: data.createdBy };
+        : null;
     }
-    return base;
+    if (!isUpdate && data.createdBy !== undefined) {
+      result.createdBy = data.createdBy;
+    }
+    return result;
   }
     
-
   /**
    * Create a new task
    * @param data TaskCreateReqDto
@@ -253,6 +251,7 @@ class TaskService {
   async updateTask(taskId: string, updateData: TaskUpdateReqDto): Promise<TaskEntity> {
     // Reuse toTaskEntityForDb for normalization, do not include createdBy
     const updateValues = this.toTaskEntityForDb(updateData, true);
+    console.debug("updateValues update:", updateValues);
     await db.update(tasks)
       .set(updateValues)
       .where(eq(tasks.id, taskId));
