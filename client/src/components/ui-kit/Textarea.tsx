@@ -1,10 +1,9 @@
-
 import { cn } from "@/lib/utils"
 import { Button } from "./Button";
 import { Info, Pencil } from "lucide-react";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "./Hover-card";
 import { useWebStorage } from "@/hooks/useWebStorage";
-import { useImperativeHandle, useRef } from "react";
+import { useImperativeHandle, useRef, useCallback } from "react";
 
 type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "onSubmit" | "onCancel"> & {
   autoSize?: boolean;
@@ -14,6 +13,10 @@ type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange"
   showButtons?: boolean;
   storageKey?: string; // unique key for localStorage, required for unique drafts
 };
+
+interface TextareaImperativeHandle extends HTMLTextAreaElement {
+  clearUnsavedCache: () => void;
+}
 
 function getStorageKey(props: any) {
   // Only use localStorage if storageKey is provided
@@ -32,18 +35,20 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
     storageKey ? { storageType: 'session' } : undefined
   );
 
-  useImperativeHandle(ref, () => {
-    const node = refTextarea.current;
-    (node as any).clearUnsavedCache = clearCache;
-
-    return node;
-  }, [clearCache]);
-
-  function clearCache() {
+  const clearCache = useCallback(() => {
     if (typeof window !== 'undefined' && storageKey) {
       storage.remove();
     }
-  };
+  }, [storage, storageKey]);
+
+  useImperativeHandle(ref, () => {
+    const node = refTextarea.current as TextareaImperativeHandle;
+    if (node) {
+      node.clearUnsavedCache = clearCache;
+      return node;
+    }
+    return node;
+  }, [clearCache]);
 
   // Detect unsaved changes: only if editedValue is different from initialValue and not empty
   const hasChanges = (
@@ -60,6 +65,7 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
     // Cancel on Escape
     if (e.key === "Escape") {
       e.preventDefault();
+      clearCache();
       if (onCancel) {
         onCancel();
       }
@@ -126,7 +132,10 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
           </HoverCardContent>
         </HoverCard>
         {showButtons && onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={() => {
+            clearCache();
+            onCancel();
+          }}>
             Cancel
           </Button>
         )}
