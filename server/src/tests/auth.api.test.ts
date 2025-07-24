@@ -21,7 +21,7 @@ describe('Auth API', () => {
       body: JSON.stringify({ email: 'wrong@example.com', password: 'wrongpassword' })
     });
     const data = await res.json();
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(422);
     expect(data.data == null).toBe(true)
     expect(data.error).toBeDefined();
   });

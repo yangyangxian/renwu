@@ -6,7 +6,6 @@ import { mapObject } from '../utils/mappers';
 import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes } from '@fullstack/common';
 import { ProjectCreateReqSchema } from '@fullstack/common';
 
-
 const router = express.Router();
 
 // POST /api/projects - create a new project and add the current user as owner

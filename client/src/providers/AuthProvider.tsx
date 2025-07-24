@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { publicRoutes } from '@/routes/routeConfig';
+import { matchRoutePattern } from '@/routes/routeUtils';
 import { ApiErrorResponse, LoginReqDto, UserResDto, LoginResDto, ErrorCodes } from '@fullstack/common';
 import { apiClient } from '../utils/APIClient';
 import logger from '../utils/logger';
@@ -31,11 +33,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authServerError, setAuthServerError] = useState(false);
   const [isInitialAuthCheckComplete, setIsInitialAuthCheckComplete] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  // Use shared matcher to check if current route is public
+  const isPublicRoute = matchRoutePattern(location.pathname, publicRoutes);
 
-  // Check authentication status on mount
+  // Check authentication status on mount only for protected routes
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    if (!isPublicRoute) {
+      checkAuthStatus();
+    } else {
+      setIsInitialAuthCheckComplete(true);
+    }
+  }, [isPublicRoute]);
 
   const checkAuthStatus = () => {
     setAuthServerError(false);
@@ -50,7 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setIsAuthenticated(false);
           logger.info('User not authenticated (unauthorized)');
-          navigate('/login', { replace: true });
+          // Only redirect if NOT on a public route
+          if (!isPublicRoute) {
+            navigate('/login', { replace: true });
+          }
         } else {
           logger.error('Auth check failed, but not unauthorized:', error);
           setIsAuthenticated(false);

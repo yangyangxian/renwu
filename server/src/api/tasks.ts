@@ -3,8 +3,10 @@ import { taskService } from '../services/TaskService';
 import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
+import logger from 'src/utils/logger';
 
 const router = express.Router();
+const publicRouter = express.Router();
 
 // Create a new task
 router.post('/',
@@ -14,6 +16,7 @@ router.post('/',
     next: express.NextFunction
   ) => {
     try {
+      logger.debug('Creating task with body:', req.params);
       const userId = req.user!.userId;
       const createdTask = await taskService.createTask({ ...req.body, createdBy: userId });
       res.json(createApiResponse<TaskResDto>(mapObject(createdTask, new TaskResDto())));
@@ -54,12 +57,6 @@ router.delete('/:taskId',
   }
 );
 
-router.get('/me', async (req, res, next) => {
-    const userId = req.user!.userId;
-    const tasks = await taskService.getTasksByUserId(userId);
-    const data: TaskResDto[] = tasks.map(task => mapObject(task, new TaskResDto()));
-    res.json(createApiResponse<TaskResDto[]>(data));
-});
 
 router.get('/project/:projectSlug',
   async (
@@ -74,4 +71,21 @@ router.get('/project/:projectSlug',
   }
 );
 
+publicRouter.get('/:taskId',
+  async (
+    req: express.Request<{ taskId: string }>,
+    res: express.Response<ApiResponse<TaskResDto>>,
+    next: express.NextFunction
+  ) => {
+
+    try {
+      const task = await taskService.getTaskById(req.params.taskId);
+      res.json(createApiResponse<TaskResDto>(task ? mapObject(task, new TaskResDto()) : undefined));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 export default router;
+export { publicRouter };

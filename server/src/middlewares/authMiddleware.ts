@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyJWT, JWTPayload } from '../utils/jwt';
 import { ErrorCodes } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError';
+import logger from 'src/utils/logger';
 
 // Extend Request type to include user
 declare global {
@@ -13,24 +14,20 @@ declare global {
 }
 
 // Public API routes that don't require authentication (without /api prefix since middleware is already on /api)
-const PUBLIC_API_ROUTES = [
-  '/hello',
-  '/auth/login',
-  '/auth/logout',
-  '/auth/signup',
-  // Add more public API routes here as needed
-];
+// const PUBLIC_API_ROUTES = [
+//   '/hello',
+//   '/auth/login',
+//   '/auth/logout',
+//   '/auth/signup',
+//   // Add more public API routes here as needed
+// ];
 
-function isPublicRoute(path: string): boolean {
-  // Since this middleware is only applied to /api routes, we just check the path after /api
-  return PUBLIC_API_ROUTES.some(publicRoute => path.startsWith(publicRoute));
-}
+// function isPublicRoute(path: string): boolean {
+//   // Since this middleware is only applied to /api routes, we just check the path after /api
+//   return PUBLIC_API_ROUTES.some(publicRoute => path.startsWith(publicRoute));
+// }
 
 export function globalAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-  if (isPublicRoute(req.path)) {
-    return next();
-  }
-
   authenticateJWT(req, res, next);
 }
 

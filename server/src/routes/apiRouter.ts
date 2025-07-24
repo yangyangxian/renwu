@@ -17,13 +17,14 @@ import logger from '../utils/logger';
  */
 
 const router = Router();
+const publicRouters = Router();
 const apiDir = path.resolve(serverRootDir, './api');
 const basePath = '/api';
 
 // Load routes synchronously during module initialization
 // If there are errors, crash the server startup process
 try {
-  await loadApiRoutesFromFiles(router, apiDir, basePath);
+  await loadApiRoutesFromFiles(router, publicRouters, apiDir, basePath);
   logger.info(`✅ API routes loaded successfully from ${apiDir}`);
 } catch (error) {
   logger.error('❌ FATAL: Failed to load API routes during startup:', error);
@@ -31,9 +32,9 @@ try {
 }
 
 /**
- * Loads API routes into the provided router
+ * Loads API routes into the provided routers
  */
-async function loadApiRoutesFromFiles(router: Router, apiDir: string, basePath: string): Promise<void> {
+async function loadApiRoutesFromFiles(authRouter: Router, publicRouter: Router, apiDir: string, basePath: string): Promise<void> {
   const files = fs.readdirSync(apiDir);
 
   for (const file of files) {
@@ -53,6 +54,7 @@ async function loadApiRoutesFromFiles(router: Router, apiDir: string, basePath: 
       try {
         const routerModule = await import(moduleUrl);
         const apiRouter = routerModule.default;
+        const modulePublicRouter = routerModule.publicRouter;
         
         if (!apiRouter) {
           const errorMsg = `No default export found in ${file}. Each API route file must export a Router as default.`;
@@ -60,8 +62,15 @@ async function loadApiRoutesFromFiles(router: Router, apiDir: string, basePath: 
           throw new Error(errorMsg);
         }
         
-        router.use(routePath, apiRouter);
+        // Register the main (authenticated) router
+        authRouter.use(routePath, apiRouter);
         logger.debug(`📍 Registered API route: ${routePath} from ${file}`);
+        
+        // Register public router if it exists
+        if (modulePublicRouter) {
+          publicRouter.use(routePath, modulePublicRouter);
+          logger.debug(`🌐 Registered public API route: ${routePath} from ${file}`);
+        }
       } catch (error) {
         logger.error(`❌ Failed to load API route from ${file}:`, error);
         throw error; // Re-throw to stop the startup process
@@ -71,3 +80,4 @@ async function loadApiRoutesFromFiles(router: Router, apiDir: string, basePath: 
 }
 
 export default router;
+export { publicRouters };

@@ -1,9 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { userService } from '../services/UserService';
-import { UserReqDto, UserResDto, ApiResponse, ErrorCodes, UpdateUserReqDto} from '@fullstack/common';
+import { UserReqDto, UserResDto, ApiResponse, ErrorCodes, UpdateUserReqDto, TaskResDto } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
 import { CustomError } from '../classes/CustomError';
+import { taskService } from '../services/TaskService';
 
 const router = Router();
 
@@ -36,6 +37,21 @@ router.put('/me', async (req: Request<{}, {}, UpdateUserReqDto>, res: Response<A
     const updatedUser = await userService.updateUser(user.userId, updateFields);
     const userDto = mapObject(updatedUser, new UserResDto());
     res.json(createApiResponse<UserResDto>(userDto));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/users/me/tasks
+router.get('/me/tasks', async (req: Request, res: Response<ApiResponse<TaskResDto[]>>, next: NextFunction) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      throw new CustomError('Unauthorized', ErrorCodes.UNAUTHORIZED);
+    }
+    const tasks = await taskService.getTasksByUserId(user.userId);
+    const data = tasks.map((task: any) => mapObject(task, new TaskResDto()));
+    res.json(createApiResponse(data));
   } catch (err) {
     next(err);
   }

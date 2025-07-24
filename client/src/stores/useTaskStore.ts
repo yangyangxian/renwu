@@ -7,19 +7,22 @@ import {
   getTasksByProjectSlug, 
   getTasks, 
   updateTaskById as updateTaskByIdEndpoint, 
-  deleteTaskById as deleteTaskByIdEndpoint 
+  deleteTaskById as deleteTaskByIdEndpoint, 
+  getTaskById 
 } from '@/apiRequests/apiEndpoints';
 
 // Internal Zustand store - only for state management
 interface TaskStoreState {
   tasks: TaskResDto[];
   projectTasks: TaskResDto[];
+  currentTask: TaskResDto | null;
   loading: boolean;
   projectLoading: boolean;
   error: string | null;
   projectError: string | null;
   setTasks: (tasks: TaskResDto[]) => void;
   setProjectTasks: (tasks: TaskResDto[]) => void;
+  setCurrentTask: (task: TaskResDto | null) => void;
   setLoading: (loading: boolean) => void;
   setProjectLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -29,12 +32,14 @@ interface TaskStoreState {
 const useZustandTaskStore = create<TaskStoreState>((set, get) => ({
   tasks: [],
   projectTasks: [],
+  currentTask: null,
   loading: false,
   projectLoading: false,
   error: null,
   projectError: null,
   setTasks: (tasks) => set({ tasks }),
   setProjectTasks: (tasks) => set({ projectTasks: tasks }),
+  setCurrentTask: (task) => set({ currentTask: task }),
   setLoading: (loading) => set({ loading }),
   setProjectLoading: (loading) => set({ projectLoading: loading }),
   setError: (error) => set({ error }),
@@ -45,17 +50,33 @@ export function useTaskStore() {
   const {
     tasks,
     projectTasks,
+    currentTask,
     loading,
     projectLoading,
     error,
     projectError,
     setTasks,
     setProjectTasks,
+    setCurrentTask,
     setLoading,
     setProjectLoading,
     setError,
     setProjectError,
   } = useZustandTaskStore();
+
+  const fetchCurrentTask = useCallback(async (taskId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiClient.get<TaskResDto>(getTaskById(taskId));
+      setCurrentTask(data);
+    } catch (err: any) {
+      setCurrentTask(null);
+      setError(err?.message || 'Failed to fetch task');
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading, setError, setCurrentTask]);
 
   const fetchMyTasks = useCallback(async () => {
     setLoading(true);
@@ -156,12 +177,14 @@ export function useTaskStore() {
   return {
     tasks,
     projectTasks,
+    currentTask,
     loading,
     projectLoading,
     error,
     projectError,
     fetchMyTasks,
     fetchProjectTasks,
+    fetchCurrentTask,
     addTask,
     updateTask,
     removeTask,

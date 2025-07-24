@@ -81,7 +81,11 @@ class TaskService {
     }
 
     // Use the common getTaskById function to fetch the created task with details
-    return await this.getTaskById(created.id);
+    const task = await this.getTaskById(created.id);
+    if (task == null) {
+      throw new CustomError('Created task not found', ErrorCodes.INTERNAL_ERROR);
+    }
+    return task;
   }
 
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
@@ -251,12 +255,16 @@ class TaskService {
   async updateTask(taskId: string, updateData: TaskUpdateReqDto): Promise<TaskEntity> {
     // Reuse toTaskEntityForDb for normalization, do not include createdBy
     const updateValues = this.toTaskEntityForDb(updateData, true);
-    console.debug("updateValues update:", updateValues);
+    logger.debug("updateValues update:", updateValues);
     await db.update(tasks)
       .set(updateValues)
       .where(eq(tasks.id, taskId));
     // Use the common getTaskById function to fetch the updated task with details
-    return await this.getTaskById(taskId);
+    const updatedTask = await this.getTaskById(taskId);
+    if (!updatedTask) {
+      throw new CustomError('Task not found after update', ErrorCodes.NOT_FOUND);
+    }
+    return updatedTask;
   }
 
   /**
@@ -264,10 +272,10 @@ class TaskService {
    * @param taskId string
    * @returns TaskEntity
    */
-  async getTaskById(taskId: string): Promise<TaskEntity> {
+  async getTaskById(taskId: string): Promise<TaskEntity | null> {
     const assignedUser = alias(users, 'assigned_user');
     const creatorUser = alias(users, 'creator_user');
-    
+
     const [taskWithDetails] = await db
       .select({
         id: tasks.id,
@@ -295,7 +303,7 @@ class TaskService {
       .where(eq(tasks.id, taskId));
 
     if (!taskWithDetails) {
-      throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
+      return null;
     }
 
     const entity = mapDbToEntity(taskWithDetails, new TaskEntity());

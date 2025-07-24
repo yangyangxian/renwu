@@ -21,20 +21,24 @@ const fieldLabelContainerClass = "flex items-center gap-3 h-7";
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
-  const { tasks, updateTaskById } = useTaskStore();
-  const task = tasks.find(t => t.id === taskId);
-  const [localDueDate, setLocalDueDate] = useState<string | undefined>(task?.dueDate);
+  const { currentTask, updateTaskById, fetchCurrentTask } = useTaskStore();
+  const [localDueDate, setLocalDueDate] = useState<string | undefined>(currentTask?.dueDate);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
   const descInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setLocalDueDate(task?.dueDate);
-    if (task) {
-      setDescInput(task.description || "");
+    if (!taskId) return;
+    fetchCurrentTask(taskId);
+  }, [taskId, fetchCurrentTask]);
+
+  useEffect(() => {
+    setLocalDueDate(currentTask?.dueDate);
+    if (currentTask) {
+      setDescInput(currentTask.description || "");
     }
     setEditingDesc(false);
-  }, [task?.dueDate, task]);
+  }, [currentTask?.dueDate, currentTask]);
 
   const handleDescClick = () => {
     setEditingDesc(true);
@@ -50,17 +54,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const handleSubmitDesc = async (newValue: string) => {
     setEditingDesc(false);
     setDescInput(newValue);
-    if (!task) return;
+    if (!currentTask) return;
     try {
       await updateTaskById(taskId, { description: newValue });
       toast.success('Task description updated');
     } catch {
       toast.error('Failed to update description');
-      setDescInput(task.description || "");
+      setDescInput(currentTask.description || "");
     }
   };
 
-  if (!task) return <div className="text-muted-foreground">Select a task to view details.</div>;
+  if (!currentTask || !currentTask.id) return <div className="text-muted-foreground">Select a task to view details.</div>;
+  const task = currentTask;
   return (
     <>
       {/* Title block above columns */}

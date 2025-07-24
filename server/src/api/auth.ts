@@ -16,9 +16,10 @@ import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService.js';
 
 const router = Router();
+const publicRouter = Router();
 
 // Login endpoint
-router.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
+publicRouter.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const loginHandler = async () => {
     try {
       const credentials : LoginReqDto = req.body;
@@ -68,7 +69,7 @@ router.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<User
 });
 
 // Signup endpoint
-router.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
+publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const signupHandler = async () => {
     try {
       const { email, password }: LoginReqDto = req.body;
@@ -147,3 +148,4 @@ router.post('/logout', (req: Request, res: Response<ApiResponse<LogoutResDto>>, 
 });
 
 export default router;
+export { publicRouter };
