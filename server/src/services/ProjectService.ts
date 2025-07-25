@@ -147,7 +147,7 @@ export class ProjectService {
     }
 
     // Use a transaction to ensure both inserts succeed or fail together
-    return await db.transaction(async (tx:any) => {
+    const projectId = await db.transaction(async (tx:any) => {
       // Insert project with user-provided slug
       const [projectRow] = await tx.insert(projects).values({
         name,
@@ -164,25 +164,11 @@ export class ProjectService {
         role: ProjectRole.OWNER,
       });
 
-      // Fetch members (just the owner for now)
-      const members = [
-        new ProjectMemberEntity({
-          id: ownerId,
-          // Optionally fetch name/email if needed, or leave blank for now
-        })
-      ];
-
-      return new ProjectEntity({
-        id: projectRow.id,
-        name: projectRow.name,
-        slug: projectRow.slug,
-        description: projectRow.description,
-        createdAt: projectRow.createdAt,
-        updatedAt: projectRow.updatedAt,
-        createdBy: projectRow.createdBy,
-        members,
-      });
+      // Return the new project ID
+      return projectRow.id;
     });
+    // Now fetch the full project info after transaction is committed
+    return await this.getProjectById(projectId);
   }
 
   async getProjectsByUserId(userId: string): Promise<ProjectEntity[]> {
