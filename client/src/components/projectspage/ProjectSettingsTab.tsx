@@ -181,7 +181,7 @@ export function ProjectSettingsTab() {
     <Card className="shadow-none m-2 py-3 px-1">
       <div className="flex flex-col w-full max-w-2xl py-1 px-4 shadow-none">
         <div className="flex items-center gap-2 mb-2">
-          <Label className="text-lg font-semibold">General Settings</Label>
+          <Label className="text-xl font-semibold">General Settings</Label>
           {hasUnsavedChanges && (
             <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-800/60 text-purple-700 dark:text-purple-200 rounded text-xs font-medium">
               <div className="w-1.5 h-1.5 bg-purple-500 dark:bg-purple-400 rounded-full"></div>
@@ -232,12 +232,14 @@ export function ProjectSettingsTab() {
         {/* Save and Cancel buttons */}
         <div className="flex gap-3">
           <Button 
+            size="sm"
             onClick={handleSave}
             disabled={!isFormValid || !hasUnsavedChanges}
           >
             Save Changes
           </Button>
           <Button 
+            size="sm"
             variant="outline" 
             onClick={handleCancel}
             disabled={!hasUnsavedChanges}
@@ -248,7 +250,7 @@ export function ProjectSettingsTab() {
         
         <div className="py-2 mt-7">
           <div className="flex items-center gap-2 mb-3">
-            <Label className="text-lg font-semibold">Danger Zone</Label>
+            <Label className="text-xl font-semibold">Danger Zone</Label>
           </div>
           <div className="border border-red-200 dark:border-red-800 rounded-md p-3 mb-4 bg-red-50 dark:bg-red-950/30">
             <div className="flex items-start">
@@ -275,6 +277,7 @@ export function ProjectSettingsTab() {
                 placeholder={project?.name || 'project name'}
               />
               <Button
+                size="sm"
                 variant="destructive"
                 disabled={deleteConfirmation !== (project?.name || '') || isDeleting}
                 onClick={handleDeleteProject}
