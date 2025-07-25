@@ -168,7 +168,11 @@ export class ProjectService {
       return projectRow.id;
     });
     // Now fetch the full project info after transaction is committed
-    return await this.getProjectById(projectId);
+    const project = await this.getProjectById(projectId);
+    if (!project) {
+      throw new CustomError('Failed to fetch project after creation', ErrorCodes.INTERNAL_ERROR);
+    }
+    return project;
   }
 
   async getProjectsByUserId(userId: string): Promise<ProjectEntity[]> {

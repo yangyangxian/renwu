@@ -3,7 +3,7 @@ import { taskService } from '../services/TaskService';
 import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
-import logger from 'src/utils/logger';
+import logger from '../utils/logger';
 
 const router = express.Router();
 const publicRouter = express.Router();
