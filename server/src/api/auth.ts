@@ -13,7 +13,9 @@ import {
   LoginResDto
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
-import { userService } from '../services/UserService.js';
+import { userService } from '../services/UserService';
+import { getCachedValue, setCachedValue } from '../database/redisCache';
+import logger from 'src/utils/logger';
 
 const router = Router();
 const publicRouter = Router();
@@ -110,28 +112,29 @@ publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiRespon
 // Get current user (auth status check) - Protected by global auth middleware
 router.get('/me', async (req: Request, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
     try {
-        const user = req.user; // Global auth middleware sets this
-        if (!user) {
-            throw new CustomError(
-                'User authentication failed',
-                ErrorCodes.UNAUTHORIZED
-            );
+        logger.debug('auth/me endpoint hit');
+        const user = req.user;
+        if (!user) throw new CustomError('User authentication failed', ErrorCodes.UNAUTHORIZED);
+
+        const cacheKey = `user:${user.email}`;
+        let userResDto = await getCachedValue<UserResDto>(cacheKey);
+
+        if (!userResDto) {
+            const dbUser = await userService.getUserByEmail(user.email);
+            if (!dbUser) throw new CustomError('User not found', ErrorCodes.UNAUTHORIZED);
+            userResDto = {
+                id: dbUser.id,
+                name: dbUser.name,
+                email: dbUser.email
+            };
+            await setCachedValue(cacheKey, userResDto);
         }
-        // Always fetch latest user info from DB
-        const dbUser = await userService.getUserByEmail(user.email);
-        if (!dbUser) {
-            throw new CustomError('User not found', ErrorCodes.UNAUTHORIZED);
-        }
-        const userResDto: UserResDto = {
-            id: dbUser.id,
-            name: dbUser.name,
-            email: dbUser.email
-        };
+
         res.json(createApiResponse<UserResDto>(userResDto));
     } catch (err) {
         next(err);
     }
-});
+  });
 
 // Logout endpoint
 router.post('/logout', (req: Request, res: Response<ApiResponse<LogoutResDto>>, next: NextFunction) => {

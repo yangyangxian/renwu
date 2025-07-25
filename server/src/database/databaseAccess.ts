@@ -30,7 +30,6 @@ const db = new Proxy(rawDb, {
         ['select', 'insert', 'update', 'delete', 'transaction'].includes(prop as string)) {
       return function(...args: any[]) {
         checkDbConnection();
-        logger.info(`[DB] Called method: ${String(prop)}`);
         return originalValue.apply(target, args);
       };
     }

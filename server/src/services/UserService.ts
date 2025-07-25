@@ -20,6 +20,7 @@ export class UserEntity {
 
 class UserService {
   async getUserByEmail(email: string): Promise<UserEntity | null> {
+    logger.debug('Fetching user by email:', email);
     const result = await db.select().from(users).where(eq(users.email, email));
     if (result.length === 0) return null;
     const user = result[0];
