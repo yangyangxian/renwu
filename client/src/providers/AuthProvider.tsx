@@ -34,17 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitialAuthCheckComplete, setIsInitialAuthCheckComplete] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  // Use shared matcher to check if current route is public
-  const isPublicRoute = matchRoutePattern(location.pathname, publicRoutes);
 
-  // Check authentication status on mount only for protected routes
+  // Always check authentication status on mount
   useEffect(() => {
-    if (!isPublicRoute) {
-      checkAuthStatus();
-    } else {
-      setIsInitialAuthCheckComplete(true);
-    }
-  }, [isPublicRoute]);
+    checkAuthStatus();
+  }, []);
 
   const checkAuthStatus = () => {
     setAuthServerError(false);
@@ -59,10 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setIsAuthenticated(false);
           logger.info('User not authenticated (unauthorized)');
-          // Only redirect if NOT on a public route
-          if (!isPublicRoute) {
-            navigate('/login', { replace: true });
-          }
         } else {
           logger.error('Auth check failed, but not unauthorized:', error);
           setIsAuthenticated(false);

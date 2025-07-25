@@ -6,6 +6,7 @@ import { ApiErrorResponse, ErrorCodes } from '@fullstack/common';
 import { Button } from '@/components/ui-kit/Button';
 import { Input } from '@/components/ui-kit/Input';
 import { Card } from '@/components/ui-kit/Card';
+import { LOGIN_PATH } from '@/routes/routeConfig';
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ function SignupPage() {
             variant="link"
             className="w-full text-center text-primary"
             type="button"
-            onClick={() => navigate('/home/login')}
+            onClick={() => navigate(LOGIN_PATH)}
           >
             Already have an account? Log In
           </Button>
