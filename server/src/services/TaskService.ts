@@ -47,13 +47,16 @@ class TaskService {
    */
   private toTaskEntityForDb(data: Partial<TaskCreateReqDto>, isUpdate: boolean = false) {
     const result: Record<string, any> = {};
+    // Helper: convert empty string or undefined to null
+    const emptyToNull = (v: any) => v === '' || v === undefined ? null : v;
+
     if (data.title !== undefined) result.title = data.title;
-    if (data.description !== undefined) result.description = data.description;
+    if (data.description !== undefined) result.description = emptyToNull(data.description);
     if (data.status !== undefined) result.status = data.status;
     if (data.assignedTo !== undefined) result.assignedTo = data.assignedTo;
-    if (data.projectId !== undefined) result.projectId = data.projectId;
+    if (data.projectId !== undefined) result.projectId = emptyToNull(data.projectId);
     if (data.dueDate !== undefined) {
-      result.dueDate = normalizeNullableString(data.dueDate)
+      result.dueDate = emptyToNull(data.dueDate)
         ? new Date(data.dueDate as string).toISOString()
         : null;
     }
