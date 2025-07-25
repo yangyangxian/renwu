@@ -19,7 +19,7 @@ export async function getCachedValue<T = any>(cacheKey: string): Promise<T | und
 export async function setCachedValue<T = any>(cacheKey: string, value: T): Promise<void> {
   if (redisClient && isRedisAvailable()) {
     try {
-      await redisClient.set(cacheKey, JSON.stringify(value), { EX: 60 * 10 });
+      await redisClient.set(cacheKey, JSON.stringify(value), { EX: 60 * 30 });
     } catch (err) {
       logger.error('Redis error (set):', err);
     }

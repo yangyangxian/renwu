@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { userService } from '../services/UserService';
 import { UserReqDto, UserResDto, ApiResponse, ErrorCodes, UpdateUserReqDto, TaskResDto } from '@fullstack/common';
+import { setCachedValue } from '../database/redisCache';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
 import { CustomError } from '../classes/CustomError';
@@ -36,6 +37,9 @@ router.put('/me', async (req: Request<{}, {}, UpdateUserReqDto>, res: Response<A
     // Add more fields as needed
     const updatedUser = await userService.updateUser(user.userId, updateFields);
     const userDto = mapObject(updatedUser, new UserResDto());
+    // Update user info in Redis cache
+    const cacheKey = `user:${updatedUser.email}`;
+    await setCachedValue(cacheKey, userDto);
     res.json(createApiResponse<UserResDto>(userDto));
   } catch (err) {
     next(err);
