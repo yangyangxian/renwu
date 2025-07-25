@@ -55,7 +55,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
           initialValue={descInput}
           onSubmit={handleSubmitDes}
           onCancel={() => setEditingDesc(false)}
-          className="min-h-40 my-4"
+          className="min-h-40 my-3"
           maxLength={10000}
           storageKey={project?.id}
         />
