@@ -28,8 +28,47 @@ Some apps do offer a cleaner interface, but even then — opening a task still f
 But come on — isn’t the main reason we open a task simply to view or edit its description?
 Why not just show me a textarea right away — like opening the iOS Notes app — and let me pour out my ideas instantly?   
 
-## Technology Stack
+## Quick Start
 
+### Run Locally
+
+1. Clone the repository:
+
+   ```sh
+   git clone https://github.com/yangyangxian/renwu.git
+   cd renwu
+   ```
+
+2. Install dependencies for both client and server:
+
+   ```sh
+    npm install
+   ```
+
+3. Start the development servers:
+   - Frontend: `npm run dev` in `client/`
+   - Backend: `npm run dev` in `server/`
+   - Frontend andd Backend concurrently: `npm run dev` in `renwu` which is your root path
+
+### Deploy with Docker Compose
+
+1. Build and start all services:
+
+   ```sh
+   docker compose up --build
+   ```
+
+2. The backend, frontend, Postgres, and Redis will run in containers. Access the app via the exposed port (default: `http://localhost:5055`).
+
+3. To stop and remove containers:
+
+   ```sh
+   docker compose down
+   ```
+
+For production, update environment variables and secrets as needed. See the Docker and Compose files for configuration details.
+
+## Technology Stack
 - React
 - Vite
 - TypeScript
