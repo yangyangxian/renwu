@@ -15,7 +15,7 @@ import {
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService';
 import { getCachedValue, setCachedValue } from '../database/redisCache';
-import logger from 'src/utils/logger';
+import logger from '../utils/logger';
 
 const router = Router();
 const publicRouter = Router();

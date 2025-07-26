@@ -25,6 +25,7 @@ COPY --from=server-build /app/common /app/common
 COPY --from=server-build /app/server/dist ./dist
 COPY --from=server-build /app/server/package*.json ./
 COPY --from=server-build /app/server/.env.production ./.env.production
+COPY ../server/drizzle.config.ts ./server/drizzle.config.ts
 WORKDIR /app
 RUN npm install --omit=dev
 

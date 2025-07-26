@@ -23,7 +23,8 @@
     "jsonwebtoken": "^9.0.2",
     "postgres": "^3.4.7",
     "redis": "^5.6.1",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "drizzle-kit": "^0.31.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -35,7 +36,6 @@
     "@types/node": "^20.0.0",
     "@types/winston": "^2.4.4",
     "concurrently": "^9.1.2",
-    "drizzle-kit": "^0.31.4",
     "tsc-esm-fix": "^3.1.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",

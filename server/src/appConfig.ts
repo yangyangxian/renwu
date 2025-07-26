@@ -13,6 +13,7 @@ class AppConfig {
   public readonly jwtSecret: string;
   public readonly jwtMaxAge: number; // in milliseconds
   public readonly redisUrl: string;
+  public readonly schemaPath: string;
 
   constructor() {
     // Load environment variables
@@ -30,6 +31,7 @@ class AppConfig {
     this.jwtSecret = this.getEnv('JWT_SECRET');
     this.jwtMaxAge = parseInt(this.getEnv('JWT_MAX_AGE', '604800000'), 10); // Default to 7 days in ms
     this.redisUrl = this.getEnv('REDIS_URL', 'redis://localhost:6379');
+    this.schemaPath = this.envMode === 'production' ? '/app/server/dist/database/schema.js' : './database/schema.ts';
   }
 
   /**

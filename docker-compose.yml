@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: renwu_user
+      POSTGRES_PASSWORD: renwu_password
+      POSTGRES_DB: renwu
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renwu_user -d renwu"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - appnet
+
+
+  web:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "5055:5055"
+    # For production, do not mount local code. Let Dockerfile handle copying code and installing dependencies.
+    volumes:
+      - /app/node_modules
+    command: ["sh", "-c", "npx drizzle-kit push --config=/app/server/dist/drizzle.config.js && node dist/index.js"]
+    networks:
+      - appnet
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  appnet:
+    driver: bridge
