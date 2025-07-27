@@ -33,10 +33,6 @@ export default function ProjectDetailPage() {
     ? Object.values(projects).find(p => p.slug === projectSlug)?.id
     : undefined;
 
-  if (!projectId) {
-    return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
-  }
-
   // Fetch project and tasks together when projectId changes
   useEffect(() => {
     if (projectId) {
@@ -45,6 +41,10 @@ export default function ProjectDetailPage() {
       fetchProjectTasks(projectId);
     }
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
+
+  if (!projectId) {
+    return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
+  }
 
   return (
     <div className="h-full w-full flex flex-col gap-1">

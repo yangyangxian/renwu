@@ -6,7 +6,7 @@ import { Label } from '@/components/ui-kit/Label';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { UserPlus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui-kit/Select';
-import { ProjectRole, UserResDto } from '@fullstack/common';
+import { ProjectAddMemberResDto, ProjectRole, UserResDto } from '@fullstack/common';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui-kit/Dialog';
 import { Check, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -69,10 +69,13 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
     setInviteLoading(true);
     await withToast(
       async () => {
-        await apiClient.post(addProjectMember(projectId), {
+        const res: ProjectAddMemberResDto = await apiClient.post(addProjectMember(projectId), {
           email: searchEmail,
           role: selectedRole,
         });
+        if (!res.success) {
+          throw new Error('Invitation failed to send email.');
+        }
         await fetchCurrentProject(projectId);
         setOpen(false);
       },

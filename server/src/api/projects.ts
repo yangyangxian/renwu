@@ -5,8 +5,9 @@ import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
 import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes } from '@fullstack/common';
+import { emailService } from '../services/EmailService';
 import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
-import { ProjectAddMemberReqDto } from '@fullstack/common';
+import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/common';
 import logger from '../utils/logger';
 
 const router = express.Router();
@@ -196,7 +197,7 @@ router.post(
   '/:projectId/members',
   async (
     req: Request<{ projectId: string }, {}, ProjectAddMemberReqDto>,
-    res: Response<ApiResponse<{ success: boolean }>>,
+    res: Response<ApiResponse<ProjectAddMemberResDto>>,
     next: NextFunction
   ) => {
     const { projectId } = req.params;
@@ -205,19 +206,36 @@ router.post(
       throw new CustomError('Project ID, email, and role are required', ErrorCodes.NO_DATA);
     }
     const user = await userService.getUserByEmail(email);
+
     if (!user) {
-      // Optionally, create an invitation for a new user here
-      // For now, return error if user not found
-      throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
+      // Send invitation email to non-user
+      let invited = false;
+      try {
+        logger.debug(`Inviting user by email: ${email}`);
+        await emailService.sendEmail({
+          to: email,
+          subject: 'You have been invited to join a project',
+          html: `<p>You have been invited to join a project on Renwu. Please sign up to join the team!</p>`,
+        });
+        invited = true;
+      } catch (err) {
+        logger.error('Failed to send invitation email:', err);
+        invited = false;
+      }
+      // Return correct success status based on email sending result
+      const dto = new ProjectAddMemberResDto();
+      dto.success = invited;
+      dto.invited = invited;
+      res.json(createApiResponse<ProjectAddMemberResDto>(dto));
+      return;
     }
 
     logger.debug('Adding member to project:', { projectId, userId: user.id, role });
     // Add member to project
     const success = await projectService.addMemberToProject(projectId, user.id, role);
-    if (!success) {
-      throw new CustomError('Failed to add member', ErrorCodes.INTERNAL_ERROR);
-    }
-    res.json(createApiResponse<{ success: boolean }>({ success: true }));
+    const dto = new ProjectAddMemberResDto();
+    dto.success = success;
+    res.json(createApiResponse<ProjectAddMemberResDto>(dto));
   }
 );
 

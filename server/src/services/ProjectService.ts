@@ -45,7 +45,6 @@ export class ProjectService {
     // Check if already a member
     const existing = await db.select().from(projectMembers)
       .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)));
-    logger.debug('Checking existing project members:', { projectId, userId, existing });
     if (existing.length > 0) {
       throw new CustomError('User is already a member of this project.', ErrorCodes.PROJECT_ALREADY_MEMBER_ERROR);
     }

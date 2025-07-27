@@ -5,6 +5,12 @@ export class ProjectAddMemberReqDto {
   role: string = '';
 }
 
+export class ProjectAddMemberResDto {
+  success!: boolean;
+  invited?: boolean;
+  error?: string;
+}
+
 export class ProjectUpdateReqDto {
   name?: string;
   description?: string;
