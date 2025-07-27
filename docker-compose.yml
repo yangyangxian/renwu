@@ -30,7 +30,6 @@ services:
     networks:
       - appnet
 
-
   web:
     build: .
     depends_on:

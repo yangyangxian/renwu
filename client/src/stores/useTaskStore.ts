@@ -4,7 +4,7 @@ import { TaskResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/commo
 import { apiClient } from '@/utils/APIClient';
 import { 
   getMyTasks, 
-  getTasksByProjectSlug, 
+  getTasksByProjectId, 
   getTasks, 
   updateTaskById as updateTaskByIdEndpoint, 
   deleteTaskById as deleteTaskByIdEndpoint, 
@@ -91,11 +91,11 @@ export function useTaskStore() {
     }
   }, [setLoading, setError, setTasks]);
 
-  const fetchProjectTasks = useCallback(async (projectSlug: string) => {
+  const fetchProjectTasks = useCallback(async (projectId: string) => {
     setProjectLoading(true);
     setProjectError(null);
     try {
-      const data = await apiClient.get<TaskResDto[]>(getTasksByProjectSlug(projectSlug));
+      const data = await apiClient.get<TaskResDto[]>(getTasksByProjectId(projectId));
       setProjectTasks(data);
     } catch (err: any) {
       setProjectError(err?.message || 'Failed to fetch project tasks');

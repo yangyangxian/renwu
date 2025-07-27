@@ -6,9 +6,11 @@ import {
   getMyProjects, 
   getProjects, 
   getProjectBySlug as getProjectBySlugEndpoint, 
+  getProjectById,
   updateProjectById as updateProjectByIdEndpoint,
   deleteProjectById as deleteProjectByIdEndpoint,
-  addProjectMember
+  addProjectMember,
+  updateProjectMemberRole
 } from '@/apiRequests/apiEndpoints';
 
 // Internal Zustand store - only for state management
@@ -71,11 +73,13 @@ export function useProjectStore() {
     }
   }, [setLoading, setError, setProjects]);
 
-    const fetchCurrentProject = useCallback(async (projectSlug: string): Promise<ProjectResDto | null> => {
+  const fetchCurrentProject = useCallback(async (projectId?: string): Promise<ProjectResDto | null> => {
     setProjectLoading(true);
     setProjectError(null);
     try {
-      const data = await apiClient.get<ProjectResDto>(getProjectBySlugEndpoint(projectSlug));
+      const idToFetch = projectId || currentProject?.id;
+      if (!idToFetch) return null;
+      const data = await apiClient.get<ProjectResDto>(getProjectById(idToFetch));
       setCurrentProject(data);
       return data;
     } catch (err: any) {
@@ -130,8 +134,8 @@ export function useProjectStore() {
     try {
       await apiClient.post(addProjectMember(projectId), memberData);
       // Refresh the current project to get updated members
-      if (currentProject?.id === projectId && currentProject?.slug) {
-        await fetchCurrentProject(currentProject.slug);
+      if (currentProject?.id === projectId) {
+        await fetchCurrentProject(projectId);
       }
     } catch (error) {
       console.error('Failed to add member to project:', error);
@@ -150,6 +154,19 @@ export function useProjectStore() {
     }
   }, [removeProject]);
 
+  const updateMemberRoleToProject = useCallback(async (projectId: string, memberId: string, role: string): Promise<void> => {
+    try {
+      await apiClient.put(updateProjectMemberRole(projectId, memberId), { role });
+      // Refresh the current project to get updated members
+      if (currentProject?.id === projectId) {
+        await fetchCurrentProject(projectId);
+      }
+    } catch (error) {
+      console.error('Failed to update member role:', error);
+      throw error;
+    }
+  }, [currentProject, fetchCurrentProject]);
+
   return {
     projects,
     currentProject,
@@ -165,5 +182,6 @@ export function useProjectStore() {
     updateProject,
     addMemberToProject,
     deleteProject,
+    updateMemberRoleToProject,
   };
 }

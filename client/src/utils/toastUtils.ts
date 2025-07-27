@@ -1,12 +1,19 @@
 import { toast } from "sonner";
 
-export async function withToast<T>(fn: () => Promise<T>, messages: { success: string; error: string }): Promise<T | undefined> {
+export async function withToast<T>(
+  fn: () => Promise<T>,
+  messages: {
+    success: string;
+    error: string | ((err: any) => string);
+  }
+): Promise<T | undefined> {
   try {
     const result = await fn();
     toast.success(messages.success);
     return result;
   } catch (e) {
-    toast.error(messages.error);
+    const errorMsg = typeof messages.error === 'function' ? messages.error(e) : messages.error;
+    toast.error(errorMsg);
     return undefined;
   }
 }

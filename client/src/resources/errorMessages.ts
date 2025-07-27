@@ -17,6 +17,10 @@ export const ERROR_MESSAGES: Record<ErrorCodes, string> = {
     [ErrorCodes.HTTP_ERROR]: 'A network error occurred. Please try again.',
     [ErrorCodes.NO_DATA]: 'No data received from the server. Please try again.',
     [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'The email address you provided is already in use. Please use a different email address.',
+    [ErrorCodes.PROJECT_LAST_ADMIN_ERROR]: 'Project must have at least one admin or owner.',
+    [ErrorCodes.PROJECT_ALREADY_MEMBER_ERROR]: 'This user is already a member of the project.',
+    [ErrorCodes.VALIDATION_ERROR]: 'Validation failed. Please check your input.',
+    [ErrorCodes.INVALID_INPUT]: 'Invalid input provided. Please correct and try again.',
 };
 
 /**

@@ -9,7 +9,7 @@ import { Tag, FolderOpen, User, Clock, FileText, CheckCircle, Check, RefreshCw }
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
 import DateSelector from "@/components/common/DateSelector";
 import { useTaskStore } from "@/stores/useTaskStore";
-import { statusLabels, statusColors, statusIcons, allStatuses } from "@/components/taskspage/taskStatusConfig";
+import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/taskStatusConfig";
 import { marked } from 'marked';
 import { toast } from 'sonner';
 

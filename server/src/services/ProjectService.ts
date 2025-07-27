@@ -1,8 +1,9 @@
 import { ProjectRole, ErrorCodes } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, and } from 'drizzle-orm';
 import { db } from '../database/databaseAccess';
 import { projects, projectMembers, users, tasks } from '../database/schema';
+import logger from '../utils/logger';
 
 export class ProjectEntity {
   id: string = '';
@@ -36,6 +37,27 @@ export interface ProjectWithMembers extends ProjectRow {
 }
 
 export class ProjectService {
+
+  /**
+   * Add a member to a project.
+   */
+  async addMemberToProject(projectId: string, userId: string, role: string): Promise<boolean> {
+    // Check if already a member
+    const existing = await db.select().from(projectMembers)
+      .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)));
+    logger.debug('Checking existing project members:', { projectId, userId, existing });
+    if (existing.length > 0) {
+      throw new CustomError('User is already a member of this project.', ErrorCodes.PROJECT_ALREADY_MEMBER_ERROR);
+    }
+    
+    logger.debug('Adding member to project:', { projectId, userId, role });
+    const [inserted] = await db.insert(projectMembers).values({
+      projectId,
+      userId,
+      role,
+    }).returning();
+    return !!inserted;
+  }
   /**
    * Get a project by its ID.
    */
@@ -302,6 +324,44 @@ export class ProjectService {
       console.error('Failed to delete project:', error);
       throw new CustomError('Failed to delete project', ErrorCodes.INTERNAL_ERROR);
     }
+  }
+
+  /**
+   * Update a member's role in a project.
+   * @param projectId string
+   * @param memberId string
+   * @param role string
+   * @returns boolean success
+   */
+  async updateMemberRole(projectId: string, memberId: string, role: string): Promise<boolean> {
+    // Fetch current project members
+    const project = await this.getProjectById(projectId);
+    if (!project) {
+      throw new CustomError('Project not found', ErrorCodes.NOT_FOUND);
+    }
+    const adminRoles = [ProjectRole.ADMIN, ProjectRole.OWNER];
+    const currentMember = project.members.find(m => m.id === memberId);
+    if (!currentMember) {
+      throw new CustomError('Member not found', ErrorCodes.NOT_FOUND);
+    }
+    const isCurrentAdmin = adminRoles.includes(currentMember.role);
+    const isChangingToNonAdmin = !adminRoles.includes(role as ProjectRole);
+    if (isCurrentAdmin && isChangingToNonAdmin) {
+      // Count admins/owners excluding the current member
+      const remainingAdmins = project.members.filter(
+        m => m.id !== memberId && adminRoles.includes(m.role)
+      ).length;
+      if (remainingAdmins === 0) {
+        throw new CustomError('Project must have at least one admin or owner.', ErrorCodes.PROJECT_LAST_ADMIN_ERROR);
+      }
+    }
+    // Update the role for the given member in the project
+    const [updated] = await db
+      .update(projectMembers)
+      .set({ role })
+      .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, memberId)))
+      .returning();
+    return !!updated;
   }
 }
 

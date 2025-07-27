@@ -12,7 +12,7 @@ interface ProjectOverviewTabProps {
   project: ProjectResDto;
 }
 
-const CARD_CLASS = "shadow-md p-4";
+const CARD_CLASS = "shadow-sm p-4";
 const MemoRadioChartCard = React.memo(RadioChartCard);
 
 export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {

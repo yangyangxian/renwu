@@ -57,15 +57,14 @@ router.delete('/:taskId',
   }
 );
 
-
-router.get('/project/:projectSlug',
+router.get('/project/id/:projectId',
   async (
-    req: express.Request<{ projectSlug: string }, {}, {}, {}>,
+    req: express.Request<{ projectId: string }, {}, {}, {}>,
     res: express.Response<ApiResponse<TaskResDto[]>>,
     next: express.NextFunction
   ) => {
-    const { projectSlug } = req.params;
-    const tasks = await taskService.getTasksByProjectSlug(projectSlug);
+    const { projectId } = req.params;
+    const tasks = await taskService.getTasksByProjectId(projectId);
     const data: TaskResDto[] = tasks.map(task => mapObject(task, new TaskResDto()));
     res.json(createApiResponse<TaskResDto[]>(data));
   }

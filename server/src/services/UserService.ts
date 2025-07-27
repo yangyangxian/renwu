@@ -3,7 +3,7 @@ import { CustomError } from '../classes/CustomError';
 import { ErrorCodes } from '@fullstack/common';
 import { db } from '../database/databaseAccess';
 import { users } from '../database/schema';
-import { eq } from 'drizzle-orm';
+import { eq, ilike } from 'drizzle-orm';
 import logger from '../utils/logger';
 
 export class UserEntity {
@@ -19,6 +19,22 @@ export class UserEntity {
 }
 
 class UserService {
+  async searchUsersByEmail(emailPart: string, limit: number = 10): Promise<UserEntity[]> {
+    // Use ilike for case-insensitive partial match in Drizzle ORM
+    if (!emailPart) return [];
+    const query = ilike(users.email, `%${emailPart}%`);
+    console.log('[DEBUG] UserService.searchUsersByEmail:', emailPart, query);
+    const result = await db.select().from(users)
+      .where(query)
+      .limit(limit);
+    console.log('[DEBUG] UserService.searchUsersByEmail result:', result.length, result.map((u: { email: string }) => u.email));
+    return result.map((user: { id: string, name: string, email: string, createdAt?: Date }) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt?.toISOString?.() ?? '',
+    }));
+  }
   async getUserByEmail(email: string): Promise<UserEntity | null> {
     logger.debug('Fetching user by email:', email);
     const result = await db.select().from(users).where(eq(users.email, email));

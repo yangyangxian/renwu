@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useTabHash } from "@/hooks/useTabHash";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ProjectOverviewTab } from "@/components/projectspage/ProjectOverviewTab";
 import { ProjectTasksTab } from "@/components/projectspage/ProjectTasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/ProjectTeamTab";
@@ -12,35 +12,39 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { TaskResDto } from '@fullstack/common';
-import { Label } from "@/components/ui-kit/Label";
+import logger from "@/utils/logger";
 
 export default function ProjectDetailPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>();
-  const { currentProject : project, updateProject, fetchCurrentProject } = useProjectStore();
-  const { 
-    projectTasks: tasks, 
-    fetchProjectTasks, 
+  const { currentProject: project, projects, fetchCurrentProject } = useProjectStore();
+  const {
+    projectTasks: tasks,
+    fetchProjectTasks,
   } = useTaskStore();
-
-  // If projectSlug is missing, show error
-  if (!projectSlug) {
-    return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
-  }
-
-  // Fetch project data and tasks when component mounts or projectSlug changes
-  useEffect(() => {
-    if (projectSlug) {
-      fetchCurrentProject(projectSlug);
-      fetchProjectTasks(projectSlug);
-    }
-  }, [projectSlug, fetchCurrentProject, fetchProjectTasks]);
-
   const [activeTab, handleTabChange] = useTabHash(
     ['overview', 'tasks', 'team', 'settings'],
     'tasks'
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
+
+  // Get projectId from global projects object using slug
+  const projectId = projectSlug && projects
+    ? Object.values(projects).find(p => p.slug === projectSlug)?.id
+    : undefined;
+
+  if (!projectId) {
+    return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
+  }
+
+  // Fetch project and tasks together when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      logger.info(`Fetching project and tasks for project ID: ${projectId}`);
+      fetchCurrentProject(projectId);
+      fetchProjectTasks(projectId);
+    }
+  }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
   return (
     <div className="h-full w-full flex flex-col gap-1">
@@ -61,7 +65,7 @@ export default function ProjectDetailPage() {
             </TabsTrigger>
             <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Users className="w-4 h-4" />
-              Activities
+              Team
             </TabsTrigger>
             <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Settings className="w-4 h-4" />

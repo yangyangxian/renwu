@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuChe
 import { Button } from "@/components/ui-kit/Button";
 import { Badge } from "@/components/ui-kit/Badge";
 import TaskDetail from "./TaskDetail";
-import { statusLabels, statusColors, statusIcons } from "@/components/taskspage/taskStatusConfig"
+import { statusLabels, statusColors, statusIcons } from "@/consts/taskStatusConfig"
 
 interface TaskListViewProps {
   tasks: TaskResDto[];

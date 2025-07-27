@@ -11,7 +11,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
 import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
-import { statusLabels, statusIcons } from "@/components/taskspage/taskStatusConfig";
+import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";

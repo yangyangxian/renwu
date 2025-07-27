@@ -9,6 +9,21 @@ import { taskService } from '../services/TaskService';
 
 const router = Router();
 
+// GET /api/users/search?email=alice
+router.get('/search', async (req: Request, res: Response<ApiResponse<UserResDto[]>>, next: NextFunction) => {
+  const emailPart = String(req.query.email || '').trim();
+  console.log('[DEBUG] /api/users/search query:', emailPart);
+  
+  try {
+    const usersRaw = await userService.searchUsersByEmail(emailPart, 10);
+    console.log('[DEBUG] /api/users/search results:', usersRaw.length, usersRaw.map(u => u.email));
+    const users: UserResDto[] = usersRaw.map(u => mapObject(u, new UserResDto()));
+    res.json(createApiResponse<UserResDto[]>(users));
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/users/email/:email
 router.get('/email/:email', async (req: Request<UserReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const email = req.params.email;

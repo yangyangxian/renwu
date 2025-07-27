@@ -1,12 +1,32 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { projectService } from '../services/ProjectService';
+import { userService } from '../services/UserService';
 import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
 import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes } from '@fullstack/common';
-import { ProjectCreateReqSchema } from '@fullstack/common';
+import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
+import { ProjectAddMemberReqDto } from '@fullstack/common';
+import logger from '../utils/logger';
 
 const router = express.Router();
+
+router.get('/id/:id', async (req: Request<{ id: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
+    const { id } = req.params;
+    if (!id) {
+      throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
+    }
+    // Fetch project by id
+    const project = await projectService.getProjectById(id);
+    if (!project) {
+      res.json(createApiResponse<ProjectResDto | null>(null));
+      return;
+    }
+    const dto = mapObject(project, new ProjectResDto());
+    dto.members = project.members;
+    res.json(createApiResponse<ProjectResDto>(dto));
+  }
+);
 
 // POST /api/projects - create a new project and add the current user as owner
 router.post(
@@ -72,7 +92,7 @@ router.get('/:slug', async (req: Request<{ slug: string }>, res: Response<ApiRes
 router.put(
   '/:id',
   async (
-    req: Request<{ id: string }, {}, { name?: string; description?: string; slug?: string }>,
+    req: Request<{ id: string }, {}, ProjectUpdateReqDto>,
     res: Response<ApiResponse<ProjectResDto>>,
     next: NextFunction
   ) => {
@@ -165,6 +185,62 @@ router.delete(
     
     if (!success) {
       throw new CustomError('Failed to delete project', ErrorCodes.INTERNAL_ERROR);
+    }
+
+    res.json(createApiResponse<{ success: boolean }>({ success: true }));
+  }
+);
+
+// POST /api/projects/:projectId/members - add a member to a project
+router.post(
+  '/:projectId/members',
+  async (
+    req: Request<{ projectId: string }, {}, ProjectAddMemberReqDto>,
+    res: Response<ApiResponse<{ success: boolean }>>,
+    next: NextFunction
+  ) => {
+    const { projectId } = req.params;
+    const { email, role } = req.body;
+    if (!projectId || !email || !role) {
+      throw new CustomError('Project ID, email, and role are required', ErrorCodes.NO_DATA);
+    }
+    const user = await userService.getUserByEmail(email);
+    if (!user) {
+      // Optionally, create an invitation for a new user here
+      // For now, return error if user not found
+      throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
+    }
+
+    logger.debug('Adding member to project:', { projectId, userId: user.id, role });
+    // Add member to project
+    const success = await projectService.addMemberToProject(projectId, user.id, role);
+    if (!success) {
+      throw new CustomError('Failed to add member', ErrorCodes.INTERNAL_ERROR);
+    }
+    res.json(createApiResponse<{ success: boolean }>({ success: true }));
+  }
+);
+
+router.put(
+  '/:projectId/members/:memberId/role',
+  async (
+    req: Request<{ projectId: string; memberId: string }, {}, ProjectMemberRoleUpdateReqDto>,
+    res: Response<ApiResponse<{ success: boolean }>>,
+    next: NextFunction
+  ) => {
+    // projectId and memberId are UUIDs
+    const { projectId, memberId } = req.params;
+    const { role } = req.body;
+
+    if (!projectId || !memberId || !role) {
+      throw new CustomError('Project ID, member ID, and role are required', ErrorCodes.NO_DATA);
+    }
+
+    // Directly update member role (no permission check)
+    const success = await projectService.updateMemberRole(projectId, memberId, role);
+
+    if (!success) {
+      throw new CustomError('Failed to update member role', ErrorCodes.INTERNAL_ERROR);
     }
 
     res.json(createApiResponse<{ success: boolean }>({ success: true }));
