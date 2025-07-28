@@ -18,13 +18,14 @@
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "dotenv": "^16.5.0",
+    "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "postgres": "^3.4.7",
     "redis": "^5.6.1",
-    "winston": "^3.17.0",
-    "drizzle-kit": "^0.31.4"
+    "resend": "^4.7.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

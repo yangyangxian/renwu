@@ -34,7 +34,7 @@ class AppConfig {
     this.jwtSecret = this.getEnv('JWT_SECRET', '');
     this.jwtMaxAge = parseInt(this.getEnv('JWT_MAX_AGE', '604800000'), 10); // Default to 7 days in ms
     this.redisUrl = this.getEnv('REDIS_URL', 'redis://localhost:6379');
-    this.schemaPath = this.envMode === 'production' ? '/app/server/dist/database/schema.js' : './database/schema.ts';
+    this.schemaPath = this.envMode === 'production' ? '/app/server/dist/database/schema.js' : './src/database/schema.ts';
     this.resendApiKey = this.getEnv('RESEND_API_KEY', '');
     this.logLevel = this.getEnv('LOG_LEVEL', 'info'); // Default log level
   }

@@ -1,6 +1,6 @@
 // schema.ts
 // To generate migration: npx drizzle-kit generate --name=
-// To push migration to database: npx drizzle-kit push
+// To push migration to database: npx drizzle-kit push --config src/drizzle.config.ts
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import {
