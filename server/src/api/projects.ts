@@ -4,14 +4,24 @@ import { userService } from '../services/UserService';
 import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
-import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes } from '@fullstack/common';
+import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole } from '@fullstack/common';
 import { emailService } from '../services/EmailService';
 import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
 import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/common';
 import logger from '../utils/logger';
+import { invitationService } from '../services/InvitationService';
 
+
+// Project API Router
+// Each endpoint below is documented with its purpose, parameters, and response structure.
 const router = express.Router();
 
+/**
+ * GET /api/projects/id/:id
+ * Fetch a project by its ID.
+ * Params: id (string, required)
+ * Response: ApiResponse<ProjectResDto | null> (project details and members, or null if not found)
+ */
 router.get('/id/:id', async (req: Request<{ id: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
     const { id } = req.params;
     if (!id) {
@@ -30,6 +40,12 @@ router.get('/id/:id', async (req: Request<{ id: string }>, res: Response<ApiResp
 );
 
 // POST /api/projects - create a new project and add the current user as owner
+/**
+ * POST /api/projects
+ * Create a new project and add the current user as owner/member.
+ * Body: ProjectCreateReqDto (name, slug, description)
+ * Response: ApiResponse<ProjectResDto> (created project details and members)
+ */
 router.post(
   '/',
   async (
@@ -58,6 +74,11 @@ router.post(
 );
 
 // GET /api/projects/me - get projects for the current user
+/**
+ * GET /api/projects/me
+ * Get all projects for the current user.
+ * Response: ApiResponse<ProjectResDto[]> (array of projects with members)
+ */
 router.get('/me', async (req, res) => {
   const userId = req.user!.userId;
   const projects = await projectService.getProjectsByUserId(userId);
@@ -70,6 +91,12 @@ router.get('/me', async (req, res) => {
   res.json(createApiResponse<ProjectResDto[]>(data));
 });
 
+/**
+ * GET /api/projects/:slug
+ * Fetch a project by its slug.
+ * Params: slug (string, required)
+ * Response: ApiResponse<ProjectResDto | null> (project details and members, or null if not found)
+ */
 router.get('/:slug', async (req: Request<{ slug: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
     const { slug } = req.params;
     if (!slug) {
@@ -90,6 +117,13 @@ router.get('/:slug', async (req: Request<{ slug: string }>, res: Response<ApiRes
 );
 
 // PUT /api/projects/:id - update project details (name, description, slug)
+/**
+ * PUT /api/projects/:id
+ * Update project details (name, description, slug).
+ * Params: id (string, required)
+ * Body: ProjectUpdateReqDto (name, description, slug)
+ * Response: ApiResponse<ProjectResDto> (updated project details and members)
+ */
 router.put(
   '/:id',
   async (
@@ -131,6 +165,12 @@ router.put(
 );
 
 // GET /api/projects/check-slug/:slug - check if slug is available
+/**
+ * GET /api/projects/check-slug/:slug
+ * Check if a project slug is available (not used by any project).
+ * Params: slug (string, required)
+ * Response: ApiResponse<{ available: boolean }>
+ */
 router.get(
   '/check-slug/:slug',
   async (
@@ -157,6 +197,12 @@ router.get(
 );
 
 // DELETE /api/projects/:id - delete project
+/**
+ * DELETE /api/projects/:id
+ * Delete a project (only allowed for project owner).
+ * Params: id (string, required)
+ * Response: ApiResponse<{ success: boolean }>
+ */
 router.delete(
   '/:id',
   async (
@@ -193,6 +239,14 @@ router.delete(
 );
 
 // POST /api/projects/:projectId/members - add a member to a project
+/**
+ * POST /api/projects/:projectId/members
+ * Add a member to a project by email and role.
+ * Params: projectId (string, required)
+ * Body: ProjectAddMemberReqDto (email, role)
+ * Response: ApiResponse<ProjectAddMemberResDto> (success, invited)
+ * If user does not exist, sends invitation email.
+ */
 router.post(
   '/:projectId/members',
   async (
@@ -208,6 +262,20 @@ router.post(
     const user = await userService.getUserByEmail(email);
 
     if (!user) {
+      // Insert invitation into the invitations table (token/expiration handled in service)
+      let token: string = '';
+      try {
+        token = await invitationService.insertInvitation({
+          email,
+          inviterId: req.user!.userId,
+          projectId,
+          role: role as ProjectRole,
+        });
+      } catch (err) {
+        logger.error('Failed to insert invitation:', err);
+        throw new CustomError('Failed to create invitation', ErrorCodes.INTERNAL_ERROR);
+      }
+
       // Send invitation email to non-user
       let invited = false;
       try {
@@ -215,7 +283,7 @@ router.post(
         await emailService.sendEmail({
           to: email,
           subject: 'You have been invited to join a project',
-          html: `<p>You have been invited to join a project on Renwu. Please sign up to join the team!</p>`,
+          html: `<p>You have been invited to join a project on Renwu.<br/>Click <a href="http://localhost:5173/signup?token=${token}">here</a> to accept the invitation.</p>`,
         });
         invited = true;
       } catch (err) {
@@ -232,13 +300,20 @@ router.post(
 
     logger.debug('Adding member to project:', { projectId, userId: user.id, role });
     // Add member to project
-    const success = await projectService.addMemberToProject(projectId, user.id, role);
+    const success = await projectService.addMemberToProject(projectId, user.id, role as ProjectRole);
     const dto = new ProjectAddMemberResDto();
     dto.success = success;
     res.json(createApiResponse<ProjectAddMemberResDto>(dto));
   }
 );
 
+/**
+ * PUT /api/projects/:projectId/members/:memberId/role
+ * Update a member's role in a project.
+ * Params: projectId (string, required), memberId (string, required)
+ * Body: ProjectMemberRoleUpdateReqDto (role)
+ * Response: ApiResponse<{ success: boolean }>
+ */
 router.put(
   '/:projectId/members/:memberId/role',
   async (

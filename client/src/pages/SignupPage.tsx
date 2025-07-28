@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { getErrorMessage } from '@/resources/errorMessages';
 import { ApiErrorResponse, ErrorCodes } from '@fullstack/common';
@@ -16,6 +16,9 @@ function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSigningUp, setIsSigningUp] = useState(false);
+  // Get token from URL
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,7 +29,12 @@ function SignupPage() {
     }
     setIsSigningUp(true);
     try {
-      await signup(email, password);
+      // Pass token to signup if present
+      if (token) {
+        await signup(email, password, token);
+      } else {
+        await signup(email, password);
+      }
       navigate('/');
     } catch (err) {
       if (err && typeof err === 'object' && 'code' in err) {

@@ -10,10 +10,13 @@ import {
   LogoutResDto, 
   ErrorCodes,
   LoginReqSchema,
-  LoginResDto
+  LoginResDto,
+  ProjectRole
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService';
+import { invitationService } from '../services/InvitationService';
+import { projectService } from '../services/ProjectService';
 import { getCachedValue, setCachedValue } from '../database/redisCache';
 import logger from '../utils/logger';
 
@@ -74,7 +77,7 @@ publicRouter.post('/login', (req: Request<LoginReqDto>, res: Response<ApiRespons
 publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const signupHandler = async () => {
     try {
-      const { email, password }: LoginReqDto = req.body;
+      const { email, password, token }: LoginReqDto & { token?: string } = req.body;
       if (!email || !password) {
         throw new CustomError(
           'Email and password are required',
@@ -82,15 +85,39 @@ publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiRespon
         );
       }
 
+      // If token is present, verify invitation before creating user
+      let invitation = null;
+      if (token) {
+        invitation = await invitationService.getInvitationByToken(token);
+        if (!invitation) {
+          throw new CustomError('Invalid or expired invitation token', ErrorCodes.INVALID_INPUT);
+        }
+        if (invitation.email !== email) {
+          throw new CustomError('Email does not match invitation', ErrorCodes.INVALID_INPUT);
+        }
+      }
+
       // Set name to empty string on signup; user must set it later
       const user = await userService.createUser({ name: '', email, password });
-      const token = createJWT({
+      if (token && invitation) {
+        await invitationService.acceptInvitation(invitation.id, email, user.id);
+        // Add user to project if invited to a project
+        if (invitation.projectId) {
+          await projectService.addMemberToProject(
+            invitation.projectId,
+            user.id,
+            invitation.role as ProjectRole || ProjectRole.MEMBER
+          );
+        }
+      }
+
+      const jwtToken = createJWT({
         userId: user.id,
         email: user.email,
         name: user.name
       });
       const isSecureCookie = appConfig.envMode === 'production' && req.secure;
-      res.cookie('auth-token', token, {
+      res.cookie('auth-token', jwtToken, {
         httpOnly: true,
         secure: isSecureCookie,
         sameSite: 'strict',

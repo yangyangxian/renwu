@@ -14,7 +14,7 @@ interface IAuthContext {
   setUser: React.Dispatch<React.SetStateAction<UserResDto | null>>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, token?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
@@ -98,10 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   };
 
-  const signup = (email: string, password: string): Promise<void> => {
+  const signup = (email: string, password: string, token?: string): Promise<void> => {
+    const payload: any = { email, password };
+    if (token) payload.token = token;
     return apiClient.post<LoginReqDto, UserResDto>(
       authSignup(),
-      { email, password }
+      payload
     )
       .then((userData: UserResDto) => {
         setUser(userData);

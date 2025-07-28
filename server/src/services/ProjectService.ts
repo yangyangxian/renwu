@@ -1,4 +1,4 @@
-import { ProjectRole, ErrorCodes } from '@fullstack/common';
+import { ProjectRole, ErrorCodes, InvitationStatus } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError';
 import { eq, inArray, and } from 'drizzle-orm';
 import { db } from '../database/databaseAccess';
@@ -41,7 +41,7 @@ export class ProjectService {
   /**
    * Add a member to a project.
    */
-  async addMemberToProject(projectId: string, userId: string, role: string): Promise<boolean> {
+  async addMemberToProject(projectId: string, userId: string, role: ProjectRole): Promise<boolean> {
     // Check if already a member
     const existing = await db.select().from(projectMembers)
       .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)));

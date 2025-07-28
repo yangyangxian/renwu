@@ -1,5 +1,5 @@
 // schema.ts
-// To generate migration: npx drizzle-kit generate --name=
+// To generate migration: npx drizzle-kit generate  --config src/drizzle.config.ts --name= 
 // To push migration to database: npx drizzle-kit push --config src/drizzle.config.ts
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
@@ -13,13 +13,12 @@ import {
   primaryKey,
   date,
 } from 'drizzle-orm/pg-core';
-import { TaskStatus, ProjectRole } from '@fullstack/common';
+import { TaskStatus, ProjectRole, InvitationStatus } from '@fullstack/common';
 
-// ---------- ENUM: Task Status ----------
+// ---------- ENUMS ----------
 export const taskStatusEnum = pgEnum('task_status', Object.values(TaskStatus) as [string, ...string[]]);
-
-// ---------- ENUM: Project Role ----------
 export const projectRoleEnum = pgEnum('project_role', Object.values(ProjectRole) as [string, ...string[]]);
+export const invitationStatusEnum = pgEnum('invitation_status', Object.values(InvitationStatus) as [string, ...string[]]);
 
 // ---------- TABLE: Users ----------
 export const users = pgTable('users', {
@@ -83,4 +82,19 @@ export const projectMembers = pgTable(
     primaryKey({ columns: [table.projectId, table.userId] }),
   ]
 );
+
+// ---------- TABLE: Invitations ----------
+export const invitations = pgTable('invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull(),
+  inviterId: uuid('inviter_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }), 
+  role: projectRoleEnum('role'), // nullable, only set if inviting to a project
+  token: varchar('token', { length: 255 }).notNull().unique(),
+  status: invitationStatusEnum('status').notNull().default(InvitationStatus.PENDING),
+  expiresAt: timestamp('expires_at'),
+  acceptedAt: timestamp('accepted_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
 
