@@ -47,9 +47,9 @@ export const projects = pgTable('projects', {
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
-  description: text('description'), // nullable by default
+  description: text('description'), 
   status: taskStatusEnum('status').notNull().default('todo'),
-  dueDate: date('due_date'), // nullable by default
+  dueDate: date('due_date'), 
 
   createdBy: uuid('created_by')
     .notNull()
@@ -59,7 +59,7 @@ export const tasks = pgTable('tasks', {
     .references(() => users.id),
   projectId: uuid('project_id').references(() => projects.id, {
     onDelete: 'set null',
-  }), // nullable by default
+  }), 
 
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -94,6 +94,7 @@ export const invitations = pgTable('invitations', {
   status: invitationStatusEnum('status').notNull().default(InvitationStatus.PENDING),
   expiresAt: timestamp('expires_at'),
   acceptedAt: timestamp('accepted_at'),
+  acceptedUserId: uuid('accepted_user_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

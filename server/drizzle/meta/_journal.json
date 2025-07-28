@@ -78,6 +78,13 @@
       "when": 1753707018090,
       "tag": "0010_add_invitations_table",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1753714524215,
+      "tag": "0011_add_column_acceptedUserId",
+      "breakpoints": true
     }
   ]
 }

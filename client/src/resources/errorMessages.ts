@@ -21,6 +21,9 @@ export const ERROR_MESSAGES: Record<ErrorCodes, string> = {
     [ErrorCodes.PROJECT_ALREADY_MEMBER_ERROR]: 'This user is already a member of the project.',
     [ErrorCodes.VALIDATION_ERROR]: 'Validation failed. Please check your input.',
     [ErrorCodes.INVALID_INPUT]: 'Invalid input provided. Please correct and try again.',
+    [ErrorCodes.INVALID_INVITATION_TOKEN]: 'Your invitation link is invalid or has expired. Please request a new invitation.',
+    [ErrorCodes.INVITATION_ALREADY_USED]: 'This invitation has already been used or is no longer valid.',
+    [ErrorCodes.INVITATION_EMAIL_MISMATCH]: 'The email you entered does not match the invitation. Please use the invited email address.',
 };
 
 /**

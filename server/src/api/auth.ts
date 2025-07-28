@@ -11,7 +11,8 @@ import {
   ErrorCodes,
   LoginReqSchema,
   LoginResDto,
-  ProjectRole
+  ProjectRole,
+  InvitationStatus
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService';
@@ -88,13 +89,7 @@ publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiRespon
       // If token is present, verify invitation before creating user
       let invitation = null;
       if (token) {
-        invitation = await invitationService.getInvitationByToken(token);
-        if (!invitation) {
-          throw new CustomError('Invalid or expired invitation token', ErrorCodes.INVALID_INPUT);
-        }
-        if (invitation.email !== email) {
-          throw new CustomError('Email does not match invitation', ErrorCodes.INVALID_INPUT);
-        }
+        invitation = await invitationService.validateInvitationForSignup(token, email);
       }
 
       // Set name to empty string on signup; user must set it later
