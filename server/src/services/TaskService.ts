@@ -24,7 +24,10 @@ export class TaskEntity {
   updatedAt: string = '';
 }
 
+type DbTask = typeof tasks.$inferInsert;
+
 class TaskService {
+  
   /**
    * Delete a task by ID
    * @param taskId string
@@ -45,11 +48,9 @@ class TaskService {
    * @param data TaskCreateReqDto or TaskUpdateReqDto
    * @param isUpdate If true, do not include createdBy (for update)
    */
-  private toTaskEntityForDb(data: Partial<TaskCreateReqDto>, isUpdate: boolean = false) {
-    const result: Record<string, any> = {};
-    // Helper: convert empty string or undefined to null
+  private toTaskEntityForCreate(data: Partial<TaskCreateReqDto>): DbTask {
     const emptyToNull = (v: any) => v === '' || v === undefined ? null : v;
-
+    let result: DbTask = {} as DbTask;
     if (data.title !== undefined) result.title = data.title;
     if (data.description !== undefined) result.description = emptyToNull(data.description);
     if (data.status !== undefined) result.status = data.status;
@@ -60,9 +61,26 @@ class TaskService {
         ? new Date(data.dueDate as string).toISOString()
         : null;
     }
-    if (!isUpdate && data.createdBy !== undefined) {
+    if (data.createdBy !== undefined) {
       result.createdBy = data.createdBy;
     }
+    return result;
+  }
+
+  private toTaskEntityForUpdate(data: Partial<TaskUpdateReqDto>): Partial<DbTask> {
+    const emptyToNull = (v: any) => v === '' || v === undefined ? null : v;
+    const result: Partial<DbTask> = {};
+    if (data.title !== undefined) result.title = data.title;
+    if (data.description !== undefined) result.description = emptyToNull(data.description);
+    if (data.status !== undefined) result.status = data.status;
+    if (data.assignedTo !== undefined) result.assignedTo = data.assignedTo;
+    if (data.projectId !== undefined) result.projectId = emptyToNull(data.projectId);
+    if (data.dueDate !== undefined) {
+      result.dueDate = emptyToNull(data.dueDate)
+        ? new Date(data.dueDate as string).toISOString()
+        : null;
+    }
+
     return result;
   }
     
@@ -72,7 +90,7 @@ class TaskService {
    */
   async createTask(data: TaskCreateReqDto): Promise<TaskEntity> {
     // Convert DTO to DB-ready entity - custom types handle empty string conversion
-    const insertValues = this.toTaskEntityForDb(data, false);
+    const insertValues = this.toTaskEntityForCreate(data);
     logger.debug('insertValues insert:', insertValues);
 
     const [created] = await db
@@ -197,7 +215,6 @@ class TaskService {
     });
   }
 
-
   /**
    * Update a task by ID, with validation and permission checks.
    * @param taskId string
@@ -205,7 +222,7 @@ class TaskService {
    */
   async updateTask(taskId: string, updateData: TaskUpdateReqDto): Promise<TaskEntity> {
     // Reuse toTaskEntityForDb for normalization, do not include createdBy
-    const updateValues = this.toTaskEntityForDb(updateData, true);
+    const updateValues = this.toTaskEntityForUpdate(updateData);
     logger.debug("updateValues update:", updateValues);
     await db.update(tasks)
       .set(updateValues)
