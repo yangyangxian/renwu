@@ -12,6 +12,8 @@ export async function getCachedValue<T = any>(cacheKey: string): Promise<T | und
     } catch (err) {
       logger.error('Redis error (get):', err);
     }
+  } else {
+    logger.warn('Redis client is not available or Redis is not configured.');
   }
   return undefined;
 }

@@ -23,16 +23,15 @@ class UserService {
     // Use ilike for case-insensitive partial match in Drizzle ORM
     if (!emailPart) return [];
     const query = ilike(users.email, `%${emailPart}%`);
-    console.log('[DEBUG] UserService.searchUsersByEmail:', emailPart, query);
     const result = await db.select().from(users)
       .where(query)
       .limit(limit);
     console.log('[DEBUG] UserService.searchUsersByEmail result:', result.length, result.map((u: { email: string }) => u.email));
-    return result.map((user: { id: string, name: string, email: string, createdAt?: Date }) => ({
+    return result.map((user: { id: string, name: string, email: string, createdAt: Date | null, updatedAt: Date | null }) => ({
       id: user.id,
       name: user.name,
       email: user.email,
-      createdAt: user.createdAt?.toISOString?.() ?? '',
+      createdAt: user.createdAt ? user.createdAt.toISOString() : '',
     }));
   }
   async getUserByEmail(email: string): Promise<UserEntity | null> {

@@ -78,15 +78,19 @@ const createLoggerWithCaller = (baseLogger: Logger) => {
   };
 };
 
+const resolvedLogLevel = config.logLevel
+  ? config.logLevel
+  : (config.envMode === 'development' ? 'debug' : 'info');
+
 const baseLogger : Logger = winston.createLogger({
-  level: 'debug', // Default minimum level to log
+  level: resolvedLogLevel, // Configurable minimum level to log
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     logFormat
   ),
   transports: [
     new winston.transports.Console({
-      level: config.envMode === 'development' ? 'debug' : 'info', // More verbose in dev
+      level: resolvedLogLevel, // Console log level matches config
       format: combine(
         colorize(),
         consoleFormat // Use the colored format for console

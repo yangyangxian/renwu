@@ -98,7 +98,7 @@ export class ProjectService {
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        role: row.memberRole,
+        role: row.memberRole as ProjectRole,
       }));
     }
     return project;
@@ -145,7 +145,7 @@ export class ProjectService {
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        role: row.memberRole,
+        role: row.memberRole as ProjectRole,
       }));
     }
     return project;
@@ -245,7 +245,7 @@ export class ProjectService {
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        role: row.memberRole,
+        role: row.memberRole as ProjectRole,
       }));
     }
     return Array.from(projectMap.values());

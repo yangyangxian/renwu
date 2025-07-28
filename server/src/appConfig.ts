@@ -15,10 +15,12 @@ class AppConfig {
   public readonly redisUrl: string;
   public readonly schemaPath: string;
   public readonly resendApiKey: string;
+  public readonly logLevel: string;
 
   constructor() {
     // Load environment variables
     this.loadEnvironmentFiles();
+    this.logLevel = this.getEnv('LOG_LEVEL', 'info'); // Default log level
     
     // Initialize configuration properties
     this.port = parseInt(this.getEnv('PORT', '5050'), 10);
@@ -28,12 +30,13 @@ class AppConfig {
     this.corsOrigins = this.getEnv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000')
       .split(',')
       .map(origin => origin.trim());
-    this.staticDir = this.getEnv('STATIC_DIR', '');
-    this.jwtSecret = this.getEnv('JWT_SECRET');
+    this.staticDir = this.getEnv('STATIC_DIR', '../../client/dist');
+    this.jwtSecret = this.getEnv('JWT_SECRET', '');
     this.jwtMaxAge = parseInt(this.getEnv('JWT_MAX_AGE', '604800000'), 10); // Default to 7 days in ms
     this.redisUrl = this.getEnv('REDIS_URL', 'redis://localhost:6379');
     this.schemaPath = this.envMode === 'production' ? '/app/server/dist/database/schema.js' : './database/schema.ts';
     this.resendApiKey = this.getEnv('RESEND_API_KEY', '');
+    this.logLevel = this.getEnv('LOG_LEVEL', 'info'); // Default log level
   }
 
   /**

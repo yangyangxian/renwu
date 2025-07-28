@@ -2,7 +2,12 @@ import { Resend } from 'resend';
 import appConfig from '../appConfig';
 import logger from '../utils/logger';
 
-const resend = new Resend(appConfig.resendApiKey);
+let resend: Resend | null = null;
+if (!appConfig.resendApiKey) {
+  logger.error('Resend API key is not configured. Email sending will be disabled.');
+} else {
+  resend = new Resend(appConfig.resendApiKey);
+}
 
 export class EmailService {
   /**
@@ -18,6 +23,11 @@ export class EmailService {
     html: string;
     from?: string;
   }): Promise<void> {
+    if (!resend) {
+      const errorMsg = 'Email not sent: Resend API key is missing.';
+      logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
     try {
       logger.debug('Sending email:', { from, to, subject });
       const response = await resend.emails.send({

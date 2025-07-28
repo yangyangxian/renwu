@@ -119,7 +119,7 @@ router.get('/me', async (req: Request, res: Response<ApiResponse<UserResDto>>, n
         const cacheKey = `user:${user.email}`;
         let userResDto = await getCachedValue<UserResDto>(cacheKey);
 
-        if (!userResDto) {
+        if (userResDto === undefined) {
             const dbUser = await userService.getUserByEmail(user.email);
             if (!dbUser) throw new CustomError('User not found', ErrorCodes.UNAUTHORIZED);
             userResDto = {
