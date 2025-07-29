@@ -121,7 +121,7 @@ export function HomeSideBar() {
     <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
       <Sidebar
         collapsible="icon"
-        className="h-full pt-3 p-3 relative max-w-[14rem]"
+        className="h-full pt-3 p-3 pl-2 relative max-w-[14rem]"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >

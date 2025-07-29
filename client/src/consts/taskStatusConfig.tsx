@@ -5,8 +5,8 @@ import { Square, Loader2, CheckCircle, XCircle } from "lucide-react";
 export const statusLabels: Record<TaskStatus, string> = {
   [TaskStatus.TODO]: "To Do",
   [TaskStatus.IN_PROGRESS]: "In Progress",
-  [TaskStatus.DONE]: "Done",
-  [TaskStatus.CLOSE]: "Closed",
+  [TaskStatus.DONE]: "In Review",
+  [TaskStatus.CLOSE]: "Done",
 };
 
 export const statusColors: Record<TaskStatus, string> = {

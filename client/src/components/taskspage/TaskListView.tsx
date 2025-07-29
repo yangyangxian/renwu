@@ -10,10 +10,11 @@ import { statusLabels, statusColors, statusIcons } from "@/consts/taskStatusConf
 
 interface TaskListViewProps {
   tasks: TaskResDto[];
-  onUpdateTask?: (taskId: string, updates: Partial<TaskResDto>) => void;
+
+  showAssignedTo?: boolean; 
 }
 
-const TaskListView: React.FC<TaskListViewProps> = ({ tasks, onUpdateTask }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) => {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
   const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE];
@@ -75,7 +76,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, onUpdateTask }) => {
   }, [sortedTasks]);
 
   return (
-    <div className="flex h-full w-full p-2 overflow-auto">
+    <div className="flex h-full w-full overflow-auto">
       {/* Left: Task List */}
       <div className="w-1/3 min-w-[260px] max-w-[300px] rounded-l-lg border border-input dark:border-[1.5px] bg-white-black overflow-y-auto shadow-xs">
         {/* Status Filter and Sort Icon */}
@@ -146,6 +147,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, onUpdateTask }) => {
                   dueDate={task.dueDate}
                   projectName={task.projectName}
                   status={task.status}
+                  assignedTo={showAssignedTo ? task.assignedTo : undefined}
                   className={`cursor-pointer rounded-none hover:border-l-primary hover:scale-100 bg-white-black py-3 pl-4 min-h-22 border-border shadow-none
                     ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
                 />

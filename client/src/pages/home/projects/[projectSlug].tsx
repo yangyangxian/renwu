@@ -28,6 +28,9 @@ export default function ProjectDetailPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
 
+  // Local state for task view (list or board)
+  const [taskView, setTaskView] = useState<'list' | 'board'>('board');
+
   // Get projectId from global projects object using slug
   const projectId = projectSlug && projects
     ? Object.values(projects).find(p => p.slug === projectSlug)?.id
@@ -47,9 +50,9 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col gap-1">
+    <div className="h-full w-full flex flex-col mt-1">
       {/* Tabs and Add Task Button in one row */}
-      <div className="flex items-center px-2 gap-2 my-1">
+      <div className="flex items-center px-2 my-1">
         <Tabs
           value={activeTab}
           onValueChange={val => handleTabChange(val as typeof activeTab)}
@@ -75,20 +78,34 @@ export default function ProjectDetailPage() {
         </Tabs>
 
         {activeTab === 'tasks' && (
-          <Button
-            variant="default"
-            className="px-3 py-2 flex items-center ml-auto gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
-            onClick={() => {
-              setEditingTask(null);
-              setIsDialogOpen(true);
-            }}
-          >
-            <span className="sr-only">Add Task</span>
-            <span className="flex items-center gap-1">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-              Add Task
-            </span>
-          </Button>
+          <div className="flex items-center gap-2 ml-auto">
+            <Tabs value={taskView} onValueChange={v => setTaskView(v as 'list' | 'board')}>
+              <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
+                <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Board
+                </TabsTrigger>
+                <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
+                  <List className="w-4 h-4" />
+                  List
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button
+              variant="default"
+              className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
+              onClick={() => {
+                setEditingTask(null);
+                setIsDialogOpen(true);
+              }}
+            >
+              <span className="sr-only">Add Task</span>
+              <span className="flex items-center gap-1">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                Add Task
+              </span>
+            </Button>
+          </div>
         )}
       </div>
       {isDialogOpen && (
@@ -111,6 +128,7 @@ export default function ProjectDetailPage() {
       )}
       {activeTab === 'tasks' && projectSlug && (
         <ProjectTasksTab
+          view={taskView}
           onTaskClick={taskId => {
             const fullTask = tasks.find(t => t.id === taskId) || null;
             setEditingTask(fullTask);

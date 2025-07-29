@@ -14,7 +14,7 @@ import { motion } from "framer-motion";
 
 export default function TasksPage() {
   const tabOptions = ["board", "list"];
-  const [view, setView] = useTabHash(tabOptions, "board");
+  const [view, setView] = useTabHash(tabOptions, "list");
   const {
     tasks,
     loading,
@@ -98,8 +98,8 @@ export default function TasksPage() {
         )}
       </div>
 
-      {view === 'board' && (
-        <div className="flex-1 overflow-y-auto p-2 rounded-xl">
+      <div className="flex-1 overflow-y-auto p-2 rounded-xl">
+        {view === 'board' && (       
           <BoardView
             tasks={filteredTasks}
             onTaskClick={taskId => {
@@ -108,15 +108,14 @@ export default function TasksPage() {
               setIsDialogOpen(true);
             }}
           />
-        </div>
-      )}
+        )}
 
-      {view === 'list' && (
-        <TaskListView 
-          tasks={filteredTasks} 
-          onUpdateTask={updateTaskById}
-        />
-      )}
+        {view === 'list' && (
+          <TaskListView 
+            tasks={filteredTasks} 
+          />
+        )}
+      </div>
     </motion.div>
   );
 }
