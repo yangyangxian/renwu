@@ -11,7 +11,6 @@ import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
-import { Label } from "@/components/ui-kit/Label";
 
 export default function TasksPage() {
   const tabOptions = ["board", "list"];

@@ -21,9 +21,6 @@ import { DropDownList } from "@/components/common/DropDownList";
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (task: { id?: string; title: string; dueDate: string; assignedTo: string; 
-    status: TaskStatus; description: string; projectId?: string,
-    createdBy: string }) => void;
   initialValues?: {
     id?: string;
     title?: string;
@@ -35,7 +32,6 @@ interface TaskDialogProps {
     projectName?: string;
   };
   title?: string;
-  // Removed projects prop - now using store directly
 }
 
 const statusOptions = [
@@ -46,7 +42,7 @@ const statusOptions = [
 ];
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
-  open, onOpenChange, onSubmit, initialValues = {}, title = "Add New Task",
+  open, onOpenChange, initialValues = {}, title = "Add New Task",
 }) => {
   const { user } = useAuth();
   const { createTask, updateTaskById } = useTaskStore();
@@ -66,7 +62,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
   
   const handleAssignedToChange = (value: string) => {
-    console.log("Assigned to changed:", value);
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
   };
 
@@ -99,12 +94,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     if (submitSuccess) {
       onOpenChange(false);
     }
-
-    // Call the optional onSubmit callback if provided (for backward compatibility)
-    // if (onSubmit) {
-    //   onSubmit(taskData);
-    // }
-
   };
 
   const getAssignedToOptions = (projectId: string | undefined) => {
