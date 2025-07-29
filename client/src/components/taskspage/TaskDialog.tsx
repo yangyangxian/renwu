@@ -105,7 +105,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       }));  
   };
 
-  useEffect(function populateAssignedTo(){
+  useEffect(() => {
     if (!taskState.projectId) {
       setAssignedToSelectOptions([{ value: String(user?.id || ""), label: String(user?.name || "Me") }]);
       handleAssignedToChange(String(user?.id || ""));
@@ -121,15 +121,17 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     
     if (options.some(opt => opt.value === initialAssignedTo)) {
       assignedUser = initialAssignedTo!;
-    } else if (options.length >0){
+    } else if (options.length > 0){
       assignedUser = options[0].value;
     }
-    dispatch({ type: 'SET_FIELD', field: 'assignedTo', value : assignedUser });
-    }, [taskState.projectId, projects, user]);
+    setTimeout(() => {
+      dispatch({ type: 'SET_FIELD', field: 'assignedTo', value: assignedUser });
+    });
+  },
+  [taskState.projectId, projects, user]);
 
-    const handleProjectChange = (value: string) => {
+  const handleProjectChange = (value: string) => {
       dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });
-      // Optionally reset assignedTo here if needed, but useEffect will handle the default
   };
 
   return (
