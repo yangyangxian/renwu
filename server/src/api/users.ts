@@ -16,17 +16,22 @@ router.get('/search', async (req: Request, res: Response<ApiResponse<UserResDto[
   console.log('[DEBUG] /api/users/search query:', emailPart);
   try {
     let users: UserResDto[] = [];
-    let redisSearched = false;
+    let redisAvailable = false;
     // Try Redis autocomplete first (now in service)
     if (emailPart) {
-      const redisResults = await userService.searchUserEmailsByPrefixRedis(emailPart, 10);
-      users = redisResults.map(u => mapObject(u, new UserResDto()));
-      redisSearched = true;
+      try {
+        const redisResults = await userService.searchUserEmailsByPrefixRedis(emailPart, 10);
+        users = redisResults.map(u => mapObject(u, new UserResDto()));
+        redisAvailable = true;
+      } catch (redisErr) {
+        logger.warn('[Redis] Autocomplete unavailable, falling back to DB:', redisErr);
+        redisAvailable = false;
+      }
     }
 
     // Fallback to DB only if Redis is unavailable (not just empty result) or prefix is empty
     // If Redis is available and returned 0 results for a non-empty prefix, skip DB search
-    if (!users.length && emailPart && !redisSearched) {
+    if (!users.length && emailPart && !redisAvailable) {
       const usersRaw = await userService.searchUsersByEmail(emailPart, 10);
       users = usersRaw.map(u => mapObject(u, new UserResDto()));
     }

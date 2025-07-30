@@ -23,9 +23,9 @@ export class UserEntity {
 
 class UserService {
   async searchUsersByEmail(emailPart: string, limit: number = 10): Promise<UserEntity[]> {
-    // Use ilike for case-insensitive partial match in Drizzle ORM
+    // Use ilike for case-insensitive prefix match in Drizzle ORM
     if (!emailPart) return [];
-    const query = ilike(users.email, `%${emailPart}%`);
+    const query = ilike(users.email, `${emailPart}%`);
     const result = await db.select().from(users)
       .where(query)
       .limit(limit);
@@ -40,7 +40,8 @@ class UserService {
 
   async searchUserEmailsByPrefixRedis(emailPart: string, limit: number = 10): Promise<UserEntity[]> {
     logger.debug('Searching user emails by prefix in Redis:', emailPart);
-    if (!redisClient || !isRedisAvailable() || !emailPart) return [];
+    if (!redisClient || !isRedisAvailable()) throw new Error('Redis unavailable');
+    if (!emailPart) return [];
     // Compute min and max for ZRANGEBYLEX
     const min = `[${emailPart}`;
     const max = (() => {
