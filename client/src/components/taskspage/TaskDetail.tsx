@@ -64,7 +64,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     }
   };
 
-  if (!currentTask || !currentTask.id) return <div className="text-muted-foreground">Select a task to view details.</div>;
+  if (!currentTask || !currentTask.id) return <Label className="text-muted-foreground">Select a task to view details.</Label>;
   const task = currentTask;
   return (
     <>

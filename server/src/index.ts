@@ -9,6 +9,7 @@ import requestLoggerMiddleware from './middlewares/requestLoggerMiddleware';
 import errorHandlingMiddleware from './middlewares/errorHandlingMiddleware';
 import corsMiddleware from './middlewares/corsMiddleware';
 import { globalAuthMiddleware } from './middlewares/authMiddleware';
+import { scheduleUserSyncJob } from './jobs/userSyncQueue';
 
 const app = express();
 
@@ -38,6 +39,9 @@ app.use(errorHandlingMiddleware); // Error handling must be the last middleware
 // Start the server
 // ********************************************************
 StartServer(configs.port);
+
+// Schedule user sync job on startup (safe for multi-instance)
+scheduleUserSyncJob();
 
 export default app;
 

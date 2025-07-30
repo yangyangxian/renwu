@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useHashCache } from '@/hooks/useHashCache';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { getUsersByEmailSearch } from '@/apiRequests/apiEndpoints';
 import { Card } from '@/components/ui-kit/Card';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui-kit/Label';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { UserPlus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui-kit/Select';
-import { ProjectAddMemberResDto, ProjectRole, UserResDto } from '@fullstack/common';
+import { ProjectAddMemberResDto, ProjectRole, UserResDto, ProjectAddMemberReqSchema } from '@fullstack/common';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui-kit/Dialog';
 import { Check, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ import { addProjectMember } from '@/apiRequests/apiEndpoints';
 import { withToast } from '@/utils/toastUtils';
 import { getErrorMessage } from '@/resources/errorMessages';
 import { roleOptions } from '@/consts/roleOptions';
+import logger from '@/utils/logger';
 
 interface MemberInvitationDialogProps {
   open: boolean;
@@ -26,6 +28,7 @@ interface MemberInvitationDialogProps {
 
 export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvitationDialogProps) {
   const [searchEmail, setSearchEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -36,6 +39,8 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
   const [selectedRole, setSelectedRole] = useState(ProjectRole.MEMBER);
   const [inviteLoading, setInviteLoading] = useState(false);
   const { fetchCurrentProject } = useProjectStore();
+  // Cache for searched emails that returned no results
+  const noUserCache = useHashCache<string>();
 
   useEffect(() => {
     if (justSelectedUserRef.current) {
@@ -52,11 +57,24 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
     setSearchResults([]);
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     if (value.length < 1) return;
+    // If the input starts with any cached prefix, skip API call
+    const cachedPrefixes = noUserCache.values();
+    if (cachedPrefixes.some(prefix => value.startsWith(prefix))) {
+      setSearchLoading(false);
+      setSearchResults([]);
+      return;
+    }
     setSearchLoading(true);
     debounceTimeout.current = setTimeout(async () => {
       try {
         const data = await apiClient.get(getUsersByEmailSearch(value)) as UserResDto[];
         setSearchResults(data);
+        if (!data || data.length === 0) {
+          noUserCache.add(value);
+        } else {
+          // If user(s) found, remove from cache if present
+          noUserCache.remove(value);
+        }
       } catch {
         setSearchResults([]);
       } finally {
@@ -66,6 +84,13 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
   };
 
   const handleInvite = async () => {
+    // Validate email before inviting
+    const emailValidation = ProjectAddMemberReqSchema.shape.email.safeParse(searchEmail);
+    if (!emailValidation.success) {
+      setEmailError(emailValidation.error.issues[0]?.message || 'Invalid email');
+      return;
+    }
+    setEmailError(null);
     setInviteLoading(true);
     await withToast(
       async () => {
@@ -107,26 +132,30 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
               If the email matches an existing user, you can select them from the dropdown. If the email does not exist, an invitation will be sent to that address to join your project.
             </Label>
             <div className="relative">
-              <Input
-                type="email"
-                className="w-full border rounded-lg px-3 py-2"
-                value={searchEmail}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setSearchEmail(e.target.value);
-                  handleSearchEmailChange(e.target.value);
-                  setSelectedUser(null);
-                  justSelectedUserRef.current = false;
-                }}
-                onFocus={() => {
-                  if (searchEmail.length >= 2 && open) {
-                    setDropdownOpen(true);
-                  }
-                }}
-                onBlur={() => {
-                  blurTimeout.current = setTimeout(() => setDropdownOpen(false), 120);
-                }}
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  type="email"
+                  className={cn("w-full border rounded-lg px-3 py-2", emailError ? "border-red-500" : "")}
+                  value={searchEmail}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    handleSearchEmailChange(e.target.value);
+                    setSelectedUser(null);
+                    justSelectedUserRef.current = false;
+                  }}
+                  onFocus={() => {
+                    if (searchEmail.length >= 2 && open) {
+                      setDropdownOpen(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    blurTimeout.current = setTimeout(() => setDropdownOpen(false), 120);
+                  }}
+                  autoComplete="off"
+                />
+                {emailError && (
+                  <span className="absolute right-0 top-1/2 -translate-y-1/2 text-xs text-red-500 pr-3">{emailError}</span>
+                )}
+              </div>
               {(searchEmail.length >= 1 && open && (searchLoading || searchResults.length > 0) && dropdownOpen) && (
                 <Card
                   className={cn(

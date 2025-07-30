@@ -11,14 +11,14 @@ import {
   ErrorCodes,
   LoginReqSchema,
   LoginResDto,
-  ProjectRole,
-  InvitationStatus
+  ProjectRole
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService';
 import { invitationService } from '../services/InvitationService';
 import { projectService } from '../services/ProjectService';
 import { getCachedValue, setCachedValue } from '../database/redisCache';
+import { userInfoKey } from '../database/redisKeys';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -138,7 +138,8 @@ router.get('/me', async (req: Request, res: Response<ApiResponse<UserResDto>>, n
         const user = req.user;
         if (!user) throw new CustomError('User authentication failed', ErrorCodes.UNAUTHORIZED);
 
-        const cacheKey = `user:${user.email}`;
+
+        const cacheKey = userInfoKey(user.email);
         let userResDto = await getCachedValue<UserResDto>(cacheKey);
 
         if (userResDto === undefined) {

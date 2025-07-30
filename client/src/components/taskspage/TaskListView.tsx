@@ -7,6 +7,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { Badge } from "@/components/ui-kit/Badge";
 import TaskDetail from "./TaskDetail";
 import { statusLabels, statusColors, statusIcons } from "@/consts/taskStatusConfig"
+import { Label } from "@/components/ui-kit/Label";
 
 interface TaskListViewProps {
   tasks: TaskResDto[];
@@ -158,7 +159,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
             </Fragment>
           ))
         ) : (
-          <div className="p-4 text-muted-foreground">No tasks found.</div>
+          <Label className="p-4 text-muted-foreground">No tasks found.</Label>
         )}
       </div>
       {/* Right: Task Details */}

@@ -6,6 +6,7 @@ import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
 import { CustomError } from '../classes/CustomError';
 import { taskService } from '../services/TaskService';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -13,11 +14,22 @@ const router = Router();
 router.get('/search', async (req: Request, res: Response<ApiResponse<UserResDto[]>>, next: NextFunction) => {
   const emailPart = String(req.query.email || '').trim();
   console.log('[DEBUG] /api/users/search query:', emailPart);
-  
   try {
-    const usersRaw = await userService.searchUsersByEmail(emailPart, 10);
-    console.log('[DEBUG] /api/users/search results:', usersRaw.length, usersRaw.map(u => u.email));
-    const users: UserResDto[] = usersRaw.map(u => mapObject(u, new UserResDto()));
+    let users: UserResDto[] = [];
+    let redisSearched = false;
+    // Try Redis autocomplete first (now in service)
+    if (emailPart) {
+      const redisResults = await userService.searchUserEmailsByPrefixRedis(emailPart, 10);
+      users = redisResults.map(u => mapObject(u, new UserResDto()));
+      redisSearched = true;
+    }
+
+    // Fallback to DB only if Redis is unavailable (not just empty result) or prefix is empty
+    // If Redis is available and returned 0 results for a non-empty prefix, skip DB search
+    if (!users.length && emailPart && !redisSearched) {
+      const usersRaw = await userService.searchUsersByEmail(emailPart, 10);
+      users = usersRaw.map(u => mapObject(u, new UserResDto()));
+    }
     res.json(createApiResponse<UserResDto[]>(users));
   } catch (err) {
     next(err);

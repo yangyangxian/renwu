@@ -10,10 +10,12 @@
     "dev": "npm --prefix ../client run build && concurrently --raw \"npm --prefix ../common run watch\" \"cross-env NODE_ENV=development tsx watch src/index.ts\"",
     "dev:alone": "cross-env NODE_ENV=development tsx --watch src/index.ts",
     "postbuild": "tsc-esm-fix dist",
-    "test": "NODE_ENV=development vitest"
+    "test": "NODE_ENV=development vitest",
+    "worker": "cross-env NODE_ENV=development tsx dist/jobs/userSyncWorker.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "bullmq": "^5.56.8",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",

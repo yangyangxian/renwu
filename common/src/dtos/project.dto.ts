@@ -1,4 +1,8 @@
 import { z } from 'zod';
+export const ProjectAddMemberReqSchema = z.object({
+  email: z.email('Invalid email address'),
+  role: z.string().min(1, 'Role is required'),
+});
 
 export class ProjectAddMemberReqDto {
   email: string = '';
