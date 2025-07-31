@@ -6,13 +6,13 @@ import { Label } from '@/components/ui-kit/Label';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { UserPlus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui-kit/Select';
-import { ProjectRole, UserResDto } from '@fullstack/common';
+import { ProjectMemberResDto, ProjectResDto, ProjectRole, UserResDto } from '@fullstack/common';
 import { MemberInvitationDialog } from '@/components/projectspage/settingTab/MemberInvitationDialog';
 import { withToast } from '@/utils/toastUtils';
 import { getErrorMessage } from '@/resources/errorMessages';
 
 interface ProjectTeamTabProps {
-  project: any;
+  project: ProjectResDto;
 }
 
 export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
@@ -51,7 +51,7 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
         <Label className="text-muted-foreground mb-5">Invite your team members to collaborate.</Label>
         <div className="flex flex-col gap-4">
           {project?.members && project.members.length > 0 ? (
-            project.members.map((member: any, idx: number) => (
+            project.members.map((member: ProjectMemberResDto, idx: number) => (
               <div key={member.id || idx} className="flex items-center gap-4">
                 <Avatar className="w-8 h-8">
                   <AvatarFallback className="text-md font-bold text-primary-purple bg-secondary dark:bg-muted-foreground">

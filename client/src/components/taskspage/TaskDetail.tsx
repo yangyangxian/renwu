@@ -115,7 +115,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
           </div>
         </div>
         {/* Right column: Fields */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {/* Assigned User */}
           {task.assignedTo && (
             <div className={fieldLabelContainerClass}>
