@@ -30,3 +30,13 @@ export class LoginResDto {
   }
 }
 
+// DTO for project role (for /roles API)
+export class ProjectRoleDto {
+  id: string = '';
+  name: string = '';
+  description?: string;
+  constructor(data?: Partial<ProjectRoleDto>) {
+    if (data) Object.assign(this, data);
+  }
+}
+

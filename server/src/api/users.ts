@@ -41,16 +41,16 @@ router.get('/search', async (req: Request, res: Response<ApiResponse<UserResDto[
   }
 });
 
-// GET /api/users/email/:email
-router.get('/email/:email', async (req: Request<UserReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
-  const email = req.params.email;
-  const user = await userService.getUserByEmail(email);
-  if (!user) {
-    throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
-  }
-  const userDto = mapObject(user, new UserResDto());
-  res.json(createApiResponse<UserResDto>(userDto));
-});
+// // GET /api/users/email/:email
+// router.get('/email/:email', async (req: Request<UserReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
+//   const email = req.params.email;
+//   const user = await userService.getUserByEmail(email);
+//   if (!user) {
+//     throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
+//   }
+//   const userDto = mapObject(user, new UserResDto());
+//   res.json(createApiResponse<UserResDto>(userDto));
+// });
 
 router.put('/me', async (req: Request<{}, {}, UpdateUserReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   try {

@@ -1,16 +1,16 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { create } from 'zustand';
-import { ProjectResDto, ProjectCreateReqDto } from '@fullstack/common';
+import { ProjectResDto, ProjectCreateReqDto, ProjectRoleDto, ProjectAddMemberReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { 
   getMyProjects, 
   getProjects, 
-  getProjectBySlug as getProjectBySlugEndpoint, 
   getProjectById,
   updateProjectById as updateProjectByIdEndpoint,
   deleteProjectById as deleteProjectByIdEndpoint,
   addProjectMember,
-  updateProjectMemberRole
+  updateProjectMemberRole,
+  getProjectRoles
 } from '@/apiRequests/apiEndpoints';
 
 // Internal Zustand store - only for state management
@@ -27,6 +27,8 @@ interface ProjectStoreState {
   setProjectLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProjectError: (error: string | null) => void;
+  projectRoles: ProjectRoleDto[];
+  setProjectRoles: (roles: ProjectRoleDto[]) => void;
 }
 
 const useZustandProjectStore = create<ProjectStoreState>((set, get) => ({
@@ -36,12 +38,14 @@ const useZustandProjectStore = create<ProjectStoreState>((set, get) => ({
   projectLoading: false,
   error: null,
   projectError: null,
+  projectRoles: [],
   setProjects: (projects) => set({ projects }),
   setCurrentProject: (project) => set({ currentProject: project }),
   setLoading: (loading) => set({ loading }),
   setProjectLoading: (loading) => set({ projectLoading: loading }),
   setError: (error) => set({ error }),
   setProjectError: (error) => set({ projectError: error }),
+  setProjectRoles: (roles) => set({ projectRoles: roles }),
 }));
 
 export function useProjectStore() {
@@ -52,6 +56,8 @@ export function useProjectStore() {
     projectLoading,
     error,
     projectError,
+    projectRoles,
+    setProjectRoles,
     setProjects,
     setCurrentProject,
     setLoading,
@@ -59,6 +65,16 @@ export function useProjectStore() {
     setError,
     setProjectError,
   } = useZustandProjectStore();
+
+  const fetchProjectRoles = useCallback(async () => {
+    const roles = await apiClient.get<ProjectRoleDto[]>(getProjectRoles());
+    setProjectRoles(roles);
+    return roles;
+  }, [setProjectRoles]);
+
+  useEffect(() => {
+    fetchProjectRoles();
+  }, []);
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
@@ -130,7 +146,7 @@ export function useProjectStore() {
     }
   }, [projects, currentProject, setProjects, setCurrentProject]);
 
-  const addMemberToProject = useCallback(async (projectId: string, memberData: { email: string; role: string }): Promise<void> => {
+  const addMemberToProject = useCallback(async (projectId: string, memberData: ProjectAddMemberReqDto): Promise<void> => {
     try {
       await apiClient.post(addProjectMember(projectId), memberData);
       // Refresh the current project to get updated members
@@ -154,9 +170,10 @@ export function useProjectStore() {
     }
   }, [removeProject]);
 
-  const updateMemberRoleToProject = useCallback(async (projectId: string, memberId: string, role: string): Promise<void> => {
+  const updateMemberRoleToProject = useCallback(async (projectId: string, memberId: string, roleId: string, roleName: string): Promise<void> => {
     try {
-      await apiClient.put(updateProjectMemberRole(projectId, memberId), { role });
+      const req: ProjectMemberRoleUpdateReqDto = { roleId, roleName };
+      await apiClient.put(updateProjectMemberRole(projectId, memberId), req);
       // Refresh the current project to get updated members
       if (currentProject?.id === projectId) {
         await fetchCurrentProject(projectId);
@@ -174,6 +191,8 @@ export function useProjectStore() {
     projectLoading,
     error,
     projectError,
+    projectRoles,
+    fetchProjectRoles,
     fetchProjects,
     fetchCurrentProject,
     addProject,

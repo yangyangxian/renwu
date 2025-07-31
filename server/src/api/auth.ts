@@ -11,12 +11,13 @@ import {
   ErrorCodes,
   LoginReqSchema,
   LoginResDto,
-  ProjectRole
+  ProjectRoleDto
 } from '@fullstack/common';
 import appConfig from '../appConfig.js';
 import { userService } from '../services/UserService';
 import { invitationService } from '../services/InvitationService';
 import { projectService } from '../services/ProjectService';
+import { PermissionService } from '../services/PermissionService';
 import { getCachedValue, setCachedValue } from '../database/redisCache';
 import { userInfoKey } from '../database/redisKeys';
 import logger from '../utils/logger';
@@ -101,7 +102,7 @@ publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiRespon
           await projectService.addMemberToProject(
             invitation.projectId,
             user.id,
-            invitation.role as ProjectRole || ProjectRole.MEMBER
+            invitation.roleId! // Use default role if not specified
           );
         }
       }
@@ -171,6 +172,13 @@ router.post('/logout', (req: Request, res: Response<ApiResponse<LogoutResDto>>, 
     const logoutResDto: LogoutResDto = { message: 'Logged out successfully' };
     res.json(createApiResponse<LogoutResDto>(logoutResDto));
 
+});
+
+// GET /api/auth/roles - fetch all project roles
+router.get('/roles', async (req: Request, res: Response<ApiResponse<ProjectRoleDto[]>>) => {
+    const dbRoles = await PermissionService.getAllRoles();
+    const roles = dbRoles.map((r: any) => new ProjectRoleDto(r));
+    res.json(createApiResponse<ProjectRoleDto[]>(roles));
 });
 
 export default router;

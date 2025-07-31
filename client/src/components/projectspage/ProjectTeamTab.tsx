@@ -1,6 +1,6 @@
 import { roleOptions } from '@/consts/roleOptions';
-import { useState } from 'react';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { useState } from 'react';
 import { Card } from '@/components/ui-kit/Card';
 import { Label } from '@/components/ui-kit/Label';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
@@ -18,14 +18,14 @@ interface ProjectTeamTabProps {
 export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
   // roleOptions imported
   const [inviteOpen, setInviteOpen] = useState(false);
-  const { updateMemberRoleToProject } = useProjectStore();
+  const { updateMemberRoleToProject, projectRoles } = useProjectStore();
 
-  const handleRoleChange = async (projectId: string, memberId: string, newRole: string, oldRole: string) => {
-    if (newRole === oldRole) return;
+  const handleRoleChange = async (projectId: string, memberId: string, oldRoleId: string, newRoleId: string, newRoleName: string) => {
+    if (newRoleId === oldRoleId) return;
 
     await withToast(
       async () => {
-        await updateMemberRoleToProject(projectId, memberId, newRole);
+        await updateMemberRoleToProject(projectId, memberId, newRoleId, newRoleName);
       },
       {
         success: 'Role updated.',
@@ -63,25 +63,28 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
                   <Label className="text-xs text-muted-foreground">{member.email}</Label>
                 </div>
                 <Select
-                  value={member.role || ProjectRole.MEMBER}
+                  value={member.roleId || ProjectRole.MEMBER}
                   onValueChange={async (newRole) => {
-                    await handleRoleChange(project.id, member.id, newRole, member.role);
+                    await handleRoleChange(project.id, member.id, member.roleId, newRole, projectRoles.find(role => role.id === newRole)?.name || '');
                   }}
                 >
                   <SelectTrigger size="sm" className="min-w-[110px]">
                     <SelectValue>
-                      {roleOptions.find((opt: typeof roleOptions[0]) => opt.value === member.role)?.label || 'Role'}
+                      {roleOptions.find(opt => opt.value === projectRoles.find(role => role.id === member.roleId)?.name)?.label || 'Role'}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {roleOptions.map((opt: typeof roleOptions[0]) => (
-                      <SelectItem key={opt.value} value={opt.value} className='cursor-pointer'>
-                        <div className="flex flex-col">
-                          <Label className="font-medium cursor-pointer">{opt.label}</Label>
-                          <span className="text-xs text-muted-foreground">{opt.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {projectRoles.map(role => {
+                      const option = roleOptions.find(opt => opt.value === role.name);
+                      return option ? (
+                        <SelectItem key={role.id} value={role.id} className='cursor-pointer'>
+                          <div className="flex flex-col">
+                            <Label className="font-medium cursor-pointer">{option.label}</Label>
+                            <span className="text-xs text-muted-foreground">{option.description}</span>
+                          </div>
+                        </SelectItem>
+                      ) : null;
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -106,3 +109,4 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
     </div>
   );
 }
+

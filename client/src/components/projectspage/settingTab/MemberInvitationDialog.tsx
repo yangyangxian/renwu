@@ -14,11 +14,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui-kit/Button';
 import { Input } from '@/components/ui-kit/Input';
 import { apiClient } from '@/utils/APIClient';
-import { addProjectMember } from '@/apiRequests/apiEndpoints';
 import { withToast } from '@/utils/toastUtils';
 import { getErrorMessage } from '@/resources/errorMessages';
-import { roleOptions } from '@/consts/roleOptions';
 import logger from '@/utils/logger';
+import { roleOptions } from '@/consts/roleOptions';
 
 interface MemberInvitationDialogProps {
   open: boolean;
@@ -36,9 +35,9 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
   const justSelectedUserRef = useRef(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const blurTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [selectedRole, setSelectedRole] = useState(ProjectRole.MEMBER);
+  const [selectedRole, setSelectedRole] = useState<string>('');
   const [inviteLoading, setInviteLoading] = useState(false);
-  const { fetchCurrentProject } = useProjectStore();
+  const { addMemberToProject, projectRoles } = useProjectStore();
   // Cache for searched emails that returned no results
   const noUserCache = useHashCache<string>();
 
@@ -51,6 +50,13 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
       setDropdownOpen(true);
     }
   }, [searchLoading, searchResults, open, searchEmail]);
+
+  // Set default role when projectRoles are loaded
+  useEffect(() => {
+    if (!selectedRole && projectRoles.length > 0) {
+      setSelectedRole(projectRoles[0].id);
+    }
+  }, [selectedRole, projectRoles]);
 
   const handleSearchEmailChange = (value: string) => {
     setSearchEmail(value);
@@ -94,14 +100,10 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
     setInviteLoading(true);
     await withToast(
       async () => {
-        const res: ProjectAddMemberResDto = await apiClient.post(addProjectMember(projectId), {
+        await addMemberToProject(projectId, {
           email: searchEmail,
-          role: selectedRole,
+          roleId: selectedRole,
         });
-        if (!res.success) {
-          throw new Error('Invitation failed to send email.');
-        }
-        await fetchCurrentProject(projectId);
         setOpen(false);
       },
       {
@@ -210,21 +212,24 @@ export function MemberInvitationDialog({ open, setOpen, projectId }: MemberInvit
               <UserPlus className="w-4 h-4 text-muted-foreground" />
               Role for new member
             </Label>
-            <Select value={selectedRole} onValueChange={value => setSelectedRole(value as ProjectRole)}>
+            <Select value={selectedRole} onValueChange={value => setSelectedRole(value)}>
               <SelectTrigger className="w-full text-secondary-foreground">
                 <SelectValue>
-                  {roleOptions.find(opt => opt.value === selectedRole)?.label || 'Role'}
+                  {roleOptions.find(opt => opt.value === projectRoles.find(role => role.id === selectedRole)?.name)?.label || 'Role'}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {roleOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value} className='cursor-pointer'>
-                    <div className="flex flex-col">
-                      <Label className="font-medium cursor-pointer">{opt.label}</Label>
-                      <span className="text-xs text-muted-foreground">{opt.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {projectRoles.map(role => {
+                  const option = roleOptions.find(opt => opt.value === role.name);
+                  return option ? (
+                    <SelectItem key={role.id} value={role.id} className='cursor-pointer'>
+                      <div className="flex flex-col">
+                        <Label className="font-medium cursor-pointer">{option.label}</Label>
+                        <span className="text-xs text-muted-foreground">{option.description}</span>
+                      </div>
+                    </SelectItem>
+                  ) : null;
+                })}
               </SelectContent>
             </Select>
           </div>

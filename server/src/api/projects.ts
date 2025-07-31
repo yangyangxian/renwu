@@ -1,10 +1,10 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { projectService } from '../services/ProjectService';
+import { ProjectMemberEntity, projectService } from '../services/ProjectService';
 import { userService } from '../services/UserService';
 import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
-import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole } from '@fullstack/common';
+import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto } from '@fullstack/common';
 import { emailService } from '../services/EmailService';
 import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
 import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/common';
@@ -34,7 +34,11 @@ router.get('/id/:id', async (req: Request<{ id: string }>, res: Response<ApiResp
       return;
     }
     const dto = mapObject(project, new ProjectResDto());
-    dto.members = project.members;
+    // Map members to ProjectMemberResDto, sorted alphabetically by name
+    dto.members = project.members
+      .slice()
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
     res.json(createApiResponse<ProjectResDto>(dto));
   }
 );
@@ -68,7 +72,7 @@ router.post(
       ownerId: userId,
     });
     const dto = mapObject(project, new ProjectResDto());
-    dto.members = project.members;
+    dto.members = project.members.map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
     res.json(createApiResponse<ProjectResDto>(dto));
   }
 );
@@ -85,36 +89,11 @@ router.get('/me', async (req, res) => {
   // Map each project to ProjectResDto, including members
   const data: ProjectResDto[] = projects.map((project) => {
     const dto = mapObject(project, new ProjectResDto());
-    dto.members = project.members;
+    dto.members = project.members.map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
     return dto;
   });
   res.json(createApiResponse<ProjectResDto[]>(data));
 });
-
-/**
- * GET /api/projects/:slug
- * Fetch a project by its slug.
- * Params: slug (string, required)
- * Response: ApiResponse<ProjectResDto | null> (project details and members, or null if not found)
- */
-router.get('/:slug', async (req: Request<{ slug: string }>, res: Response<ApiResponse<ProjectResDto | null>>, next: NextFunction) => {
-    const { slug } = req.params;
-    if (!slug) {
-      throw new CustomError('Project slug is required', ErrorCodes.NO_DATA);
-    }
-
-    // Fetch project by slug
-    const project = await projectService.getProjectBySlug(slug);
-    if (!project) {
-      // Return 200 with data: null (not an error, just not found)
-      res.json(createApiResponse<ProjectResDto | null>(null));
-      return;
-    }
-    const dto = mapObject(project, new ProjectResDto());
-    dto.members = project.members;
-    res.json(createApiResponse<ProjectResDto>(dto));
-  }
-);
 
 // PUT /api/projects/:id - update project details (name, description, slug)
 /**
@@ -159,7 +138,7 @@ router.put(
     }
 
     const dto = mapObject(updatedProject, new ProjectResDto());
-    dto.members = updatedProject.members;
+    dto.members = updatedProject.members.map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
     res.json(createApiResponse<ProjectResDto>(dto));
   }
 );
@@ -255,8 +234,8 @@ router.post(
     next: NextFunction
   ) => {
     const { projectId } = req.params;
-    const { email, role } = req.body;
-    if (!projectId || !email || !role) {
+    const { email, roleId } = req.body;
+    if (!projectId || !email || !roleId) {
       throw new CustomError('Project ID, email, and role are required', ErrorCodes.NO_DATA);
     }
     const user = await userService.getUserByEmail(email);
@@ -269,7 +248,7 @@ router.post(
           email,
           inviterId: req.user!.userId,
           projectId,
-          role: role as ProjectRole,
+          roleId: roleId,
         });
       } catch (err) {
         logger.error('Failed to insert invitation:', err);
@@ -298,9 +277,9 @@ router.post(
       return;
     }
 
-    logger.debug('Adding member to project:', { projectId, userId: user.id, role });
+    logger.debug('Adding member to project:', { projectId, userId: user.id, roleId });
     // Add member to project
-    const success = await projectService.addMemberToProject(projectId, user.id, role as ProjectRole);
+    const success = await projectService.addMemberToProject(projectId, user.id, roleId);
     const dto = new ProjectAddMemberResDto();
     dto.success = success;
     res.json(createApiResponse<ProjectAddMemberResDto>(dto));
@@ -323,14 +302,14 @@ router.put(
   ) => {
     // projectId and memberId are UUIDs
     const { projectId, memberId } = req.params;
-    const { role } = req.body;
+    const { roleId, roleName } = req.body;
 
-    if (!projectId || !memberId || !role) {
+    if (!projectId || !memberId || !roleId || !roleName) {
       throw new CustomError('Project ID, member ID, and role are required', ErrorCodes.NO_DATA);
     }
 
     // Directly update member role (no permission check)
-    const success = await projectService.updateMemberRole(projectId, memberId, role);
+    const success = await projectService.updateMemberRole(projectId, memberId, roleId, roleName);
 
     if (!success) {
       throw new CustomError('Failed to update member role', ErrorCodes.INTERNAL_ERROR);

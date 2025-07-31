@@ -26,11 +26,11 @@ export class InvitationService {
    * Insert a new invitation for a user to join a project. Generates token and expiration internally.
    * Returns the generated token.
    */
-  async insertInvitation({ email, inviterId, projectId, role, status }: {
+  async insertInvitation({ email, inviterId, projectId, roleId, status }: {
     email: string;
     inviterId: string;
     projectId?: string;
-    role?: ProjectRole;
+    roleId?: string;
     status?: InvitationStatus;
   }): Promise<string> {
     const token = crypto.randomBytes(32).toString('hex');
@@ -39,7 +39,7 @@ export class InvitationService {
       email,
       inviterId,
       projectId,
-      role,
+      roleId,
       token,
       status: status ?? InvitationStatus.PENDING,
       expiresAt,

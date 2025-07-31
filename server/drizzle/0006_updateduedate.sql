@@ -1,1 +1,0 @@
-ALTER TABLE "tasks" ALTER COLUMN "due_date" SET DATA TYPE date;

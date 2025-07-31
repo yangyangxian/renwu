@@ -2,7 +2,7 @@ import { ProjectRole, ErrorCodes, InvitationStatus } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError';
 import { eq, inArray, and } from 'drizzle-orm';
 import { db } from '../database/databaseAccess';
-import { projects, projectMembers, users, tasks } from '../database/schema';
+import { projects, projectMembers, users, tasks, roles } from '../database/schema';
 import logger from '../utils/logger';
 
 export class ProjectEntity {
@@ -23,7 +23,9 @@ export class ProjectMemberEntity {
   id: string = '';
   name: string = '';
   email?: string = '';
-  role: ProjectRole = ProjectRole.MEMBER;
+  roleId: string = '';
+  roleName?: string = '';
+  roleDescription?: string | null;
   constructor(init?: Partial<ProjectMemberEntity>) {
     Object.assign(this, init);
   }
@@ -41,7 +43,7 @@ export class ProjectService {
   /**
    * Add a member to a project.
    */
-  async addMemberToProject(projectId: string, userId: string, role: ProjectRole): Promise<boolean> {
+  async addMemberToProject(projectId: string, userId: string, roleId: string): Promise<boolean> {
     // Check if already a member
     const existing = await db.select().from(projectMembers)
       .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)));
@@ -49,11 +51,11 @@ export class ProjectService {
       throw new CustomError('User is already a member of this project.', ErrorCodes.PROJECT_ALREADY_MEMBER_ERROR);
     }
     
-    logger.debug('Adding member to project:', { projectId, userId, role });
+    logger.debug('Adding member to project:', { projectId, userId, roleId });
     const [inserted] = await db.insert(projectMembers).values({
       projectId,
       userId,
-      role,
+      roleId,
     }).returning();
     return !!inserted;
   }
@@ -61,7 +63,7 @@ export class ProjectService {
    * Get a project by its ID.
    */
   async getProjectById(projectId: string): Promise<ProjectEntity | null> {
-    // Get project and all members
+    // Get project and all members, joining roles for real role name/description
     const rows = await db
       .select({
         projectId: projects.id,
@@ -74,11 +76,14 @@ export class ProjectService {
         memberId: users.id,
         memberName: users.name,
         memberEmail: users.email,
-        memberRole: projectMembers.role,
+        memberRoleId: projectMembers.roleId,
+        memberRoleName: roles.name,
+        memberRoleDescription: roles.description,
       })
       .from(projects)
       .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
       .innerJoin(users, eq(projectMembers.userId, users.id))
+      .innerJoin(roles, eq(projectMembers.roleId, roles.id))
       .where(eq(projects.id, projectId));
 
     if (!rows || rows.length === 0) return null;
@@ -98,7 +103,9 @@ export class ProjectService {
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        role: row.memberRole as ProjectRole,
+        roleId: row.memberRoleId,
+        roleName: row.memberRoleName,
+        roleDescription: row.memberRoleDescription,
       }));
     }
     return project;
@@ -121,7 +128,7 @@ export class ProjectService {
         memberId: users.id,
         memberName: users.name,
         memberEmail: users.email,
-        memberRole: projectMembers.role,
+        memberRole: projectMembers.roleId,
       })
       .from(projects)
       .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
@@ -145,7 +152,7 @@ export class ProjectService {
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        role: row.memberRole as ProjectRole,
+        roleId: row.memberRole as ProjectRole,
       }));
     }
     return project;
@@ -168,7 +175,7 @@ export class ProjectService {
     }
 
     // Use a transaction to ensure both inserts succeed or fail together
-    const projectId = await db.transaction(async (tx:any) => {
+    const projectId = await db.transaction(async (tx: any) => {
       // Insert project with user-provided slug
       const [projectRow] = await tx.insert(projects).values({
         name,
@@ -178,11 +185,15 @@ export class ProjectService {
       }).returning();
       if (!projectRow) throw new CustomError('Failed to create project', ErrorCodes.INTERNAL_ERROR);
 
-      // Add owner as project member with OWNER role
+      // Get the OWNER roleId from the roles table
+      const [ownerRole] = await tx.select().from(roles).where(eq(roles.name, ProjectRole.OWNER)).limit(1);
+      if (!ownerRole) throw new CustomError('OWNER role not found in roles table', ErrorCodes.INTERNAL_ERROR);
+
+      // Add owner as project member with OWNER roleId
       await tx.insert(projectMembers).values({
         projectId: projectRow.id,
         userId: ownerId,
-        role: ProjectRole.OWNER,
+        roleId: ownerRole.id,
       });
 
       // Return the new project ID
@@ -216,11 +227,14 @@ export class ProjectService {
         memberId: users.id,
         memberName: users.name,
         memberEmail: users.email,
-        memberRole: projectMembers.role,
+        memberRoleId: projectMembers.roleId,
+        memberRoleName: roles.name,
+        memberRoleDescription: roles.description,
       })
       .from(projects)
       .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
       .innerJoin(users, eq(projectMembers.userId, users.id))
+      .innerJoin(roles, eq(projectMembers.roleId, roles.id))
       .where(inArray(projects.id, projectIds));
 
     // Group by project and map to ProjectEntity
@@ -245,7 +259,9 @@ export class ProjectService {
         id: row.memberId,
         name: row.memberName,
         email: row.memberEmail,
-        role: row.memberRole as ProjectRole,
+        roleId: row.memberRoleId,
+        roleName: row.memberRoleName,
+        roleDescription: row.memberRoleDescription,
       }));
     }
     return Array.from(projectMap.values());
@@ -332,7 +348,7 @@ export class ProjectService {
    * @param role string
    * @returns boolean success
    */
-  async updateMemberRole(projectId: string, memberId: string, role: string): Promise<boolean> {
+  async updateMemberRole(projectId: string, memberId: string, roleId: string, roleName: string): Promise<boolean> {
     // Fetch current project members
     const project = await this.getProjectById(projectId);
     if (!project) {
@@ -343,12 +359,12 @@ export class ProjectService {
     if (!currentMember) {
       throw new CustomError('Member not found', ErrorCodes.NOT_FOUND);
     }
-    const isCurrentAdmin = adminRoles.includes(currentMember.role);
-    const isChangingToNonAdmin = !adminRoles.includes(role as ProjectRole);
+    const isCurrentAdmin = adminRoles.includes(currentMember.roleName as ProjectRole);
+    const isChangingToNonAdmin = !adminRoles.includes(roleName as ProjectRole);
     if (isCurrentAdmin && isChangingToNonAdmin) {
       // Count admins/owners excluding the current member
       const remainingAdmins = project.members.filter(
-        m => m.id !== memberId && adminRoles.includes(m.role)
+        m => m.id !== memberId && adminRoles.includes(m.roleName as ProjectRole)
       ).length;
       if (remainingAdmins === 0) {
         throw new CustomError('Project must have at least one admin or owner.', ErrorCodes.PROJECT_LAST_ADMIN_ERROR);
@@ -357,7 +373,7 @@ export class ProjectService {
     // Update the role for the given member in the project
     const [updated] = await db
       .update(projectMembers)
-      .set({ role })
+      .set({ roleId })
       .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, memberId)))
       .returning();
     return !!updated;

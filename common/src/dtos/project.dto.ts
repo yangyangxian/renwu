@@ -6,7 +6,7 @@ export const ProjectAddMemberReqSchema = z.object({
 
 export class ProjectAddMemberReqDto {
   email: string = '';
-  role: string = '';
+  roleId: string = '';
 }
 
 export class ProjectAddMemberResDto {
@@ -21,7 +21,8 @@ export class ProjectUpdateReqDto {
   slug?: string;
 }
 export class ProjectMemberRoleUpdateReqDto {
-  role: string = '';
+  roleId: string = '';
+  roleName?: string = '';
 }
 
 export const ProjectCreateReqSchema = z.object({
@@ -44,7 +45,8 @@ export class ProjectMemberResDto {
   id: string = '';
   name: string = '';
   email?: string = '';
-  role: string = '';
+  roleId: string = '';
+  roleName?: string = '';
 }
 
 export class ProjectCreateReqDto {

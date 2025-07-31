@@ -14,13 +14,11 @@ export const getMyTasks = () => '/api/users/me/tasks';
 export const getTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const updateTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const deleteTaskById = (taskId: string) => `/api/tasks/${taskId}`;
-export const getTasksByProjectSlug = (projectSlug: string) => `/api/tasks/project/${projectSlug}`;
 export const getTasksByProjectId = (projectId: string) => `/api/tasks/project/id/${projectId}`;
 
 // --- Projects ---
 export const getProjects = () => '/api/projects';
 export const getMyProjects = () => '/api/projects/me';
-export const getProjectBySlug = (projectSlug: string) => `/api/projects/${projectSlug}`;
 export const getProjectById = (projectId: string) => `/api/projects/id/${projectId}`;
 export const updateProjectById = (projectId: string) => `/api/projects/${projectId}`;
 export const deleteProjectById = (projectId: string) => `/api/projects/${projectId}`;
@@ -30,10 +28,9 @@ export const removeProjectMember = (projectId: string, userId: string) => `/api/
 export const updateProjectMemberRole = (projectId: string, memberId: string) => `/api/projects/${projectId}/members/${memberId}/role`;
 
 // --- Users ---
-export const getUserByEmail = (email: string) => `/api/users/email/${encodeURIComponent(email)}`;
 export const getUsersByEmailSearch = (email: string) => `/api/users/search?email=${encodeURIComponent(email)}`;
 export const updateMe = () => '/api/users/me';
 
-// --- Hello ---
-export const getHello = () => '/api/hello';
+// --- Roles ---
+export const getProjectRoles = () => '/api/auth/roles';
 

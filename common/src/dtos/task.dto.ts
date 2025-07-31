@@ -1,4 +1,4 @@
-import { TaskStatus } from '../emuns/taskStatus.js';
+import { TaskStatus } from '../enums/taskStatus.js';
 import { UserResDto } from './user.dto.js';
 
 export class TaskResDto {
