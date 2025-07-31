@@ -12,7 +12,7 @@ import { withToast } from '@/utils/toastUtils';
 import { getErrorMessage } from '@/resources/errorMessages';
 
 interface ProjectTeamTabProps {
-  project: ProjectResDto;
+  project: ProjectResDto | null;
 }
 
 export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
@@ -100,8 +100,8 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
       </Card>
 
       {/* Invite Member Modal */}
-      {inviteOpen && (
-        <MemberInvitationDialog open={inviteOpen} setOpen={setInviteOpen} projectId={project.id} />
+      {inviteOpen && project != null && (
+        <MemberInvitationDialog open={inviteOpen} setOpen={setInviteOpen} projectId={project!.id} />
       )}
     </div>
   );
