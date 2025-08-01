@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
-import { publicRoutes, LOGIN_PATH, SIGNUP_PATH, ROOT_PATH, TASKS_PATH, LANDING_PATH } from '@/routes/routeConfig';
+import { publicRoutes, LOGIN_PATH, SIGNUP_PATH, ROOT_PATH, MYTASKS_PATH, LANDING_PATH } from '@/routes/routeConfig';
 import { matchRoutePattern } from '@/routes/routeUtils';
 
 interface ProtectedRouteProps {
@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (location.pathname === ROOT_PATH) {
     if (isAuthenticated) {
-      return <Navigate to={TASKS_PATH} replace />;
+      return <Navigate to={MYTASKS_PATH} replace />;
     } else {
       return <Navigate to={LANDING_PATH} replace />;
     }

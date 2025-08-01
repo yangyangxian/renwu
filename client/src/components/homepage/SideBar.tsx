@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { ListChecks, Folder, ChevronDown, Plus, Pin, PinOff } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
 import { useNavigate, useLocation } from "react-router-dom";
-import { PROJECTS_PATH, TASKS_PATH } from "@/routes/routeConfig";
+import { PROJECTS_PATH, MYTASKS_PATH } from "@/routes/routeConfig";
 import { useState, useEffect, useRef } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { ProjectDialog } from "@/components/projectspage/ProjectDialog";
@@ -70,8 +70,8 @@ export function HomeSideBar() {
   };
 
   // Navigation handlers
-  const handleTasksClick = () => navigate(TASKS_PATH);
-  const isTasksActive = location.pathname.startsWith(TASKS_PATH);
+  const handleTasksClick = () => navigate(MYTASKS_PATH);
+  const isTasksActive = location.pathname.startsWith(MYTASKS_PATH);
   const isProjectActive = (projectId: string) => {
     // Check if current URL matches this project's slug (ignore hash for active state)
     const project = projects.find(p => p.id === projectId);

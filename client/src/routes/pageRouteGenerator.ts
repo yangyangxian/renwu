@@ -11,23 +11,24 @@ function buildRoutes(modules: Record<string, any>, base: string = '') {
   const tree: any = {};
   for (const [file, mod] of Object.entries(modules)) {
     const segments = file
-      .replace(/^\.\.\/pages\//, '')
+      .replace(/^\u0000?\.\.\/pages\//, '')
       .replace(/\.tsx$/, '')
       .split('/')
       .filter(seg => !/^\u0000?\(.*\)$/.test(seg)); // omit blanket segments
     if (!segments.length) continue;
     let isHome = segments[0] === 'home';
     let start = isHome ? 1 : 0;
-    // Flatten single dynamic route folders (e.g., task/[taskId].tsx => /task/:taskId)
+    // Flatten any route ending with a single dynamic segment (e.g., home/projects/[projectSlug].tsx => /home/projects/:projectSlug)
     if (
-      segments.length === 2 &&
-      !segments[0].startsWith('[') &&
-      /^\[.+\]$/.test(segments[1])
+      segments.length >= 2 &&
+      /^\[.+\]$/.test(segments[segments.length - 1]) &&
+      segments.slice(start, -1).every(seg => !/^\[.+\]$/.test(seg))
     ) {
-      // e.g., ['task', '[taskId]'] => path: 'task/:taskId'
-      const seg0 = segments[0].toLowerCase();
-      const seg1 = `:${segments[1].slice(1, -1)}`;
-      tree[`${seg0}/${seg1}`] = { file: mod };
+      // e.g., ['home','projects','[projectSlug]'] => path: 'home/projects/:projectSlug'
+      const staticPath = segments.slice(start, -1).map(seg => seg.toLowerCase()).join('/');
+      const dynamicSeg = `:${segments[segments.length - 1].slice(1, -1)}`;
+      const fullPath = staticPath ? `${staticPath}/${dynamicSeg}` : dynamicSeg;
+      tree[fullPath] = { file: mod };
       continue;
     }
     // Otherwise, build nested as before

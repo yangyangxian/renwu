@@ -42,7 +42,7 @@ export default function TasksPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
+      transition={{ duration: 0.4 }}
     >
       {/* Responsive menu bar: all controls in one row on all devices */}
       <div id="menuBar" className="w-full px-2">

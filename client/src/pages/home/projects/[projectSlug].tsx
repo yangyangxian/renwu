@@ -13,6 +13,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { TaskResDto } from '@fullstack/common';
 import logger from "@/utils/logger";
+import { motion } from "framer-motion";
 
 export default function ProjectDetailPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>();
@@ -50,6 +51,13 @@ export default function ProjectDetailPage() {
   }
 
   return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full h-full"
+    >
     <div className="h-full w-full flex flex-col mt-1">
       {/* Tabs and Add Task Button in one row */}
       <div className="flex items-center px-2 my-1">
@@ -139,5 +147,6 @@ export default function ProjectDetailPage() {
       {activeTab === 'team' && <ProjectTeamTab project={project} />}
       {activeTab === 'settings' && <ProjectSettingsTab />}
     </div>
+    </motion.div>
   );
 }
