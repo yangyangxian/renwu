@@ -17,6 +17,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/common/DropDownList";
+import { logger } from "@/utils/logger";
 
 interface TaskDialogProps {
   open: boolean;
@@ -105,30 +106,33 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       }));  
   };
 
+
   useEffect(() => {
+
     if (!taskState.projectId) {
       setAssignedToSelectOptions([{ value: String(user?.id || ""), label: String(user?.name || "Me") }]);
       handleAssignedToChange(String(user?.id || ""));
       return;
     }
-
+    logger.debug("TaskDialog useEffect:", taskState);
     const options = getAssignedToOptions(taskState.projectId);
     setAssignedToSelectOptions(options);
 
     let assignedUser = "";
     // Get user ID from the UserResDto object
     const initialAssignedTo = initialValues.assignedTo?.id;
-    
+
     if (options.some(opt => opt.value === initialAssignedTo)) {
       assignedUser = initialAssignedTo!;
-    } else if (options.length > 0){
+    } else if (user?.id && options.some(opt => opt.value === user.id)) {
+      assignedUser = user.id;
+    } else if (options.length > 0) {
       assignedUser = options[0].value;
     }
     setTimeout(() => {
       dispatch({ type: 'SET_FIELD', field: 'assignedTo', value: assignedUser });
     });
-  },
-  [taskState.projectId, projects, user]);
+  }, [taskState.projectId, projects, user, initialValues.assignedTo]);
 
   const handleProjectChange = (value: string) => {
       dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });

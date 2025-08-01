@@ -76,6 +76,7 @@ export function TaskFilterMenu({
           value={selectedProject}
           onValueChange={v => {
             setSelectedProject(v);
+            if (v === "all") v = '';
             if (onProjectSelect) onProjectSelect(v);
           }}
           defaultValue="all"

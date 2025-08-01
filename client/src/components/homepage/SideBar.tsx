@@ -143,7 +143,7 @@ export function HomeSideBar() {
               <TooltipTrigger asChild>
                 <span
                   onClick={toggleSidebarIsFixed}
-                  className="absolute bottom-2 right-2 rounded-full p-2 flex items-center justify-center hover:bg-secondary transition bg-transparent cursor-pointer select-none"
+                  className="absolute bottom-2 right-2 rounded-full p-2 flex items-center justify-center hover:bg-secondary transition bg-transparent cursor-pointer"
                   aria-label={sidebarIsFixed ? 'Unpin sidebar' : 'Pin sidebar'}
                   tabIndex={0}
                   role="button"

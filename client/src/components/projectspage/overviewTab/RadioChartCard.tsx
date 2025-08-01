@@ -72,7 +72,7 @@ export function RadioChartCard({ data, className }: RadioChartCardProps) {
 			  key={entry.key}
 			  className="flex items-center py-1 text-sm w-full"
 			>
-			  <div className="flex items-center gap-1 w-1/3">
+			  <div className="flex items-center gap-2 w-1/3">
 				<span
 				  className={`inline-block w-3 h-3 rounded-sm ${entry.dotClass ?? ''}`}
 				/>

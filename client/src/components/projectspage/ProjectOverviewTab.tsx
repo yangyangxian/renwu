@@ -46,7 +46,7 @@ export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
 
   return (
     <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
-      <div className="flex flex-col w-1/3 lg:w-29/100 gap-3 h-full">
+      <div className="flex flex-col w-38/100 xl:w-29/100 gap-3 h-full">
         <MemoRadioChartCard data={chartData} className={CARD_CLASS} />
         <UpcomingDeadlinesCard tasks={tasks} className={CARD_CLASS} />
       </div>
