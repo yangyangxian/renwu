@@ -32,7 +32,10 @@ const lock = await redisClient.set(lockKey, 'locked', { NX: true, PX: ttl });
   if (lock) {
     // Lock acquired, safe to add job
     logger.debug('Acquired lock for user sync, scheduling job');
-    await userSyncQueue.add('sync-all-users', {});
+    await userSyncQueue.add('sync-all-users', {}, {
+      removeOnComplete: 10,
+      removeOnFail: 100
+    });
     // Update last sync timestamp
     await redisClient.set(lastSyncKey, now.toString());
   } else {
@@ -44,5 +47,8 @@ const lock = await redisClient.set(lockKey, 'locked', { NX: true, PX: ttl });
 export async function scheduleUserRedisSyncJob(user: { id: string, email: string, name: string }) {
   if (!redisClient) throw new Error('Redis client is not initialized');
   // Always enqueue a new job for user sync
-  await userSyncQueue.add('sync-user', user);
+  await userSyncQueue.add('sync-user', user, {
+    removeOnComplete: 10,
+    removeOnFail: 100
+  });
 }
