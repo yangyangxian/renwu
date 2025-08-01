@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { DndContext, closestCorners, useDraggable, useDroppable, DragOverlay, useSensors, useSensor, PointerSensor } from "@dnd-kit/core";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Card";
 import TaskCard from "@/components/taskspage/TaskCard";
-import { TaskResDto, TaskStatus } from "@fullstack/common";
+import { PermissionAction, PermissionResourceType, TaskResDto, TaskStatus } from "@fullstack/common";
 import { ClipboardList } from "lucide-react";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
+import { usePermissionStore } from "@/stores/usePermissionStore";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface BoardViewProps {
   tasks: TaskResDto[];
@@ -49,6 +51,8 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
 
 const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedTo }) => {
   const { updateTaskById } = useTaskStore();
+  const { hasPermission } = usePermissionStore();
+  const { user } = useAuth();
 
   const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     const task = tasks.find(t => String(t.id) === String(taskId));
@@ -149,6 +153,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                           assignedTo={showAssignedTo ? task.assignedTo : undefined}
                           status={task.status}
                           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+                          showDeleteButton={hasPermission(PermissionAction.DELETE_OTHERS_TASK, { resourceType: PermissionResourceType.TASK, loggedUserId: user?.id!, projectId: task.projectId!, assignedUserId: task.assignedTo!.id })}
                         />
                       </DraggableTaskCard>
                     ))
@@ -168,6 +173,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
             projectName={activeTask.projectName}
             assignedTo={activeTask.assignedTo}
             status={activeTask.status}
+            showDeleteButton={false}
           />
         ) : null}
       </DragOverlay>

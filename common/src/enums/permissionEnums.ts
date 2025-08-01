@@ -3,6 +3,7 @@
 export enum PermissionAction {
   DELETE_PROJECT = 'delete_project',
   UPDATE_PROJECT = 'update_project',
+  DELETE_OTHERS_TASK = 'delete_others_task',
 }
 
 export enum PermissionResourceType {

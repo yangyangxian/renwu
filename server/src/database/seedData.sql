@@ -1,5 +1,3 @@
--- Custom SQL migration file, put your code below! --
-
 -- Seed default roles (matching ProjectRole enum)
 INSERT INTO roles (id, name, description) VALUES
   (gen_random_uuid(), 'member', 'Project member'),
@@ -10,12 +8,20 @@ ON CONFLICT (name) DO NOTHING;
 -- Seed default permissions (matching PermissionAction enum)
 INSERT INTO permissions (id, action, description) VALUES
   (gen_random_uuid(), 'delete_project', 'Delete project'),
-  (gen_random_uuid(), 'update_project', 'Update project')
+  (gen_random_uuid(), 'update_project', 'Update project'),
+  (gen_random_uuid(), 'delete_others_task', 'Delete others tasks')
 ON CONFLICT (action) DO NOTHING;
 
 -- Optionally, seed role_permissions (assign permissions according to role)
 -- Owner: all permissions
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'owner';
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'owner'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'admin' AND p.action = 'update_project';
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'admin' AND p.action = 'update_project'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'admin' AND p.action = 'delete_others_task'
+ON CONFLICT (role_id, permission_id) DO NOTHING;

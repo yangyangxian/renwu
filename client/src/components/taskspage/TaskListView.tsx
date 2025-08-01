@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui-kit/Badge";
 import TaskDetail from "./TaskDetail";
 import { statusLabels, statusColors, statusIcons } from "@/consts/taskStatusConfig"
 import { Label } from "@/components/ui-kit/Label";
+import { usePermissionStore } from '@/stores/usePermissionStore';
+import { PermissionAction, PermissionResourceType } from '@fullstack/common';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface TaskListViewProps {
   tasks: TaskResDto[];
@@ -16,6 +19,8 @@ interface TaskListViewProps {
 }
 
 const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) => {
+  const { hasPermission } = usePermissionStore();
+  const { user } = useAuth();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
   const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
@@ -140,26 +145,38 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
           </DropdownMenu>
         </div>
         {sortedTasks.length ? (
-          sortedTasks.map((task, idx) => (
-            <Fragment key={task.id}>
-              <div onClick={() => setSelectedTaskId(task.id)}>
-                <TaskCard
-                  taskId={task.id}
-                  title={task.title}
-                  description={task.description}
-                  dueDate={task.dueDate}
-                  projectName={task.projectName}
-                  status={task.status}
-                  assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                  className={`cursor-pointer rounded-none hover:border-l-primary hover:scale-100 bg-white-black py-3 pl-4 min-h-22 border-border shadow-none
-                    ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
-                />
-              </div>
-              {idx < sortedTasks.length - 1 && (
-                <div className="border-b border-border" />
-              )}
-            </Fragment>
-          ))
+          sortedTasks.map((task, idx) => {
+            const showDeleteButton = hasPermission(
+              PermissionAction.DELETE_OTHERS_TASK,
+              {
+                resourceType: PermissionResourceType.TASK,
+                loggedUserId: user?.id!,
+                projectId: task.projectId!,
+                assignedUserId: task.assignedTo?.id!
+              }
+            );
+            return (
+              <Fragment key={task.id}>
+                <div onClick={() => setSelectedTaskId(task.id)}>
+                  <TaskCard
+                    taskId={task.id}
+                    title={task.title}
+                    description={task.description}
+                    dueDate={task.dueDate}
+                    projectName={task.projectName}
+                    status={task.status}
+                    assignedTo={showAssignedTo ? task.assignedTo : undefined}
+                    className={`cursor-pointer rounded-none hover:border-l-primary hover:scale-100 bg-white-black py-3 pl-4 min-h-22 border-border shadow-none
+                      ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
+                    showDeleteButton={showDeleteButton}
+                  />
+                </div>
+                {idx < sortedTasks.length - 1 && (
+                  <div className="border-b border-border" />
+                )}
+              </Fragment>
+            );
+          })
         ) : (
           <Label className="p-4 text-muted-foreground">No tasks found.</Label>
         )}

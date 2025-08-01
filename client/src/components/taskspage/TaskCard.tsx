@@ -27,7 +27,7 @@ interface TaskCardProps {
   status?: TaskStatus;
   onClick?: () => void;
   className?: string;
-  // Remove onDelete prop - we'll handle it internally
+  showDeleteButton?: boolean; 
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -37,7 +37,8 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, status, onClick, description, className }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
+  status, onClick, description, className, showDeleteButton }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
 
@@ -66,21 +67,27 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       onClick={onClick}
     >
       {/* Delete icon, only visible on hover or focus */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-1.5 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 transition-opacity duration-150 p-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 focus-visible:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto focus:pointer-events-auto focus-visible:pointer-events-auto dark:bg-black/60 dark:hover:bg-red-900"
-        style={{ width: 24, height: 24, minWidth: 0 }}
-        tabIndex={0}
-        aria-label="Delete task"
-        type="button"
-        onClick={e => {
-          e.stopPropagation();
-          setDialogOpen(true);
-        }}
-      >
-        <Trash2 className="w-3 h-3" />
-      </Button>
+      {showDeleteButton && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-1.5 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
+          transition-opacity duration-150 p-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 
+          focus:opacity-100 focus-visible:opacity-100 pointer-events-none group-hover:pointer-events-auto 
+          group-focus-within:pointer-events-auto focus:pointer-events-auto focus-visible:pointer-events-auto 
+          dark:bg-black/60 dark:hover:bg-red-900"
+          style={{ width: 24, height: 24, minWidth: 0 }}
+          tabIndex={0}
+          aria-label="Delete task"
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            setDialogOpen(true);
+          }}
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      )}
       {dialogOpen && (
         <Dialog
           open={dialogOpen}

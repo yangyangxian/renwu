@@ -1,0 +1,1 @@
+ALTER TYPE "public"."permission_action" ADD VALUE 'delete_others_task';

@@ -11,7 +11,6 @@ import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/commo
 import logger from '../utils/logger';
 import { invitationService } from '../services/InvitationService';
 
-
 // Project API Router
 // Each endpoint below is documented with its purpose, parameters, and response structure.
 const router = express.Router();
@@ -307,7 +306,6 @@ router.put(
     if (!projectId || !memberId || !roleId || !roleName) {
       throw new CustomError('Project ID, member ID, and role are required', ErrorCodes.NO_DATA);
     }
-
     // Directly update member role (no permission check)
     const success = await projectService.updateMemberRole(projectId, memberId, roleId, roleName);
 

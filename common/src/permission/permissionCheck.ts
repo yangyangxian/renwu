@@ -7,7 +7,8 @@ export interface ResourceBase {
 
 export interface TaskResource extends ResourceBase {
   resourceType: PermissionResourceType.TASK;
-  taskId: string;
+  projectId: string;
+  loggedUserId: string;
   assignedUserId: string;
 }
 
@@ -55,5 +56,10 @@ function hasTaskPermission(
   taskResource: TaskResource,
   action: PermissionAction
 ): boolean {
-  return false; // Placeholder for actual task permission logic
+  if (taskResource.loggedUserId === taskResource.assignedUserId)
+    return true;
+
+  const projectPerm = permissions.find((p) => p.projectId === taskResource.projectId);
+  if (!projectPerm) return false;
+  return projectPerm.actions.includes(action);
 } 
