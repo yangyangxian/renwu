@@ -69,13 +69,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   return (
     <>
       {/* Title block above columns */}
-      <div className="mb-10">
+      <div className="mb-8">
         <Label className="text-xl font-bold flex items-center gap-3">
           <Tag className="size-5" />
           {task.title}
         </Label>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,5fr)_minmax(260px,3fr)] gap-8 px-4 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,11fr)_minmax(280px,5fr)] gap-6 px-3 w-full">
         {/* Left column: Description and future comments */}
         <div className="flex flex-col gap-4">
           {/* Description */}
@@ -90,7 +90,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 initialValue={descInput}
                 onSubmit={handleSubmitDesc}
                 onCancel={() => setEditingDesc(false)}
-                className="min-h-[300px]"
+                className="min-h-[330px]"
                 maxLength={10000}
                 storageKey={taskId}
               />
@@ -98,7 +98,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <>
                 {descInput ? (
                   <div
-                    className="markdown-body min-h-[200px] !text-sm !leading-6 !bg-muted/40 dark:!bg-muted/65 !p-3 rounded-lg cursor-pointer overflow-auto border border-transparent hover:border-muted-foreground/20 transition-colors"
+                    className="markdown-body min-h-[200px] max-h-[450px] !text-sm !leading-6 !bg-muted/40 dark:!bg-muted/65 !p-3 rounded-lg cursor-pointer overflow-auto border border-transparent hover:border-muted-foreground/20 transition-colors"
                     onClick={handleDescClick}
                     dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
                   />

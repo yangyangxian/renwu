@@ -18,7 +18,7 @@ interface TaskListViewProps {
 const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) => {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
-  const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE];
+  const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>(defaultStatuses);
   const [sortField, setSortField] = useState<'dueDate' | 'updateDate' | 'title'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -79,45 +79,47 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
   return (
     <div className="flex h-full w-full overflow-auto">
       {/* Left: Task List */}
-      <div className="w-1/3 min-w-[260px] max-w-[300px] rounded-l-lg border border-input dark:border-[1.5px] bg-white-black overflow-y-auto shadow-xs">
+      <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input dark:border-[1.5px] bg-white-black overflow-y-auto shadow-xs">
         {/* Status Filter and Sort Icon */}
         <div className="sticky bg-white-black top-0 z-10 py-1 border-b border-border flex items-center justify-between rounded-t-md">
           {/* Status Filter DropdownMenu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex items-center focus-visible:ring-0 focus-visible:outline-none focus-visible:border-transparent px-1 ml-2">
-                {statusFilter.map(status => (
-                  <Badge key={status} variant="outline" className={`border flex items-center gap-1 ${statusColors[status]} px-2 py-0.5 text-[11px] font-medium`}>
-                    {statusLabels[status]}
-                  </Badge>
+          <div className="max-w-[220px]">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex justify-start items-center focus-visible:ring-0 focus-visible:outline-none focus-visible:border-transparent px-[3px] ml-2">
+                  {statusFilter.map(status => (
+                    <Badge key={status} variant="outline" className={`border flex items-center gap-[2px] ${statusColors[status]} px-[6px] py-0.5 text-[11px] font-medium`}>
+                      {statusLabels[status]}
+                    </Badge>
+                  ))}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="ml-3 w-[180px]">
+                {allStatuses.map((status) => (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={statusFilter.includes(status)}
+                    onCheckedChange={(checked: boolean) => {
+                      setStatusFilter((prev: TaskStatus[]) =>
+                        checked
+                          ? [...prev, status]
+                          : prev.filter((s) => s !== status)
+                      );
+                    }}
+                    onSelect={(e: any) => e.preventDefault()}
+                    className="flex items-center gap-2 cursor-pointer text-xs"
+                  >
+                    {statusIcons[status as TaskStatus]}
+                    {statusLabels[status as TaskStatus]}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="ml-3 w-[180px]">
-              {allStatuses.map((status) => (
-                <DropdownMenuCheckboxItem
-                  key={status}
-                  checked={statusFilter.includes(status)}
-                  onCheckedChange={(checked: boolean) => {
-                    setStatusFilter((prev: TaskStatus[]) =>
-                      checked
-                        ? [...prev, status]
-                        : prev.filter((s) => s !== status)
-                    );
-                  }}
-                  onSelect={(e: any) => e.preventDefault()}
-                  className="flex items-center gap-2 cursor-pointer text-xs"
-                >
-                  {statusIcons[status as TaskStatus]}
-                  {statusLabels[status as TaskStatus]}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {/* Sort Dropdown - Icon Trigger */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="py-2 mr-1 focus-visible:ring-0 focus-visible:outline-none focus-visible:border-transparent" aria-label="Sort">
+              <Button variant="ghost" size="icon" className="py-2 mr-[2px] focus-visible:ring-0 focus-visible:outline-none focus-visible:border-transparent" aria-label="Sort">
                 <ArrowDownUp className="text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
@@ -163,7 +165,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
         )}
       </div>
       {/* Right: Task Details */}
-      <div className="flex-1 p-6 overflow-y-auto shadow-xs bg-white-black rounded-r-lg border border-input dark:border-[1.5px] border-l-0 dark:border-l-0 overflow-auto">
+      <div className="flex-1 p-5 overflow-y-auto shadow-xs bg-white-black rounded-r-lg border border-input dark:border-[1.5px] border-l-0 dark:border-l-0">
         {selectedTaskId ? (
           <TaskDetail taskId={selectedTaskId} />
         ) : (

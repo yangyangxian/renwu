@@ -101,7 +101,12 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
       <textarea
         data-slot="textarea"
         value={editedValue}
-        className="flex-1 resize-none border-input text-primary placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 w-full rounded-md border bg-transparent p-3 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-[0.95rem] min-h-32"
+        className="flex-1 resize-none border-input text-primary placeholder:text-muted-foreground 
+        focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 
+        dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 
+        w-full rounded-md border bg-transparent p-3 text-base shadow-xs transition-[color,box-shadow]
+         outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 
+         md:text-[0.9rem] min-h-32"
         onKeyDown={handleKeyDown}
         onChange={handleChange}
         {...props}
