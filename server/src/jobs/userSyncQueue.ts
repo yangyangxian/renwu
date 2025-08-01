@@ -1,6 +1,7 @@
 import { Queue } from 'bullmq';
 import appConfig from '../appConfig';
 import { redisClient } from '../database/redisClient';
+import logger from '../utils/logger';
 
 export const userSyncQueue = new Queue('user-sync', { connection: { url: appConfig.redisUrl } });
 
@@ -20,8 +21,9 @@ export async function scheduleUserSyncJob() {
   // Check last sync timestamp
   const lastSync = await redisClient.get(lastSyncKey);
   const now = Date.now();
-  if (lastSync && now - Number(lastSync) < minInterval) {
+  if (lastSync && (now - Number(lastSync)) < minInterval) {
     // Last sync was too recent, skip scheduling
+    logger.debug('User sync job is already scheduled or running, skipping this time');
     return;
   }
 
@@ -29,7 +31,8 @@ export async function scheduleUserSyncJob() {
 const lock = await redisClient.set(lockKey, 'locked', { NX: true, PX: ttl });
   if (lock) {
     // Lock acquired, safe to add job
-    await userSyncQueue.add('sync-all-users', {}, { jobId: 'unique-user-sync' });
+    logger.debug('Acquired lock for user sync, scheduling job');
+    await userSyncQueue.add('sync-all-users', {});
     // Update last sync timestamp
     await redisClient.set(lastSyncKey, now.toString());
   } else {
@@ -40,6 +43,6 @@ const lock = await redisClient.set(lockKey, 'locked', { NX: true, PX: ttl });
   // Add or update a single user in Redis via a job
 export async function scheduleUserRedisSyncJob(user: { id: string, email: string, name: string }) {
   if (!redisClient) throw new Error('Redis client is not initialized');
-  // Use a unique jobId per user to deduplicate
-  await userSyncQueue.add('sync-user', user, { jobId: `sync-user:${user.id}` });
+  // Always enqueue a new job for user sync
+  await userSyncQueue.add('sync-user', user);
 }
