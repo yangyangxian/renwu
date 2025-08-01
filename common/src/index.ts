@@ -5,4 +5,5 @@ export * from './enums/httpStatus.js';
 export * from './enums/taskStatus.js';
 export * from './enums/projectRole.js';
 export * from './enums/invitationStatus.js';
-export * from './enums/permissionAction.js';
+export * from './enums/permissionEnums.js';
+export * from './permission/permissionCheck.js';

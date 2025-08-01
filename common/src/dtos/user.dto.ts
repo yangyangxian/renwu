@@ -1,3 +1,11 @@
+import { PermissionAction } from '../enums/permissionEnums';
+
+export class UserPermissionResDto {
+  userId: string = '';
+  projectId: string = '';
+  actions: PermissionAction[] = [];
+}
+
 export class UserResDto {
   id: string = '';
   name: string = '';

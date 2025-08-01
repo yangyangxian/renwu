@@ -40,6 +40,12 @@ function authenticateJWT(req: Request, res: Response, next: NextFunction): void 
     
     const payload = verifyJWT(token);
     req.user = payload;
+    if (!req.user || !req.user.userId) {
+      const error = new CustomError(
+        'Invalid access token',
+        ErrorCodes.UNAUTHORIZED
+      );
+    }
     next();
     
   } catch (error) {

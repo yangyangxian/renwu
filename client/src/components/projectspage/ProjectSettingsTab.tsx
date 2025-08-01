@@ -5,6 +5,8 @@ import { Button } from '@/components/ui-kit/Button';
 import { AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { usePermissionStore } from '@/stores/usePermissionStore';
+import { PermissionAction, PermissionResourceType } from '@fullstack/common';
 import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PROJECTS_PATH } from '@/routes/routeConfig';
@@ -16,12 +18,23 @@ export function ProjectSettingsTab() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentProject: project, projects, updateProject, deleteProject } = useProjectStore();
+  const { hasPermission } = usePermissionStore();
   const [projectName, setProjectName] = useState(project?.name || '');
   const [projectSlug, setProjectSlug] = useState(project?.slug || '');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [validationErrors, setValidationErrors] = useState<{ name?: string; slug?: string }>({});
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const canEditProject = project && hasPermission(
+    PermissionAction.UPDATE_PROJECT,
+    { resourceType: PermissionResourceType.PROJECT, projectId: project.id }
+  );
+
+  const canDeleteProject = project && hasPermission(
+    PermissionAction.DELETE_PROJECT,
+    { resourceType: PermissionResourceType.PROJECT, projectId: project.id }
+  );
   
   // Track if there are unsaved changes (both name and slug are updateable)
   const hasUnsavedChanges = projectName !== (project?.name || '') || projectSlug !== (project?.slug || '');
@@ -201,6 +214,7 @@ export function ProjectSettingsTab() {
               }}
               placeholder="Project Name"
               className={validationErrors.name ? 'border-red-500' : ''}
+              disabled={!canEditProject}
             />
             <div className="h-5 mt-1">
               {validationErrors.name && (
@@ -221,6 +235,7 @@ export function ProjectSettingsTab() {
               }}
               placeholder="Project Slug"
               className={validationErrors.slug ? 'border-red-500' : ''}
+              disabled={!canEditProject}
             />
             <div className="h-5 mt-1">
               {validationErrors.slug && (
@@ -234,7 +249,7 @@ export function ProjectSettingsTab() {
           <Button 
             size="sm"
             onClick={handleSave}
-            disabled={!isFormValid || !hasUnsavedChanges}
+            disabled={!isFormValid || !hasUnsavedChanges || !canEditProject}
           >
             Save Changes
           </Button>
@@ -242,7 +257,7 @@ export function ProjectSettingsTab() {
             size="sm"
             variant="outline" 
             onClick={handleCancel}
-            disabled={!hasUnsavedChanges}
+            disabled={!hasUnsavedChanges || !canEditProject}
           >
             Cancel
           </Button>
@@ -275,6 +290,7 @@ export function ProjectSettingsTab() {
                 value={deleteConfirmation}
                 onChange={e => setDeleteConfirmation(e.target.value)}
                 placeholder={project?.name || 'project name'}
+                disabled={!canDeleteProject}
               />
               <Button
                 size="sm"

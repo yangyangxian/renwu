@@ -34,3 +34,6 @@ export const updateMe = () => '/api/users/me';
 // --- Roles ---
 export const getProjectRoles = () => '/api/auth/roles';
 
+// --- Permissions ---
+export const getMyPermissionsEndpoint = () => '/api/users/me/permissions';
+

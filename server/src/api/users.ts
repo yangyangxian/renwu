@@ -1,3 +1,5 @@
+import { permissionService } from '../services/PermissionService';
+import { UserPermissionResDto } from '@fullstack/common';
 import { Router, Request, Response, NextFunction } from 'express';
 import { userService } from '../services/UserService';
 import { UserReqDto, UserResDto, ApiResponse, ErrorCodes, UpdateUserReqDto, TaskResDto } from '@fullstack/common';
@@ -41,17 +43,6 @@ router.get('/search', async (req: Request, res: Response<ApiResponse<UserResDto[
   }
 });
 
-// // GET /api/users/email/:email
-// router.get('/email/:email', async (req: Request<UserReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
-//   const email = req.params.email;
-//   const user = await userService.getUserByEmail(email);
-//   if (!user) {
-//     throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
-//   }
-//   const userDto = mapObject(user, new UserResDto());
-//   res.json(createApiResponse<UserResDto>(userDto));
-// });
-
 router.put('/me', async (req: Request<{}, {}, UpdateUserReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   try {
     const user = req.user;
@@ -81,13 +72,22 @@ router.put('/me', async (req: Request<{}, {}, UpdateUserReqDto>, res: Response<A
 // GET /api/users/me/tasks
 router.get('/me/tasks', async (req: Request, res: Response<ApiResponse<TaskResDto[]>>, next: NextFunction) => {
   try {
-    const user = req.user;
-    if (!user) {
-      throw new CustomError('Unauthorized', ErrorCodes.UNAUTHORIZED);
-    }
-    const tasks = await taskService.getTasksByUserId(user.userId);
+    const userId = req.user!.userId;
+    const tasks = await taskService.getTasksByUserId(userId);
     const data = tasks.map((task: any) => mapObject(task, new TaskResDto()));
     res.json(createApiResponse(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/users/me/permissions - get all permissions for the logged-in user
+router.get('/me/permissions', async (req: Request, res: Response<ApiResponse<UserPermissionResDto[]>>, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const permissions = await permissionService.getAllUserPermissions(userId);
+    const dto: UserPermissionResDto[] = permissions.map((perm: any) => mapObject(perm, new UserPermissionResDto()));
+    res.json(createApiResponse(dto));
   } catch (err) {
     next(err);
   }

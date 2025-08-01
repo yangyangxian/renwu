@@ -1,12 +1,14 @@
 import { roleOptions } from '@/consts/roleOptions';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { usePermissionStore } from '@/stores/usePermissionStore';
+import { PermissionAction, PermissionResourceType } from '@fullstack/common';
 import { useState } from 'react';
 import { Card } from '@/components/ui-kit/Card';
 import { Label } from '@/components/ui-kit/Label';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { UserPlus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui-kit/Select';
-import { ProjectMemberResDto, ProjectResDto, ProjectRole, UserResDto } from '@fullstack/common';
+import { ProjectMemberResDto, ProjectResDto, ProjectRole } from '@fullstack/common';
 import { MemberInvitationDialog } from '@/components/projectspage/settingTab/MemberInvitationDialog';
 import { withToast } from '@/utils/toastUtils';
 import { getErrorMessage } from '@/resources/errorMessages';
@@ -19,6 +21,13 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
   // roleOptions imported
   const [inviteOpen, setInviteOpen] = useState(false);
   const { updateMemberRoleToProject, projectRoles } = useProjectStore();
+  const { hasPermission, fetchPermissions } = usePermissionStore();
+
+  // Permission check: can user update project roles?
+  const canUpdateRoles = project && hasPermission(
+    PermissionAction.UPDATE_PROJECT,
+    { resourceType: PermissionResourceType.PROJECT, projectId: project.id }
+  );
 
   const handleRoleChange = async (projectId: string, memberId: string, oldRoleId: string, newRoleId: string, newRoleName: string) => {
     if (newRoleId === oldRoleId) return;
@@ -26,6 +35,7 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
     await withToast(
       async () => {
         await updateMemberRoleToProject(projectId, memberId, newRoleId, newRoleName);
+        await fetchPermissions();
       },
       {
         success: 'Role updated.',
@@ -67,6 +77,7 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
                   onValueChange={async (newRole) => {
                     await handleRoleChange(project.id, member.id, member.roleId, newRole, projectRoles.find(role => role.id === newRole)?.name || '');
                   }}
+                  disabled={!canUpdateRoles}
                 >
                   <SelectTrigger size="sm" className="min-w-[110px]">
                     <SelectValue>
