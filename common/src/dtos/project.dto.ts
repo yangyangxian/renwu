@@ -27,7 +27,7 @@ export class ProjectMemberRoleUpdateReqDto {
 
 export const ProjectCreateReqSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
-  slug: z.string().min(2, 'Slug must be at least 2 characters').max(3, 'Slug must be at most 3 characters'),
+  slug: z.string().min(2, 'Project ID must be at least 2 characters').max(3, 'Project ID must be at most 3 characters'),
   description: z.string().optional(),
 });
 export class ProjectResDto {
