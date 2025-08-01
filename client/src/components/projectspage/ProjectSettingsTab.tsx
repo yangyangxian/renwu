@@ -205,7 +205,10 @@ export function ProjectSettingsTab() {
         <Label className="text-muted-foreground mb-6 block">Basic project information and settings.</Label>
         <div className="flex flex-row gap-8">
           <div className="flex flex-col w-1/2">
-            <Label className="mb-2 font-medium">Project Name</Label>
+            <div className="flex items-center gap-2 mb-3">
+              <Label className="font-medium">Project Name</Label>
+              <Label className="text-xs text-muted-foreground">(best ≤ 22 characters for sidebar)</Label>
+            </div>
             <Input
               value={projectName}
               onChange={e => {
@@ -223,9 +226,9 @@ export function ProjectSettingsTab() {
             </div>
           </div>
           <div className="flex flex-col w-1/2">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <Label className="font-medium">Project ID</Label>
-              <span className="text-xs text-muted-foreground">(2-3 characters)</span>
+              <Label className="text-xs text-muted-foreground">(2-3 characters)</Label>
             </div>
             <Input
               value={projectSlug}
@@ -283,7 +286,7 @@ export function ProjectSettingsTab() {
               </div>
             </div>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label className="text-sm font-medium">Enter "{project?.name || 'project name'}" to permanently delete this project:</Label>
             <div className="flex flex-col items-start gap-6">
               <Input
