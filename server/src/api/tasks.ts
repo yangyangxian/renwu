@@ -1,9 +1,10 @@
 import express from 'express';
 import { taskService } from '../services/TaskService';
-import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse } from '@fullstack/common';
+import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
 import logger from '../utils/logger';
+import { requirePermission } from '../middlewares/permissionMiddleware';
 
 const router = express.Router();
 const publicRouter = express.Router();
@@ -42,6 +43,11 @@ router.put('/:taskId',
 
 // Delete a task by ID
 router.delete('/:taskId',
+  (req, res, next) => requirePermission(
+    PermissionAction.DELETE_OTHERS_TASK,
+    PermissionResourceType.TASK,
+    req.params.taskId
+  )(req, res, next),
   async (
     req: express.Request<{ taskId: string }>,
     res: express.Response<ApiResponse<null>>,

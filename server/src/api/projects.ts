@@ -4,12 +4,13 @@ import { userService } from '../services/UserService';
 import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
-import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto } from '@fullstack/common';
+import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto, hasPermission, PermissionAction, PermissionResourceType, UserPermissionResDto } from '@fullstack/common';
 import { emailService } from '../services/EmailService';
 import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
 import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/common';
 import logger from '../utils/logger';
 import { invitationService } from '../services/InvitationService';
+import { requirePermission } from '../middlewares/permissionMiddleware';
 
 // Project API Router
 // Each endpoint below is documented with its purpose, parameters, and response structure.
@@ -104,12 +105,16 @@ router.get('/me', async (req, res) => {
  */
 router.put(
   '/:id',
+  (req, res, next) => requirePermission(
+    PermissionAction.UPDATE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.id
+  )(req, res, next),
   async (
     req: Request<{ id: string }, {}, ProjectUpdateReqDto>,
     res: Response<ApiResponse<ProjectResDto>>,
     next: NextFunction
   ) => {
-    const userId = req.user!.userId;
     const { id } = req.params;
     const { name, description, slug } = req.body;
 
@@ -183,26 +188,20 @@ router.get(
  */
 router.delete(
   '/:id',
+  (req, res, next) => requirePermission(
+    PermissionAction.DELETE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.id
+  )(req, res, next),
   async (
     req: Request<{ id: string }>,
     res: Response<ApiResponse<{ success: boolean }>>,
     next: NextFunction
   ) => {
-    const userId = req.user!.userId;
     const { id } = req.params;
 
     if (!id) {
       throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
-    }
-
-    // Check if user has permission to delete this project (project owner)
-    const project = await projectService.getProjectById(id);
-    if (!project) {
-      throw new CustomError('Project not found', ErrorCodes.NOT_FOUND);
-    }
-
-    if (project.createdBy !== userId) {
-      throw new CustomError('Only project owners can delete projects', ErrorCodes.UNAUTHORIZED);
     }
 
     // Delete the project
@@ -227,6 +226,11 @@ router.delete(
  */
 router.post(
   '/:projectId/members',
+  (req, res, next) => requirePermission(
+    PermissionAction.UPDATE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.projectId
+  )(req, res, next),
   async (
     req: Request<{ projectId: string }, {}, ProjectAddMemberReqDto>,
     res: Response<ApiResponse<ProjectAddMemberResDto>>,
@@ -294,6 +298,11 @@ router.post(
  */
 router.put(
   '/:projectId/members/:memberId/role',
+  (req, res, next) => requirePermission(
+    PermissionAction.UPDATE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.projectId
+  )(req, res, next),
   async (
     req: Request<{ projectId: string; memberId: string }, {}, ProjectMemberRoleUpdateReqDto>,
     res: Response<ApiResponse<{ success: boolean }>>,
