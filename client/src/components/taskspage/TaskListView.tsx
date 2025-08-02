@@ -1,6 +1,7 @@
-import { ArrowDownUp } from "lucide-react";
+import { ArrowDownWideNarrow } from "lucide-react";
 import { useEffect, useState, useMemo, Fragment } from "react";
 import { TaskResDto, TaskStatus } from "@fullstack/common";
+import { TaskSortField, TaskSortOrder } from "@fullstack/common";
 import TaskCard from "./TaskCard";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuRadioItem, DropdownMenuRadioGroup } from "@/components/ui-kit/Dropdown-menu";
 import { Button } from "@/components/ui-kit/Button";
@@ -25,17 +26,17 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
   const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>(defaultStatuses);
-  const [sortField, setSortField] = useState<'dueDate' | 'updateDate' | 'title'>('dueDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<TaskSortField>(TaskSortField.DUE_DATE);
+  const [sortOrder, setSortOrder] = useState<TaskSortOrder>(TaskSortOrder.ASC);
 
   // Automatically set sortOrder when sortField changes
   const handleSortFieldChange = (val: string) => {
-    const field = val as 'dueDate' | 'updateDate' | 'title';
+    const field = val as TaskSortField;
     setSortField(field);
-    if (field === 'dueDate') {
-      setSortOrder('asc');
-    } else if (field === 'updateDate') {
-      setSortOrder('desc');
+    if (field === TaskSortField.DUE_DATE) {
+      setSortOrder(TaskSortOrder.ASC);
+    } else if (field === TaskSortField.UPDATE_DATE) {
+      setSortOrder(TaskSortOrder.DESC);
     }
   };
 
@@ -52,20 +53,20 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
     const tasksCopy = filteredTasks.slice();
     tasksCopy.sort((a, b) => {
       let result = 0;
-      if (sortField === 'dueDate') {
+      if (sortField === TaskSortField.DUE_DATE) {
         if (!a.dueDate && !b.dueDate) result = 0;
         else if (!a.dueDate) result = 1;
         else if (!b.dueDate) result = -1;
         else result = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      } else if (sortField === 'updateDate') {
+      } else if (sortField === TaskSortField.UPDATE_DATE) {
         if (!a.updatedAt && !b.updatedAt) result = 0;
         else if (!a.updatedAt) result = 1;
         else if (!b.updatedAt) result = -1;
         else result = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-      } else if (sortField === 'title') {
+      } else if (sortField === TaskSortField.TITLE) {
         result = a.title.localeCompare(b.title);
       }
-      return sortOrder === 'asc' ? result : -result;
+      return sortOrder === TaskSortOrder.ASC ? result : -result;
     });
     return tasksCopy;
   }, [filteredTasks, sortField, sortOrder]);
@@ -125,21 +126,21 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="py-2 mr-[2px] focus-visible:ring-0 focus-visible:outline-none focus-visible:border-transparent" aria-label="Sort">
-                <ArrowDownUp className="text-muted-foreground" />
+                <ArrowDownWideNarrow className="text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="mr-2 w-[160px] py-1 rounded-md shadow-lg border border-border bg-popover">
               {/* Sort Field Group */}
               <div className="px-2 pb-1 text-[12px] text-muted-foreground">Sort By</div>
               <DropdownMenuRadioGroup value={sortField} onValueChange={handleSortFieldChange}>
-                <DropdownMenuRadioItem value="dueDate" className="cursor-pointer text-xs">Due Date</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="updateDate" className="cursor-pointer text-xs">Update Date</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="title" className="cursor-pointer text-xs">Title</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value={TaskSortField.DUE_DATE} className="cursor-pointer text-xs">Due Date</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value={TaskSortField.UPDATE_DATE} className="cursor-pointer text-xs">Update Date</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value={TaskSortField.TITLE} className="cursor-pointer text-xs">Title</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <div className="px-2 pt-2 pb-1 text-xs text-muted-foreground">Order</div>
-              <DropdownMenuRadioGroup value={sortOrder} onValueChange={(val: string) => setSortOrder(val as 'asc' | 'desc')}>
-                <DropdownMenuRadioItem value="asc" className="cursor-pointer text-xs">Ascending</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="desc" className="cursor-pointer text-xs">Descending</DropdownMenuRadioItem>
+              <DropdownMenuRadioGroup value={sortOrder} onValueChange={(val: string) => setSortOrder(val as TaskSortOrder)}>
+                <DropdownMenuRadioItem value={TaskSortOrder.ASC} className="cursor-pointer text-xs">Ascending</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value={TaskSortOrder.DESC} className="cursor-pointer text-xs">Descending</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>

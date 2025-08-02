@@ -11,7 +11,7 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
 import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
-import { TaskResDto } from '@fullstack/common';
+import { TaskResDto, TaskViewMode } from '@fullstack/common';
 import logger from "@/utils/logger";
 import { motion } from "framer-motion";
 
@@ -30,7 +30,7 @@ export default function ProjectDetailPage() {
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
 
   // Local state for task view (list or board)
-  const [taskView, setTaskView] = useState<'list' | 'board'>('board');
+  const [taskView, setTaskView] = useState<TaskViewMode>(TaskViewMode.BOARD);
 
   // Get projectId from global projects object using slug
   const projectId = projectSlug && projects
@@ -87,13 +87,13 @@ export default function ProjectDetailPage() {
 
         {activeTab === 'tasks' && (
           <div className="flex items-center gap-2 ml-auto">
-            <Tabs value={taskView} onValueChange={v => setTaskView(v as 'list' | 'board')}>
+            <Tabs value={taskView} onValueChange={v => setTaskView(v as TaskViewMode)}>
               <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
-                <TabsTrigger value="board" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
+                <TabsTrigger value={TaskViewMode.BOARD} className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <LayoutDashboard className="w-4 h-4" />
                   Board
                 </TabsTrigger>
-                <TabsTrigger value="list" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
+                <TabsTrigger value={TaskViewMode.LIST} className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
                   <List className="w-4 h-4" />
                   List
                 </TabsTrigger>

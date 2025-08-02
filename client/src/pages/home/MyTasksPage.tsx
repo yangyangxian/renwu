@@ -4,7 +4,7 @@ import { useTaskStore } from '@/stores/useTaskStore';
 import { useProjectStore } from '@/stores/useProjectStore';
 import BoardView from "@/components/taskspage/BoardView";
 import TaskListView from "@/components/taskspage/TaskListView";
-import { TaskResDto } from '@fullstack/common';
+import { TaskResDto, TaskViewMode } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Plus, Kanban, List } from "lucide-react";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
@@ -13,14 +13,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
 
 export default function TasksPage() {
-  const tabOptions = ["board", "list"];
-  const [view, setView] = useTabHash(tabOptions, "list");
+  const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
+  const [view, setView] = useTabHash(tabOptions, TaskViewMode.LIST);
   const {
     tasks,
-    loading,
-    error,
     fetchMyTasks,
-    updateTaskById,
   } = useTaskStore();
 
   // Use project store instead of outlet context
@@ -99,7 +96,7 @@ export default function TasksPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 rounded-xl">
-        {view === 'board' && (       
+        {view === TaskViewMode.BOARD && (       
           <BoardView
             tasks={filteredTasks}
             onTaskClick={taskId => {
@@ -110,7 +107,7 @@ export default function TasksPage() {
           />
         )}
 
-        {view === 'list' && (
+        {view === TaskViewMode.LIST && (
           <TaskListView 
             tasks={filteredTasks} 
           />

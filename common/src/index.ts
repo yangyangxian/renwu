@@ -7,3 +7,5 @@ export * from './enums/projectRole.js';
 export * from './enums/invitationStatus.js';
 export * from './enums/permissionEnums.js';
 export * from './permission/permissionCheck.js';
+export * from './enums/taskViewMode.js';
+export * from './enums/taskSort.js';
