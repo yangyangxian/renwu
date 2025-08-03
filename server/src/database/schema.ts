@@ -4,16 +4,7 @@
 // To push migration to database: npx drizzle-kit push --config src/drizzle.config.ts
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
-import {
-  pgTable,
-  uuid,
-  text,
-  varchar,
-  timestamp,
-  pgEnum,
-  primaryKey,
-  date,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb } from 'drizzle-orm/pg-core';
 import { TaskStatus, PermissionAction, InvitationStatus } from '@fullstack/common';
 
 // ---------- ENUMS ----------
@@ -64,6 +55,16 @@ export const tasks = pgTable('tasks', {
 
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ---------- TABLE: Task Views ----------
+export const taskView = pgTable('task_view', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 64 }).notNull(),
+  viewConfig: jsonb('view_config').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // ---------- TABLE: Project Members ----------

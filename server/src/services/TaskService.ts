@@ -1,8 +1,6 @@
-// ...existing code...
-import { normalizeNullableString } from '../utils/stringHelpers';
 import { db } from '../database/databaseAccess';
-import { tasks, projects, users } from '../database/schema';
-import { eq } from 'drizzle-orm';
+import { tasks, projects, users, taskView } from '../database/schema';
+import { eq, and } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
@@ -22,6 +20,13 @@ export class TaskEntity {
   dueDate?: string = '';
   createdAt: string = '';
   updatedAt: string = '';
+}
+
+export class TaskViewEntity {
+  id: string = '';
+  userId: string = '';
+  name: string = '';
+  viewConfig: any = null;
 }
 
 type DbTask = typeof tasks.$inferInsert;
@@ -80,8 +85,63 @@ class TaskService {
         ? new Date(data.dueDate as string).toISOString()
         : null;
     }
-
     return result;
+  }
+
+  /**
+   * Get all task views for a user
+   */
+  async getTaskViewsByUser(userId: string): Promise<TaskViewEntity[]> {
+    logger.debug('Fetching task views for user:', userId);
+    const rows = await db
+      .select({
+        id: taskView.id,
+        userId: taskView.userId,
+        name: taskView.name,
+        viewConfig: taskView.viewConfig,
+        createdAt: taskView.createdAt,
+        updatedAt: taskView.updatedAt,
+      })
+      .from(taskView)
+      .where(eq(taskView.userId, userId));
+    return rows.map(row => {
+      const entity = Object.assign(new TaskViewEntity(), row);
+      return entity;
+    });
+  }
+
+  /**
+   * Create a new task view for a user
+   */
+  async createTaskView(userId: string, name: string, viewConfig: any) {
+    const [created] = await db.insert(taskView).values({ userId, name, viewConfig }).returning();
+    if (!created) throw new CustomError('Failed to create task view', ErrorCodes.INTERNAL_ERROR);
+    return created;
+  }
+
+  /**
+   * Update a task view (must belong to user)
+   */
+  async updateTaskView(userId: string, viewId: string, update: { name?: string; viewConfig?: any }) {
+    const [updated] = await db
+      .update(taskView)
+      .set({ ...update, updatedAt: new Date() })
+      .where(and(eq(taskView.id, viewId), eq(taskView.userId, userId)))
+      .returning();
+    if (!updated) throw new CustomError('Task view not found or not owned by user', ErrorCodes.NOT_FOUND);
+    return updated;
+  }
+
+  /**
+   * Delete a task view (must belong to user)
+   */
+  async deleteTaskView(userId: string, viewId: string) {
+    const [deleted] = await db
+      .delete(taskView)
+      .where(and(eq(taskView.id, viewId), eq(taskView.userId, userId)))
+      .returning();
+    if (!deleted) throw new CustomError('Task view not found or not owned by user', ErrorCodes.NOT_FOUND);
+    return deleted;
   }
     
   /**

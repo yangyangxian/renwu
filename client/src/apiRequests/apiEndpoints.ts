@@ -11,7 +11,7 @@ export const authMe = () => '/api/auth/me';
 // --- Tasks ---
 export const getTasks = () => '/api/tasks';
 export const getMyTasks = () => '/api/users/me/tasks';
-export const getTaskById = (taskId: string) => `/api/tasks/${taskId}`;
+export const getTaskById = (taskId: string) => `/api/tasks/id/${taskId}`;
 export const updateTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const deleteTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const getTasksByProjectId = (projectId: string) => `/api/tasks/project/id/${projectId}`;
