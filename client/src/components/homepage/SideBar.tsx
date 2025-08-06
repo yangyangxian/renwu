@@ -44,13 +44,17 @@ export function HomeSideBar() {
   const [mouseCooldown, setMouseCooldown] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
-  const { projects, loading, fetchProjects, createProject } = useProjectStore();
+  const { projects, loading, fetchProjectRoles, fetchProjects, createProject } = useProjectStore();
   const { taskViews, fetchTaskViews } = useTaskViewStore();
 
   // Fetch projects on mount
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  useEffect(() => {
+    fetchProjectRoles();
+  }, [fetchProjectRoles]);
 
   // Fetch task views on mount
   useEffect(() => {
@@ -139,7 +143,7 @@ export function HomeSideBar() {
           <TasksMenuItem 
             showText={showText}
             isTasksActive={isTasksActive}
-            handleTasksClick={handleTasksClick}
+            handleTasksClick={() => navigate(MYTASKS_PATH)}
             taskViews={taskViews}
             navigate={navigate}
             location={location}
@@ -210,19 +214,21 @@ function TasksMenuItem({
   location: any;
   isTaskViewActive: (viewId: string) => boolean;
 }) {
-  const {setCurrentSelectedTaskView} = useTaskViewStore();
+  const { setCurrentSelectedTaskView } = useTaskViewStore();
   return (
     <SidebarMenuItem>
       {/* Main "My Tasks" button - always visible */}
       <SidebarMenuButton 
         className="relative flex items-center min-w-0 mb-1 cursor-pointer"
         isActive={isTasksActive}
-        onClick={handleTasksClick}
+        onClick={() => {
+          setCurrentSelectedTaskView(null);
+          handleTasksClick();
+        }}
       >
         <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
         {showText && <span>My Tasks</span>}
       </SidebarMenuButton>
-      
       {/* Task views - always visible when showText is true */}
       {showText && (
         <SidebarMenuSub className="gap-[6px]">

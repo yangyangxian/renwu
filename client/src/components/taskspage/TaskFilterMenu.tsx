@@ -3,27 +3,28 @@ import { Input } from "@/components/ui-kit/Input";
 import { Calendar, Folder } from "lucide-react";
 import { Search } from "lucide-react";
 import { ProjectResDto, TaskResDto } from "@fullstack/common";
+import { useState, useEffect } from "react";
+import logger from "@/utils/logger";
+import { useProjectStore } from "@/stores/useProjectStore";
 
 interface TaskFilterMenuProps {
   showProjectSelect?: boolean;
   showDateRange?: boolean;
   showSearch?: boolean;
-  projects: ProjectResDto[];
   tasks: TaskResDto[];
   onFilter: (filtered: TaskResDto[]) => void;
   onProjectSelect?: (projectId: string) => void;
 }
 
-import { useState, useEffect } from "react";
 export function TaskFilterMenu({
   showProjectSelect,
   showDateRange,
   showSearch,
-  projects,
   tasks,
   onFilter,
   onProjectSelect,
 }: TaskFilterMenuProps) {
+  const { projects } = useProjectStore();
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const [dateRange, setDateRange] = useState<'1m' | '3m' | '1y' | 'all'>("1m");
   const [searchTerm, setSearchTerm] = useState<string>("");

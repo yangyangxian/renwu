@@ -72,10 +72,6 @@ export function useProjectStore() {
     return roles;
   }, [setProjectRoles]);
 
-  useEffect(() => {
-    fetchProjectRoles();
-  }, []);
-
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     setError(null);

@@ -12,20 +12,20 @@ import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
 import logger from "@/utils/logger";
+import { useTaskViewStore } from "@/stores/useTaskViewStore";
 
 export default function TasksPage() {
-  const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
-  const [view, setView] = useTabHash(tabOptions, TaskViewMode.LIST);
-  const {
-    tasks,
-    fetchMyTasks,
-  } = useTaskStore();
+  
+  const { tasks, fetchMyTasks } = useTaskStore();
+  const { currentSelectedTaskView } = useTaskViewStore();
 
-  // Use project store instead of outlet context
-  const { projects } = useProjectStore();
+  logger.debug("currentSelectedTaskView:" + currentSelectedTaskView?.viewConfig.viewMode);
+  const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
+  const [view, setView] = useTabHash(tabOptions, currentSelectedTaskView?.viewConfig.viewMode || TaskViewMode.BOARD);
 
   // Fetch tasks when component mounts (route-specific data)
   useEffect(() => {
+    logger.info("Fetching my tasks for TasksPage");
     fetchMyTasks();
   }, [fetchMyTasks]);
 
@@ -50,7 +50,6 @@ export default function TasksPage() {
             showDateRange={true}
             showProjectSelect={true}
             showSearch={true}
-            projects={projects}
             tasks={tasks}
             onFilter={setFilteredTasks}
             onProjectSelect={setSelectedProjectId}

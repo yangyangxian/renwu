@@ -80,7 +80,7 @@ export class APIClient {
             internalErrorToastActive = false;
           }, 2000); // 2 seconds, adjust as needed
         }
-        return this.handleResponse<TResponse>(response);
+        return this.handleResponse<TResponse>(response, url);
       },
       error => {
         // Handle network errors (server down, no internet, CORS, etc.)
@@ -94,7 +94,7 @@ export class APIClient {
     );
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async handleResponse<T>(response: Response, url?: string): Promise<T> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       if (errorData && errorData.error) {
@@ -114,7 +114,7 @@ export class APIClient {
     }
 
     const apiResponse: ApiResponse<T> = await response.json();
-    logger.info(`Received response:`, apiResponse);
+    logger.info(`Received response from ${url}:`, apiResponse);
 
     if (apiResponse.error) {
       // Handle cases where the API signals failure in its own structure, even with a 2xx HTTP status

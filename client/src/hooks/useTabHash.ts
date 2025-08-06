@@ -12,6 +12,13 @@ export function useTabHash<T extends string>(tabs: T[], defaultTab: T): [T, (tab
 
   const [activeTab, setActiveTab] = useState<T>(getInitialTab());
 
+  // defaultTab may change when the selected task view changes
+  useEffect(() => {
+    if (tabs.includes(defaultTab)) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -23,7 +30,11 @@ export function useTabHash<T extends string>(tabs: T[], defaultTab: T): [T, (tab
 
   const handleTabChange = (tab: T) => {
     setActiveTab(tab);
-    navigate({ hash: `#${tab}` }, { replace: true });
+    navigate({
+      pathname: location.pathname,
+      search: location.search,
+      hash: `#${tab}`,
+    }, { replace: true });
   };
 
   return [activeTab, handleTabChange];
