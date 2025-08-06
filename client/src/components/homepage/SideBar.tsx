@@ -9,6 +9,7 @@ import {
 } from "@/components/ui-kit/Sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui-kit/Collapsible";
 import { ListChecks, Folder, ChevronDown, Plus, Pin, PinOff } from "lucide-react";
+import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, MYTASKS_PATH } from "@/routes/routeConfig";
@@ -43,13 +44,18 @@ export function HomeSideBar() {
   const [mouseCooldown, setMouseCooldown] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
-  // Use project store
   const { projects, loading, fetchProjects, createProject } = useProjectStore();
+  const { taskViews, fetchTaskViews } = useTaskViewStore();
 
   // Fetch projects on mount
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  // Fetch task views on mount
+  useEffect(() => {
+    fetchTaskViews();
+  }, [fetchTaskViews]);
 
   // Handle project creation
   const handleProjectSubmit = async (project: { name: string; slug: string; description: string }) => {
@@ -71,7 +77,11 @@ export function HomeSideBar() {
 
   // Navigation handlers
   const handleTasksClick = () => navigate(MYTASKS_PATH);
-  const isTasksActive = location.pathname.startsWith(MYTASKS_PATH);
+  const isTasksActive = location.pathname.startsWith(MYTASKS_PATH) && !location.search.includes('view=');
+  const isTaskViewActive = (viewName: string) => {
+    const dashedName = viewName.replace(/\s+/g, '-');
+    return location.pathname.startsWith(MYTASKS_PATH) && location.search.includes(`view=${dashedName}`);
+  };
   const isProjectActive = (projectId: string) => {
     // Check if current URL matches this project's slug (ignore hash for active state)
     const project = projects.find(p => p.id === projectId);
@@ -126,7 +136,15 @@ export function HomeSideBar() {
         onMouseLeave={handleSidebarMouseLeave}
       >
         <SidebarMenu className="gap-2 bg-white-black">
-          <TaskMenuItem isActive={isTasksActive} onClick={handleTasksClick} showText={showText} />
+          <TasksMenuItem 
+            showText={showText}
+            isTasksActive={isTasksActive}
+            handleTasksClick={handleTasksClick}
+            taskViews={taskViews}
+            navigate={navigate}
+            location={location}
+            isTaskViewActive={isTaskViewActive}
+          />
           <ProjectsMenuItem
             showText={showText}
             isProjectActive={isProjectActive}
@@ -175,25 +193,62 @@ export function HomeSideBar() {
   );
 }
 
-function TaskMenuItem({ 
-  isActive, 
-  onClick, 
-  showText 
+function TasksMenuItem({ 
+  showText,
+  isTasksActive,
+  handleTasksClick,
+  taskViews,
+  navigate,
+  location,
+  isTaskViewActive
 }: { 
-  isActive: boolean; 
-  onClick: () => void;
-  showText: boolean;
+  showText: boolean; 
+  isTasksActive: boolean;
+  handleTasksClick: () => void;
+  taskViews: any[];
+  navigate: any;
+  location: any;
+  isTaskViewActive: (viewId: string) => boolean;
 }) {
+  const {setCurrentSelectedTaskView} = useTaskViewStore();
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={isActive}
-        onClick={onClick}
-        className="flex items-center cursor-pointer"
+      {/* Main "My Tasks" button - always visible */}
+      <SidebarMenuButton 
+        className="relative flex items-center min-w-0 mb-1 cursor-pointer"
+        isActive={isTasksActive}
+        onClick={handleTasksClick}
       >
         <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
-        {showText && <span className="truncate">My Tasks</span>}
+        {showText && <span>My Tasks</span>}
       </SidebarMenuButton>
+      
+      {/* Task views - always visible when showText is true */}
+      {showText && (
+        <SidebarMenuSub className="gap-[6px]">
+          {taskViews.length === 0 && (
+            <SidebarMenuSubItem>
+              <SidebarMenuButton className="pl-4 cursor-default text-muted-foreground">
+                No saved views
+              </SidebarMenuButton>
+            </SidebarMenuSubItem>
+          )}
+          {taskViews.map((view) => (
+            <SidebarMenuSubItem key={view.id}>
+              <SidebarMenuButton
+                className="pl-3 cursor-pointer"
+                isActive={isTaskViewActive(view.name)}
+                onClick={() => {
+                  setCurrentSelectedTaskView(view);
+                  navigate(`/mytasks?view=${view.name.replace(/\s+/g, '-')}`);
+                }}
+              >
+                {view.name}
+              </SidebarMenuButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      )}
     </SidebarMenuItem>
   );
 }
@@ -215,6 +270,7 @@ function ProjectsMenuItem({
   loading: boolean;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleAddProject = (e: React.MouseEvent) => {
     e.stopPropagation();

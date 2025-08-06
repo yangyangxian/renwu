@@ -11,6 +11,7 @@ import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { motion } from "framer-motion";
+import logger from "@/utils/logger";
 
 export default function TasksPage() {
   const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
@@ -116,4 +117,3 @@ export default function TasksPage() {
     </motion.div>
   );
 }
-

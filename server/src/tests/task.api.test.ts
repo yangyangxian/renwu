@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, expect } from 'vitest';
 import { baseURL } from './globalSetup';
-import { TaskStatus, TaskViewCreateReqDto, TaskViewMode, TaskViewUpdateReqDto } from '@fullstack/common';
+import { TaskSortField, TaskSortOrder, TaskStatus, TaskViewCreateReqDto, TaskViewMode, TaskViewUpdateReqDto } from '@fullstack/common';
 
 describe('Task View API', () => {
   let userCookie: string;
@@ -20,9 +20,13 @@ describe('Task View API', () => {
   it('should create a new task view', async () => {
     const body: TaskViewCreateReqDto = {
       name: 'My View',
-      viewConfig: { status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS], sort: 'createdAt',
-        projectId: 'add project id', viewMode: TaskViewMode.LIST, searchWord: 'search term', 
-        dateRange: { start: new Date().toDateString(), end: new Date().toDateString() } },
+      viewConfig: {
+        status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
+        projectId: 'add project id', viewMode: TaskViewMode.LIST, searchTerm: 'search term',
+        dateRange: { start: new Date().toDateString(), end: new Date().toDateString() },
+        sortField: TaskSortField.DUE_DATE,
+        sortOrder: TaskSortOrder.ASC
+      },
     };
     const res = await fetch(`${baseURL}/api/tasks/views`, {
       method: 'POST',
@@ -52,7 +56,17 @@ describe('Task View API', () => {
   it('should update a task view', async () => {
     const body: TaskViewUpdateReqDto = {
       name: 'Updated View',
-      viewConfig: { status: [TaskStatus.IN_PROGRESS], sort: 'createdAt', projectId: 'updated', viewMode: TaskViewMode.LIST },
+      viewConfig: {
+        status: [TaskStatus.IN_PROGRESS], projectId: 'updated',
+        viewMode: TaskViewMode.LIST,
+        dateRange: {
+          start: '',
+          end: ''
+        },
+        sortField: TaskSortField.DUE_DATE,
+        sortOrder: TaskSortOrder.ASC,
+        searchTerm: ''
+      },
     };
     const res = await fetch(`${baseURL}/api/tasks/views/${createdViewId}`, {
       method: 'PUT',

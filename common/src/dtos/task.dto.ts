@@ -1,3 +1,4 @@
+import { TaskSortField, TaskSortOrder } from '../enums/taskSort.js';
 import { TaskStatus } from '../enums/taskStatus.js';
 import { TaskViewMode } from '../enums/taskViewMode.js';
 import { UserResDto } from './user.dto.js';
@@ -75,19 +76,21 @@ export class TaskViewResDto {
 }
 
 export class ViewConfig {
-  projectId!: string;
-  dateRange!: DateRange;
-  status!: TaskStatus[];
-  sort!: string;
-  viewMode!: TaskViewMode;
-  searchWord!: string
-  constructor(projectId: string, dateRange: DateRange, status: TaskStatus[], sort: string, viewMode: TaskViewMode, searchWord: string) {
+  projectId: string;
+  dateRange: DateRange;
+  status: TaskStatus[];
+  sortField: TaskSortField;
+  sortOrder: TaskSortOrder;
+  viewMode: TaskViewMode;
+  searchTerm: string;
+  constructor(projectId: string, dateRange: DateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string) {
     this.projectId = projectId;
     this.dateRange = dateRange;
     this.status = status;
-    this.sort = sort;
+    this.sortField = sortField;
+    this.sortOrder = sortOrder;
     this.viewMode = viewMode;
-    this.searchWord = searchWord;
+    this.searchTerm = searchTerm;
   }
 }
 
