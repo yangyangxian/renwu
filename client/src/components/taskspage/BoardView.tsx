@@ -132,15 +132,31 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                   tasksByStatus[col.key]
                     .slice() // avoid mutating original
                     .sort((a, b) => {
-                      if (a.dueDate && b.dueDate) {
-                        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-                      } else if (a.dueDate) {
-                        return -1;
-                      } else if (b.dueDate) {
-                        return 1;
-                      } else {
-                        return 0;
+                      // For TODO and IN_PROGRESS, sort by dueDate (earliest first)
+                      if (col.key === TaskStatus.TODO || col.key === TaskStatus.IN_PROGRESS) {
+                        if (a.dueDate && b.dueDate) {
+                          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                        } else if (a.dueDate) {
+                          return -1;
+                        } else if (b.dueDate) {
+                          return 1;
+                        } else {
+                          return 0;
+                        }
                       }
+                      // For IN_REVIEW and DONE, sort by updatedAt (most recent first)
+                      if (col.key === TaskStatus.DONE || col.key === TaskStatus.CLOSE) {
+                        if (a.updatedAt && b.updatedAt) {
+                          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+                        } else if (a.updatedAt) {
+                          return -1;
+                        } else if (b.updatedAt) {
+                          return 1;
+                        } else {
+                          return 0;
+                        }
+                      }
+                      return 0;
                     })
                     .map((task, idx) => (
                       <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
