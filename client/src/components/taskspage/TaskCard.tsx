@@ -7,15 +7,7 @@ import { formatDateSmart } from "@/utils/dateUtils";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "@/components/ui-kit/Dialog";
+import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 
 interface TaskCardProps {
   taskId: string; // Add taskId prop for deletion
@@ -88,35 +80,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
           <Trash2 className="w-3 h-3" />
         </Button>
       )}
-      {dialogOpen && (
-        <Dialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-        >
-          <DialogContent showCloseButton={false} className="max-w-xs" onClick={e => e.stopPropagation()}>
-            <DialogHeader>
-              <DialogTitle>Delete Task?</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this task? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" type="button">Cancel</Button>
-              </DialogClose>
-              <Button variant="destructive" type="button"
-                onClick={e => {
-                  e.stopPropagation();
-                  setDialogOpen(false);
-                  handleDeleteTask();
-                }}
-              >
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <ConfirmDeleteDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="Delete Task?"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        onConfirm={(e?: React.MouseEvent) => {
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+          setDialogOpen(false);
+          handleDeleteTask();
+        }}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
       <div className="flex items-center w-3/4 mb-2">
           <div className={`text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
             {!projectName || projectName === "" ? "Personal" : projectName}

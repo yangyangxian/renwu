@@ -1,5 +1,5 @@
 import BoardView from '@/components/taskspage/BoardView';
-import TaskListView from '@/components/taskspage/TaskListView';
+import TaskListView from '@/components/taskspage/ListView';
 import { useTaskStore } from '@/stores/useTaskStore';
 
 interface ProjectTasksTabProps {

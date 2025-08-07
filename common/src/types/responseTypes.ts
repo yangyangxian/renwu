@@ -9,4 +9,4 @@ export interface ApiErrorResponse {
 export interface ApiResponse<T> {
   data?: T;
   error?: ApiErrorResponse;
-}
+} 

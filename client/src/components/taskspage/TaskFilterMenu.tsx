@@ -2,10 +2,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Input } from "@/components/ui-kit/Input";
 import { Calendar, Folder } from "lucide-react";
 import { Search } from "lucide-react";
-import { ProjectResDto, TaskResDto } from "@fullstack/common";
-import { useState, useEffect } from "react";
+import { TaskResDto, TaskDateRange } from "@fullstack/common";
+import { useEffect } from "react";
 import logger from "@/utils/logger";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useTaskViewStore } from "@/stores/useTaskViewStore";
 
 interface TaskFilterMenuProps {
   showProjectSelect?: boolean;
@@ -25,9 +26,13 @@ export function TaskFilterMenu({
   onProjectSelect,
 }: TaskFilterMenuProps) {
   const { projects } = useProjectStore();
-  const [selectedProject, setSelectedProject] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<'1m' | '3m' | '1y' | 'all'>("1m");
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const { currentDisplayViewConfig, setCurrentDisplayViewConfig, currentSelectedTaskView } = useTaskViewStore();
+
+
+  // Always use currentDisplayViewConfig for UI
+  const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
+  const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.LAST_3_MONTHS;
+  const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
 
   useEffect(() => {
     const filtered = tasks.filter(t => {
@@ -35,11 +40,10 @@ export function TaskFilterMenu({
       let dateOk = true;
       if (showDateRange) {
         let threshold: Date | null = null;
-        if (dateRange !== 'all') {
+        if (dateRange !== TaskDateRange.ALL_TIME) {
           threshold = new Date();
-          if (dateRange === '1m') threshold.setMonth(threshold.getMonth() - 1);
-          if (dateRange === '3m') threshold.setMonth(threshold.getMonth() - 3);
-          if (dateRange === '1y') threshold.setFullYear(threshold.getFullYear() - 1);
+          if (dateRange === TaskDateRange.LAST_3_MONTHS) threshold.setMonth(threshold.getMonth() - 3);
+          if (dateRange === TaskDateRange.LAST_1_YEAR) threshold.setFullYear(threshold.getFullYear() - 1);
           threshold.setHours(0, 0, 0, 0);
         }
         const updatedAt = t.updatedAt ? new Date(t.updatedAt) : null;
@@ -76,14 +80,16 @@ export function TaskFilterMenu({
         <Select
           value={selectedProject}
           onValueChange={v => {
-            setSelectedProject(v);
+            setCurrentDisplayViewConfig({
+              ...currentDisplayViewConfig,
+              projectId: v
+            });
             if (v === "all" || v === "personal") v = '';
             if (onProjectSelect) onProjectSelect(v);
           }}
           defaultValue="all"
         >
           <SelectTrigger
-            size="sm"
             className="px-3 bg-white dark:text-primary flex items-center min-w-[9rem]"
             id="project-select"
           >
@@ -104,18 +110,20 @@ export function TaskFilterMenu({
 
       {showDateRange && (
         <div className="flex items-center">
-          <Select value={dateRange} onValueChange={v => setDateRange(v as any)}>
-            <SelectTrigger size="sm" className="min-w-[10rem] px-2 bg-white dark:text-primary flex gap-2" id="date-range-select">
-              <Calendar className="w-4 h-4" />
-              <SelectValue placeholder="Date range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1m">Last 30 days</SelectItem>
-              <SelectItem value="3m">Last 3 months</SelectItem>
-              <SelectItem value="1y">Last 1 year</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
+      <Select value={dateRange} onValueChange={v => setCurrentDisplayViewConfig({
+        ...currentDisplayViewConfig,
+        dateRange: v as TaskDateRange
+      })}>
+        <SelectTrigger className="min-w-[10rem] px-2 bg-white dark:text-primary flex gap-2" id="date-range-select">
+          <Calendar className="w-4 h-4" />
+          <SelectValue placeholder="Date range" />
+        </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={TaskDateRange.LAST_3_MONTHS}>Last 3 months</SelectItem>
+        <SelectItem value={TaskDateRange.LAST_1_YEAR}>Last 1 year</SelectItem>
+        <SelectItem value={TaskDateRange.ALL_TIME}>All Time</SelectItem>
+      </SelectContent>
+      </Select>
         </div>
       )}
 
@@ -125,9 +133,12 @@ export function TaskFilterMenu({
           <Input
             type="text"
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={e => setCurrentDisplayViewConfig({
+              ...currentDisplayViewConfig,
+              searchTerm: e.target.value
+            })}
             placeholder="Search"
-            className="bg-white-black text-sm pl-9 max-w-[10rem] h-[31px]"
+            className="bg-white-black text-sm pl-9 max-w-[10rem]"
           />
         </div>
       )}

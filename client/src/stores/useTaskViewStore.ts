@@ -1,7 +1,11 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
-import { TaskViewCreateReqDto, TaskViewResDto, ViewConfig } from '@fullstack/common';
+import { TaskSortField, TaskSortOrder, TaskViewCreateReqDto, TaskViewMode, TaskViewResDto, 
+  ViewConfig, TaskDateRange, 
+  TaskStatus} from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
+import { updateTaskViewById, createTaskView as createTaskViewEndpoint, deleteTaskViewById } from '@/apiRequests/apiEndpoints';
+import { View } from 'lucide-react';
 
 interface TaskViewStoreState {
   taskViews: TaskViewResDto[];
@@ -12,7 +16,20 @@ interface TaskViewStoreState {
   setTaskViews: (views: TaskViewResDto[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  currentDisplayViewConfig: ViewConfig;
+  setCurrentDisplayViewConfig: (view: ViewConfig) => void;
+  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => void;
 }
+
+const defaultDisplayViewConfig: ViewConfig = {
+  projectId: 'all',
+  dateRange: TaskDateRange.LAST_3_MONTHS,
+  searchTerm: '',
+  status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
+  sortField: TaskSortField.DUE_DATE,
+  sortOrder: TaskSortOrder.ASC,
+  viewMode: TaskViewMode.BOARD
+};
 
 const useZustandTaskViewStore = create<TaskViewStoreState>((set) => ({
   taskViews: [],
@@ -23,11 +40,38 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set) => ({
   setError: (error) => set({ error }),
   currentSelectedTaskView: null,
   setCurrentSelectedTaskView: (view) => set({ currentSelectedTaskView: view }),
+  currentDisplayViewConfig: defaultDisplayViewConfig,
+  setCurrentDisplayViewConfig: (view) => set({ currentDisplayViewConfig: view }),
+  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => set((state) => ({
+    currentDisplayViewConfig: {
+      ...state.currentDisplayViewConfig,
+      viewMode
+    }
+  })), // This function allows updating just the viewMode in the currentDisplayViewConfig
 }));
 
 export function useTaskViewStore() {
   const { taskViews, loading, error, setTaskViews, setLoading, setError, 
-    currentSelectedTaskView, setCurrentSelectedTaskView } = useZustandTaskViewStore();
+    currentSelectedTaskView, setCurrentSelectedTaskView, currentDisplayViewConfig, 
+    setCurrentDisplayViewConfig, setCurrentDisplayViewConfigViewMode } = useZustandTaskViewStore();
+    
+  const deleteTaskView = useCallback(async (viewId: string): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await apiClient.delete(deleteTaskViewById(viewId));
+      setTaskViews(taskViews.filter(tv => tv.id !== viewId));
+      if (currentSelectedTaskView && currentSelectedTaskView.id === viewId) {
+        setCurrentSelectedTaskView(null);
+        setCurrentDisplayViewConfig(defaultDisplayViewConfig);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to delete task view');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [taskViews, setTaskViews, setLoading, setError, currentSelectedTaskView, setCurrentSelectedTaskView, setCurrentDisplayViewConfig, defaultDisplayViewConfig]);
 
   const fetchTaskViews = useCallback(async () => {
     setLoading(true);
@@ -42,16 +86,35 @@ export function useTaskViewStore() {
     }
   }, [setLoading, setError, setTaskViews]);
 
+
   const createTaskView = useCallback(async (name: string, viewConfig: ViewConfig): Promise<TaskViewResDto> => {
     setLoading(true);
     setError(null);
     try {
       const reqBody: TaskViewCreateReqDto = { name, viewConfig };
-      const created = await apiClient.post<TaskViewCreateReqDto, TaskViewResDto>('/api/tasks/views', reqBody);
+      const created = await apiClient.post<TaskViewCreateReqDto, TaskViewResDto>(createTaskViewEndpoint(), reqBody);
       setTaskViews([...taskViews, created]);
       return created;
     } catch (err: any) {
       setError(err?.message || 'Failed to create task view');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [taskViews, setTaskViews, setLoading, setError]);
+
+  const updateTaskView = useCallback(async (viewId: string, name: string, viewConfig: ViewConfig): Promise<TaskViewResDto> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updated = await apiClient.put<{ name: string; viewConfig: ViewConfig }, TaskViewResDto>(
+        updateTaskViewById(viewId),
+        { name, viewConfig }
+      );
+      setTaskViews(taskViews.map(tv => tv.id === viewId ? updated : tv));
+      return updated;
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update task view');
       throw err;
     } finally {
       setLoading(false);
@@ -70,8 +133,14 @@ export function useTaskViewStore() {
     error,
     fetchTaskViews,
     createTaskView,
+    updateTaskView,
+    deleteTaskView,
     currentSelectedTaskView,
     setCurrentSelectedTaskView,
+    currentDisplayViewConfig,
+    setCurrentDisplayViewConfig,
     applyTaskView,
+    defaultDisplayViewConfig,
+    setCurrentDisplayViewConfigViewMode
   };
 }

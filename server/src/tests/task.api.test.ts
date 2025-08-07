@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, expect } from 'vitest';
 import { baseURL } from './globalSetup';
-import { TaskSortField, TaskSortOrder, TaskStatus, TaskViewCreateReqDto, TaskViewMode, TaskViewUpdateReqDto } from '@fullstack/common';
+import { TaskDateRange, TaskSortField, TaskSortOrder, TaskStatus, TaskViewCreateReqDto, TaskViewMode, TaskViewUpdateReqDto } from '@fullstack/common';
 
 describe('Task View API', () => {
   let userCookie: string;
@@ -23,7 +23,7 @@ describe('Task View API', () => {
       viewConfig: {
         status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
         projectId: 'add project id', viewMode: TaskViewMode.LIST, searchTerm: 'search term',
-        dateRange: { start: new Date().toDateString(), end: new Date().toDateString() },
+        dateRange: TaskDateRange.LAST_3_MONTHS,
         sortField: TaskSortField.DUE_DATE,
         sortOrder: TaskSortOrder.ASC
       },
@@ -59,10 +59,7 @@ describe('Task View API', () => {
       viewConfig: {
         status: [TaskStatus.IN_PROGRESS], projectId: 'updated',
         viewMode: TaskViewMode.LIST,
-        dateRange: {
-          start: '',
-          end: ''
-        },
+        dateRange: TaskDateRange.LAST_3_MONTHS,
         sortField: TaskSortField.DUE_DATE,
         sortOrder: TaskSortOrder.ASC,
         searchTerm: ''

@@ -8,9 +8,10 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui-kit/Sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui-kit/Collapsible";
-import { ListChecks, Folder, ChevronDown, Plus, Pin, PinOff } from "lucide-react";
+import { ListChecks, Folder, ChevronDown, Plus, Pin, PinOff, Trash2 } from "lucide-react";
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
+import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, MYTASKS_PATH } from "@/routes/routeConfig";
 import { useState, useEffect, useRef } from "react";
@@ -80,7 +81,6 @@ export function HomeSideBar() {
   };
 
   // Navigation handlers
-  const handleTasksClick = () => navigate(MYTASKS_PATH);
   const isTasksActive = location.pathname.startsWith(MYTASKS_PATH) && !location.search.includes('view=');
   const isTaskViewActive = (viewName: string) => {
     const dashedName = viewName.replace(/\s+/g, '-');
@@ -197,6 +197,7 @@ export function HomeSideBar() {
   );
 }
 
+
 function TasksMenuItem({ 
   showText,
   isTasksActive,
@@ -214,7 +215,24 @@ function TasksMenuItem({
   location: any;
   isTaskViewActive: (viewId: string) => boolean;
 }) {
-  const { setCurrentSelectedTaskView } = useTaskViewStore();
+  const { setCurrentSelectedTaskView, currentSelectedTaskView, defaultDisplayViewConfig,
+    setCurrentDisplayViewConfig, deleteTaskView } = useTaskViewStore();
+  const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
+  const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
+
+  // Automatically set currentSelectedTaskView based on active view in URL
+  useEffect(() => {
+    // Find the active view by matching the URL
+    const activeView = taskViews.find(view => isTaskViewActive(view.name));
+    if (activeView && (!currentSelectedTaskView || currentSelectedTaskView.id !== activeView.id)) {
+      setCurrentSelectedTaskView(activeView);
+      setCurrentDisplayViewConfig(activeView.viewConfig);
+    } else if (!activeView && currentSelectedTaskView) {
+      setCurrentSelectedTaskView(null);
+      setCurrentDisplayViewConfig(defaultDisplayViewConfig);
+    }
+  }, [location, taskViews, isTaskViewActive, setCurrentSelectedTaskView]);
+
   return (
     <SidebarMenuItem>
       {/* Main "My Tasks" button - always visible */}
@@ -241,16 +259,75 @@ function TasksMenuItem({
           )}
           {taskViews.map((view) => (
             <SidebarMenuSubItem key={view.id}>
-              <SidebarMenuButton
-                className="pl-3 cursor-pointer"
-                isActive={isTaskViewActive(view.name)}
-                onClick={() => {
-                  setCurrentSelectedTaskView(view);
-                  navigate(`/mytasks?view=${view.name.replace(/\s+/g, '-')}`);
-                }}
+              <div
+                className="relative group flex items-center"
+                onMouseEnter={() => setHoveredViewId(view.id)}
+                onMouseLeave={() => setHoveredViewId(null)}
               >
-                {view.name}
-              </SidebarMenuButton>
+                <SidebarMenuButton
+                  className="pl-3 cursor-pointer flex-1 min-w-0"
+                  isActive={isTaskViewActive(view.name)}
+                  onClick={() => {
+                    setCurrentSelectedTaskView(view);
+                    navigate(`/mytasks?view=${view.name.replace(/\s+/g, '-')}`);
+                  }}
+                >
+                  <span className="truncate">{view.name}</span>
+                </SidebarMenuButton>
+                {/* Delete button: only show for hovered item */}
+                {hoveredViewId === view.id && (
+                  <>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            className="absolute right-1 top-1/2 -translate-y-1/2 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
+                            tabIndex={0}
+                            aria-label="Delete task view"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setDeleteDialogOpenId(view.id);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Delete view</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <ConfirmDeleteDialog
+                      open={deleteDialogOpenId === view.id}
+                      onOpenChange={open => {
+                        if (!open) setDeleteDialogOpenId(null);
+                      }}
+                      title="Delete Task View?"
+                      description="Are you sure you want to delete this task view? This action cannot be undone."
+                      onConfirm={async () => {
+                        try {
+                          const wasSelected = currentSelectedTaskView && currentSelectedTaskView.id === view.id;
+                          await deleteTaskView(view.id);
+                          if (wasSelected) {
+                            // Find the next available view (excluding the deleted one)
+                            const remainingViews = taskViews.filter(v => v.id !== view.id);
+                            if (remainingViews.length > 0) {
+                              const nextView = remainingViews[0];
+                              setCurrentSelectedTaskView(nextView);
+                              navigate(`${MYTASKS_PATH}?view=${nextView.name.replace(/\s+/g, '-')}`);
+                            } else {
+                              setCurrentSelectedTaskView(null);
+                              navigate(MYTASKS_PATH);
+                            }
+                          }
+                        } finally {
+                          setDeleteDialogOpenId(null);
+                        }
+                      }}
+                      confirmText="Delete"
+                      cancelText="Cancel"
+                    />
+                  </>
+                )}
+              </div>
             </SidebarMenuSubItem>
           ))}
         </SidebarMenuSub>

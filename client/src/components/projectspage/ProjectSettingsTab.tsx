@@ -13,6 +13,7 @@ import { PROJECTS_PATH } from '@/routes/routeConfig';
 import { ProjectCreateReqSchema } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { checkSlugAvailability } from '@/apiRequests/apiEndpoints';
+import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
 
 export function ProjectSettingsTab() {
   const navigate = useNavigate();
@@ -195,19 +196,14 @@ export function ProjectSettingsTab() {
       <div className="flex flex-col w-full py-1 px-4 shadow-none">
         <div className="flex items-center gap-2 mb-2">
           <Label className="text-xl font-medium">General Settings</Label>
-          {hasUnsavedChanges && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-800/60 text-purple-700 dark:text-purple-200 rounded text-xs font-medium">
-              <div className="w-1.5 h-1.5 bg-purple-500 dark:bg-purple-400 rounded-full"></div>
-              Unsaved changes
-            </div>
-          )}
+          {hasUnsavedChanges && <UnsavedChangesIndicator />}
         </div>
         <Label className="text-muted-foreground mb-6 block">Basic project information and settings.</Label>
         <div className="flex flex-row gap-8">
           <div className="flex flex-col w-1/2">
             <div className="flex items-center gap-2 mb-3">
               <Label className="font-medium">Project Name</Label>
-              <Label className="text-xs text-muted-foreground">(best ≤ 22 characters for sidebar)</Label>
+              <Label className="text-xs text-muted-foreground">(best ≤ 22 characters)</Label>
             </div>
             <Input
               value={projectName}

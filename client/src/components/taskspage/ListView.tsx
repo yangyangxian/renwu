@@ -12,6 +12,7 @@ import { Label } from "@/components/ui-kit/Label";
 import { usePermissionStore } from '@/stores/usePermissionStore';
 import { PermissionAction, PermissionResourceType } from '@fullstack/common';
 import { useAuth } from '@/providers/AuthProvider';
+import { useTaskViewStore } from '@/stores/useTaskViewStore';
 
 interface TaskListViewProps {
   tasks: TaskResDto[];
@@ -24,26 +25,32 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
   const { user } = useAuth();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
-  const defaultStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
-  const [statusFilter, setStatusFilter] = useState<TaskStatus[]>(defaultStatuses);
-  const [sortField, setSortField] = useState<TaskSortField>(TaskSortField.DUE_DATE);
-  const [sortOrder, setSortOrder] = useState<TaskSortOrder>(TaskSortOrder.ASC);
+  const { currentDisplayViewConfig, setCurrentDisplayViewConfig } = useTaskViewStore();
+  // Use only currentDisplayViewConfig for all filter/sort logic
+  const statusFilter = currentDisplayViewConfig.status ?? [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
+  const sortField = currentDisplayViewConfig.sortField ?? TaskSortField.DUE_DATE;
+  const sortOrder = currentDisplayViewConfig.sortOrder ?? TaskSortOrder.ASC;
 
   // Automatically set sortOrder when sortField changes
   const handleSortFieldChange = (val: string) => {
     const field = val as TaskSortField;
-    setSortField(field);
+    let newSortOrder = sortOrder;
     if (field === TaskSortField.DUE_DATE) {
-      setSortOrder(TaskSortOrder.ASC);
+      newSortOrder = TaskSortOrder.ASC;
     } else if (field === TaskSortField.UPDATE_DATE) {
-      setSortOrder(TaskSortOrder.DESC);
+      newSortOrder = TaskSortOrder.DESC;
     }
+    setCurrentDisplayViewConfig({
+      ...currentDisplayViewConfig,
+      sortField: field,
+      sortOrder: newSortOrder,
+    });
   };
 
   // Filter by status (multi-select)
   const filteredTasks = useMemo(() => {
     return (tasks || []).filter(task => {
-      if (statusFilter.length === 0) return true;
+      if (!statusFilter || statusFilter.length === 0) return true;
       return statusFilter.includes(task.status);
     });
   }, [tasks, statusFilter]);
@@ -83,7 +90,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
   }, [sortedTasks]);
 
   return (
-    <div className="flex h-full w-full overflow-auto">
+    <div className="flex h-full w-full overflow-auto shadow-xs rounded-lg">
       {/* Left: Task List */}
       <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input dark:border-[1.5px] bg-white-black overflow-y-auto shadow-xs">
         {/* Status Filter and Sort Icon */}
@@ -106,11 +113,16 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
                     key={status}
                     checked={statusFilter.includes(status)}
                     onCheckedChange={(checked: boolean) => {
-                      setStatusFilter((prev: TaskStatus[]) =>
-                        checked
-                          ? [...prev, status]
-                          : prev.filter((s) => s !== status)
-                      );
+                      let newStatusFilter: TaskStatus[];
+                      if (checked) {
+                        newStatusFilter = [...statusFilter, status];
+                      } else {
+                        newStatusFilter = statusFilter.filter((s) => s !== status);
+                      }
+                      setCurrentDisplayViewConfig({
+                        ...currentDisplayViewConfig,
+                        status: newStatusFilter,
+                      });
                     }}
                     onSelect={(e: any) => e.preventDefault()}
                     className="flex items-center gap-2 cursor-pointer text-xs"
@@ -138,7 +150,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
                 <DropdownMenuRadioItem value={TaskSortField.TITLE} className="cursor-pointer text-xs">Title</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
               <div className="px-2 pt-2 pb-1 text-xs text-muted-foreground">Order</div>
-              <DropdownMenuRadioGroup value={sortOrder} onValueChange={(val: string) => setSortOrder(val as TaskSortOrder)}>
+              <DropdownMenuRadioGroup value={sortOrder} onValueChange={(val: string) => setCurrentDisplayViewConfig({
+                ...currentDisplayViewConfig,
+                sortOrder: val as TaskSortOrder
+              })}>
                 <DropdownMenuRadioItem value={TaskSortOrder.ASC} className="cursor-pointer text-xs">Ascending</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value={TaskSortOrder.DESC} className="cursor-pointer text-xs">Descending</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>

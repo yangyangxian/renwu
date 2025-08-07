@@ -16,6 +16,11 @@ export const updateTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const deleteTaskById = (taskId: string) => `/api/tasks/${taskId}`;
 export const getTasksByProjectId = (projectId: string) => `/api/tasks/project/id/${projectId}`;
 
+// --- Task Views ---
+export const createTaskView = () => '/api/tasks/views';
+export const updateTaskViewById = (viewId: string) => `/api/tasks/views/${viewId}`;
+export const deleteTaskViewById = (viewId: string) => `/api/tasks/views/${viewId}`;
+
 // --- Projects ---
 export const getProjects = () => '/api/projects';
 export const getMyProjects = () => '/api/projects/me';

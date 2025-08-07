@@ -1,4 +1,4 @@
-import { PermissionAction, PermissionResourceType } from '../enums/permissionEnums';
+import { PermissionAction, PermissionResourceType } from '../enums/permissionEnums.js';
 import { UserPermissionResDto } from '../dtos/user.dto';
 
 export interface ResourceBase {
