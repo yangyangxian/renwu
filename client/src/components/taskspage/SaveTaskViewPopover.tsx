@@ -24,7 +24,7 @@ export const SaveTaskViewPopover: React.FC<SaveTaskViewPopoverProps> = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent align="end" className="w-56 p-2">
+      <PopoverContent align="end" className="w-46 p-2">
         <div className="flex flex-col gap-2">
           <Button
             variant="default"
@@ -33,7 +33,7 @@ export const SaveTaskViewPopover: React.FC<SaveTaskViewPopoverProps> = ({
             className="flex items-center gap-2"
           >
             <Plus className="w-4 h-4 align-middle -ml-1" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-            Save as new task view
+            Save as new
           </Button>
           <Button
             variant="outline"
@@ -43,7 +43,7 @@ export const SaveTaskViewPopover: React.FC<SaveTaskViewPopoverProps> = ({
             className="flex items-center gap-2"
           >
             <Save className="w-4 h-4 align-middle" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-            Save (override current)
+            Save current view
           </Button>
         </div>
       </PopoverContent>

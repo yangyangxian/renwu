@@ -28,7 +28,6 @@ export default function MyTasksPage() {
     updateTaskView,
   } = useTaskViewStore();
 
-  logger.debug("currentSelectedTaskView:" + currentSelectedTaskView?.viewConfig.viewMode);
   const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
 
   useEffect(() => {
@@ -103,38 +102,41 @@ export default function MyTasksPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {currentSelectedTaskView ? (
-                    <SaveTaskViewPopover
-                      onSaveNew={handleSaveAsNew}
-                      onOverride={handleOverride}
-                      onOpenDialog={() => setIsBookmarkDialogOpen(true)}
-                      disabled={!hasUnsavedChanges || !isSavedView}
-                    >
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Show saved views"
-                        className="rounded-md p-2 cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none transition-colors"
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={currentSelectedTaskView ? "Show saved views" : "Add new task view"}
+                    className="rounded-md p-2 cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none transition-colors"
+                    onClick={() => {
+                      if (!currentSelectedTaskView) setIsBookmarkDialogOpen(true);
+                    }}
+                  >
+                    {currentSelectedTaskView ? (
+                      <SaveTaskViewPopover
+                        onSaveNew={handleSaveAsNew}
+                        onOverride={handleOverride}
+                        onOpenDialog={() => setIsBookmarkDialogOpen(true)}
+                        disabled={!hasUnsavedChanges || !isSavedView}
                       >
                         <Bookmark className={
-                          `w-4 h-4 hover:scale-115 transition-transform duration-200 ${isSavedView ? 'text-purple-500 fill-purple-500' : 'text-muted-foreground'}`
-                        } />
-                      </span>
-                    </SaveTaskViewPopover>
-                  ) : (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Add new task view"
-                      className="rounded-md p-2 cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none transition-colors"
-                      onClick={() => setIsBookmarkDialogOpen(true)}
-                    >
-                      <Bookmark className="w-4 h-4 hover:scale-115 transition-transform duration-200 text-muted-foreground" />
-                    </span>
-                  )}
+                          hasUnsavedChanges
+                            ? "w-4 h-4 hover:scale-110 transition-transform duration-200 text-purple-500 stroke-2 fill-none"
+                            : isSavedView
+                              ? "w-4 h-4 hover:scale-110 transition-transform duration-200 text-purple-500 fill-purple-500"
+                              : "w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground"
+                        } style={hasUnsavedChanges ? { stroke: '#a855f7' } : {}} />
+                      </SaveTaskViewPopover>
+                    ) : (
+                      <Bookmark className="w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground" />
+                    )}
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="center">
-                  {hasUnsavedChanges ? 'You have unsaved changes to this view' : 'Save as a task view'}
+                  {hasUnsavedChanges
+                    ? 'Click to save'
+                    : (isSavedView
+                        ? 'Click to save as a new task view'
+                        : 'Click to save as a task view')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

@@ -45,7 +45,8 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
         <Label asChild className="text-md font-medium block">
           <div>Save the following filters as a new task view:</div>
         </Label>
-        <div className="space-y-3 text-sm rounded-lg px-3 py-2 mb-3">
+
+        <div className="space-y-3 text-sm rounded-lg px-3 py-2">
           <div className="flex items-center gap-3">
             <Folder className="w-4 h-4 text-primary" />
             <Label className="font-medium min-w-[90px]">Project:</Label>
