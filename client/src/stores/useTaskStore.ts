@@ -157,12 +157,13 @@ export function useTaskStore() {
       
       const updatedTask = await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskByIdEndpoint(taskId), updatePayload);
       updateTask(updatedTask);
+      setCurrentTask(updatedTask);
       return updatedTask;
     } catch (error) {
       console.error('Failed to update task:', error);
       throw error;
     }
-  }, [updateTask]);
+  }, [updateTask, setCurrentTask]);
 
   const deleteTaskById = useCallback(async (taskId: string): Promise<void> => {
     try {
