@@ -1,10 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useTabHash } from "@/hooks/useTabHash";
 import { useEffect, useState } from "react";
-import { ProjectOverviewTab } from "@/components/projectspage/ProjectOverviewTab";
-import { ProjectTasksTab } from "@/components/projectspage/ProjectTasksTab";
-import { ProjectTeamTab } from "@/components/projectspage/ProjectTeamTab";
-import { ProjectSettingsTab } from "@/components/projectspage/ProjectSettingsTab";
+import { ProjectOverviewTab } from "@/components/projectspage/OverviewTab";
+import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
+import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
+import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
 import { LayoutDashboard, List, Users, Settings } from "lucide-react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";

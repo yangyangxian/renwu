@@ -1,26 +1,21 @@
 import {
   Sidebar,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarProvider,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
 } from "@/components/ui-kit/Sidebar";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui-kit/Collapsible";
-import { ListChecks, Folder, ChevronDown, Plus, Pin, PinOff, Trash2 } from "lucide-react";
+import { Pin, PinOff } from "lucide-react";
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH, MYTASKS_PATH } from "@/routes/routeConfig";
 import { useState, useEffect, useRef } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
-import { ProjectDialog } from "@/components/projectspage/ProjectDialog";
+import { ProjectDialog } from "@/components/projectspage/AddProjectDialog";
 import { withToast } from "@/utils/toastUtils";
 import logger from "@/utils/logger";
+import { TasksMenuItem } from "./TasksMenuItem";
+import { ProjectsMenuItem } from "./ProjectsMenuItem";
 
-// Sidebar props interface - no longer needs any props!
 export interface HomeSideBarProps {}
 
 // Sidebar mode: true (fixed) or false (auto)
@@ -70,7 +65,7 @@ export function HomeSideBar() {
         setProjectDialogOpen(false);
         if (newProject && newProject.slug) {
           const currentHash = location.hash;
-          navigate(`/projects/${newProject.slug}${currentHash}`);
+          navigate(`${PROJECTS_PATH}/${newProject.slug}${currentHash}`);
         }
       },
       {
@@ -194,232 +189,6 @@ export function HomeSideBar() {
         )}
       </Sidebar>
     </SidebarProvider>
-  );
-}
-
-
-function TasksMenuItem({ 
-  showText,
-  isTasksActive,
-  handleTasksClick,
-  taskViews,
-  navigate,
-  location,
-  isTaskViewActive
-}: { 
-  showText: boolean; 
-  isTasksActive: boolean;
-  handleTasksClick: () => void;
-  taskViews: any[];
-  navigate: any;
-  location: any;
-  isTaskViewActive: (viewId: string) => boolean;
-}) {
-  const { setCurrentSelectedTaskView, currentSelectedTaskView, defaultDisplayViewConfig,
-    setCurrentDisplayViewConfig, deleteTaskView } = useTaskViewStore();
-  const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
-  const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
-
-  // Automatically set currentSelectedTaskView based on active view in URL
-  useEffect(() => {
-    // Find the active view by matching the URL
-    const activeView = taskViews.find(view => isTaskViewActive(view.name));
-    if (activeView && (!currentSelectedTaskView || currentSelectedTaskView.id !== activeView.id)) {
-      setCurrentSelectedTaskView(activeView);
-      setCurrentDisplayViewConfig(activeView.viewConfig);
-    } else if (!activeView && currentSelectedTaskView) {
-      setCurrentSelectedTaskView(null);
-      setCurrentDisplayViewConfig(defaultDisplayViewConfig);
-    }
-  }, [location, taskViews, isTaskViewActive, setCurrentSelectedTaskView]);
-
-  return (
-    <SidebarMenuItem>
-      {/* Main "My Tasks" button - always visible */}
-      <SidebarMenuButton 
-        className="relative flex items-center min-w-0 mb-1 cursor-pointer"
-        isActive={isTasksActive}
-        onClick={() => {
-          setCurrentSelectedTaskView(null);
-          handleTasksClick();
-        }}
-      >
-        <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
-        {showText && <span>My Tasks</span>}
-      </SidebarMenuButton>
-      {/* Task views - always visible when showText is true */}
-      {showText && (
-        <SidebarMenuSub className="gap-[6px]">
-          {taskViews.length === 0 && (
-            <SidebarMenuSubItem>
-              <SidebarMenuButton className="pl-4 cursor-default text-muted-foreground">
-                No saved views
-              </SidebarMenuButton>
-            </SidebarMenuSubItem>
-          )}
-          {taskViews.map((view) => (
-            <SidebarMenuSubItem key={view.id}>
-              <div
-                className="relative group flex items-center"
-                onMouseEnter={() => setHoveredViewId(view.id)}
-                onMouseLeave={() => setHoveredViewId(null)}
-              >
-                <SidebarMenuButton
-                  className="pl-3 cursor-pointer flex-1 min-w-0"
-                  isActive={isTaskViewActive(view.name)}
-                  onClick={() => {
-                    setCurrentSelectedTaskView(view);
-                    navigate(`/mytasks?view=${view.name.replace(/\s+/g, '-')}`);
-                  }}
-                >
-                  <span className="truncate">{view.name}</span>
-                </SidebarMenuButton>
-                {/* Delete button: only show for hovered item */}
-                {hoveredViewId === view.id && (
-                  <>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            className="absolute right-1 top-1/2 -translate-y-1/2 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
-                            tabIndex={0}
-                            aria-label="Delete task view"
-                            onClick={e => {
-                              e.stopPropagation();
-                              setDeleteDialogOpenId(view.id);
-                            }}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">Delete view</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <ConfirmDeleteDialog
-                      open={deleteDialogOpenId === view.id}
-                      onOpenChange={open => {
-                        if (!open) setDeleteDialogOpenId(null);
-                      }}
-                      title="Delete Task View?"
-                      description="Are you sure you want to delete this task view? This action cannot be undone."
-                      onConfirm={async () => {
-                        try {
-                          const wasSelected = currentSelectedTaskView && currentSelectedTaskView.id === view.id;
-                          await deleteTaskView(view.id);
-                          if (wasSelected) {
-                            // Find the next available view (excluding the deleted one)
-                            const remainingViews = taskViews.filter(v => v.id !== view.id);
-                            if (remainingViews.length > 0) {
-                              const nextView = remainingViews[0];
-                              setCurrentSelectedTaskView(nextView);
-                              navigate(`${MYTASKS_PATH}?view=${nextView.name.replace(/\s+/g, '-')}`);
-                            } else {
-                              setCurrentSelectedTaskView(null);
-                              navigate(MYTASKS_PATH);
-                            }
-                          }
-                        } finally {
-                          setDeleteDialogOpenId(null);
-                        }
-                      }}
-                      confirmText="Delete"
-                      cancelText="Cancel"
-                    />
-                  </>
-                )}
-              </div>
-            </SidebarMenuSubItem>
-          ))}
-        </SidebarMenuSub>
-      )}
-    </SidebarMenuItem>
-  );
-}
-
-// Projects menu item component
-function ProjectsMenuItem({ 
-  showText,
-  isProjectActive,
-  setExpanded,
-  onAddProject,
-  projects,
-  loading
-}: { 
-  showText: boolean; 
-  isProjectActive: (projectId: string) => boolean;
-  setExpanded: (v: boolean) => void;
-  onAddProject?: () => void;
-  projects: { id: string; name: string; slug: string }[];
-  loading: boolean;
-}) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleAddProject = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddProject && onAddProject();
-  };
-
-  return (
-    <SidebarMenuItem>
-      <Collapsible defaultOpen={true} className="group/collapsible">
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="relative flex items-center min-w-0 mb-1 group cursor-pointer">
-            <Folder className="w-5 h-5 mr-1 flex-shrink-0" />
-            {showText && (
-              <>
-                <span>
-                  Projects
-                </span>
-                <span className="flex-1" />
-                <span className="flex items-center gap-1">
-                  <span
-                    role="button"
-                    aria-label="Add Project"
-                    tabIndex={0}
-                    onClick={handleAddProject}
-                    onMouseDown={e => e.stopPropagation()}
-                    onFocus={e => e.stopPropagation()}
-                    className="inline-flex items-center justify-center rounded-full cursor-pointer hover:bg-primary-purple/70 dark:hover:bg-primary-purple p-1 z-[1]"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </span>
-                  <ChevronDown
-                    className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 flex-shrink-0"
-                    aria-hidden="true"
-                  />
-                </span>
-              </>
-            )}
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub className="gap-[6px]">
-            {showText && loading && (
-              <SidebarMenuSubItem>
-                <SidebarMenuButton className="pl-4 cursor-default">
-                  Loading...
-                </SidebarMenuButton>
-              </SidebarMenuSubItem>
-            )}
-            {showText && !loading && projects.map((project) => (
-              <SidebarMenuSubItem key={project.id}>
-                <SidebarMenuButton
-                  className="pl-3 cursor-pointer"
-                  isActive={isProjectActive(project.id)}
-                  onClick={() => {
-                    const currentHash = location.hash;
-                    navigate(`${PROJECTS_PATH}/${project.slug}${currentHash}`);
-                  }}
-                >
-                  {project.name}
-                </SidebarMenuButton>
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </Collapsible>
-    </SidebarMenuItem>
   );
 }
 
