@@ -17,16 +17,27 @@ export function useTabHash<T extends string>(
 
   const [activeTab, setActiveTab] = useState<T>(getInitialTab());
 
-  // defaultTab may change when the selected task view changes
+  // Only force defaultTab if there is no valid hash in the URL
   useEffect(() => {
-    if (tabs.includes(defaultTab)) {
-      if (externalSetter) {
-        externalSetter(defaultTab);
-      } else {
-        setActiveTab(defaultTab);
+    const hash = location.hash.replace('#', '');
+    const hasValidHash = tabs.includes(hash as T);
+    const targetHash = `#${defaultTab}`;
+    // Only update if the current tab/hash is not already the default
+    if (!hasValidHash && tabs.includes(defaultTab)) {
+      // Only update state if needed
+      if ((externalValue ?? activeTab) !== defaultTab) {
+        if (externalSetter) {
+          externalSetter(defaultTab);
+        } else {
+          setActiveTab(defaultTab);
+        }
+      }
+      // Only navigate if the hash is not already set to defaultTab
+      if (location.hash !== targetHash) {
+        navigate({ pathname: location.pathname, search: location.search, hash: targetHash }, { replace: true });
       }
     }
-  }, [defaultTab]);
+  }, [defaultTab, tabs, externalSetter, externalValue, activeTab, location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     const onHashChange = () => {
