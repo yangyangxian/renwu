@@ -28,6 +28,7 @@ const publicRouter = Router();
 // Login endpoint
 publicRouter.post('/login', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const loginHandler = async () => {
+    res.setHeader('Cache-Control', 'private');
     try {
       const credentials : LoginReqDto = req.body;
       const result = LoginReqSchema.safeParse(credentials);
@@ -78,6 +79,7 @@ publicRouter.post('/login', (req: Request<LoginReqDto>, res: Response<ApiRespons
 // Signup endpoint
 publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiResponse<UserResDto>>, next: NextFunction) => {
   const signupHandler = async () => {
+    res.setHeader('Cache-Control', 'private');
     try {
       const { email, password, token }: LoginReqDto & { token?: string } = req.body;
       if (!email || !password) {
@@ -119,6 +121,7 @@ publicRouter.post('/signup', (req: Request<LoginReqDto>, res: Response<ApiRespon
         sameSite: 'strict',
         maxAge: appConfig.jwtMaxAge
       });
+      
       const userResDto: UserResDto = {
         id: user.id,
         name: user.name,
