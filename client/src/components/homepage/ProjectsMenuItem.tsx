@@ -68,17 +68,10 @@ export function ProjectsMenuItem({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub className="gap-[6px]">
-            {showText && loading && (
-              <SidebarMenuSubItem>
-                <SidebarMenuButton className="pl-4 cursor-default">
-                  Loading...
-                </SidebarMenuButton>
-              </SidebarMenuSubItem>
-            )}
             {showText && !loading && projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuButton
-                  className="pl-3 cursor-pointer"
+                  className="pl-4 cursor-pointer"
                   isActive={isProjectActive(project.id)}
                   onClick={() => {
                     const currentHash = location.hash;

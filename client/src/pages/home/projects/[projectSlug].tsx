@@ -47,7 +47,7 @@ export default function ProjectDetailPage() {
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
   if (!projectId) {
-    return <div className="p-8 text-center text-lg text-red-500">Project not found.</div>;
+    return <div></div>;
   }
 
   return (

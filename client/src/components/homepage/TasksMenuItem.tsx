@@ -10,7 +10,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { useState, useEffect } from "react";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
-import logger from "@/utils/logger";
+import { logger } from "@/utils/logger";
 
 export function TasksMenuItem({ 
   showText,
@@ -60,8 +60,7 @@ export function TasksMenuItem({
         isActive={isTasksActive}
         onClick={() => {
           setCurrentSelectedTaskView(null);
-          // Preserve current hash (view mode) when navigating back to My Tasks without adding to history
-          navigate({ pathname: MYTASKS_PATH, hash: location.hash }, { replace: true });
+          handleTasksClick();
         }}
       >
         <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
@@ -70,13 +69,6 @@ export function TasksMenuItem({
       {/* Task views - always visible when showText is true */}
       {showText && (
         <SidebarMenuSub className="gap-[6px]">
-          {taskViews.length === 0 && (
-            <SidebarMenuSubItem>
-              <SidebarMenuButton className="pl-4 cursor-default text-muted-foreground">
-                No saved views
-              </SidebarMenuButton>
-            </SidebarMenuSubItem>
-          )}
           {taskViews.map((view) => (
             <SidebarMenuSubItem key={view.id}>
               <div
@@ -85,16 +77,11 @@ export function TasksMenuItem({
                 onMouseLeave={() => setHoveredViewId(null)}
               >
                 <SidebarMenuButton
-                  className="pl-3 cursor-pointer flex-1 min-w-0"
+                  className="pl-4 cursor-pointer flex-1 min-w-0"
                   isActive={isTaskViewActive(view.name)}
                   onClick={() => {
                     setCurrentSelectedTaskView(view);
-                    // Keep current view mode (hash) when switching saved views; do not spam history
-                    navigate({ 
-                      pathname: MYTASKS_PATH, 
-                      search: `?view=${view.name.replace(/\s+/g, '-')}`,
-                      hash: location.hash
-                    }, { replace: true });
+                    navigate(`/mytasks?view=${view.name.replace(/\s+/g, '-')}`);
                   }}
                 >
                   <span className="truncate">{view.name}</span>
