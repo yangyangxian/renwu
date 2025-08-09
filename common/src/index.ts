@@ -1,5 +1,5 @@
 export * from './dtos/dtoTypes.js'; 
-export * from './types/ResponseTypes.js';
+export * from './types/responseTypes.js';
 export * from './enums/errorCodes.js';
 export * from './enums/httpStatus.js';
 export * from './enums/taskStatus.js';

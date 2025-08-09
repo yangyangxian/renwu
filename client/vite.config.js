@@ -47,11 +47,14 @@ export default defineConfig({
             }
             if (id.includes('recharts')) {
               return 'recharts';
-            }         
+            }
             if (id.includes('framer-motion')) {
               return 'framer-motion';
             }
-            if (id.match(/node_modules\/(@radix-ui\/)/)) {
+            if (id.match(/node_modules\/(milkdown|@milkdown|prosemirror|@prosemirror|@lezer|@codemirror|@prosemirror-adapter)/)) {
+              return 'vendor-milkdown';
+            }
+            if (id.match(/node_modules\/(\@radix-ui\/)/)) {
               return 'vendor-radix';
             }
             // All other dependencies go into a generic vendor chunk

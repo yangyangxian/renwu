@@ -1,9 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui-kit/Card';
-import { Textarea } from '@/components/ui-kit/Textarea';
-import { marked } from 'marked';
 import { toast } from 'sonner';
 import { ProjectResDto } from '@fullstack/common';
+import { MarkdownnEditor } from '@/components/common/editor/MarkdownEditor';
+import { marked } from 'marked';
+import { Pencil } from 'lucide-react';
+import { Button } from '@/components/ui-kit/Button';
 
 interface ProjectDescriptionCardProps {
   project: ProjectResDto;
@@ -48,34 +50,44 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
   };
 
   return (
-    <Card className={`flex-1 h-full${className ? ` ${className}` : ''}`}>
+    <Card className={`flex-1 overflow-y-auto h-full${className ? ` ${className}` : ''}`}>
       {editingDesc ? (
-        <Textarea
-          ref={descInputRef}
-          initialValue={descInput}
-          onSubmit={handleSubmitDes}
-          onCancel={() => setEditingDesc(false)}
-          className="min-h-40 my-3"
-          maxLength={10000}
-          storageKey={project?.id}
+        <MarkdownnEditor
+          value={descInput}
+          onSave={(val) => { handleSubmitDes(val); setEditingDesc(false); }}
+          onCancel={() => {
+            setEditingDesc(false);
+            setDescInput(project?.description || "");
+          }}
+          showSaveCancel={true}
         />
       ) : (
-        <>
+        <div className="relative group">
           {descInput ? (
-            <div
-              className="markdown-body !bg-transparent !text-[0.9rem] !leading-5 !py-3 h-full cursor-pointer overflow-auto"
-              onClick={handleDescClick}
-              dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
-            />
+            <>
+              <div
+                className="markdown-body pt-[18px]"
+                dangerouslySetInnerHTML={{ __html: marked.parse(descInput) }}
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute top-5 right-3 opacity-70 group-hover:opacity-100 transition-opacity"
+                onClick={handleDescClick}
+                title="Edit description"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            </>
           ) : (
             <div
-              className="markdown-body !text-[0.9rem] !bg-transparent p-4 pt-5 cursor-pointer text-muted-foreground italic"
+              className="markdown-body"
               onClick={handleDescClick}
             >
               Enter a project description… (Markdown supported!)
             </div>
           )}
-        </>
+        </div>
       )}
     </Card>
   );
