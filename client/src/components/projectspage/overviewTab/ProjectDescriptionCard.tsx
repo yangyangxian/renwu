@@ -50,7 +50,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
   };
 
   return (
-    <Card className={`flex-1 overflow-y-auto h-full${className ? ` ${className}` : ''}`}>
+    <Card className={`flex-1 overflow-y-auto break-all h-full ${className ? ` ${className}` : ''}`}>
       {editingDesc ? (
         <MarkdownnEditor
           value={descInput}
@@ -72,7 +72,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
               <Button
                 size="icon"
                 variant="ghost"
-                className="absolute top-5 right-3 opacity-70 group-hover:opacity-100 transition-opacity"
+                className="absolute top-5 right-1 opacity-70 group-hover:opacity-100 transition-opacity"
                 onClick={handleDescClick}
                 title="Edit description"
               >

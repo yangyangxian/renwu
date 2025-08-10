@@ -12,6 +12,8 @@ import { Button } from '@/components/ui-kit/Button';
 import logger from '@/utils/logger';
 import { slash, SlashView } from './Slash';
 import { history, historyKeymap } from '@milkdown/plugin-history'
+import { imageBlockComponent } from '@milkdown/kit/component/image-block'
+import { getMarkdown } from '@milkdown/kit/utils';
 
 export interface MarkdownnEditorProps {
   value: string;
@@ -25,59 +27,70 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
   const { value, onChange, showSaveCancel, onSave, onCancel } = props;
   const pluginViewFactory = usePluginViewFactory();
   const nodeViewFactory = useNodeViewFactory();
-  const [editorValue, setEditorValue] = useState(""); 
   const [dirty, setDirty] = useState(false);
   const originalValue = useRef<string | null>(null);
+  const editorRef = useRef<Editor | null>(null);
 
   useEditor((root: HTMLElement) => {
-    return Editor
+    const editor = Editor
       .make()
       .config(ctx => {
-        ctx.set(rootCtx, root)
-        ctx.set(defaultValueCtx, value)
+        ctx.set(rootCtx, root);
+        ctx.set(defaultValueCtx, value);
         ctx.set(tooltip.key, {
           view: pluginViewFactory({
             component: TooltipView,
           })
-        })
+        });
         ctx.set(editorViewOptionsCtx, {
           nodeViews: {
             code_block: nodeViewFactory({ component: CodeBlockView }),
           },
         });
         ctx.set(historyKeymap.key, {
-          // Remap to one shortcut.
           Undo: { shortcuts: 'Mod-z' },
-          // Remap to multiple shortcuts.
           Redo: { shortcuts: 'Mod-y' },
-        })
+        });
         // Add Milkdown listener plugin for real-time value tracking
         ctx.get(listenerCtx).markdownUpdated((_, md: string, preMd: string) => {
           if (originalValue.current === null) {
-            logger.debug("originalValue:", preMd);
             originalValue.current = preMd;
           }
-          setEditorValue(md);
+          if (md !== originalValue.current) {
+            setDirty(true);
+          } else {
+            setDirty(false);
+          }
+          logger.debug("Markdown updated:", md);
         });
         ctx.set(slash.key, {
           view: pluginViewFactory({
             component: SlashView,
           })
-        })
+        });
       })
       .use(commonmark)
       .use(tooltip)
       .use(listener)
       .use(slash)
       .use(history)
+      //.use(imageBlockComponent)
+    editorRef.current = editor;
+    return editor;
   }, [value, pluginViewFactory, nodeViewFactory])
 
   // Handler for save button
   const handleSave = () => {
-    let currentMarkdown = editorValue;
-    // Fallback to the value prop if still empty
-    if (!currentMarkdown || currentMarkdown.trim() === '') {
-      currentMarkdown = value;
+    let currentMarkdown = value;
+    if (editorRef.current) {
+      try {
+        const markdown = editorRef.current.action(getMarkdown());
+        if (markdown && typeof markdown === 'string') {
+          currentMarkdown = markdown;
+        }
+      } catch (e) {
+        logger.error('Failed to get raw markdown from Milkdown:', e);
+      }
     }
     logger.debug("Saving markdown content:", currentMarkdown);
     onSave?.(currentMarkdown);
@@ -85,18 +98,9 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
   };
 
   const handleCancel = () => {
-    setEditorValue(originalValue.current || value);
     setDirty(false);
     onCancel?.();
   };
-
-  useEffect(() => {
-    if (originalValue.current !== null && editorValue !== originalValue.current) {
-      setDirty(true);
-    } else {
-      setDirty(false);
-    }
-  }, [editorValue]);
 
   return (
     <div className="editor-scope">
