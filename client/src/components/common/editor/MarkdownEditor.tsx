@@ -12,8 +12,18 @@ import { Button } from '@/components/ui-kit/Button';
 import logger from '@/utils/logger';
 import { slash, SlashView } from './Slash';
 import { history, historyKeymap } from '@milkdown/plugin-history'
-import { imageBlockComponent } from '@milkdown/kit/component/image-block'
-import { getMarkdown } from '@milkdown/kit/utils';
+import { getMarkdown, callCommand } from '@milkdown/kit/utils';
+import { insertImageCommand } from '@milkdown/kit/preset/commonmark';
+import { apiFile } from '@/apiRequests/apiEndpoints';
+import { toast } from 'sonner';
+import {
+  dataUrlToBlob,
+  isTooLargeBytes,
+  replaceDataUrlsWithUploads,
+  rewriteLegacyUploads,
+  stripImageTitles,
+  computeRemovedFilenames,
+} from '@/utils/imageUtils';
 
 export interface MarkdownnEditorProps {
   value: string;
@@ -74,25 +84,90 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
       .use(listener)
       .use(slash)
       .use(history)
-      //.use(imageBlockComponent)
     editorRef.current = editor;
     return editor;
   }, [value, pluginViewFactory, nodeViewFactory])
 
-  // Handler for save button
-  const handleSave = () => {
+  // Attach paste event after editor is mounted
+  useEffect(() => {
+    const root = editorRef.current?.ctx.get(rootCtx);
+    if (!root || !(root instanceof HTMLElement)) return;
+    const handlePaste = (event: ClipboardEvent) => {
+      if (!event.clipboardData) return;
+      const item = Array.from(event.clipboardData.items).find(i => i.type.startsWith('image/'));
+      if (!item) return;
+      event.preventDefault();
+      const file = item.getAsFile();
+      if (!file) return;
+
+      if (typeof file.size === 'number' && isTooLargeBytes(file.size)) {
+        toast.warning('Image exceeds 5MB limit. Please use a smaller image.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        try {
+          const blob = dataUrlToBlob(dataUrl);
+          if (isTooLargeBytes(blob.size)) {
+            toast.warning('Image exceeds 5MB limit. Please use a smaller image.');
+            return;
+          }
+        } catch {}
+        if (editorRef.current) {
+          const fileName = file.name || 'image.png';
+          editorRef.current.action(callCommand(insertImageCommand.key, { src: dataUrl, alt: fileName }));
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    root.addEventListener('paste', handlePaste);
+    return () => root.removeEventListener('paste', handlePaste);
+  }, [editorRef.current?.ctx]);
+
+  // Helper: upload image data URL
+  const uploadImage = async (dataUrl: string): Promise<string> => {
+    const blob = dataUrlToBlob(dataUrl);
+    if (isTooLargeBytes(blob.size)) {
+      toast.warning('Image exceeds 5MB limit. Please use a smaller image.');
+      throw new Error('Image too large');
+    }
+    const formData = new FormData();
+    formData.append('file', blob, 'image.png');
+    const res = await fetch(apiFile(), { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Image upload failed');
+    const json = await res.json();
+    const url = json?.data?.url ?? json?.url;
+    if (!url) throw new Error('Invalid upload response');
+    return url;
+  };
+
+  const handleSave = async () => {
     let currentMarkdown = value;
     if (editorRef.current) {
       try {
-        const markdown = editorRef.current.action(getMarkdown());
-        if (markdown && typeof markdown === 'string') {
-          currentMarkdown = markdown;
+        const md = editorRef.current.action(getMarkdown());
+        if (md && typeof md === 'string') {
+          let updated = await replaceDataUrlsWithUploads(md, uploadImage);
+          updated = rewriteLegacyUploads(updated);
+          updated = stripImageTitles(updated);
+
+          // Cleanup removed files
+          try {
+            const toDelete = computeRemovedFilenames(value, updated);
+            if (toDelete.length) {
+              await Promise.all(toDelete.map((name) => fetch(`${apiFile()}/${name}`, { method: 'DELETE' }).catch(() => {})));
+            }
+          } catch {}
+
+          currentMarkdown = updated;
         }
       } catch (e) {
         logger.error('Failed to get raw markdown from Milkdown:', e);
       }
     }
-    logger.debug("Saving markdown content:", currentMarkdown);
+    logger.debug('Saving markdown content:', currentMarkdown);
     onSave?.(currentMarkdown);
     setDirty(false);
   };

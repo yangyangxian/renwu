@@ -18,7 +18,8 @@ const app = express();
 // ********************************************************
 app.use(corsMiddleware); // CORS must be applied before other middleware
 app.use(cookieParser()); // Parse cookies
-app.use(express.json()); // Parse JSON bodies
+app.use(express.json({ limit: '5mb' })); // Parse JSON bodies with increased limit
+app.use(express.urlencoded({ limit: '5mb', extended: true })); // Parse URL-encoded bodies with increased limit
 app.use(requestLoggerMiddleware);
 
 // ********************************************************  

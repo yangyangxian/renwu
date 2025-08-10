@@ -39,3 +39,4 @@ client/package-lock.json
 client/server/package-lock.json
 package-lock.json
 server/.env.development
+/server/src/uploads

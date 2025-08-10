@@ -42,3 +42,5 @@ export const getProjectRoles = () => '/api/auth/roles';
 // --- Permissions ---
 export const getMyPermissionsEndpoint = () => '/api/users/me/permissions';
 
+// --- Files ---
+export const apiFile = () => '/api/file';
