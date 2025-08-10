@@ -10,6 +10,7 @@ import { EditorFooterHandle } from './EditorFooterHandle';
 import { UnsavedChangesIndicator } from '../UnsavedChangesIndicator';
 import { Button } from '@/components/ui-kit/Button';
 import logger from '@/utils/logger';
+import { slash, SlashView } from './Slash';
 
 export interface MarkdownnEditorProps {
   value: string;
@@ -51,10 +52,16 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
           }
           setEditorValue(md);
         });
+        ctx.set(slash.key, {
+          view: pluginViewFactory({
+            component: SlashView,
+          })
+        })
       })
       .use(commonmark)
       .use(tooltip)
       .use(listener)
+      .use(slash)
   }, [value, pluginViewFactory, nodeViewFactory])
 
   // Handler for save button

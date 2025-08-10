@@ -11,8 +11,12 @@ import { Code2, Quote, Code, Bold, Italic, List } from 'lucide-react';
 
 export const tooltip = tooltipFactory('Text');
 
-export const TooltipView = () => {
-    const ref = useRef<HTMLDivElement>(null)
+export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
+  refEl?: React.RefObject<HTMLDivElement>,
+  onKeyDown?: React.KeyboardEventHandler<HTMLDivElement>,
+  onMouseDown?: React.MouseEventHandler<HTMLDivElement>
+}) => {
+    const ref = refEl ?? useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<TooltipProvider | null>(null)
     const updateTimerRef = useRef<number | null>(null)
@@ -95,7 +99,11 @@ export const TooltipView = () => {
     }, [view])
 
     const handleMouseDown = (e: React.MouseEvent) => {
-        e.preventDefault()
+        e.preventDefault();
+        if (onMouseDown) onMouseDown(e as any)
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     }
 
     // Helpers to detect active state and depth
@@ -171,7 +179,7 @@ export const TooltipView = () => {
 
     return (
         <div
-            ref={ref}
+            ref={refEl ?? ref}
             className="absolute data-[show=false]:hidden z-50 -translate-y-3"
         >
             <div
@@ -187,8 +195,8 @@ export const TooltipView = () => {
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${boldActive ? activeCls : ''}`}
-                            onMouseDown={handleMouseDown}
-                            onClick={() => action(callCommand(toggleStrongCommand.key))}
+                            onMouseDown={e => { handleMouseDown(e); setTimeout(() => action(callCommand(toggleStrongCommand.key)), 0); }}
+                            onKeyDown={handleKeyDown}
                         >
                             <Bold className="size-3.5" />
                         </Button>
@@ -203,8 +211,8 @@ export const TooltipView = () => {
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${italicActive ? activeCls : ''}`}
-                            onMouseDown={handleMouseDown}
-                            onClick={() => action(callCommand(toggleEmphasisCommand.key))}
+                            onMouseDown={e => { handleMouseDown(e); setTimeout(() => action(callCommand(toggleEmphasisCommand.key)), 0); }}
+                            onKeyDown={handleKeyDown}
                         >
                             <Italic className="size-3.5" />
                         </Button>
@@ -219,8 +227,8 @@ export const TooltipView = () => {
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${inBlockquoteInfo ? activeCls : ''}`}
-                            onMouseDown={handleMouseDown}
-                            onClick={toggleBlockquote}
+                            onMouseDown={e => { handleMouseDown(e); setTimeout(() => toggleBlockquote(), 0); }}
+                            onKeyDown={handleKeyDown}
                         >
                             <Quote className="size-3.5" />
                         </Button>
@@ -235,8 +243,8 @@ export const TooltipView = () => {
                             variant="ghost"
                             size="sm"
                             className={tooltipButtonClass}
-                            onMouseDown={handleMouseDown}
-                            onClick={() => action(callCommand(wrapInBulletListCommand.key))}
+                            onMouseDown={e => { handleMouseDown(e); setTimeout(() => action(callCommand(wrapInBulletListCommand.key)), 0); }}
+                            onKeyDown={handleKeyDown}
                         >
                             <List className="size-3.5" />
                         </Button>
@@ -251,8 +259,8 @@ export const TooltipView = () => {
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${inlineCodeActive ? activeCls : ''}`}
-                            onMouseDown={handleMouseDown}
-                            onClick={() => action(callCommand(toggleInlineCodeCommand.key))}
+                            onMouseDown={e => { handleMouseDown(e); setTimeout(() => action(callCommand(toggleInlineCodeCommand.key)), 0); }}
+                            onKeyDown={handleKeyDown}
                         >
                             <Code className="size-3.5" />
                         </Button>
@@ -267,8 +275,8 @@ export const TooltipView = () => {
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${inCodeBlockInfo ? activeCls : ''}`}
-                            onMouseDown={handleMouseDown}
-                            onClick={toggleCodeBlock}
+                            onMouseDown={e => { handleMouseDown(e); setTimeout(() => toggleCodeBlock(), 0); }}
+                            onKeyDown={handleKeyDown}
                         >
                             <Code2 className="size-3.5" />
                         </Button>
@@ -284,8 +292,8 @@ export const TooltipView = () => {
                                 variant="ghost"
                                 size="sm"
                                 className={`${tooltipButtonClass} ${headingLevel === level ? activeCls : ''}`}
-                                onMouseDown={handleMouseDown}
-                                onClick={() => toggleHeading(level)}
+                                onMouseDown={e => { handleMouseDown(e); setTimeout(() => toggleHeading(level), 0); }}
+                                onKeyDown={handleKeyDown}
                             >
                                 {"H"}{level}
                             </Button>
