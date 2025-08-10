@@ -11,6 +11,7 @@ import { UnsavedChangesIndicator } from '../UnsavedChangesIndicator';
 import { Button } from '@/components/ui-kit/Button';
 import logger from '@/utils/logger';
 import { slash, SlashView } from './Slash';
+import { history, historyKeymap } from '@milkdown/plugin-history'
 
 export interface MarkdownnEditorProps {
   value: string;
@@ -44,6 +45,12 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
             code_block: nodeViewFactory({ component: CodeBlockView }),
           },
         });
+        ctx.set(historyKeymap.key, {
+          // Remap to one shortcut.
+          Undo: { shortcuts: 'Mod-z' },
+          // Remap to multiple shortcuts.
+          Redo: { shortcuts: 'Mod-y' },
+        })
         // Add Milkdown listener plugin for real-time value tracking
         ctx.get(listenerCtx).markdownUpdated((_, md: string, preMd: string) => {
           if (originalValue.current === null) {
@@ -62,6 +69,7 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
       .use(tooltip)
       .use(listener)
       .use(slash)
+      .use(history)
   }, [value, pluginViewFactory, nodeViewFactory])
 
   // Handler for save button
@@ -91,7 +99,7 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
   }, [editorValue]);
 
   return (
-    <div className="editor-scope pr-6">
+    <div className="editor-scope">
       <style>{`
         .markdown-body .editor {
           outline: none !important;
