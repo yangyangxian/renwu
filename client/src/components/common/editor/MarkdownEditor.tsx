@@ -1,6 +1,6 @@
 import { defaultValueCtx, Editor, rootCtx, editorViewOptionsCtx } from '@milkdown/kit/core';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { Milkdown, useEditor } from '@milkdown/react';
 import { usePluginViewFactory, useNodeViewFactory } from '@prosemirror-adapter/react';
@@ -24,15 +24,14 @@ import {
   stripImageTitles,
   computeRemovedFilenames,
 } from '@/utils/imageUtils';
-import { useImperativeHandle } from 'react';
-
+import {
+  imageBlockComponent
+} from '@milkdown/components/image-block'
 export interface MarkdownnEditorProps {
   value: string;
-  onChange?: (markdown: string) => void;
   showSaveCancel?: boolean;
   onSave?: (markdown: string) => void;
   onCancel?: () => void;
-  // New: notify parent when dirty changes
   onDirtyChange?: (dirty: boolean) => void;
   ref: React.Ref<MarkdownEditorHandle> | null;
 }
@@ -43,7 +42,7 @@ export interface MarkdownEditorHandle {
 }
 
 export function MarkdownnEditor(props: MarkdownnEditorProps) {
-  const { value, onChange, showSaveCancel, onSave, onCancel, onDirtyChange } = props;
+  const { value, ref, showSaveCancel, onSave, onCancel, onDirtyChange } = props;
   const pluginViewFactory = usePluginViewFactory();
   const nodeViewFactory = useNodeViewFactory();
   const [dirty, setDirty] = useState(false);
@@ -91,6 +90,8 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
       .use(listener)
       .use(slash)
       .use(history)
+      .use(imageBlockComponent)
+
     editorRef.current = editor;
     return editor;
   }, [value, pluginViewFactory, nodeViewFactory])
@@ -99,6 +100,7 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
   useEffect(() => {
     const root = editorRef.current?.ctx.get(rootCtx);
     if (!root || !(root instanceof HTMLElement)) return;
+    
     const handlePaste = (event: ClipboardEvent) => {
       if (!event.clipboardData) return;
       const item = Array.from(event.clipboardData.items).find(i => i.type.startsWith('image/'));
@@ -186,20 +188,20 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
     onCancel?.();
   }, [onCancel, onDirtyChange]);
 
-  useImperativeHandle(props.ref, () => ({
+  useImperativeHandle(ref, () => ({
     save: handleSave,
     cancel: handleCancel,
   }), [handleSave, handleCancel]);
 
   return (
-    <div className="editor-scope">
+    <div className="editor-scope w-full">
       <style>{`
         .markdown-body .editor {
           outline: none !important;
         }
       `}</style>
       
-      <div className="markdown-body break-all">
+      <div className="markdown-body break-all w-full">
         <Milkdown />
       </div>
       <EditorFooterHandle />

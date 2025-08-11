@@ -58,10 +58,10 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
   }, [descInput]);
 
   return (
-    <Card className={`flex-1 break-all overflow-y-auto h-full ${className ? ` ${className}` : ''}`}>
+    <Card className={`flex-1 break-all overflow-y-auto h-full w-full ${className ? ` ${className}` : ''}`}>
       {editingDesc ? (
-        <div className="relative h-full">
-          <div className="flex overflow-y-auto h-92/100 pr-3">
+        <div className="relative h-full w-full">
+          <div className="flex overflow-y-auto h-92/100 pr-3 w-full">
             <MarkdownnEditor
               ref={editorRef}
               value={descInput}
@@ -91,9 +91,9 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
       ) : (
         <div className="relative group">
           {descInput ? (
-            <>
+            <div className='markdown-body flex w-full h-full relative'>
               <div
-                className="markdown-body pt-[18px] pr-3"
+                className="pr-3 w-full"
                 dangerouslySetInnerHTML={{ __html: renderedHtml }}
               />
               <Button
@@ -105,7 +105,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
               >
                 <Pencil className="w-4 h-4" />
               </Button>
-            </>
+            </div>
           ) : (
             <div
               className="markdown-body"
