@@ -61,7 +61,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
     <Card className={`flex-1 break-all overflow-y-auto h-full ${className ? ` ${className}` : ''}`}>
       {editingDesc ? (
         <div className="relative h-full">
-          <div className="flex overflow-y-auto h-93/100 pr-3">
+          <div className="flex overflow-y-auto h-92/100 pr-3">
             <MarkdownnEditor
               ref={editorRef}
               value={descInput}
@@ -74,7 +74,7 @@ export const ProjectDescriptionCard: React.FC<ProjectDescriptionCardProps> = ({ 
               onDirtyChange={setIsDirty}
             />
           </div>
-          <div className="flex justify-end items-center gap-2 my-2">
+          <div className="flex justify-end items-center gap-2 my-2 mt-4 mr-3">
             {isDirty && (
               <div className='mr-3'>
                 <UnsavedChangesIndicator />
