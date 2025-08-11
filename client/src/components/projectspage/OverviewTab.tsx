@@ -52,7 +52,7 @@ export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
       </div>
       <ProjectDescriptionCard project={project} 
         updateProject={updateProject} 
-        className={`${CARD_CLASS} py-2 pr-0 px-6`} />
+        className={`${CARD_CLASS} py-2 px-6 pr-3`} />
     </div>
   );
 }

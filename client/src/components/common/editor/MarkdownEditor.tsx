@@ -1,6 +1,6 @@
 import { defaultValueCtx, Editor, rootCtx, editorViewOptionsCtx } from '@milkdown/kit/core';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { Milkdown, useEditor } from '@milkdown/react';
 import { usePluginViewFactory, useNodeViewFactory } from '@prosemirror-adapter/react';
@@ -24,6 +24,7 @@ import {
   stripImageTitles,
   computeRemovedFilenames,
 } from '@/utils/imageUtils';
+import { useImperativeHandle } from 'react';
 
 export interface MarkdownnEditorProps {
   value: string;
@@ -31,10 +32,18 @@ export interface MarkdownnEditorProps {
   showSaveCancel?: boolean;
   onSave?: (markdown: string) => void;
   onCancel?: () => void;
+  // New: notify parent when dirty changes
+  onDirtyChange?: (dirty: boolean) => void;
+  ref: React.Ref<MarkdownEditorHandle> | null;
+}
+
+export interface MarkdownEditorHandle {
+  save: () => void;
+  cancel: () => void;
 }
 
 export function MarkdownnEditor(props: MarkdownnEditorProps) {
-  const { value, onChange, showSaveCancel, onSave, onCancel } = props;
+  const { value, onChange, showSaveCancel, onSave, onCancel, onDirtyChange } = props;
   const pluginViewFactory = usePluginViewFactory();
   const nodeViewFactory = useNodeViewFactory();
   const [dirty, setDirty] = useState(false);
@@ -66,11 +75,9 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
           if (originalValue.current === null) {
             originalValue.current = preMd;
           }
-          if (md !== originalValue.current) {
-            setDirty(true);
-          } else {
-            setDirty(false);
-          }
+          const nowDirty = md !== originalValue.current;
+          setDirty(nowDirty);
+          onDirtyChange?.(nowDirty);
           logger.debug("Markdown updated:", md);
         });
         ctx.set(slash.key, {
@@ -143,7 +150,7 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
     return url;
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     let currentMarkdown = value;
     if (editorRef.current) {
       try {
@@ -170,12 +177,19 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
     logger.debug('Saving markdown content:', currentMarkdown);
     onSave?.(currentMarkdown);
     setDirty(false);
-  };
+    onDirtyChange?.(false);
+  }, [value, onSave, onDirtyChange]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setDirty(false);
+    onDirtyChange?.(false);
     onCancel?.();
-  };
+  }, [onCancel, onDirtyChange]);
+
+  useImperativeHandle(props.ref, () => ({
+    save: handleSave,
+    cancel: handleCancel,
+  }), [handleSave, handleCancel]);
 
   return (
     <div className="editor-scope">
