@@ -48,9 +48,6 @@ export default defineConfig({
             if (id.includes('marked')) {
               return 'vendor-marked';
             }
-            if (id.includes('recharts')) {
-              return 'recharts';
-            }
             if (id.includes('framer-motion')) {
               return 'framer-motion';
             }
