@@ -10,12 +10,15 @@ const __dirname = path.dirname(
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src').replace(/\\/g, '/'),
       '@fullstack/common': path.resolve(__dirname, '../common/src').replace(/\\/g, '/'),
     },
+  },
+  optimizeDeps: {
+    include: ['recharts'],
   },
   server: {
     proxy: {
