@@ -40,3 +40,4 @@ client/server/package-lock.json
 package-lock.json
 server/.env.development
 /server/src/uploads
+server/src/drizzle.config.supabase.ts
