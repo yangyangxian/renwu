@@ -24,9 +24,8 @@ import {
   stripImageTitles,
   computeRemovedFilenames,
 } from '@/utils/imageUtils';
-import {
-  imageBlockComponent
-} from '@milkdown/components/image-block'
+import { editorViewCtx } from '@milkdown/core';
+
 export interface MarkdownnEditorProps {
   value: string;
   showSaveCancel?: boolean;
@@ -90,7 +89,6 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
       .use(listener)
       .use(slash)
       .use(history)
-      .use(imageBlockComponent)
 
     editorRef.current = editor;
     return editor;
@@ -127,6 +125,13 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
         if (editorRef.current) {
           const fileName = file.name || 'image.png';
           editorRef.current.action(callCommand(insertImageCommand.key, { src: dataUrl, alt: fileName }));
+          // Insert a new line after the image
+          editorRef.current.action(ctx => {
+            const view = ctx.get(editorViewCtx);
+            if (view) {
+              view.dispatch(view.state.tr.insertText('\n'));
+            }
+          });
         }
       };
       reader.readAsDataURL(file);
