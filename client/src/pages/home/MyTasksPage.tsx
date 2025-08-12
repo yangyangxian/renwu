@@ -7,7 +7,7 @@ import TaskListView from "@/components/taskspage/ListView";
 import { TaskResDto, TaskViewMode, TaskDateRange } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
-import { Plus, Kanban, List, Bookmark } from "lucide-react";
+import { Plus, Kanban, List, Bookmark, Home } from "lucide-react";
 import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import logger from "@/utils/logger";
 import { useTaskViewStore } from "@/stores/useTaskViewStore";
 import isEqual from "lodash/isEqual";
-import { Skeleton } from "@/components/ui-kit/Skeleton";
+import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
 
 export default function MyTasksPage() {
   const { tasks, fetchMyTasks, } = useTaskStore();
@@ -88,6 +88,10 @@ export default function MyTasksPage() {
 
   return (
     <>
+    { isLoadingTasks &&
+      <HomePageSkeleton />
+    }
+
     { !isLoadingTasks && 
     <motion.div
       className="w-full h-full flex flex-col pt-1 gap-1"

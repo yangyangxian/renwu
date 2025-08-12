@@ -14,6 +14,7 @@ import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { TaskResDto, TaskViewMode } from '@fullstack/common';
 import logger from "@/utils/logger";
 import { motion } from "framer-motion";
+import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
 
 export default function ProjectDetailPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>();
@@ -31,6 +32,7 @@ export default function ProjectDetailPage() {
 
   // Local state for task view (list or board)
   const [taskView, setTaskView] = useState<TaskViewMode>(TaskViewMode.BOARD);
+  const [loadingCurrentProject, setLoadingCurrentProject] = useState(true);
 
   // Get projectId from global projects object using slug
   const projectId = projectSlug && projects
@@ -39,15 +41,22 @@ export default function ProjectDetailPage() {
 
   // Fetch project and tasks together when projectId changes
   useEffect(() => {
+    setLoadingCurrentProject(true);
     if (projectId) {
-      logger.info(`Fetching project and tasks for project ID: ${projectId}`);
-      fetchCurrentProject(projectId);
-      fetchProjectTasks(projectId);
+      fetchCurrentProject(projectId)
+        .then(async () => {
+          await fetchProjectTasks(projectId);
+          setLoadingCurrentProject(false);
+        })
+        .catch(err => {
+          logger.error("Failed to fetch project or tasks:", err);
+          setLoadingCurrentProject(false);
+        });
     }
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
-  if (!projectId) {
-    return <div></div>;
+  if (!projectId || loadingCurrentProject) {
+    return <HomePageSkeleton />;
   }
 
   return (
