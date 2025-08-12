@@ -4,9 +4,7 @@ import { Calendar, Folder } from "lucide-react";
 import { Search } from "lucide-react";
 import { TaskResDto, TaskDateRange } from "@fullstack/common";
 import { useEffect } from "react";
-import logger from "@/utils/logger";
 import { useProjectStore } from "@/stores/useProjectStore";
-import { useTaskViewStore } from "@/stores/useTaskViewStore";
 
 interface TaskFilterMenuProps {
   showProjectSelect?: boolean;
@@ -14,7 +12,14 @@ interface TaskFilterMenuProps {
   showSearch?: boolean;
   tasks: TaskResDto[];
   onFilter: (filtered: TaskResDto[]) => void;
-  onProjectSelect?: (projectId: string) => void;
+  // controlled values from parent
+  selectedProject: string;
+  dateRange: TaskDateRange;
+  searchTerm: string;
+  // change handlers from parent
+  onSelectedProjectChange?: (projectId: string) => void;
+  onDateRangeChange?: (range: TaskDateRange) => void;
+  onSearchTermChange?: (term: string) => void;
 }
 
 export function TaskFilterMenu({
@@ -23,17 +28,16 @@ export function TaskFilterMenu({
   showSearch,
   tasks,
   onFilter,
-  onProjectSelect,
+  selectedProject,
+  dateRange,
+  searchTerm,
+  onSelectedProjectChange,
+  onDateRangeChange,
+  onSearchTermChange,
 }: TaskFilterMenuProps) {
   const { projects } = useProjectStore();
-  const { currentDisplayViewConfig, setCurrentDisplayViewConfig, currentSelectedTaskView } = useTaskViewStore();
 
-
-  // Always use currentDisplayViewConfig for UI
-  const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
-  const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.LAST_3_MONTHS;
-  const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
-
+  // Filtering depends on controlled values from parent
   useEffect(() => {
     const filtered = tasks.filter(t => {
       // Date filter
@@ -80,12 +84,7 @@ export function TaskFilterMenu({
         <Select
           value={selectedProject}
           onValueChange={v => {
-            setCurrentDisplayViewConfig({
-              ...currentDisplayViewConfig,
-              projectId: v
-            });
-            if (v === "all" || v === "personal") v = '';
-            if (onProjectSelect) onProjectSelect(v);
+            onSelectedProjectChange?.(v);
           }}
           defaultValue="all"
         >
@@ -110,10 +109,7 @@ export function TaskFilterMenu({
 
       {showDateRange && (
         <div className="flex items-center">
-      <Select value={dateRange} onValueChange={v => setCurrentDisplayViewConfig({
-        ...currentDisplayViewConfig,
-        dateRange: v as TaskDateRange
-      })}>
+      <Select value={dateRange} onValueChange={v => onDateRangeChange?.(v as TaskDateRange)}>
         <SelectTrigger className="min-w-[10rem] px-2 bg-white dark:text-primary flex gap-2" id="date-range-select">
           <Calendar className="w-4 h-4" />
           <SelectValue placeholder="Date range" />
@@ -133,10 +129,7 @@ export function TaskFilterMenu({
           <Input
             type="text"
             value={searchTerm}
-            onChange={e => setCurrentDisplayViewConfig({
-              ...currentDisplayViewConfig,
-              searchTerm: e.target.value
-            })}
+            onChange={e => onSearchTermChange?.(e.target.value)}
             placeholder="Search"
             className="bg-white-black text-sm pl-9 max-w-[10rem]"
           />

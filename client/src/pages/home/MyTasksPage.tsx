@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from 'framer-motion';
 import { useTabHash } from "@/hooks/useTabHash";
 import { useTaskStore } from '@/stores/useTaskStore';
 import BoardView from "@/components/taskspage/BoardView";
 import TaskListView from "@/components/taskspage/ListView";
-import { TaskResDto, TaskViewMode } from '@fullstack/common';
+import { TaskResDto, TaskViewMode, TaskDateRange } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { Plus, Kanban, List, Bookmark } from "lucide-react";
@@ -26,6 +26,7 @@ export default function MyTasksPage() {
     currentDisplayViewConfig,
     setCurrentDisplayViewConfigViewMode,
     updateTaskView,
+    setCurrentDisplayViewConfig,
   } = useTaskViewStore();
 
   const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
@@ -41,14 +42,18 @@ export default function MyTasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isBookmarkDialogOpen, setIsBookmarkDialogOpen] = useState(false);
   const isSavedView = !!currentSelectedTaskView;
+
+  // Controlled filter values (lifted from TaskFilterMenu)
+  logger.debug("Current display view config:", currentDisplayViewConfig);
+  const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
+  const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.LAST_3_MONTHS;
+  const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
 
   // Unsaved changes detection
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   useEffect(() => {
-    logger.debug(currentSelectedTaskView?.viewConfig.projectId + " " + currentDisplayViewConfig.projectId);
     if (currentSelectedTaskView && currentDisplayViewConfig) {
       setHasUnsavedChanges(!isEqual(currentSelectedTaskView.viewConfig, currentDisplayViewConfig));
     } else {
@@ -94,7 +99,27 @@ export default function MyTasksPage() {
               showSearch={true}
               tasks={tasks}
               onFilter={setFilteredTasks}
-              onProjectSelect={setSelectedProjectId}
+              selectedProject={selectedProject}
+              dateRange={dateRange}
+              searchTerm={searchTerm}
+              onSelectedProjectChange={(v) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  projectId: v,
+                });
+              }}
+              onDateRangeChange={(v) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  dateRange: v,
+                });
+              }}
+              onSearchTermChange={(v) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  searchTerm: v,
+                });
+              }}
             />
           </div>
             {/* Bookmark icon next to search input */}
@@ -180,7 +205,7 @@ export default function MyTasksPage() {
               if (!open) setEditingTask(null);
             }}
             title={editingTask ? "Edit Task" : "Add New Task"}
-            initialValues={editingTask || (selectedProjectId ? { projectId: selectedProjectId } : {})}
+            initialValues={editingTask || ((selectedProject !== 'all' && selectedProject !== 'personal') ? { projectId: selectedProject } : {})}
           />
         )}
       </div>

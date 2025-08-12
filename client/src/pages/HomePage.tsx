@@ -12,7 +12,6 @@ import { updateMe } from "@/apiRequests/apiEndpoints";
 import logger from "@/utils/logger";
 
 export default function HomePage() {
-  logger.debug("HomePage component is being rendered");
   const location = useLocation();
   const { isAuthenticated, user, setUser, logout } = useAuth();
   // Name dialog state
@@ -30,7 +29,6 @@ export default function HomePage() {
     e.preventDefault();
     if (!pendingName.trim()) return;
     try {
-      console.log("Updating user name:", pendingName.trim());
       const response = await apiClient.put(updateMe(), { name: pendingName.trim() });
       // Assume response is the updated user object
       const updatedUser = response as typeof user;

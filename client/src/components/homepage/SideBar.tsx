@@ -7,7 +7,7 @@ import { Pin, PinOff } from "lucide-react";
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
 import { useNavigate, useLocation } from "react-router-dom";
-import { PROJECTS_PATH, MYTASKS_PATH } from "@/routes/routeConfig";
+import { PROJECTS_PATH } from "@/routes/routeConfig";
 import { useState, useEffect, useRef } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { ProjectDialog } from "@/components/projectspage/AddProjectDialog";
@@ -76,17 +76,12 @@ export function HomeSideBar() {
   };
 
   // Navigation handlers
-  const isTasksActive = location.pathname.startsWith(MYTASKS_PATH) && !location.search.includes('view=');
-  const isTaskViewActive = (viewName: string) => {
-    const dashedName = viewName.replace(/\s+/g, '-');
-    return location.pathname.startsWith(MYTASKS_PATH) && location.search.includes(`view=${dashedName}`);
-  };
   const isProjectActive = (projectId: string) => {
     // Check if current URL matches this project's slug (ignore hash for active state)
     const project = projects.find(p => p.id === projectId);
     return project ? location.pathname === `${PROJECTS_PATH}/${project.slug}` : false;
   };
-
+  
   // Handle delayed text display after expansion animation
   useEffect(() => {
     if (expanded) {
@@ -137,20 +132,17 @@ export function HomeSideBar() {
         <SidebarMenu className="gap-2 bg-white-black">
           <TasksMenuItem 
             showText={showText}
-            isTasksActive={isTasksActive}
-            handleTasksClick={() => navigate(MYTASKS_PATH)}
             taskViews={taskViews}
             navigate={navigate}
             location={location}
-            isTaskViewActive={isTaskViewActive}
           />
           <ProjectsMenuItem
             showText={showText}
-            isProjectActive={isProjectActive}
             setExpanded={setExpanded}
             onAddProject={() => setProjectDialogOpen(true)}
             projects={projects}
             loading={loading}
+            location={location}
           />
         </SidebarMenu>
         {/* Pin/Unpin button at bottom right: only show when expanded */}

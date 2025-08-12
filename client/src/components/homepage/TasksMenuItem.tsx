@@ -8,44 +8,44 @@ import { ListChecks, Trash2 } from "lucide-react";
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
 import { logger } from "@/utils/logger";
 
 export function TasksMenuItem({ 
   showText,
-  isTasksActive,
-  handleTasksClick,
   taskViews,
   navigate,
-  location,
-  isTaskViewActive
+  location
 }: { 
   showText: boolean; 
-  isTasksActive: boolean;
-  handleTasksClick: () => void;
   taskViews: any[];
   navigate: any;
   location: any;
-  isTaskViewActive: (viewId: string) => boolean;
 }) {
   const { setCurrentSelectedTaskView, currentSelectedTaskView, defaultDisplayViewConfig,
     setCurrentDisplayViewConfig, deleteTaskView } = useTaskViewStore();
   const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
   const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
 
+  const isTasksActive = useCallback(() => location.pathname.startsWith(MYTASKS_PATH) && !location.search.includes('view='), [location]);
+
+  const isTaskViewActive = useCallback((viewName: string) => {
+    const dashedName = viewName.replace(/\s+/g, '-');
+    return location.pathname.startsWith(MYTASKS_PATH) && location.search.includes(`view=${dashedName}`);
+  }, [location]);
+
   // Automatically set currentSelectedTaskView based on active view in URL
   useEffect(() => {
     // Find the active view by matching the URL
     const activeView = taskViews.find(view => isTaskViewActive(view.name));
-    logger.debug("Active view from URL:", activeView);
     
     if (activeView && (!currentSelectedTaskView || currentSelectedTaskView.id !== activeView.id)) {
       setCurrentSelectedTaskView(activeView);
       setCurrentDisplayViewConfig(activeView.viewConfig);
       logger.debug("set setCurrentDisplayViewConfig:", activeView.viewConfig);
     } else if (!activeView && currentSelectedTaskView) {
-        logger.debug("No active view found, resetting currentSelectedTaskView");
+      logger.debug("No active view found, resetting currentSelectedTaskView");
       setCurrentSelectedTaskView(null);
       setCurrentDisplayViewConfig(defaultDisplayViewConfig);
       logger.debug("set setCurrentDisplayViewConfig:", defaultDisplayViewConfig);
@@ -57,10 +57,11 @@ export function TasksMenuItem({
       {/* Main "My Tasks" button - always visible */}
       <SidebarMenuButton 
         className="relative flex items-center min-w-0 mb-1 cursor-pointer"
-        isActive={isTasksActive}
+        isActive={isTasksActive()}
         onClick={() => {
+          navigate(MYTASKS_PATH);
           setCurrentSelectedTaskView(null);
-          handleTasksClick();
+          setCurrentDisplayViewConfig(defaultDisplayViewConfig);
         }}
       >
         <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
@@ -80,8 +81,9 @@ export function TasksMenuItem({
                   className="pl-4 cursor-pointer flex-1 min-w-0"
                   isActive={isTaskViewActive(view.name)}
                   onClick={() => {
+                    navigate(`${MYTASKS_PATH}?view=${view.name.replace(/\s+/g, '-')}`);
                     setCurrentSelectedTaskView(view);
-                    navigate(`/mytasks?view=${view.name.replace(/\s+/g, '-')}`);
+                    setCurrentDisplayViewConfig(view.viewConfig);
                   }}
                 >
                   <span className="truncate">{view.name}</span>

@@ -8,25 +8,31 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Folder, ChevronDown, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH } from "@/routes/routeConfig";
-import React from "react";
+import React, { useCallback } from "react";
+import { ProjectResDto } from "@fullstack/common";
 
 export function ProjectsMenuItem({ 
   showText,
-  isProjectActive,
   setExpanded,
   onAddProject,
   projects,
-  loading
+  loading,
+  location
 }: { 
   showText: boolean; 
-  isProjectActive: (projectId: string) => boolean;
   setExpanded: (v: boolean) => void;
   onAddProject?: () => void;
-  projects: { id: string; name: string; slug: string }[];
+  projects: ProjectResDto[];
   loading: boolean;
+  location: any;
 }) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { pathname } = useLocation();
+
+  const isProjectActive = useCallback((projectId: string) => {
+    const project = projects.find((p: any) => p.id === projectId);
+    return project ? pathname === `${PROJECTS_PATH}/${project.slug}` : false;
+  }, [pathname, projects]);
 
   const handleAddProject = (e: React.MouseEvent) => {
     e.stopPropagation();
