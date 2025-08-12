@@ -40,8 +40,8 @@ export function HomeSideBar() {
   const [mouseCooldown, setMouseCooldown] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
-  const { projects, loading, fetchProjectRoles, fetchProjects, createProject } = useProjectStore();
-  const { taskViews, fetchTaskViews } = useTaskViewStore();
+  const { projects, loading: projectLoading, fetchProjectRoles, fetchProjects, createProject } = useProjectStore();
+  const { taskViews, loading: taskViewLoading, fetchTaskViews } = useTaskViewStore();
 
   // Fetch projects on mount
   useEffect(() => {
@@ -73,13 +73,6 @@ export function HomeSideBar() {
         error: 'Failed to create project.'
       }
     );
-  };
-
-  // Navigation handlers
-  const isProjectActive = (projectId: string) => {
-    // Check if current URL matches this project's slug (ignore hash for active state)
-    const project = projects.find(p => p.id === projectId);
-    return project ? location.pathname === `${PROJECTS_PATH}/${project.slug}` : false;
   };
   
   // Handle delayed text display after expansion animation
@@ -135,13 +128,14 @@ export function HomeSideBar() {
             taskViews={taskViews}
             navigate={navigate}
             location={location}
+            loading={taskViewLoading}
           />
           <ProjectsMenuItem
             showText={showText}
             setExpanded={setExpanded}
             onAddProject={() => setProjectDialogOpen(true)}
             projects={projects}
-            loading={loading}
+            loading={projectLoading}
             location={location}
           />
         </SidebarMenu>

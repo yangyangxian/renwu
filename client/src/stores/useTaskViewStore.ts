@@ -5,7 +5,6 @@ import { TaskSortField, TaskSortOrder, TaskViewCreateReqDto, TaskViewMode, TaskV
   TaskStatus} from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { updateTaskViewById, createTaskView as createTaskViewEndpoint, deleteTaskViewById } from '@/apiRequests/apiEndpoints';
-import { View } from 'lucide-react';
 
 interface TaskViewStoreState {
   taskViews: TaskViewResDto[];

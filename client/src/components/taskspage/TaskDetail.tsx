@@ -12,6 +12,7 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/taskStatusConfig";
 import { marked } from 'marked';
 import { toast } from 'sonner';
+import { Skeleton } from "../ui-kit/Skeleton";
 
 interface TaskDetailProps {
   taskId: string;
@@ -21,7 +22,7 @@ const fieldLabelContainerClass = "flex items-center gap-3 h-7";
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
-  const { currentTask, updateTaskById, fetchCurrentTask } = useTaskStore();
+  const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
   const [localDueDate, setLocalDueDate] = useState<string | undefined>(currentTask?.dueDate);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
@@ -64,10 +65,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     }
   };
 
-  if (!currentTask || !currentTask.id) return <Label className="text-muted-foreground">Select a task to view details.</Label>;
-  const task = currentTask;
+  const task = currentTask!;
   return (
-    <>
+    <>     
+      { loadingCurrentTask && 
+        <div className="flex flex-col p-3 space-y-3 w-1/2">
+          <Skeleton className="h-6 w-full mb-2" />
+          <Skeleton className="h-6 w-full mb-2" />
+        </div>
+      }
+
+      { !loadingCurrentTask && task &&
+      <>
       {/* Title block above columns */}
       <div className="mb-8">
         <Label className="text-xl font-bold flex items-center gap-3">
@@ -234,6 +243,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
           </div>
         </div>
       </div>
+      </>}
     </>
   );
 };

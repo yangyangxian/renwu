@@ -11,17 +11,20 @@ import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { useState, useEffect, useCallback } from "react";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
 import { logger } from "@/utils/logger";
+import { Skeleton } from "../ui-kit/Skeleton";
 
 export function TasksMenuItem({ 
   showText,
   taskViews,
   navigate,
-  location
+  location,
+  loading
 }: { 
   showText: boolean; 
   taskViews: any[];
   navigate: any;
   location: any;
+  loading: boolean;
 }) {
   const { setCurrentSelectedTaskView, currentSelectedTaskView, defaultDisplayViewConfig,
     setCurrentDisplayViewConfig, deleteTaskView } = useTaskViewStore();
@@ -68,8 +71,13 @@ export function TasksMenuItem({
         {showText && <span>My Tasks</span>}
       </SidebarMenuButton>
       {/* Task views - always visible when showText is true */}
-      {showText && (
+        {showText && (
         <SidebarMenuSub className="gap-[6px]">
+          { loading && 
+          <>
+            <Skeleton className="h-6 w-full mb-2" />
+            <Skeleton className="h-6 w-full mb-2" />
+          </>}
           {taskViews.map((view) => (
             <SidebarMenuSubItem key={view.id}>
               <div
@@ -88,6 +96,7 @@ export function TasksMenuItem({
                 >
                   <span className="truncate">{view.name}</span>
                 </SidebarMenuButton>
+
                 {/* Delete button: only show for hovered item */}
                 {hoveredViewId === view.id && (
                   <>

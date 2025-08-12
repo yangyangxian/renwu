@@ -47,45 +47,47 @@ export default function HomePage() {
           <HomeSideBar />
         </aside>
       )}
+      
       {/* Main Content or Outlet */}
       <section className="flex w-full max-h-full pl-2 p-2">
-        {/* Name Dialog */}
-        <Dialog open={nameDialogOpen} modal>
-          <DialogContent 
-            className="max-w-xs w-full flex flex-col gap-2 items-center"
-            showCloseButton={false}
-            // Prevent closing on outside click or Escape
-            onInteractOutside={e => e.preventDefault()}
-            onEscapeKeyDown={e => e.preventDefault()}
-          >
-            <DialogTitle>
-              <VisuallyHidden>Set your name</VisuallyHidden>
-            </DialogTitle>
-            <span className="font-bold text-lg">Welcome! Please tell us your name.</span>
-            <span className="text-sm text-muted-foreground text-center mb-5">Your friends will find you by your name.</span>
-            <form onSubmit={handleNameSubmit} className="w-full flex flex-col gap-3">
-              <Input
-                type="text"
-                placeholder="Enter your name"
-                value={pendingName}
-                onChange={e => setPendingName(e.target.value)}
-                required
-                autoFocus
-              />
-              <Button type="submit" className="mt-5">Save</Button>
-            </form>
-            {/* Log out button for stuck users */}
-            <Button
-              variant="outline"
-              className="mt-2 w-full"
-              onClick={logout}
-            >
-              Log out
-            </Button>
-          </DialogContent>
-        </Dialog>
         <Outlet />
       </section>
+
+      {/* Name Dialog */}
+      <Dialog open={nameDialogOpen} modal>
+        <DialogContent 
+          className="max-w-xs w-full flex flex-col gap-2 items-center"
+          showCloseButton={false}
+          // Prevent closing on outside click or Escape
+          onInteractOutside={e => e.preventDefault()}
+          onEscapeKeyDown={e => e.preventDefault()}
+        >
+          <DialogTitle>
+            <VisuallyHidden>Set your name</VisuallyHidden>
+          </DialogTitle>
+          <span className="font-bold text-lg">Welcome! Please tell us your name.</span>
+          <span className="text-sm text-muted-foreground text-center mb-5">Your friends will find you by your name.</span>
+          <form onSubmit={handleNameSubmit} className="w-full flex flex-col gap-3">
+            <Input
+              type="text"
+              placeholder="Enter your name"
+              value={pendingName}
+              onChange={e => setPendingName(e.target.value)}
+              required
+              autoFocus
+            />
+            <Button type="submit" className="mt-5">Save</Button>
+          </form>
+          {/* Log out button for stuck users */}
+          <Button
+            variant="outline"
+            className="mt-2 w-full"
+            onClick={logout}
+          >
+            Log out
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -29,21 +29,21 @@ export const SaveTaskViewPopover: React.FC<SaveTaskViewPopoverProps> = ({
           <Button
             variant="default"
             size="sm"
-            onClick={() => { setOpen(false); onOpenDialog(); }}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4 align-middle -ml-1" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-            Save as new
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => { setOpen(false); onOverride(); }}
             disabled={disabled}
             className="flex items-center gap-2"
           >
             <Save className="w-4 h-4 align-middle" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
             Save current view
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setOpen(false); onOpenDialog(); }}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4 align-middle -ml-1" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+            Save as a new view
           </Button>
         </div>
       </PopoverContent>

@@ -18,9 +18,10 @@ import { toast } from 'sonner';
 import logger from "@/utils/logger";
 import { useTaskViewStore } from "@/stores/useTaskViewStore";
 import isEqual from "lodash/isEqual";
+import { Skeleton } from "@/components/ui-kit/Skeleton";
 
 export default function MyTasksPage() {
-  const { tasks, fetchMyTasks } = useTaskStore();
+  const { tasks, fetchMyTasks, } = useTaskStore();
   const {
     currentSelectedTaskView,
     currentDisplayViewConfig,
@@ -30,11 +31,6 @@ export default function MyTasksPage() {
   } = useTaskViewStore();
 
   const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
-
-  useEffect(() => {
-    fetchMyTasks();
-  }, [fetchMyTasks]);
-
   const [view, setView] = useTabHash(tabOptions, currentDisplayViewConfig.viewMode,
     currentDisplayViewConfig.viewMode, setCurrentDisplayViewConfigViewMode
   );
@@ -44,12 +40,22 @@ export default function MyTasksPage() {
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
   const [isBookmarkDialogOpen, setIsBookmarkDialogOpen] = useState(false);
   const isSavedView = !!currentSelectedTaskView;
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
 
   // Controlled filter values (lifted from TaskFilterMenu)
   logger.debug("Current display view config:", currentDisplayViewConfig);
   const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
   const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.LAST_3_MONTHS;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setIsLoadingTasks(true);
+      await fetchMyTasks();
+      setIsLoadingTasks(false);
+    };
+    fetchTasks();
+  }, [fetchMyTasks]);
 
   // Unsaved changes detection
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -81,6 +87,8 @@ export default function MyTasksPage() {
   }, [currentSelectedTaskView, currentDisplayViewConfig, updateTaskView]);
 
   return (
+    <>
+    { !isLoadingTasks && 
     <motion.div
       className="w-full h-full flex flex-col pt-1 gap-1"
       initial={{ opacity: 0 }}
@@ -88,7 +96,6 @@ export default function MyTasksPage() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Responsive menu bar: all controls in one row on all devices */}
       <div id="menuBar" className="w-full px-2">
         <div className="flex flex-row w-full gap-2 items-start sm:items-center flex-wrap">
           {/* TaskFilterMenu now owns filter state and logic */}
@@ -195,6 +202,7 @@ export default function MyTasksPage() {
                 <span className="">Add Task</span>
               </Button>
             </div>
+            
 
         </div>
         {isDialogOpen && (
@@ -234,5 +242,7 @@ export default function MyTasksPage() {
     />
     }
     </motion.div>
+    }
+    </>
   );
 }

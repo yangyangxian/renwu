@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { PROJECTS_PATH } from "@/routes/routeConfig";
 import React, { useCallback } from "react";
 import { ProjectResDto } from "@fullstack/common";
+import { Skeleton } from "../ui-kit/Skeleton";
 
 export function ProjectsMenuItem({ 
   showText,
@@ -74,6 +75,11 @@ export function ProjectsMenuItem({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub className="gap-[6px]">
+            {loading && 
+            <>
+              <Skeleton className="h-6 w-full mb-2" />
+              <Skeleton className="h-6 w-full mb-2" />
+            </>}
             {showText && !loading && projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuButton
