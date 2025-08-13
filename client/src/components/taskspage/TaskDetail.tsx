@@ -13,6 +13,7 @@ import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/t
 import { marked } from 'marked';
 import { toast } from 'sonner';
 import { Skeleton } from "../ui-kit/Skeleton";
+import { motion } from "framer-motion";
 
 interface TaskDetailProps {
   taskId: string;
@@ -67,16 +68,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
 
   const task = currentTask!;
   return (
-    <>     
-      { loadingCurrentTask && 
-        <div className="flex flex-col p-3 space-y-3 w-1/2">
-          <Skeleton className="h-6 w-full mb-2" />
-          <Skeleton className="h-6 w-full mb-2" />
-        </div>
-      }
-
-      { !loadingCurrentTask && task &&
       <>
+      { !loadingCurrentTask && task &&
+      <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full h-full"
+      >
       {/* Title block above columns */}
       <div className="mb-8">
         <Label className="text-xl font-bold flex items-center gap-3">
@@ -243,8 +243,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
           </div>
         </div>
       </div>
-      </>}
-    </>
+      </motion.div>
+      }
+      </>
   );
 };
 
