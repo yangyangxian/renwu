@@ -111,6 +111,9 @@ export function useTaskViewStore() {
         { name, viewConfig }
       );
       setTaskViews(taskViews.map(tv => tv.id === viewId ? updated : tv));
+      if (updated.id === currentSelectedTaskView?.id) {
+        setCurrentSelectedTaskView(updated);
+      }
       return updated;
     } catch (err: any) {
       setError(err?.message || 'Failed to update task view');
