@@ -35,7 +35,9 @@ export function TasksMenuItem({
 
   const isTaskViewActive = useCallback((viewName: string) => {
     const dashedName = viewName.replace(/\s+/g, '-');
-    return location.pathname.startsWith(MYTASKS_PATH) && location.search.includes(`view=${dashedName}`);
+    const params = new URLSearchParams(location.search);
+    // params.get('view') is automatically decoded by the browser
+    return location.pathname.startsWith(MYTASKS_PATH) && params.get('view') === dashedName;
   }, [location]);
 
   // Automatically set currentSelectedTaskView based on active view in URL
@@ -89,7 +91,9 @@ export function TasksMenuItem({
                   className="pl-4 cursor-pointer flex-1 min-w-0"
                   isActive={isTaskViewActive(view.name)}
                   onClick={() => {
-                    navigate(`${MYTASKS_PATH}?view=${view.name.replace(/\s+/g, '-')}`);
+                    const dashedName = view.name.replace(/\s+/g, '-');
+                    const encoded = encodeURIComponent(dashedName);
+                    navigate(`${MYTASKS_PATH}?view=${encoded}`);
                     setCurrentSelectedTaskView(view);
                     setCurrentDisplayViewConfig(view.viewConfig);
                   }}
@@ -135,7 +139,9 @@ export function TasksMenuItem({
                             if (remainingViews.length > 0) {
                               const nextView = remainingViews[0];
                               setCurrentSelectedTaskView(nextView);
-                              navigate(`${MYTASKS_PATH}?view=${nextView.name.replace(/\s+/g, '-')}`);
+                              const dashedName = nextView.name.replace(/\s+/g, '-');
+                              const encoded = encodeURIComponent(dashedName);
+                              navigate(`${MYTASKS_PATH}?view=${encoded}`);
                             } else {
                               setCurrentSelectedTaskView(null);
                               navigate(MYTASKS_PATH);
