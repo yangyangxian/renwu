@@ -49,13 +49,25 @@ export default defineConfig({
               return 'vendor-marked';
             }
             if (id.includes('framer-motion')) {
-              return 'framer-motion';
+              return 'vendor-framer-motion';
             }
             if (id.match(/node_modules\/(milkdown|@milkdown|prosemirror|@prosemirror|@lezer|@codemirror|@prosemirror-adapter)/)) {
               return 'vendor-milkdown';
             }
             if (id.match(/node_modules\/(\@radix-ui\/)/)) {
               return 'vendor-radix';
+            }
+            if (id.match(/node_modules\/lodash/)) {
+              return 'vendor-lodash';
+            }
+            if (id.match(/node_modules\/@dnd-kit/)) {
+              return 'vendor-dndkit';
+            }
+            if (id.match(/node_modules\/react-day-picker/)) {
+              return 'vendor-react-day-picker';
+            }
+            if (id.match(/node_modules\/tailwind-merge/)) {
+              return 'vendor-tailwind-merge';
             }
             // All other dependencies go into a generic vendor chunk
             return 'vendor';
