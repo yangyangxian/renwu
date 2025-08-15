@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { TaskStatus } from "@fullstack/common";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioItem } from "@/components/ui-kit/Dropdown-menu";
 import { Badge } from "@/components/ui-kit/Badge";
 import { Label } from "@/components/ui-kit/Label";
-import { Textarea } from "@/components/ui-kit/Textarea";
-import { Tag, FolderOpen, User, Clock, FileText, CheckCircle, Check, RefreshCw } from "lucide-react";
+import { MarkdownnEditor, MarkdownEditorHandle } from '@/components/common/editor/MarkdownEditor';
+import { Button } from '@/components/ui-kit/Button';
+import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
+import { Tag, FolderOpen, User, Clock, FileText, CheckCircle, Check, RefreshCw, Pencil } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
 import DateSelector from "@/components/common/DateSelector";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -20,14 +22,15 @@ interface TaskDetailProps {
 }
 
 const fieldLabelContainerClass = "flex items-center gap-3 h-7";
-const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2";
+const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-3";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
   const [localDueDate, setLocalDueDate] = useState<string | undefined>(currentTask?.dueDate);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
-  const descInputRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<MarkdownEditorHandle | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (!taskId) return;
@@ -44,13 +47,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
 
   const handleDescClick = () => {
     setEditingDesc(true);
-    setTimeout(() => {
-      if (descInputRef.current) {
-        descInputRef.current.focus();
-        const val = descInputRef.current.value;
-        descInputRef.current.setSelectionRange(val.length, val.length);
-      }
-    }, 0);
   };
 
   const handleSubmitDesc = async (newValue: string) => {
@@ -65,6 +61,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       setDescInput(currentTask.description || "");
     }
   };
+
+  const renderedHtml: string = useMemo(() => {
+    const out = marked.parse(descInput) as unknown;
+    return typeof out === 'string' ? out : '';
+  }, [descInput]);
 
   const task = currentTask!;
   return (
@@ -94,26 +95,52 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               Description:
             </Label>
             {editingDesc ? (
-              <Textarea
-                ref={descInputRef}
-                initialValue={descInput}
-                onSubmit={handleSubmitDesc}
-                onCancel={() => setEditingDesc(false)}
-                className="min-h-[330px]"
-                maxLength={10000}
-                storageKey={taskId}
-              />
+              <div className="h-[600px] !text-sm rounded-lg flex flex-col">
+                <div className="flex-1 overflow-y-auto px-3 py-2 !bg-muted/40 dark:!bg-muted/65">
+                  <MarkdownnEditor
+                    ref={editorRef}
+                    value={descInput}
+                    onSave={(val) => { handleSubmitDesc(val); setEditingDesc(false); setIsDirty(false); }}
+                    onCancel={() => { setEditingDesc(false); setDescInput(currentTask?.description || ""); setIsDirty(false); }}
+                    showSaveCancel={false}
+                    onDirtyChange={setIsDirty}
+                  />
+                </div>
+                <div className="flex justify-end items-center gap-2 my-2 mt-4 mr-3">
+                  {isDirty && (
+                    <div className='mr-3'>
+                      <UnsavedChangesIndicator />
+                    </div>
+                  )}
+                  <Button size="sm" variant="default" disabled={!isDirty} onClick={() => editorRef.current?.save()}>
+                    Save
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => editorRef.current?.cancel()}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
             ) : (
               <>
                 {descInput ? (
+                <div className='markdown-body overflow-auto min-h-[200px] max-h-[600px] !bg-muted/40 dark:!bg-muted/65 flex w-full h-full relative'>
                   <div
-                    className="markdown-body min-h-[200px] max-h-[450px] !text-sm !leading-6 !bg-muted/40 dark:!bg-muted/65 !p-3 rounded-lg cursor-pointer overflow-auto border border-transparent hover:border-muted-foreground/20 transition-colors"
-                    onClick={handleDescClick}
-                    dangerouslySetInnerHTML={{ __html: marked.parse(descInput || '') }}
+                    className="px-3 py-2 w-full"
+                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
                   />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute right-3 top-2 opacity-70 group-hover:opacity-100 transition-opacity"
+                    onClick={handleDescClick}
+                    title="Edit description"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                </div>
                 ) : (
                   <div
-                    className="markdown-body min-h-[200px] !text-sm !bg-muted/40 dark:!bg-muted/65 !p-3 rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start pt-3"
+                    className="markdown-body min-h-[200px] !text-sm !bg-muted/40 dark:!bg-muted/65 !p-3 rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start"
                     onClick={handleDescClick}
                   >
                     Enter a task description… (Markdown supported!)
