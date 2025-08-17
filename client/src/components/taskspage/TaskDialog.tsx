@@ -5,7 +5,6 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { withToast } from "@/utils/toastUtils";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
-import { Textarea } from "@/components/ui-kit/Textarea";
 import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
@@ -14,10 +13,12 @@ import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from
 import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { MarkdownnEditor, MarkdownEditorHandle } from "@/components/common/editor/MarkdownEditor";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/common/DropDownList";
 import { logger } from "@/utils/logger";
+import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
 
 interface TaskDialogProps {
   open: boolean;
@@ -48,9 +49,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const { user } = useAuth();
   const { createTask, updateTaskById } = useTaskStore();
   const { projects } = useProjectStore();
-  // Ref for Textarea imperative handle
-  const descriptionRef = useRef<any>(null);
-  
+  // Ref for Markdown editor imperative handle
+  const mdEditorRef = useRef<MarkdownEditorHandle | null>(null);
   // Convert initialValues to ensure assignedTo is a string
   const processedInitialValues = {
     ...initialValues,
@@ -66,15 +66,17 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
   };
 
+  const [isDirty, setIsDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   const handleSubmit = async (taskData: any) => {
     const isEditMode = !!taskData.id;
     let submitSuccess = false;
     await withToast(
       async () => {
         if (isEditMode) {
-          // For edit mode, filter out all read-only fields
-          const { id, createdAt, updatedAt, projectName, createdBy, ...updateData } = taskData;
-          await updateTaskById(id, updateData);
+          const { id, createdAt, updatedAt, projectName, ...updateData } = taskData;
+          await updateTaskById(String(taskData.id), updateData);
         } else {
           // For create mode, only send the fields that are part of TaskCreateReqDto
           const { id, createdAt, updatedAt, projectName, ...createData } = taskData;
@@ -88,10 +90,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       }
     );
 
-    // Only clear cache if submit was successful
-    if (submitSuccess && descriptionRef.current && descriptionRef.current.clearUnsavedCache) {
-      descriptionRef.current.clearUnsavedCache();     
-    }
+    // Close dialog on successful submit
     if (submitSuccess) {
       onOpenChange(false);
     }
@@ -159,15 +158,18 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           <form
             onSubmit={e => {
               e.preventDefault();
-              const taskData: any = {
-                ...taskState,
-                description: descriptionRef.current?.value || "",
-              };
-              // Only add createdBy for create mode
-              if (!taskState.id) {
-                taskData.createdBy = user?.id || "";
+              // Delegate to editor save so paste/upload logic and image handling runs there
+              if (mdEditorRef.current && mdEditorRef.current.save) {
+                mdEditorRef.current.save();
+              } else {
+                // Fallback: no editor instance available, submit with current state
+                const taskData: any = {
+                  ...taskState,
+                  description: taskState.description || "",
+                };
+                if (!taskState.id) taskData.createdBy = user?.id || "";
+                handleSubmit(taskData);
               }
-              handleSubmit(taskData);
             }}
             className="flex flex-col gap-6 px-10 py-6"
           >
@@ -276,33 +278,54 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   <FileText className="size-4" />
                   Description
                 </Label>
-                <Textarea
-                  id="description"
-                  className="min-h-[200px]"
-                  placeholder="Task description"
-                  initialValue={taskState.description || ""}
-                  storageKey={taskState.id || "new-task"}
-                  rows={8}
-                  showButtons={false}
-                  ref={descriptionRef}
-                />
+                <div
+                  className="markdown-body min-h-[200px] max-h-[400px] px-3 py-2 overflow-auto !bg-muted/40 dark:!bg-muted/65"
+                >
+                  <MarkdownnEditor
+                    ref={mdEditorRef}
+                    value={taskState.description || ""}
+                    showSaveCancel={false}
+                    onSave={async (md) => {
+                      setSaving(true);
+                      try {
+                        const normalized = (md ?? "") as string;
+                        const taskData: any = {
+                          ...taskState,
+                          description: normalized,
+                        };
+                        if (!taskState.id) {
+                          taskData.createdBy = user?.id || "";
+                        }
+                        await handleSubmit(taskData);
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    onDirtyChange={(d) => setIsDirty(!!d)}
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 border-t pt-6">
-              <DialogClose asChild>
-                <Button type="button" variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button
-                type="submit"
-                variant="default"
-                disabled={
-                  !taskState.title.trim() ||
-                  !taskState.assignedTo ||
-                  !user?.id
-                }
-              >
-                Save
-              </Button>
+            <div className="flex items-center justify-between border-t pt-6">
+              <div />
+              <div className="flex items-center gap-3">
+                {isDirty && (
+                  <div className='mr-1'>
+                    <UnsavedChangesIndicator />
+                  </div>
+                )}
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" onClick={() => mdEditorRef.current?.cancel()} disabled={saving}>Cancel</Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => mdEditorRef.current?.save()}
+                  disabled={saving || !taskState.title.trim() || !taskState.assignedTo || !user?.id}
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
             </div>
           </form>
           {/* Right panel for future content */}

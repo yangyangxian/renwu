@@ -192,6 +192,7 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Bold */}
                     <div className="group relative">
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${boldActive ? activeCls : ''}`}
@@ -208,6 +209,7 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Italic */}
                     <div className="group relative">
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${italicActive ? activeCls : ''}`}
@@ -224,6 +226,7 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Blockquote */}
                     <div className="group relative">
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${inBlockquoteInfo ? activeCls : ''}`}
@@ -240,6 +243,7 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Unordered list */}
                     <div className="group relative">
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className={tooltipButtonClass}
@@ -256,6 +260,7 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Inline code */}
                     <div className="group relative">
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${inlineCodeActive ? activeCls : ''}`}
@@ -272,6 +277,7 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Code block */}
                     <div className="group relative">
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className={`${tooltipButtonClass} ${inCodeBlockInfo ? activeCls : ''}`}
@@ -288,7 +294,8 @@ export const TooltipView = ({ refEl, onKeyDown, onMouseDown }: {
                     {/* Headings */}
                     {[1, 2, 3, 4].map((level) => (
                         <div className="group relative" key={level}>
-                            <Button
+                                <Button
+                                type="button"
                                 variant="ghost"
                                 size="sm"
                                 className={`${tooltipButtonClass} ${headingLevel === level ? activeCls : ''}`}

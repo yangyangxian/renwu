@@ -182,7 +182,11 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
       }
     }
     logger.debug('Saving markdown content:', currentMarkdown);
-    onSave?.(currentMarkdown);
+    if (onSave) {
+      // Ensure we await the consumer's onSave so callers relying on the promise
+      // returned by the imperative save() observe the real completion.
+      await Promise.resolve(onSave(currentMarkdown));
+    }
     setDirty(false);
     onDirtyChange?.(false);
   }, [value, onSave, onDirtyChange]);
@@ -196,7 +200,8 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
   useImperativeHandle(ref, () => ({
     save: handleSave,
     cancel: handleCancel,
-  }), [handleSave, handleCancel]);
+    // no extra helpers exposed; external callers should use save/cancel
+  } as MarkdownEditorHandle), [handleSave, handleCancel]);
 
   return (
     <div className="editor-scope w-full">
