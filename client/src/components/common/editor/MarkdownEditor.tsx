@@ -136,8 +136,10 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
       };
       reader.readAsDataURL(file);
     };
-    root.addEventListener('paste', handlePaste);
-    return () => root.removeEventListener('paste', handlePaste);
+  // Listen in capture phase and stop propagation after handling to avoid Milkdown
+  // also processing the same paste event which would insert the image twice.
+  root.addEventListener('paste', handlePaste, true);
+  return () => root.removeEventListener('paste', handlePaste, true);
   }, [editorRef.current?.ctx]);
 
   // Helper: upload image data URL
