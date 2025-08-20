@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui-kit/Badge";
 import { Label } from "@/components/ui-kit/Label";
 import { MarkdownnEditor, MarkdownEditorHandle } from '@/components/common/editor/MarkdownEditor';
 import { Button } from '@/components/ui-kit/Button';
+import { Input } from '@/components/ui-kit/Input';
 import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
 import { Tag, FolderOpen, User, Clock, FileText, CheckCircle, Check, RefreshCw, Pencil } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
@@ -26,6 +27,8 @@ const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-3"
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState<string>(currentTask?.title || "");
   const [localDueDate, setLocalDueDate] = useState<string | undefined>(currentTask?.dueDate);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
@@ -41,9 +44,47 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     setLocalDueDate(currentTask?.dueDate);
     if (currentTask) {
       setDescInput(currentTask.description || "");
+      setTitleInput(currentTask.title || "");
     }
     setEditingDesc(false);
   }, [currentTask?.dueDate, currentTask]);
+
+  const saveTitle = async (value: string) => {
+    if (!currentTask) return;
+    const newTitle = value.trim();
+    if (newTitle === currentTask.title) return;
+    try {
+      await updateTaskById(taskId, { title: newTitle });
+      toast.success('Task title updated');
+    } catch (err) {
+      toast.error('Failed to update title');
+      setTitleInput(currentTask.title || "");
+    }
+  };
+
+  const handleTitleBlur = async () => {
+    setEditingTitle(false);
+    await saveTitle(titleInput);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      // commit on Enter
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'Escape') {
+      // cancel on Escape
+      setEditingTitle(false);
+      setTitleInput(currentTask?.title || "");
+    }
+  };
+
+  const handleEditClick = () => {
+    setEditingTitle(true);
+    setTimeout(() => {
+      const el = document.getElementById(`task-title-input-${taskId}`) as HTMLInputElement | null;
+      el?.focus();
+    }, 0);
+  };
 
   const handleDescClick = () => {
     setEditingDesc(true);
@@ -82,7 +123,32 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       <div className="mb-8">
         <Label className="text-xl font-bold flex items-center gap-3">
           <Tag className="size-5" />
-          {task.title}
+          <div className="flex items-center gap-2">
+            {editingTitle ? (
+              <Input
+                id={`task-title-input-${taskId}`}
+                value={titleInput}
+                onChange={(e) => setTitleInput(e.target.value)}
+                onBlur={handleTitleBlur}
+                onKeyDown={handleTitleKeyDown}
+                className="text-xl! font-bold w-[min(60vw,900px)] min-w-[280px] px-2 py-1 leading-tight"
+                autoFocus
+              />
+              ) : (
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="max-w-[900px] min-w-0 truncate">{task.title}</span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleEditClick}
+                  title="Edit title"
+                  className="opacity-70 hover:opacity-100 transition-opacity"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </Label>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,11fr)_minmax(280px,5fr)] gap-6 px-3 w-full">
