@@ -53,7 +53,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
     : false;
   return (
     <Card
-      className={`group bg-muted dark:bg-black p-3 shadow hover:scale-104 transition-transform duration-200 cursor-pointer relative ${className || ''}`}
+      className={`group bg-muted dark:bg-black p-3 shadow hover:scale-104 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}
@@ -107,9 +107,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       </div>
       
       <div className="flex items-center justify-between">
-        <div className="flex items-center mr-2">
-          <h3 className="text-xs lg:text-[13px] line-clamp-3">{title}</h3>
-        </div>
+          <div className="flex items-center mr-2 max-w-full">
+            <h3 className="text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden">{title}</h3>
+          </div>
         <div className="flex flex-col items-end gap-1">
           {description && description.trim() !== "" && (
             <Tooltip>
