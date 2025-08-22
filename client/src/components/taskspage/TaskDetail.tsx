@@ -32,6 +32,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const [localDueDate, setLocalDueDate] = useState<string | undefined>(currentTask?.dueDate);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
+  const descViewRef = useRef<HTMLDivElement | null>(null);
+  const [descContainerHeight, setDescContainerHeight] = useState<number | undefined>(undefined);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -87,6 +89,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   };
 
   const handleDescClick = () => {
+    // capture current viewer height to avoid layout jumps when mounting editor
+    const h = descViewRef.current?.clientHeight;
+    if (h) setDescContainerHeight(h);
     setEditingDesc(true);
   };
 
@@ -97,9 +102,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     try {
       await updateTaskById(taskId, { description: newValue });
       toast.success('Task description updated');
+      setDescContainerHeight(undefined);
     } catch {
       toast.error('Failed to update description');
       setDescInput(currentTask.description || "");
+      setDescContainerHeight(undefined);
     }
   };
 
@@ -156,23 +163,41 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         <div className="flex flex-col gap-4">
           {/* Description */}
           <div className="flex flex-col gap-3 min-h-[48px]">
-            <Label className={fieldLabelClass}>
-              <FileText className="size-4" />
-              Description:
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className={fieldLabelClass}>
+                <FileText className="size-4" />
+                Description:
+              </Label>
+              <div className="ml-3">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="opacity-70 hover:opacity-100 transition-opacity"
+                  onClick={handleDescClick}
+                  title="Edit description"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
             {editingDesc ? (
-              <div className="h-[600px] !text-sm rounded-lg flex flex-col">
-                <div className="flex-1 overflow-y-auto px-3 py-2 !bg-muted/40 dark:!bg-muted/65">
-                  <MarkdownnEditor
-                    ref={editorRef}
-                    value={descInput}
-                    onSave={(val) => { handleSubmitDesc(val); setEditingDesc(false); setIsDirty(false); }}
-                    onCancel={() => { setEditingDesc(false); setDescInput(currentTask?.description || ""); setIsDirty(false); }}
-                    showSaveCancel={false}
-                    onDirtyChange={setIsDirty}
-                  />
+              <>
+                <div
+                  className='markdown-body overflow-auto min-h-[200px] max-h-[600px] !bg-muted/40 dark:!bg-muted/65 flex w-full h-full'
+                  style={descContainerHeight ? { height: descContainerHeight } : undefined}
+                >
+                  <div className="px-3 py-2 w-full">
+                    <MarkdownnEditor
+                      ref={editorRef}
+                      value={descInput}
+                      onSave={(val) => { handleSubmitDesc(val); setEditingDesc(false); setIsDirty(false); }}
+                      onCancel={() => { setEditingDesc(false); setDescInput(currentTask?.description || ""); setIsDirty(false); setDescContainerHeight(undefined); }}
+                      showSaveCancel={false}
+                      onDirtyChange={setIsDirty}
+                    />
+                  </div>
                 </div>
-                <div className="flex justify-end items-center gap-2 my-2 mt-4 mr-3">
+                <div className="flex justify-end items-center gap-2 my-2 mt-2 mr-3">
                   {isDirty && (
                     <div className='mr-3'>
                       <UnsavedChangesIndicator />
@@ -185,24 +210,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                     Cancel
                   </Button>
                 </div>
-              </div>
+              </>
             ) : (
               <>
                 {descInput ? (
-                <div className='markdown-body overflow-auto min-h-[200px] max-h-[600px] !bg-muted/40 dark:!bg-muted/65 flex w-full h-full relative'>
-                  <div
-                    className="px-3 py-2 w-full"
-                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute right-3 top-2 opacity-70 group-hover:opacity-100 transition-opacity"
-                    onClick={handleDescClick}
-                    title="Edit description"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
+                <div ref={descViewRef} className="markdown-body w-full !bg-muted/40 dark:!bg-muted/65">
+                  <div className="overflow-auto min-h-[200px] max-h-[600px] px-3 py-2">
+                    <div className="w-full" dangerouslySetInnerHTML={{ __html: renderedHtml }} />
+                  </div>
                 </div>
                 ) : (
                   <div
