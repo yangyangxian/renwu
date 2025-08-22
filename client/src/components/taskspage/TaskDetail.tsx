@@ -21,7 +21,7 @@ interface TaskDetailProps {
   taskId: string;
 }
 
-const fieldLabelContainerClass = "flex items-center gap-3";
+const fieldLabelContainerClass = "flex items-center gap-3 min-h-[44px]";
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
@@ -231,7 +231,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
           </div>
         </div>
         {/* Right column: Fields */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
           {/* Assigned User */}
           {task.assignedTo && (
             <div className={fieldLabelContainerClass}>
