@@ -15,15 +15,14 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/taskStatusConfig";
 import { marked } from 'marked';
 import { toast } from 'sonner';
-import { Skeleton } from "../ui-kit/Skeleton";
 import { motion } from "framer-motion";
 
 interface TaskDetailProps {
   taskId: string;
 }
 
-const fieldLabelContainerClass = "flex items-center gap-3 h-7";
-const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-3";
+const fieldLabelContainerClass = "flex items-center gap-3";
+const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
@@ -240,12 +239,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 <User className="size-4" />
                 Assigned to:
               </Label>
-              <Avatar className="size-6">
-                <AvatarFallback className="text-base text-primary">
-                  {task.assignedTo.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Label>{task.assignedTo.name}</Label>
+              <div className="flex items-center gap-3">
+                <Avatar className="size-6">
+                  <AvatarFallback className="text-base text-primary">
+                    {task.assignedTo.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <Label className="!mb-0">{task.assignedTo.name}</Label>
+              </div>
             </div>
           )}
           {/* Due Date */}
@@ -254,17 +255,19 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <Clock className="size-4" />
               Due date:
             </Label>
-            <DateSelector
-              value={localDueDate}
-              onChange={async (newDate) => {
-                setLocalDueDate(newDate);
-                if (taskId && newDate) {
-                  await updateTaskById(taskId, { dueDate: newDate });
-                }
-              }}
-              label={undefined}
-              buttonClassName=""
-            />
+            <div className="flex items-center">
+              <DateSelector
+                value={localDueDate}
+                onChange={async (newDate) => {
+                  setLocalDueDate(newDate);
+                  if (taskId && newDate) {
+                    await updateTaskById(taskId, { dueDate: newDate });
+                  }
+                }}
+                label={undefined}
+                buttonClassName=""
+              />
+            </div>
           </div>
           {/* Status (Badge Dropdown Trigger) */}
           <div className={fieldLabelContainerClass}>
@@ -272,39 +275,41 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <CheckCircle className="size-4" />
               Status:
             </Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Badge
-                  variant="outline"
-                  className={`border flex items-center px-1.5 py-1 text-xs font-medium cursor-pointer ${statusColors[task.status]}`}
-                >
-                  {statusIcons[task.status]}
-                  {statusLabels[task.status]}
-                </Badge>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[180px]">
-                {allStatuses.map((status: TaskStatus) => (
-                  <DropdownMenuRadioItem
-                    key={status}
-                    value={status}
-                    onSelect={async () => {
-                      if (taskId) {
-                        await updateTaskById(taskId, { status: status as TaskStatus });
-                      }
-                    }}
-                    className="flex items-center cursor-pointer pl-8 relative"
+            <div className="flex items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    className={`border flex items-center px-1.5 py-1 text-xs font-medium cursor-pointer ${statusColors[task.status]}`}
                   >
-                    {task.status === status && (
-                      <Check className="w-4 h-4 text-primary absolute left-2" />
-                    )}
-                    <div className="flex items-center gap-2">
-                      {statusIcons[status as TaskStatus]}
-                      {statusLabels[status as TaskStatus]}
-                    </div>
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    {statusIcons[task.status]}
+                    {statusLabels[task.status]}
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[180px]">
+                  {allStatuses.map((status: TaskStatus) => (
+                    <DropdownMenuRadioItem
+                      key={status}
+                      value={status}
+                      onSelect={async () => {
+                        if (taskId) {
+                          await updateTaskById(taskId, { status: status as TaskStatus });
+                        }
+                      }}
+                      className="flex items-center cursor-pointer pl-8 relative"
+                    >
+                      {task.status === status && (
+                        <Check className="w-4 h-4 text-primary absolute left-2" />
+                      )}
+                      <div className="flex items-center gap-2">
+                        {statusIcons[status as TaskStatus]}
+                        {statusLabels[status as TaskStatus]}
+                      </div>
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
           {/* Created By */}
           <div className={fieldLabelContainerClass}>
@@ -313,14 +318,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               Created by:
             </Label>
             {task.createdBy && typeof task.createdBy === 'object' ? (
-              <>
+              <div className="flex items-center gap-3">
                 <Avatar className="size-6">
                   <AvatarFallback className="text-base text-primary">
                     {task.createdBy.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <Label>{task.createdBy.name}</Label>
-              </>
+                <Label className="!mb-0">{task.createdBy.name}</Label>
+              </div>
             ) : (
               <Label className="text-muted-foreground">--</Label>
             )}
@@ -331,11 +336,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <FolderOpen className="size-4" />
               Created:
             </Label>
-            <Label>
-              {task.createdAt
-                ? format(new Date(task.createdAt), "yyyy-MM-dd HH:mm")
-                : "--"}
-            </Label>
+            <div className="flex items-center">
+              <Label className="!mb-0">
+                {task.createdAt
+                  ? format(new Date(task.createdAt), "yyyy-MM-dd HH:mm")
+                  : "--"}
+              </Label>
+            </div>
           </div>
           {/* Updated At */}
           <div className={fieldLabelContainerClass}>
@@ -343,11 +350,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <RefreshCw className="size-4" />
               Updated:
             </Label>
-            <Label>
-              {task.updatedAt
-                ? format(new Date(task.updatedAt), "yyyy-MM-dd HH:mm")
-                : "--"}
-            </Label>
+            <div className="flex items-center">
+              <Label className="!mb-0">
+                {task.updatedAt
+                  ? format(new Date(task.updatedAt), "yyyy-MM-dd HH:mm")
+                  : "--"}
+              </Label>
+            </div>
           </div>
         </div>
       </div>
