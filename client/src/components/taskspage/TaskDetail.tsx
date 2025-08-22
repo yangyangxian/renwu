@@ -171,7 +171,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="opacity-70 hover:opacity-100 transition-opacity"
+                  className="opacity-80 hover:opacity-100 transition-opacity text-muted-foreground dark:text-white"
                   onClick={handleDescClick}
                   title="Edit description"
                 >
