@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { TaskStatus } from "@fullstack/common";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioItem } from "@/components/ui-kit/Dropdown-menu";
@@ -12,6 +12,9 @@ import { Tag, FolderOpen, User, Clock, FileText, CheckCircle, Check, RefreshCw, 
 import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
 import DateSelector from "@/components/common/DateSelector";
 import { useTaskStore } from "@/stores/useTaskStore";
+import { useProjectStore } from '@/stores/useProjectStore';
+import UserSelectPopover from '@/components/common/UserSelectPopover';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui-kit/Popover';
 import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/taskStatusConfig";
 import { marked } from 'marked';
 import { toast } from 'sonner';
@@ -35,6 +38,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const [descContainerHeight, setDescContainerHeight] = useState<number | undefined>(undefined);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const task = currentTask!;
+  const { projects } = useProjectStore();
 
   useEffect(() => {
     if (!taskId) return;
@@ -114,7 +119,27 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     return typeof out === 'string' ? out : '';
   }, [descInput]);
 
-  const task = currentTask!;
+  const memberOptions = React.useMemo(() => {
+    if (!task?.projectId) return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [{ value: '', label: 'Unassigned', avatarText: '-' }];
+    const project = projects.find((p: any) => String(p.id) === String(task.projectId));
+    if (!project || !Array.isArray(project.members)) {
+      return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [];
+    }
+    const opts = project.members.map((m: any) => ({ value: String(m.id), label: String(m.name || m.id), avatarText: String(m.name || '').charAt(0).toUpperCase() }));
+    return opts;
+  }, [projects, task]);
+
+  const handleAssigneeSelect = useCallback(async (userId: string) => {
+    if (!taskId) return;
+    try {
+      await updateTaskById(taskId, { assignedTo: userId || null });
+      toast.success('Assignee updated');
+    } catch (err) {
+      console.error('Failed to update assignee', err);
+      toast.error('Failed to update assignee');
+    }
+  }, [taskId, updateTaskById]);
+
   return (
       <>
       { !loadingCurrentTask && task &&
@@ -141,14 +166,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 autoFocus
               />
               ) : (
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 pointer-events-none">
                 <span className="max-w-[900px] min-w-0 truncate">{task.title}</span>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={handleEditClick}
                   title="Edit title"
-                  className="opacity-70 hover:opacity-100 transition-opacity"
+                  className="opacity-70 hover:opacity-100 transition-opacity pointer-events-auto"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -233,22 +258,37 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         {/* Right column: Fields */}
         <div className="flex flex-col gap-2">
           {/* Assigned User */}
-          {task.assignedTo && (
-            <div className={fieldLabelContainerClass}>
-              <Label className={fieldLabelClass}>
-                <User className="size-4" />
-                Assigned to:
-              </Label>
-              <div className="flex items-center gap-3">
-                <Avatar className="size-6">
-                  <AvatarFallback className="text-base text-primary">
-                    {task.assignedTo.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <Label className="!mb-0">{task.assignedTo.name}</Label>
-              </div>
+          <div className={fieldLabelContainerClass}>
+            <Label className={fieldLabelClass}>
+              <User className="size-4" />
+              Assigned to:
+            </Label>
+            {/* Inline popover picker to match the compact style of Due date */}
+            <div className="flex items-center">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" className="text-left h-8 flex items-center justify-between px-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="size-5">
+                        <AvatarFallback className="text-base text-primary">
+                          {task.assignedTo ? task.assignedTo.name.charAt(0).toUpperCase() : '-'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-secondary-foreground">{task.assignedTo ? task.assignedTo.name : 'Unassigned'}</span>
+                    </div>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" align="start">
+                  {/* Build generic options from project members and pass to the generic AssigneePopover */}
+                  <UserSelectPopover
+                    options={memberOptions}
+                    currentValue={task.assignedTo}
+                    onSelect={handleAssigneeSelect}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-          )}
+          </div>
           {/* Due Date */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
