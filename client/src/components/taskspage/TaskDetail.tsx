@@ -25,7 +25,8 @@ interface TaskDetailProps {
 }
 
 const fieldLabelContainerClass = "flex items-center gap-3 min-h-[44px]";
-const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0";
+// make label icons more visible in dark mode by default
+const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
@@ -152,9 +153,10 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       >
       {/* Title block above columns */}
       <div className="mb-8">
-        <Label className="text-xl font-bold flex items-center gap-3">
-          <Tag className="size-5" />
-          <div className="flex items-center gap-2">
+        {/* restore larger title font and ensure the leading icon is visible in dark mode */}
+        <div className="text-2xl font-bold flex items-center gap-3">
+          <Tag className="size-5 text-muted-foreground dark:text-white" />
+          <div className="flex items-center gap-2 min-w-0">
             {editingTitle ? (
               <Input
                 id={`task-title-input-${taskId}`}
@@ -162,25 +164,35 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 onChange={(e) => setTitleInput(e.target.value)}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-xl! font-bold w-[min(60vw,900px)] min-w-[280px] px-2 py-1 leading-tight"
+                className="text-2xl! font-bold w-[min(60vw,900px)] min-w-[280px] px-2 py-1 leading-tight"
                 autoFocus
               />
-              ) : (
-              <div className="flex items-center gap-2 min-w-0 pointer-events-none">
-                <span className="max-w-[900px] min-w-0 truncate">{task.title}</span>
+            ) : (
+              <>
+                <Label htmlFor={`task-title-input-${taskId}`} className="max-w-[900px] min-w-0 truncate mb-0 text-2xl dark:text-white">
+                  {task.title}
+                </Label>
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={handleEditClick}
+                  onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    // prevent label from receiving the focus on mousedown
+                    e.stopPropagation();
+                    (e.currentTarget as HTMLButtonElement).focus();
+                  }}
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.stopPropagation();
+                    handleEditClick();
+                  }}
                   title="Edit title"
-                  className="opacity-70 hover:opacity-100 transition-opacity pointer-events-auto"
+                  className="opacity-70 hover:opacity-100 transition-opacity text-muted-foreground dark:text-white"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
-              </div>
+              </>
             )}
           </div>
-        </Label>
+        </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,11fr)_minmax(280px,5fr)] gap-6 px-3 w-full">
         {/* Left column: Description and future comments */}
