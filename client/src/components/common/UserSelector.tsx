@@ -1,5 +1,4 @@
-import React from 'react';
-import * as RadixPopover from '@radix-ui/react-popover';
+import React, { useState, useCallback } from 'react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui-kit/Popover';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { Button } from '@/components/ui-kit/Button';
@@ -18,8 +17,18 @@ interface UserSelectorProps {
 }
 
 const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSelect }) => {
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = useCallback(async (value: string) => {
+    try {
+      await onSelect(value);
+    } finally {
+      setOpen(false);
+    }
+  }, [onSelect]);
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" className="text-left h-8 flex items-center justify-between px-[10px]">
             <Avatar className="size-6">
@@ -31,25 +40,22 @@ const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSe
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-auto p-1" align="start" sideOffset={6}>
-        <div className="min-w-[140px] max-h-[280px] overflow-auto">
-          <div className="flex flex-col">
-            {options.map(opt => (
-              <RadixPopover.Close asChild key={opt.value}>
-                <Button
-                  type="button"
-                  onClick={() => onSelect(opt.value)}
-                  variant="ghost"
-                  className="w-full justify-start p-1 px-[6px] hover:bg-muted rounded-none cursor-pointer flex items-center gap-3"
-                >
-                  <Avatar className="size-6">
-                    <AvatarFallback className="text-base text-primary">{opt.avatarText ?? String(opt.label).charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <Label className="text-sm text-secondary-foreground cursor-pointer">{opt.label}</Label>
-                </Button>
-              </RadixPopover.Close>
-            ))}
-          </div>
+      <PopoverContent className="p-1 w-auto">
+        <div className="max-h-[280px] overflow-auto flex-col">
+          {options.map(opt => (
+            <Button
+              key={opt.value}
+              type="button"
+              onClick={() => handleSelect(opt.value)}
+              variant="ghost"
+              className="w-full px-[6px] hover:bg-muted cursor-pointer flex justify-start"
+            >
+              <Avatar className="size-6">
+                <AvatarFallback className="text-base text-primary">{opt.avatarText ?? String(opt.label).charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <Label className="text-sm text-secondary-foreground cursor-pointer">{opt.label}</Label>
+            </Button>
+          ))}
         </div>
       </PopoverContent>
     </Popover>

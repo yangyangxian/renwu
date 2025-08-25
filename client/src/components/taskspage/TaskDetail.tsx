@@ -118,7 +118,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     return typeof out === 'string' ? out : '';
   }, [descInput]);
 
-  const memberOptions = React.useMemo(() => {
+  const memberOptions = useMemo(() => {
     if (!task?.projectId) return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [{ value: '', label: 'Unassigned', avatarText: '-' }];
     const project = projects.find((p: any) => String(p.id) === String(task.projectId));
     if (!project || !Array.isArray(project.members)) {
