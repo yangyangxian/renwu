@@ -13,8 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui-kit/Avatar";
 import DateSelector from "@/components/common/DateSelector";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { useProjectStore } from '@/stores/useProjectStore';
-import UserSelectPopover from '@/components/common/UserSelectPopover';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui-kit/Popover';
+import UserSelector from '@/components/common/UserSelector';
 import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/taskStatusConfig";
 import { marked } from 'marked';
 import { toast } from 'sonner';
@@ -274,30 +273,12 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <User className="size-4" />
               Assigned to:
             </Label>
-            {/* Inline popover picker to match the compact style of Due date */}
             <div className="flex items-center">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button type="button" variant="outline" className="text-left h-7 flex items-center justify-between px-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-4">
-                        <AvatarFallback className="text-base text-primary">
-                          {task.assignedTo ? task.assignedTo.name.charAt(0).toUpperCase() : '-'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-secondary-foreground">{task.assignedTo ? task.assignedTo.name : 'Unassigned'}</span>
-                    </div>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2" align="start">
-                  {/* Build generic options from project members and pass to the generic AssigneePopover */}
-                  <UserSelectPopover
-                    options={memberOptions}
-                    currentValue={task.assignedTo}
-                    onSelect={handleAssigneeSelect}
-                  />
-                </PopoverContent>
-              </Popover>
+              <UserSelector
+                options={memberOptions}
+                currentValue={task.assignedTo}
+                onSelect={handleAssigneeSelect}
+              />
             </div>
           </div>
           {/* Due Date */}
@@ -331,13 +312,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 <DropdownMenuTrigger asChild>
                   <Badge
                     variant="outline"
-                    className={`border flex items-center px-1.5 py-1 text-xs font-medium cursor-pointer ${statusColors[task.status]}`}
+                    className={`border flex items-center px-[10px] py-1 text-sm font-medium cursor-pointer ${statusColors[task.status]}`}
                   >
                     {statusIcons[task.status]}
                     {statusLabels[task.status]}
                   </Badge>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-[180px]">
+                <DropdownMenuContent align="start">
                   {allStatuses.map((status: TaskStatus) => (
                     <DropdownMenuRadioItem
                       key={status}
@@ -369,7 +350,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               Created by:
             </Label>
             {task.createdBy && typeof task.createdBy === 'object' ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Avatar className="size-6">
                   <AvatarFallback className="text-base text-primary">
                     {task.createdBy.name.charAt(0).toUpperCase()}

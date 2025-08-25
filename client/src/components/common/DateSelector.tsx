@@ -3,6 +3,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { Label } from "@/components/ui-kit/Label";
 
 interface DateSelectorProps {
   value?: string;
@@ -32,14 +33,14 @@ const DateSelector: React.FC<DateSelectorProps> = ({
             <Button
               type="button"
               variant="outline"
-              className={`h-7 text-left justify-between transition-none text-secondary-foreground text-[13px] ${buttonClassName}`}
+              className={`h-8 text-left justify-between px-[10px] text-secondary-foreground text-sm ${buttonClassName}`}
               aria-label="Select due date"
               onClick={() => setOpen(true)}
             >
-              <span>
+              <CalendarIcon className="size-4" />
+              <Label className="cursor-pointer">
                 {new Date(value).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
-              </span>
-              <CalendarIcon className="size-3" />
+              </Label>
             </Button>
           ) : (
             <Button
@@ -70,7 +71,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
               type="button"
               size="sm"
               variant="ghost"
-              className="self-end px-2 mr-3 text-xs"
+              className="self-end px-2 mr-3 text-sm"
               onClick={() => {
                 onChange(undefined);
                 setOpen(false);
