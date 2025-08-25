@@ -25,7 +25,6 @@ interface TaskDetailProps {
 }
 
 const fieldLabelContainerClass = "flex items-center gap-3 min-h-[44px]";
-// make label icons more visible in dark mode by default
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
@@ -279,9 +278,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             <div className="flex items-center">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button type="button" variant="outline" className="text-left h-8 flex items-center justify-between px-3">
+                  <Button type="button" variant="outline" className="text-left h-7 flex items-center justify-between px-3">
                     <div className="flex items-center gap-3">
-                      <Avatar className="size-5">
+                      <Avatar className="size-4">
                         <AvatarFallback className="text-base text-primary">
                           {task.assignedTo ? task.assignedTo.name.charAt(0).toUpperCase() : '-'}
                         </AvatarFallback>
