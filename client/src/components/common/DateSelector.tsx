@@ -46,11 +46,11 @@ const DateSelector: React.FC<DateSelectorProps> = ({
             <Button
               type="button"
               variant="outline"
-              className={`h-7 w-7 flex items-center justify-center ${buttonClassName}`}
+              className={`h-8 w-8 flex items-center justify-center ${buttonClassName}`}
               aria-label="Select due date"
               onClick={() => setOpen(true)}
             >
-              <CalendarIcon className="size-3" />
+              <CalendarIcon className="size-4" />
             </Button>
           )}
         </PopoverTrigger>

@@ -150,7 +150,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       className="w-full h-full"
       >
       {/* Title block above columns */}
-      <div className="mb-8">
+      <div className="mb-4 ml-2">
         {/* restore larger title font and ensure the leading icon is visible in dark mode */}
         <div className="text-2xl font-bold flex items-center gap-3">
           <Tag className="size-5 text-muted-foreground dark:text-white" />
@@ -167,7 +167,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               />
             ) : (
               <>
-                <Label htmlFor={`task-title-input-${taskId}`} className="max-w-[900px] min-w-0 truncate mb-0 text-2xl dark:text-white">
+                <Label className="max-w-[900px] min-w-0 truncate mb-0 text-2xl dark:text-white">
                   {task.title}
                 </Label>
                 <Button
