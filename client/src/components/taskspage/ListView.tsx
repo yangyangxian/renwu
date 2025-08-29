@@ -90,11 +90,13 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
   }, [sortedTasks]);
 
   return (
-    <div className="flex h-full w-full overflow-auto shadow-xs rounded-lg">
+    <div className="flex h-full w-full shadow-xs rounded-lg">
       {/* Left: Task List */}
-      <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input dark:border-[1.5px] bg-white-black overflow-y-auto shadow-xs">
+      <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input 
+        dark:border-[1.5px] bg-white-black shadow-xs h-full flex flex-col">
         {/* Status Filter and Sort Icon */}
-        <div className="sticky bg-white-black top-0 z-10 py-1 border-b border-border flex items-center justify-between rounded-t-md">
+        <div className="bg-white-black py-1 border-b border-border flex items-center 
+          justify-between rounded-t-md">
           {/* Status Filter DropdownMenu */}
           <div className="max-w-[220px]">
             <DropdownMenu>
@@ -160,42 +162,44 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        {sortedTasks.length ? (
-          sortedTasks.map((task, idx) => {
-            const showDeleteButton = hasPermission(
-              PermissionAction.DELETE_OTHERS_TASK,
-              {
-                resourceType: PermissionResourceType.TASK,
-                loggedUserId: user?.id!,
-                projectId: task.projectId!,
-                assignedUserId: task.assignedTo?.id!
-              }
-            );
-            return (
-              <Fragment key={task.id}>
-                <div onClick={() => setSelectedTaskId(task.id)}>
-                  <TaskCard
-                    taskId={task.id}
-                    title={task.title}
-                    description={task.description}
-                    dueDate={task.dueDate}
-                    projectName={task.projectName}
-                    status={task.status}
-                    assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                    className={`cursor-pointer rounded-none hover:border-l-primary hover:scale-100 bg-white-black py-3 pl-4 min-h-22 border-border shadow-none
-                      ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
-                    showDeleteButton={showDeleteButton}
-                  />
-                </div>
-                {idx < sortedTasks.length - 1 && (
-                  <div className="border-b border-border" />
-                )}
-              </Fragment>
-            );
-          })
-        ) : (
-          <Label className="p-4 text-muted-foreground">No tasks found.</Label>
-        )}
+        <div id="taskList" className="flex flex-col overflow-auto min-h-0">
+          {sortedTasks.length ? (
+            sortedTasks.map((task, idx) => {
+              const showDeleteButton = hasPermission(
+                PermissionAction.DELETE_OTHERS_TASK,
+                {
+                  resourceType: PermissionResourceType.TASK,
+                  loggedUserId: user?.id!,
+                  projectId: task.projectId!,
+                  assignedUserId: task.assignedTo?.id!
+                }
+              );
+              return (
+                <Fragment key={task.id}>
+                  <div onClick={() => setSelectedTaskId(task.id)}>
+                    <TaskCard
+                      taskId={task.id}
+                      title={task.title}
+                      description={task.description}
+                      dueDate={task.dueDate}
+                      projectName={task.projectName}
+                      status={task.status}
+                      assignedTo={showAssignedTo ? task.assignedTo : undefined}
+                      className={`hover:scale-100 cursor-pointer rounded-none bg-white-black py-3 pl-4 min-h-22 border-border shadow-none
+                        ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
+                      showDeleteButton={showDeleteButton}
+                    />
+                  </div>
+                  {idx < sortedTasks.length - 1 && (
+                    <div className="border-b border-border" />
+                  )}
+                </Fragment>
+              );
+            })
+          ) : (
+            <Label className="p-4 text-muted-foreground">No tasks found.</Label>
+          )}
+        </div>
       </div>
       {/* Right: Task Details */}
       <div className="flex-1 p-5 overflow-y-auto shadow-xs bg-white-black rounded-r-lg border border-input dark:border-[1.5px] border-l-0 dark:border-l-0">
