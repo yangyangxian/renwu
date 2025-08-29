@@ -162,7 +162,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div id="taskList" className="flex flex-col overflow-auto min-h-0">
+        <div id="taskList" className="flex flex-col overflow-auto min-h-0 rounded-b-md">
           {sortedTasks.length ? (
             sortedTasks.map((task, idx) => {
               const showDeleteButton = hasPermission(
