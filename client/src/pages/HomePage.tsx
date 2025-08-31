@@ -43,7 +43,7 @@ export default function HomePage() {
     <div className="flex w-full h-full">
       {/* Sidebar with icon and text */}
       {isAuthenticated && (
-        <aside className="h-full max-h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
+        <aside className="h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
           <HomeSideBar />
         </aside>
       )}
