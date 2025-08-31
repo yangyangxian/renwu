@@ -90,10 +90,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
   }, [sortedTasks]);
 
   return (
-    <div className="flex h-full w-full shadow-xs rounded-lg">
+    <div className="flex h-full w-full rounded-lg">
       {/* Left: Task List */}
       <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input 
-        dark:border-[1.5px] bg-white-black shadow-xs h-full flex flex-col">
+        dark:border-[1.5px] bg-white-black h-full flex flex-col">
         {/* Status Filter and Sort Icon */}
         <div className="bg-white-black py-1 border-b border-border flex items-center 
           justify-between rounded-t-md">
