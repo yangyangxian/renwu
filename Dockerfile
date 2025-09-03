@@ -39,7 +39,6 @@ ENV NODE_ENV=production
 COPY --from=server-build /app/common /app/common
 COPY --from=server-build /app/server/dist ./server/dist
 COPY --from=server-build /app/server/package*.json ./server/
-COPY --from=server-build /app/server/.env.production ./server/.env.production
 # Copy client build into server static directory
 COPY --from=client-build /app/client/dist ./client/dist
 
