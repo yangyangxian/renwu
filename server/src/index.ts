@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import { Server } from 'http';
 import configs from './appConfig';
 import logger from './utils/logger';
+import maskDatabaseUrl from './utils/maskDatabaseUrl';
 import apiRouter, { publicRouters } from './routes/apiRouter';
 import staticRouter from './routes/staticRouter';
 import requestLoggerMiddleware from './middlewares/requestLoggerMiddleware';
@@ -52,6 +53,12 @@ export default app;
 function StartServer(port: number): void {
   const server: Server = app.listen(port, () => {
     logger.info(`Server running at http://localhost:${port} in ${configs.envMode} mode.`);
+    try {
+      const masked = maskDatabaseUrl(configs.dbUrl);
+      logger.info(`Database in use: ${masked}`);
+    } catch (err) {
+      logger.warn('Unable to log masked DATABASE_URL');
+    }
   });
 
   server.on('error', (err: NodeJS.ErrnoException) => {
