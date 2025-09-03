@@ -29,6 +29,13 @@
       "when": 1754127174799,
       "tag": "0003_addtaskview",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1756816116575,
+      "tag": "0004_addlabeltable",
+      "breakpoints": true
     }
   ]
 }

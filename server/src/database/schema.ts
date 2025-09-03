@@ -140,3 +140,36 @@ export const rolePermissions = pgTable(
     primaryKey({ columns: [table.roleId, table.permissionId] }),
   ]
 );
+
+// ---------- TABLE: Labels ----------
+export const labels = pgTable('labels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  labelName: varchar('label_name', { length: 255 }).notNull(),
+  labelDescription: text('label_description'),
+  labelColor: varchar('label_color', { length: 30 }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ---------- TABLE: Label Sets ----------
+export const labelSets = pgTable('label_sets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  labelSetName: varchar('label_set_name', { length: 255 }).notNull(),
+  labelSetDescription: text('label_set_description'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ---------- TABLE: Label Set ↔ Label (junction) ----------
+export const labelSetLabels = pgTable(
+  'label_set_labels',
+  {
+    labelSetId: uuid('label_set_id').notNull().references(() => labelSets.id, { onDelete: 'cascade' }),
+    labelId: uuid('label_id').notNull().references(() => labels.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.labelSetId, table.labelId] }),
+  ]
+);
