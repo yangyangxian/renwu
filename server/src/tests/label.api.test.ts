@@ -36,14 +36,15 @@ describe('Labels API', () => {
     const res = await fetch(`${baseURL}/api/labels/sets/${createdSet.id}/labels`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
-      body: JSON.stringify({ labelName: 'bug', labelDescription: 'a bug', labelColor: '#ff0000' })
+      body: JSON.stringify({ labelName: 'bug', description: 'a bug', color: '#ff0000' })
     });
     const data = await res.json();
     expect(res.status === 200 || res.status === 201).toBeTruthy();
     if (res.status === 200 || res.status === 201) {
       createdLabel = data.data;
       expect(createdLabel).toBeDefined();
-      expect(createdLabel.labelName).toBe('bug');
+      console.log("createdLabel" + JSON.stringify(createdLabel));
+      expect(createdLabel.name).toBe('bug');
     }
   });
 
@@ -78,7 +79,7 @@ describe('Labels API', () => {
     const upRes = await fetch(`${baseURL}/api/labels/${createdLabel.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
-      body: JSON.stringify({ labelName: 'bug-updated' })
+      body: JSON.stringify({ name: 'bug-updated' })
     });
     const upData = await upRes.json();
     expect(upRes.status === 200).toBeTruthy();

@@ -15,6 +15,7 @@ import { withToast } from "@/utils/toastUtils";
 import logger from "@/utils/logger";
 import { TasksMenuItem } from "./TasksMenuItem";
 import { ProjectsMenuItem } from "./ProjectsMenuItem";
+import { LabelsMenuItem } from "./LabelsMenuItem";
 
 export interface HomeSideBarProps {}
 
@@ -138,6 +139,7 @@ export function HomeSideBar() {
             loading={projectLoading}
             location={location}
           />
+          <LabelsMenuItem showText={showText} />
         </SidebarMenu>
         {/* Pin/Unpin button at bottom right: only show when expanded */}
         {expanded && (
