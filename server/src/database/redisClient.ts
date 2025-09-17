@@ -8,12 +8,12 @@ let redisConnected = false;
 try {
   redisClient = createClient({
     url: appConfig.redisUrl || 'redis://localhost:6379',
+
     socket: {
       reconnectStrategy: (retries) => {
-        // Wait 30 seconds (30000 ms) before each retry
-        return 30000;
+        return 2147483647;
       }
-    }
+    },
   });
 
   redisClient.on('error', (err) => {
