@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { Label } from '@/components/ui-kit/Label';
 import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
-import { ScrollArea } from '@/components/ui-kit/scroll-area';
+import { ScrollArea } from '@/components/ui-kit/Scroll-area';
 import { Plus } from 'lucide-react';
 
 // Simple mock label sets until API is implemented
@@ -84,7 +84,7 @@ export default function LabelsPage() {
   }, [labels]);
 
   return (
-    <div className="w-full h-full p-3 flex flex-col gap-10 overflow-hidden">
+    <div className="w-full h-full p-3 py-4 flex flex-col gap-8 overflow-hidden">
       {/* My Labels Section */}
       <section>
         <div className="mb-4">
@@ -103,7 +103,7 @@ export default function LabelsPage() {
               <Badge
                 key={l.id}
                 variant="outline"
-                className="px-2.5 py-1 text-xs shadow-none border-0"
+                className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
                 style={l.color ? { background: l.color, color: '#fff' } : undefined}
               >
                 {l.name}
@@ -114,9 +114,9 @@ export default function LabelsPage() {
               variant="outline"
               size="icon"
               aria-label="Add new label"
-              className="border-dashed border-border/60 bg-muted/60 hover:bg-muted/80 text-muted-foreground"
+              className="!p-1 w-6 h-6 flex items-center justify-center rounded-md bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3 h-3" />
             </Button>
           </div>
         )}
@@ -130,36 +130,40 @@ export default function LabelsPage() {
             variant="outline"
             size="icon"
             aria-label="Add label set"
-            className="border-dashed border-border/60 bg-muted/60 hover:bg-muted/80 text-muted-foreground"
+            className="!p-1 w-6 h-6 flex items-center justify-center rounded-md bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 h-3" />
           </Button>
         </div>
         <div className="overflow-x-auto pb-3 pr-2 -ml-1">
-          <div className="flex gap-3 items-start w-max pl-1">
-            {mockLabelSets.map(set => (
-              <ScrollArea
-                key={set.id}
-                className="flex flex-col h-full min-h-64 rounded-xl border bg-background/40 backdrop-blur shadow-sm min-w-[150px] max-w-[260px] w-auto h-[340px] pl-2 pr-1 pt-1 pb-2"
-              >
-                <div className="pb-2 pt-1">
-                  <h3 className="font-medium text-sm tracking-wide text-foreground/90 truncate">{set.name}</h3>
-                </div>
-                <div className="space-y-2 pr-1.5">
-                  {set.labels.map(l => (
-                    <Badge
-                      key={l.id}
-                      variant="outline"
-                      className="flex w-full justify-start px-2.5 py-1 text-xs border-0 shadow-none focus-visible:ring-0 focus-visible:border-transparent hover:bg-accent/40 transition-colors"
-                      style={l.color ? { background: l.color, color: '#fff' } : undefined}
-                    >
-                      {l.name}
-                    </Badge>
-                  ))}
-                </div>
-              </ScrollArea>
-            ))}
-          </div>
+          {loading ? (
+            <HomePageSkeleton />
+          ) : (
+            <div className="flex gap-3 items-start w-max pl-1">
+              {mockLabelSets.map(set => (
+                <ScrollArea
+                  key={set.id}
+                  className="flex flex-col rounded-lg border bg-background/40 dark:bg-muted/60 max-w-[260px] max-h-[400px] w-auto pl-3 pr-2 pt-1 pb-3"
+                >
+                  <div className="pb-2 pt-1">
+                    <h3 className="font-medium text-sm tracking-wide text-foreground/90 truncate">{set.name}</h3>
+                  </div>
+                  <div className="flex flex-col space-y-2 pr-1.5">
+                    {set.labels.map(l => (
+                      <Badge
+                        key={l.id}
+                        variant="outline"
+                        className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
+                        style={l.color ? { background: l.color, color: '#fff' } : undefined}
+                      >
+                        {l.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </ScrollArea>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
