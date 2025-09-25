@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui-kit/Button";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/providers/AuthProvider";
-import { HomeSideBar } from "@/components/homepage/SideBar";
 import { Outlet, useLocation } from "react-router-dom";
 import { apiClient } from "@/utils/APIClient";
 import { Input } from "@/components/ui-kit/Input";
@@ -41,14 +40,6 @@ export default function HomePage() {
 
   return (
     <div className="flex w-full h-full">
-      {/* Sidebar with icon and text */}
-      {isAuthenticated && (
-        <aside className="h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
-          <HomeSideBar />
-        </aside>
-      )}
-      
-      {/* Main Content or Outlet */}
       <section className="flex w-full max-h-full pl-2 p-2">
         <Outlet />
       </section>

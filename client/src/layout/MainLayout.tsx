@@ -9,8 +9,9 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui-kit/Dropdown-menu";
 import { LayoutDashboard, User, Sun, Moon, Monitor } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
+import { HomeSideBar } from "@/components/homepage/SideBar";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -20,6 +21,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { toggleDark, setDark, setLight, setSystem, mode } = useDarkMode();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const location = useLocation();
+  // Show sidebar on authenticated routes except explicit public marketing/auth pages
+  const hideSidebarRoutes = ['/login', '/signup', '/landing'];
+  const showSidebar = isAuthenticated && !hideSidebarRoutes.includes(location.pathname);
 
   return (
     <div className="bg-gray-100 dark:bg-black pt-14">
@@ -91,7 +96,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </nav>
       {/* Main Content */}
       <main className="flex h-[calc(100vh-56px)]">
-        {children}
+        {showSidebar && (
+          <aside className="h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
+            <HomeSideBar />
+          </aside>
+        )}
+        <div className="flex-1 h-full overflow-hidden">
+          {children}
+        </div>
       </main>
     </div>
   );
