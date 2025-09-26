@@ -5,6 +5,7 @@ import { useLabelStore } from '@/stores/useLabelStore';
 import { Label } from '@/components/ui-kit/Label';
 import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
 import { ScrollArea } from '@/components/ui-kit/Scroll-area';
+import { Card } from '@/components/ui-kit/Card';
 import { Plus } from 'lucide-react';
 
 // Simple mock label sets until API is implemented
@@ -87,39 +88,42 @@ export default function LabelsPage() {
     <div className="w-full h-full p-3 py-4 flex flex-col gap-8 overflow-hidden">
       {/* My Labels Section */}
       <section>
-        <div className="mb-4">
+        <div className="mb-3">
           <Label className="text-xl font-medium">My Labels</Label>
         </div>
-        {loading && <HomePageSkeleton />}
-        {!loading && (
-          <div className="flex flex-wrap gap-3 items-center">
-            {(labels.length > 0 ? labels : [
-              { id: 'mock-bug', name: 'Bug', color: '#991b1b' },
-              { id: 'mock-enh', name: 'Enhancement', color: '#1d4ed8' },
-              { id: 'mock-feature', name: 'New Feature', color: '#ca8a04' },
-              { id: 'mock-docs', name: 'Docs', color: '#0369a1' },
-              { id: 'mock-refactor', name: 'Refactor', color: '#7c3aed' },
-            ]).map((l: any) => (
-              <Badge
-                key={l.id}
-                variant="outline"
-                className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
-                style={l.color ? { background: l.color, color: '#fff' } : undefined}
-              >
-                {l.name}
-              </Badge>
-            ))}
-            {/* Inline add button styled similarly to badges */}
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Add new label"
-              className="!p-1 w-6 h-6 flex items-center justify-center rounded-md bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
-          </div>
-        )}
+        <div className="flex items-start">
+          <Card className="p-3 flex flex-wrap gap-3 rounded-md border bg-background dark:bg-muted/60 max-w-full">
+            {loading && <HomePageSkeleton />}
+            {!loading && (
+              <div className="flex flex-wrap items-center gap-3">
+                {(labels.length > 0 ? labels : [
+                  { id: 'mock-bug', name: 'Bug', color: '#991b1b' },
+                  { id: 'mock-enh', name: 'Enhancement', color: '#1d4ed8' },
+                  { id: 'mock-feature', name: 'New Feature', color: '#ca8a04' },
+                  { id: 'mock-docs', name: 'Docs', color: '#0369a1' },
+                  { id: 'mock-refactor', name: 'Refactor', color: '#7c3aed' },
+                ]).map((l: any) => (
+                  <Badge
+                    key={l.id}
+                    variant="outline"
+                    className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
+                    style={l.color ? { background: l.color, color: '#fff' } : undefined}
+                  >
+                    {l.name}
+                  </Badge>
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Add new label"
+                  className="!p-1 w-6 h-6 flex items-center justify-center rounded-md bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
+                >
+                  <Plus className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
       </section>
 
       {/* Label Sets Section */}
@@ -141,26 +145,31 @@ export default function LabelsPage() {
           ) : (
             <div className="flex gap-3 items-start w-max pl-1">
               {mockLabelSets.map(set => (
-                <ScrollArea
+                <Card
                   key={set.id}
-                  className="flex flex-col rounded-lg border bg-background/40 dark:bg-muted/60 max-w-[260px] max-h-[400px] w-auto pl-3 pr-2 pt-1 pb-3"
+                  className="flex flex-col rounded-md border bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]"
                 >
-                  <div className="pb-2 pt-1">
-                    <h3 className="font-medium text-sm tracking-wide text-foreground/90 truncate">{set.name}</h3>
+                  <div className="px-3 py-2 border-b border-border/40 shrink-0">
+                    <h3 className="text-sm font-medium leading-tight truncate">{set.name}</h3>
                   </div>
-                  <div className="flex flex-col space-y-2 pr-1.5">
-                    {set.labels.map(l => (
-                      <Badge
-                        key={l.id}
-                        variant="outline"
-                        className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
-                        style={l.color ? { background: l.color, color: '#fff' } : undefined}
-                      >
-                        {l.name}
-                      </Badge>
-                    ))}
+
+                  <div className="flex-1 min-h-0">{/* establishes containing block for ScrollArea viewport */}
+                    <ScrollArea className="h-full w-full px-3">
+                      <div className="flex flex-col space-y-2 my-2">
+                        {set.labels.map(l => (
+                          <Badge
+                            key={l.id}
+                            variant="outline"
+                            className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
+                            style={l.color ? { background: l.color, color: '#fff' } : undefined}
+                          >
+                            {l.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   </div>
-                </ScrollArea>
+                </Card>
               ))}
             </div>
           )}
