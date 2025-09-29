@@ -89,10 +89,13 @@ export default function LabelsPage() {
     <div className="w-full h-full p-3 py-3 flex flex-col gap-8 overflow-hidden">
       {/* My Labels Section */}
       <section>
-        <div className="mb-3">
+        <div className="mb-5">
           <Label className="text-xl font-medium">Labels</Label>
+          <Label className="block text-xs text-muted-foreground mt-1 leading-relaxed font-normal">
+            Personal labels you create here can be applied to your own tasks or attached to a project later.
+          </Label>
         </div>
-        <div className="flex items-start">
+        <div className="flex items-start ml-1">
           <Card className="p-3 flex flex-wrap gap-3 shadow-none rounded-md border bg-background dark:bg-muted/60 max-w-full">
             {loading && <HomePageSkeleton />}
             {!loading && (
@@ -110,7 +113,7 @@ export default function LabelsPage() {
                   variant="outline"
                   size="icon"
                   aria-label="Add new label"
-                  className="!p-1 w-6 h-6 flex items-center justify-center rounded-md bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
+                  className="!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
                 >
                   <Plus className="w-3 h-3" />
                 </Button>
@@ -121,19 +124,24 @@ export default function LabelsPage() {
       </section>
 
       {/* Label Sets Section */}
-      <section className="flex flex-col gap-4 flex-1 overflow-hidden">
-        <div className="flex items-center gap-3 mb-1">
-          <Label className="text-xl font-medium">Label Sets</Label>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Add label set"
-            className="!p-1 w-6 h-6 flex items-center justify-center rounded-md bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
-          >
-            <Plus className="w-3 h-3" />
-          </Button>
+      <section className="flex flex-col flex-1 overflow-hidden">
+        <div className="mb-5">
+          <div className="flex items-center gap-3 mb-1">
+            <Label className="text-xl font-medium">Label Sets</Label>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Add label set"
+              className="!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
+            >
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+          <Label className="block text-xs text-muted-foreground leading-relaxed font-normal">
+            These sets can be applied to your personal tasks or linked to a project.
+          </Label>
         </div>
-        <div className="overflow-x-auto pb-3 pr-2 -ml-1">
+        <div className="overflow-x-auto pb-3 pr-2">
           {loading ? (
             <HomePageSkeleton />
           ) : (

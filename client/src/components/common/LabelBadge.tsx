@@ -23,7 +23,7 @@ export function LabelBadge({ text, color, className, onClick, disabled, title }:
       title={title || text}
       onClick={disabled ? undefined : onClick}
       className={cn(
-        'px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0 select-none flex items-center gap-1',
+        'px-2 pb-[3px] pt-[2px] text-xs shadow-none border-0 select-none flex items-center gap-1',
         disabled && 'opacity-60 cursor-not-allowed',
         onClick && !disabled && 'cursor-pointer hover:bg-accent/60 transition-colors',
         className,
