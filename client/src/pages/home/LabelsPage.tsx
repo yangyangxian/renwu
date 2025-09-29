@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui-kit/Button';
-import { Badge } from '@/components/ui-kit/Badge';
+import { Badge } from '@/components/ui-kit/Badge'; // (legacy usage can be removed later)
+import LabelBadge from '@/components/common/LabelBadge';
 import { useEffect, useMemo } from 'react';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { Label } from '@/components/ui-kit/Label';
@@ -103,14 +104,7 @@ export default function LabelsPage() {
                   { id: 'mock-docs', name: 'Docs', color: '#0369a1' },
                   { id: 'mock-refactor', name: 'Refactor', color: '#7c3aed' },
                 ]).map((l: any) => (
-                  <Badge
-                    key={l.id}
-                    variant="outline"
-                    className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
-                    style={l.color ? { background: l.color, color: '#fff' } : undefined}
-                  >
-                    {l.name}
-                  </Badge>
+                  <LabelBadge key={l.id} text={l.name} color={l.color} />
                 ))}
                 <Button
                   variant="outline"
@@ -157,14 +151,7 @@ export default function LabelsPage() {
                     <ScrollArea className="h-full w-full px-[14px]">
                       <div className="flex flex-col space-y-2 my-2">
                         {set.labels.map(l => (
-                          <Badge
-                            key={l.id}
-                            variant="outline"
-                            className="px-2.5 pb-1 pt-[3px] text-xs shadow-none border-0"
-                            style={l.color ? { background: l.color, color: '#fff' } : undefined}
-                          >
-                            {l.name}
-                          </Badge>
+                          <LabelBadge key={l.id} text={l.name} color={l.color} />
                         ))}
                       </div>
                     </ScrollArea>
