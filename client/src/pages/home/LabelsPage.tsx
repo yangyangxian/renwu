@@ -69,7 +69,7 @@ export default function LabelsPage() {
         ],
       },
       // Additional mock sets to force horizontal scrolling
-      ...Array.from({ length: 8 }).map((_, i) => ({
+      ...Array.from({ length: 1 }).map((_, i) => ({
         id: `set-mock-${i}`,
         name: `Set ${i + 1}`,
         labels: [
@@ -85,14 +85,14 @@ export default function LabelsPage() {
   }, [labels]);
 
   return (
-    <div className="w-full h-full p-3 py-4 flex flex-col gap-8 overflow-hidden">
+    <div className="w-full h-full p-3 py-3 flex flex-col gap-8 overflow-hidden">
       {/* My Labels Section */}
       <section>
         <div className="mb-3">
-          <Label className="text-xl font-medium">My Labels</Label>
+          <Label className="text-xl font-medium">Labels</Label>
         </div>
         <div className="flex items-start">
-          <Card className="p-3 flex flex-wrap gap-3 rounded-md border bg-background dark:bg-muted/60 max-w-full">
+          <Card className="p-3 flex flex-wrap gap-3 shadow-none rounded-md border bg-background dark:bg-muted/60 max-w-full">
             {loading && <HomePageSkeleton />}
             {!loading && (
               <div className="flex flex-wrap items-center gap-3">
@@ -129,7 +129,7 @@ export default function LabelsPage() {
       {/* Label Sets Section */}
       <section className="flex flex-col gap-4 flex-1 overflow-hidden">
         <div className="flex items-center gap-3 mb-1">
-          <Label className="text-xl font-medium">My Label Sets</Label>
+          <Label className="text-xl font-medium">Label Sets</Label>
           <Button
             variant="outline"
             size="icon"
@@ -147,14 +147,14 @@ export default function LabelsPage() {
               {mockLabelSets.map(set => (
                 <Card
                   key={set.id}
-                  className="flex flex-col rounded-md border bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]"
+                  className="flex flex-col rounded-md  shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]"
                 >
-                  <div className="px-3 py-2 border-b border-border/40 shrink-0">
+                  <div className="px-[14px] py-3 border-b border-border/40 shrink-0">
                     <h3 className="text-sm font-medium leading-tight truncate">{set.name}</h3>
                   </div>
 
                   <div className="flex-1 min-h-0">{/* establishes containing block for ScrollArea viewport */}
-                    <ScrollArea className="h-full w-full px-3">
+                    <ScrollArea className="h-full w-full px-[14px]">
                       <div className="flex flex-col space-y-2 my-2">
                         {set.labels.map(l => (
                           <Badge
