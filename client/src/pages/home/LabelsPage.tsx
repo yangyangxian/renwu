@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui-kit/Button';
-import { Badge } from '@/components/ui-kit/Badge'; // (legacy usage can be removed later)
 import LabelBadge from '@/components/common/LabelBadge';
 import { useEffect, useMemo } from 'react';
 import { useLabelStore } from '@/stores/useLabelStore';
@@ -91,7 +90,7 @@ export default function LabelsPage() {
       <section>
         <div className="mb-5">
           <Label className="text-xl font-medium">Labels</Label>
-          <Label className="block text-xs text-muted-foreground mt-1 leading-relaxed font-normal">
+          <Label className="block text-[13px] text-muted-foreground mt-1 leading-relaxed font-normal">
             Personal labels you create here can be applied to your own tasks or attached to a project later.
           </Label>
         </div>
@@ -137,7 +136,7 @@ export default function LabelsPage() {
               <Plus className="w-3 h-3" />
             </Button>
           </div>
-          <Label className="block text-xs text-muted-foreground leading-relaxed font-normal">
+          <Label className="block text-[13px] text-muted-foreground leading-relaxed font-normal">
             These sets can be applied to your personal tasks or linked to a project.
           </Label>
         </div>
