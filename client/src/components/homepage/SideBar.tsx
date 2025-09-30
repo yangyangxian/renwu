@@ -120,6 +120,10 @@ export function HomeSideBar() {
       defaultOpen={true}
       open={expanded}
       onOpenChange={setExpanded}
+      style={{
+        // local override to make the sidebar narrower without editing the ui-kit
+        "--sidebar-width": "15rem"
+      } as React.CSSProperties}
     >
       <Sidebar
         collapsible="icon"
