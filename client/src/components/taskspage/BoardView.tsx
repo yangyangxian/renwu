@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { DndContext, closestCorners, useDraggable, useDroppable, DragOverlay, useSensors, useSensor, PointerSensor } from "@dnd-kit/core";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Card";
+import GradientScrollArea from "../common/GradientScrollArea";
 import TaskCard from "@/components/taskspage/TaskCard";
 import { PermissionAction, PermissionResourceType, TaskResDto, TaskStatus } from "@fullstack/common";
 import { ClipboardList } from "lucide-react";
@@ -122,58 +123,63 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
               >
                 <CardTitle className="font-light text-white">{col.label}</CardTitle>
               </CardHeader>
-              <CardContent className="p-3 flex flex-col overflow-y-auto gap-3">
-                {tasksByStatus[col.key].length === 0 ? (
-                  <Card className="flex flex-col items-center justify-center text-muted-foreground py-3 rounded-lg border border-dashed">
-                    <ClipboardList className="w-5 h-5 mb-2" />
-                    <span className="text-sm">No tasks here yet.</span>
-                  </Card>
-                ) : (
-                  tasksByStatus[col.key]
-                    .slice() // avoid mutating original
-                    .sort((a, b) => {
-                      // For TODO and IN_PROGRESS, sort by dueDate (earliest first)
-                      if (col.key === TaskStatus.TODO || col.key === TaskStatus.IN_PROGRESS) {
-                        if (a.dueDate && b.dueDate) {
-                          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-                        } else if (a.dueDate) {
-                          return -1;
-                        } else if (b.dueDate) {
-                          return 1;
-                        } else {
-                          return 0;
+              <CardContent className="flex flex-col flex-1 min-h-0 p-0">
+                <GradientScrollArea
+                  topOverlayHeight={35}
+                  bottomOverlayHeight={50}
+                  scrollAreaClassName="p-3 flex flex-col gap-3"
+                  className="flex-1"
+                >
+                  {tasksByStatus[col.key].length === 0 ? (
+                    <Card className="flex flex-col items-center justify-center text-muted-foreground py-3 rounded-lg border border-dashed">
+                      <ClipboardList className="w-5 h-5 mb-2" />
+                      <span className="text-sm">No tasks here yet.</span>
+                    </Card>
+                  ) : (
+                    tasksByStatus[col.key]
+                      .slice()
+                      .sort((a, b) => {
+                        if (col.key === TaskStatus.TODO || col.key === TaskStatus.IN_PROGRESS) {
+                          if (a.dueDate && b.dueDate) {
+                            return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                          } else if (a.dueDate) {
+                            return -1;
+                          } else if (b.dueDate) {
+                            return 1;
+                          } else {
+                            return 0;
+                          }
                         }
-                      }
-                      // For IN_REVIEW and DONE, sort by updatedAt (most recent first)
-                      if (col.key === TaskStatus.DONE || col.key === TaskStatus.CLOSE) {
-                        if (a.updatedAt && b.updatedAt) {
-                          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-                        } else if (a.updatedAt) {
-                          return -1;
-                        } else if (b.updatedAt) {
-                          return 1;
-                        } else {
-                          return 0;
+                        if (col.key === TaskStatus.DONE || col.key === TaskStatus.CLOSE) {
+                          if (a.updatedAt && b.updatedAt) {
+                            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+                          } else if (a.updatedAt) {
+                            return -1;
+                          } else if (b.updatedAt) {
+                            return 1;
+                          } else {
+                            return 0;
+                          }
                         }
-                      }
-                      return 0;
-                    })
-                    .map((task, idx) => (
-                      <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
-                        <TaskCard
-                          taskId={task.id}
-                          title={task.title}
-                          description={task.description}
-                          dueDate={task.dueDate}
-                          projectName={task.projectName}
-                          assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                          status={task.status}
-                          onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
-                          showDeleteButton={hasPermission(PermissionAction.DELETE_OTHERS_TASK, { resourceType: PermissionResourceType.TASK, loggedUserId: user?.id!, projectId: task.projectId!, assignedUserId: task.assignedTo!.id })}
-                        />
-                      </DraggableTaskCard>
-                    ))
-                )}
+                        return 0;
+                      })
+                      .map((task, idx) => (
+                        <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
+                          <TaskCard
+                            taskId={task.id}
+                            title={task.title}
+                            description={task.description}
+                            dueDate={task.dueDate}
+                            projectName={task.projectName}
+                            assignedTo={showAssignedTo ? task.assignedTo : undefined}
+                            status={task.status}
+                            onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+                            showDeleteButton={hasPermission(PermissionAction.DELETE_OTHERS_TASK, { resourceType: PermissionResourceType.TASK, loggedUserId: user?.id!, projectId: task.projectId!, assignedUserId: task.assignedTo!.id })}
+                          />
+                        </DraggableTaskCard>
+                      ))
+                  )}
+                </GradientScrollArea>
               </CardContent>
             </Card>
           </DroppableColumn>

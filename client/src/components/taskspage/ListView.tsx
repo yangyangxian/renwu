@@ -8,6 +8,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { Badge } from "@/components/ui-kit/Badge";
 import TaskDetail from "./TaskDetail";
 import { statusLabels, statusColors, statusIcons } from "@/consts/taskStatusConfig"
+import GradientScrollArea from "../common/GradientScrollArea";
 import { Label } from "@/components/ui-kit/Label";
 import { usePermissionStore } from '@/stores/usePermissionStore';
 import { PermissionAction, PermissionResourceType } from '@fullstack/common';
@@ -93,7 +94,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
     <div className="flex h-full w-full rounded-lg">
       {/* Left: Task List */}
       <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input 
-        dark:border-[1.5px] bg-white-black h-full flex flex-col">
+        dark:border-[1.5px] bg-white-black h-full flex flex-col overflow-hidden">
         {/* Status Filter and Sort Icon */}
         <div className="bg-white-black py-1 border-b border-border flex items-center 
           justify-between rounded-t-md">
@@ -162,7 +163,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div id="taskList" className="flex flex-col overflow-auto min-h-0 rounded-b-md">
+        <GradientScrollArea topOverlayHeight={60} bottomOverlayHeight={70} className="flex-1" scrollAreaClassName="flex flex-col min-h-0">
           {sortedTasks.length ? (
             sortedTasks.map((task, idx) => {
               const showDeleteButton = hasPermission(
@@ -185,8 +186,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
                       projectName={task.projectName}
                       status={task.status}
                       assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                      className={`hover:scale-100 cursor-pointer rounded-none bg-white-black py-3 pl-4 min-h-22 border-border shadow-none
-                        ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
+                      className={`hover:scale-100 cursor-pointer rounded-none bg-white-black py-3 pl-4 min-h-22 border-border shadow-none ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
                       showDeleteButton={showDeleteButton}
                     />
                   </div>
@@ -199,7 +199,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
           ) : (
             <Label className="p-4 text-muted-foreground">No tasks found.</Label>
           )}
-        </div>
+        </GradientScrollArea>
       </div>
       {/* Right: Task Details */}
       <div className="flex-1 p-5 overflow-y-auto shadow-xs bg-white-black rounded-r-lg border border-input dark:border-[1.5px] border-l-0 dark:border-l-0">
