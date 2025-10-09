@@ -29,7 +29,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="bg-gray-100 dark:bg-black pt-14">
       {/* Top Navigation Bar */}
-      <nav className="fixed top-0 left-0 w-full bg-primary-purple shadow-md z-50 flex justify-between items-center h-14 px-2">
+      <nav className="fixed top-0 left-0 w-full bg-primary-purple shadow-sm z-50 flex justify-between items-center h-14 px-2">
         <div className="flex items-center gap-6">
           <Button
             variant='default'
