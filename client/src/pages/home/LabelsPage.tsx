@@ -7,6 +7,7 @@ import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
 import { ScrollArea } from '@/components/ui-kit/Scroll-area';
 import { Card } from '@/components/ui-kit/Card';
 import { Plus } from 'lucide-react';
+import AddLabelDialog from '@/components/homepage/AddLabelDialog';
 
 // Simple mock label sets until API is implemented
 interface MockLabelSet {
@@ -88,14 +89,14 @@ export default function LabelsPage() {
     <div className="w-full h-full p-3 py-3 flex flex-col gap-8 overflow-hidden">
       {/* My Labels Section */}
       <section>
-        <div className="mb-5">
+        <div className="mb-4">
           <Label className="text-xl font-medium">Labels</Label>
-          <Label className="block text-[13px] text-muted-foreground mt-1 leading-relaxed font-normal">
+          <Label className="block text-[13px] text-muted-foreground leading-relaxed font-normal">
             Personal labels you create here can be applied to your own tasks or attached to a project later.
           </Label>
         </div>
-        <div className="flex items-start ml-1">
-          <Card className="p-3 flex flex-wrap gap-3 shadow-none rounded-md border bg-background dark:bg-muted/60 max-w-full">
+        <div className="flex items-start">
+          <Card className="px-3 py-4 flex flex-wrap gap-3 shadow-none rounded-md border bg-background dark:bg-muted/60 max-w-full">
             {loading && <HomePageSkeleton />}
             {!loading && (
               <div className="flex flex-wrap items-center gap-3">
@@ -108,14 +109,7 @@ export default function LabelsPage() {
                 ]).map((l: any) => (
                   <LabelBadge key={l.id} text={l.name} color={l.color} />
                 ))}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Add new label"
-                  className="!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
-                >
-                  <Plus className="w-3 h-3" />
-                </Button>
+                <AddLabelDialog />
               </div>
             )}
           </Card>
@@ -125,7 +119,7 @@ export default function LabelsPage() {
       {/* Label Sets Section */}
       <section className="flex flex-col flex-1 overflow-hidden">
         <div className="mb-5">
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex items-center gap-3">
             <Label className="text-xl font-medium">Label Sets</Label>
             <Button
               variant="outline"
@@ -144,7 +138,7 @@ export default function LabelsPage() {
           {loading ? (
             <HomePageSkeleton />
           ) : (
-            <div className="flex gap-3 items-start w-max pl-1">
+            <div className="flex gap-3 items-start w-max">
               {mockLabelSets.map(set => (
                 <Card
                   key={set.id}

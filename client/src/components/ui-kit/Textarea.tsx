@@ -12,6 +12,8 @@ type TextareaProps = Omit<React.ComponentProps<"textarea">, "value" | "onChange"
   initialValue?: string;
   showButtons?: boolean;
   storageKey?: string; // unique key for localStorage, required for unique drafts
+  onValueChange?: (value: string) => void; // notify parent on each change
+  hideMarkdownHelper?: boolean; // hide the markdown helper icon/hover card
 };
 
 interface TextareaImperativeHandle extends HTMLTextAreaElement {
@@ -24,7 +26,7 @@ function getStorageKey(props: any) {
   return null;
 }
 
-function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, storageKey: storageKeyProp, ...props }: TextareaProps) {
+function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit, initialValue = "", showButtons = true, storageKey: storageKeyProp, onValueChange, hideMarkdownHelper = false, ...props }: TextareaProps) {
   // Compute storage key for this instance
   const storageKey = getStorageKey({ ...props, storageKey: storageKeyProp });
   const refTextarea = useRef<HTMLTextAreaElement>(null);
@@ -58,7 +60,9 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
 
   // Handle changes: update local editedValue only
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditedValue(e.target.value);
+    const val = e.target.value;
+    setEditedValue(val);
+    if (onValueChange) onValueChange(val);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -112,30 +116,32 @@ function Textarea({ ref, className, onBlur, autoSize = false, onCancel, onSubmit
         {...props}
         ref={refTextarea}
       />
-      <div className="flex items-center justify-end gap-2 mt-4 mr-4">
-        {hasChanges && (
-          <span className="flex items-center gap-1 text-sm text-primary/80 select-none">
+      <div className="flex items-center justify-end gap-2 mr-4">
+        {storageKey && hasChanges && (
+          <span className="flex items-center gap-1 text-sm text-primary/80 select-none mt-4">
             <Pencil className="w-4 h-4" aria-label="You have unsaved changes" />
             <span className="font-medium text-xs text-primary/70">Unsaved changes</span>
           </span>
         )}
-        <HoverCard openDelay={0}>
-          <HoverCardTrigger asChild>
-            <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80 text-xs leading-relaxed">
-            <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
-            <ul className="list-disc pl-5">
-              <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
-              <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
-              <li><b>Link:</b> <code>[title](url)</code></li>
-              <li><b>List:</b> <code>* item</code></li>
-              <li><b>Number List:</b> <code> 1. item</code></li>
-              <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
-              <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
-            </ul>
-          </HoverCardContent>
-        </HoverCard>
+        {!hideMarkdownHelper && (
+          <HoverCard openDelay={0}>
+            <HoverCardTrigger asChild>
+              <Info className="w-4 h-4 text-muted-foreground cursor-pointer mt-4" />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 text-xs leading-relaxed">
+              <div className="font-semibold text-sm mb-2">Markdown Syntax</div>
+              <ul className="list-disc pl-5">
+                <li><b>Bold:</b> <code>**bold**</code> or <code>__bold__</code></li>
+                <li><b>Italic:</b> <code>*italic*</code> or <code>_italic_</code></li>
+                <li><b>Link:</b> <code>[title](url)</code></li>
+                <li><b>List:</b> <code>* item</code></li>
+                <li><b>Number List:</b> <code> 1. item</code></li>
+                <li><b>Heading:</b> <code># H1</code>, <code>## H2</code>, ...</li>
+                <li><b>Code:</b> <code>`inline code`</code> or <code>```block```</code></li>
+              </ul>
+            </HoverCardContent>
+          </HoverCard>
+        )}
         {showButtons && onCancel && (
           <Button type="button" variant="outline" onClick={() => {
             clearCache();
