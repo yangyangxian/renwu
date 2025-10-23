@@ -17,7 +17,7 @@ interface MockLabelSet {
 }
 
 export default function LabelsPage() {
-  const { labels, loading, fetchLabels } = useLabelStore();
+  const { labels, loading, fetchLabels, deleteLabel } = useLabelStore();
 
   useEffect(() => {
     fetchLabels();
@@ -107,7 +107,13 @@ export default function LabelsPage() {
                   { id: 'mock-docs', name: 'Docs', color: '#0369a1' },
                   { id: 'mock-refactor', name: 'Refactor', color: '#7c3aed' },
                 ]).map((l: any) => (
-                  <LabelBadge key={l.id} text={l.name} color={l.color} />
+                  <LabelBadge
+                    key={l.id}
+                    text={l.name}
+                    color={l.color}
+                    // only allow deleting real (server-provided) labels — mock ids start with 'mock-'
+                    onDelete={String(l.id).startsWith('mock-') ? undefined : (() => deleteLabel(l.id))}
+                  />
                 ))}
                 <AddLabelDialog />
               </div>

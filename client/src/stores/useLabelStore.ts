@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
 import { apiClient } from '@/utils/APIClient';
+import { getMyLabels, createLabel as createLabelEndpoint, getLabelById, updateLabelById, deleteLabelById } from '@/apiRequests/apiEndpoints';
 import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto } from '@fullstack/common';
 
 interface LabelStoreState {
@@ -28,7 +29,8 @@ export function useLabelStore() {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiClient.get<LabelResDto[]>('/api/labels');
+  // server exposes a convenience endpoint for current user
+  const data = await apiClient.get<LabelResDto[]>(getMyLabels());
       setLabels(Array.isArray(data) ? data : []);
       return data as LabelResDto[];
     } catch (err: any) {
@@ -48,7 +50,7 @@ export function useLabelStore() {
         body.labelName = (body as any).name;
         delete body.name;
       }
-      const created = await apiClient.post<LabelCreateReqDto, LabelResDto>('/api/labels', body as any);
+  const created = await apiClient.post<LabelCreateReqDto, LabelResDto>(createLabelEndpoint(), body as any);
       setLabels([...labels, (created as LabelResDto)]);
       return created as LabelResDto;
     } catch (err) {
@@ -58,7 +60,7 @@ export function useLabelStore() {
 
   const deleteLabel = useCallback(async (id: string): Promise<void> => {
     try {
-      await apiClient.delete(`/api/labels/${id}`);
+  await apiClient.delete(deleteLabelById(id));
       setLabels(labels.filter(l => l.id !== id));
     } catch (err) {
       throw err;
@@ -73,7 +75,7 @@ export function useLabelStore() {
         body.labelName = body.name;
         delete body.name;
       }
-      const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(`/api/labels/${id}`, body as any);
+  const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(updateLabelById(id), body as any);
       setLabels(labels.map(l => l.id === id ? (updated as LabelResDto) : l));
       return updated as LabelResDto;
     } catch (err) {

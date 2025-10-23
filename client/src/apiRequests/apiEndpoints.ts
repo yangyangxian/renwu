@@ -44,3 +44,10 @@ export const getMyPermissionsEndpoint = () => '/api/users/me/permissions';
 
 // --- Files ---
 export const apiFile = () => '/api/file';
+
+// --- Labels ---
+export const getMyLabels = () => '/api/labels/me';
+export const createLabel = () => '/api/labels';
+export const getLabelById = (labelId: string) => `/api/labels/${labelId}`;
+export const updateLabelById = (labelId: string) => `/api/labels/${labelId}`;
+export const deleteLabelById = (labelId: string) => `/api/labels/${labelId}`;

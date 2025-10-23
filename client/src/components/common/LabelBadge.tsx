@@ -1,5 +1,7 @@
 import { Badge } from '@/components/ui-kit/Badge';
 import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui-kit/Button';
 
 export interface LabelBadgeProps {
   text: string;
@@ -8,6 +10,7 @@ export interface LabelBadgeProps {
   onClick?: () => void;
   disabled?: boolean;
   title?: string;
+  onDelete?: () => void;
 }
 
 function pickTextColor(bg?: string) {
@@ -31,26 +34,42 @@ function pickTextColor(bg?: string) {
   return luminance > 0.6 ? '#000' : '#fff';
 }
 
-export function LabelBadge({ text, color, className, onClick, disabled, title }: LabelBadgeProps) {
+export function LabelBadge({ text, color, className, onClick, disabled, title, onDelete }: LabelBadgeProps) {
   const style = color ? { background: color, color: pickTextColor(color) } : undefined;
+  // wrapper allows us to show delete button only on hover (group)
   return (
-    <Badge
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : -1}
-      aria-label={text}
-      variant="outline"
-      title={title || text}
-      onClick={disabled ? undefined : onClick}
-      className={cn(
-        'px-2 py-[3px] text-xs shadow-none border-0 select-none flex items-center gap-1',
-        disabled && 'opacity-60 cursor-not-allowed',
-        onClick && !disabled && 'cursor-pointer hover:bg-accent/60 transition-colors',
-        className,
+    <div className={cn('relative inline-flex items-center', onDelete ? 'group' : '')}>
+      <Badge
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : -1}
+        aria-label={text}
+        variant="outline"
+        title={title || text}
+        onClick={disabled ? undefined : onClick}
+        className={cn(
+          'px-2 py-[3px] text-xs shadow-none border-0 select-none flex items-center gap-1',
+          disabled && 'opacity-60 cursor-not-allowed',
+          onClick && !disabled && 'cursor-pointer hover:bg-accent/60 transition-colors',
+          className,
+        )}
+        style={style}
+      >
+        {text}
+      </Badge>
+
+      {onDelete && (
+        <Button
+          variant="destructive"
+          size="icon"
+          aria-label={`Delete ${text}`}
+          onClick={(e: any) => { e.stopPropagation(); e.preventDefault(); if (!disabled) onDelete(); }}
+          className="absolute -right-1 -top-1 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/70 hover:bg-destructive/80 text-white rounded-full p-1 w-4 h-4"
+          title={`Delete ${text}`}
+        >
+          <X className="w-1 h-1" />
+        </Button>
       )}
-      style={style}
-    >
-      {text}
-    </Badge>
+    </div>
   );
 }
 
