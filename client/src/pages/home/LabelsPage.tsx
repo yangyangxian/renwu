@@ -6,10 +6,9 @@ import { Label } from '@/components/ui-kit/Label';
 import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
 import { ScrollArea } from '@/components/ui-kit/Scroll-area';
 import { Card } from '@/components/ui-kit/Card';
-import { Plus } from 'lucide-react';
-import AddLabelDialog from '@/components/homepage/AddLabelDialog';
-
-// Simple mock label sets until API is implemented
+import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
+import AddLabelSetDialog from '@/components/labelpage/AddLabelSetDialog';
+import SetCard from '@/components/labelpage/SetCard';
 interface MockLabelSet {
   id: string;
   name: string;
@@ -17,11 +16,15 @@ interface MockLabelSet {
 }
 
 export default function LabelsPage() {
-  const { labels, loading, fetchLabels, deleteLabel } = useLabelStore();
+  const { labels, loading, fetchLabels, deleteLabel, labelSets, fetchLabelSets } = useLabelStore();
 
   useEffect(() => {
     fetchLabels();
   }, [fetchLabels]);
+
+  useEffect(() => {
+    fetchLabelSets();
+  }, [fetchLabelSets]);
 
   // Derive some mock label sets from existing labels (repeat / slice) for UI preview
   const mockLabelSets: MockLabelSet[] = useMemo(() => {
@@ -82,8 +85,10 @@ export default function LabelsPage() {
         ],
       })),
     ];
+    // prefer server-provided label sets if available
+    if (labelSets && labelSets.length > 0) return labelSets as any[];
     return fallback;
-  }, [labels]);
+  }, [labels, labelSets]);
 
   return (
     <div className="w-full h-full p-3 py-3 flex flex-col gap-8 overflow-hidden">
@@ -125,16 +130,9 @@ export default function LabelsPage() {
       {/* Label Sets Section */}
       <section className="flex flex-col flex-1 overflow-hidden">
         <div className="mb-5">
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <Label className="text-xl font-medium">Label Sets</Label>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Add label set"
-              className="!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground"
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
+            <AddLabelSetDialog />
           </div>
           <Label className="block text-[13px] text-muted-foreground leading-relaxed font-normal">
             These sets can be applied to your personal tasks or linked to a project.
@@ -145,26 +143,9 @@ export default function LabelsPage() {
             <HomePageSkeleton />
           ) : (
             <div className="flex gap-3 items-start w-max">
-              {mockLabelSets.map(set => (
-                <Card
-                  key={set.id}
-                  className="flex flex-col rounded-md  shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]"
-                >
-                  <div className="px-[14px] py-3 border-b border-border/40 shrink-0">
-                    <h3 className="text-sm font-medium leading-tight truncate">{set.name}</h3>
-                  </div>
-
-                  <div className="flex-1 min-h-0">{/* establishes containing block for ScrollArea viewport */}
-                    <ScrollArea className="h-full w-full px-[14px]">
-                      <div className="flex flex-col space-y-2 my-2">
-                        {set.labels.map(l => (
-                          <LabelBadge key={l.id} text={l.name} color={l.color} />
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </Card>
-              ))}
+                {mockLabelSets.map(set => (
+                  <SetCard key={set.id} set={set} />
+                ))}
             </div>
           )}
         </div>

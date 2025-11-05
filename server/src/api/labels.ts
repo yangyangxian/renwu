@@ -159,4 +159,24 @@ router.post('/sets/:setId/labels',
   }
 );
 
+// GET labels for a specific set (ownership enforced)
+router.get('/sets/:setId/labels',
+  async (
+    req: Request<{ setId: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { setId } = req.params;
+      const rows = await labelService.listLabelsInSet(setId);
+      const mapped: LabelResDto[] = rows.map(r => mapObject(r, new LabelResDto(), {
+        labelName: 'name',
+        labelDescription: 'description',
+        labelColor: 'color',
+      }));
+      res.json(createApiResponse(mapped));
+    } catch (err) { next(err); }
+  }
+);
+
 export default router;

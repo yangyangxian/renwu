@@ -1,29 +1,34 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
 import { apiClient } from '@/utils/APIClient';
-import { getMyLabels, createLabel as createLabelEndpoint, getLabelById, updateLabelById, deleteLabelById } from '@/apiRequests/apiEndpoints';
+import { getMyLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, createLabelInSet, getLabelsInSet } from '@/apiRequests/apiEndpoints';
 import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto } from '@fullstack/common';
 
 interface LabelStoreState {
   labels: LabelResDto[];
+  labelSets: any[];
   loading: boolean;
   error: string | null;
   setLabels: (labels: LabelResDto[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setLabelSets: (sets: any[]) => void;
 }
 
 const useZustandLabelStore = create<LabelStoreState>((set) => ({
   labels: [] as LabelResDto[],
+  labelSets: [] as any[],
   loading: false,
   error: null,
   setLabels: (labels) => set({ labels }),
+  setLabelSets: (sets) => set({ labelSets: sets }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
 }));
 
 export function useLabelStore() {
   const { labels, loading, error, setLabels, setLoading, setError } = useZustandLabelStore();
+  const { labelSets, setLabelSets } = useZustandLabelStore();
 
   const fetchLabels = useCallback(async () => {
     setLoading(true);
@@ -41,6 +46,43 @@ export function useLabelStore() {
       setLoading(false);
     }
   }, [setLabels, setLoading, setError]);
+
+  const fetchLabelSets = useCallback(async () => {
+    try {
+      const data = await apiClient.get<any[]>(getMyLabelSets());
+      // Normalize server rows to UI-friendly shape: { id, name, labels }
+      const normalized = Array.isArray(data) ? data.map(r => ({
+        id: r.id,
+        name: r.labelSetName || r.name || '',
+        // server doesn't return labels in this endpoint; we'll try to fetch them separately
+        labels: [] as any[],
+        // keep original raw row for future use if needed
+        _raw: r,
+      })) : [];
+
+      // fetch labels for each set concurrently, but don't fail the whole flow if one set fails
+      const settled = await Promise.allSettled(normalized.map(async (s) => {
+        try {
+          const labels = await apiClient.get<any[]>(getLabelsInSet(s.id));
+          return { id: s.id, labels: Array.isArray(labels) ? labels : [] };
+        } catch (e) {
+          return { id: s.id, labels: [] };
+        }
+      }));
+
+      const labelsBySet = (settled || []).reduce((acc: Record<string, any[]>, s: any) => {
+        if (s.status === 'fulfilled' && s.value) acc[s.value.id] = s.value.labels || [];
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      const withLabels = normalized.map(s => ({ ...s, labels: labelsBySet[s.id] ?? [] }));
+      setLabelSets(withLabels as any[]);
+      return withLabels as any[];
+    } catch (err: any) {
+      // keep existing mock sets if api fails — do not override
+      return [] as any[];
+    }
+  }, [setLabelSets]);
 
   const createLabel = useCallback(async (payload: Partial<LabelCreateReqDto>): Promise<LabelResDto> => {
     try {
@@ -62,6 +104,12 @@ export function useLabelStore() {
     try {
   await apiClient.delete(deleteLabelById(id));
       setLabels(labels.filter(l => l.id !== id));
+      // remove from any label sets as well
+      try {
+        setLabelSets((labelSets || []).map(s => ({ ...s, labels: (s.labels || []).filter((ll: any) => ll.id !== id) })));
+      } catch (e) {
+        // non-fatal
+      }
     } catch (err) {
       throw err;
     }
@@ -83,13 +131,47 @@ export function useLabelStore() {
     }
   }, [labels, setLabels]);
 
+  const addLabelToSet = useCallback(async (setId: string, payload: Partial<LabelCreateReqDto>): Promise<any> => {
+    try {
+      const body: any = { ...payload };
+      if ((body as any).name && !(body as any).labelName) {
+        body.labelName = (body as any).name;
+        delete body.name;
+      }
+      const created = await apiClient.post(createLabelInSet(setId), body as any);
+      // optimistic update: append to set's labels if present
+      const next = (labelSets || []).map(s => s.id === setId ? ({ ...s, labels: [...(s.labels || []), created] }) : s);
+      setLabelSets(next as any[]);
+      return created;
+    } catch (err) {
+      throw err;
+    }
+  }, [labelSets, setLabelSets]);
+
+  const fetchLabelsForSet = useCallback(async (setId: string) => {
+    try {
+      const data = await apiClient.get<any[]>(getLabelsInSet(setId));
+      const labels = Array.isArray(data) ? data : [];
+      const next = (labelSets || []).map(s => s.id === setId ? ({ ...s, labels }) : s);
+      setLabelSets(next as any[]);
+      return labels;
+    } catch (err) {
+      // don't fail if fetching labels per set fails; return empty
+      return [] as any[];
+    }
+  }, [labelSets, setLabelSets]);
+
   return {
     labels,
     loading,
     error,
+    labelSets,
+    addLabelToSet,
     fetchLabels,
+    fetchLabelSets,
     createLabel,
     deleteLabel,
     updateLabel,
+    fetchLabelsForSet,
   };
 }

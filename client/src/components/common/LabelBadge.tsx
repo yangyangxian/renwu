@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui-kit/Badge';
 import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui-kit/Button';
 
 export interface LabelBadgeProps {
@@ -38,7 +38,8 @@ export function LabelBadge({ text, color, className, onClick, disabled, title, o
   const style = color ? { background: color, color: pickTextColor(color) } : undefined;
   // wrapper allows us to show delete button only on hover (group)
   return (
-    <div className={cn('relative inline-flex items-center', onDelete ? 'group' : '')}>
+    <div className={cn('inline-flex items-center px-1', onDelete ? 'group' : '')}>
+      <div className="relative inline-block">
       <Badge
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : -1}
@@ -56,19 +57,25 @@ export function LabelBadge({ text, color, className, onClick, disabled, title, o
       >
         {text}
       </Badge>
-
       {onDelete && (
         <Button
-          variant="destructive"
+          variant="ghost"
           size="icon"
           aria-label={`Delete ${text}`}
           onClick={(e: any) => { e.stopPropagation(); e.preventDefault(); if (!disabled) onDelete(); }}
-          className="absolute -right-1 -top-1 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/70 hover:bg-destructive/80 text-white rounded-full p-1 w-4 h-4"
+          // circular background; icon turns red on hover and background becomes subtly red to make it noticeable
+          className={cn(
+            'absolute -right-[6px] -top-[6px] opacity-0 group-hover:opacity-100 transition-opacity',
+            'text-gray-500 hover:text-red-600',
+            'bg-white/70 hover:bg-red-100 dark:bg-black/80 dark:hover:bg-red-900',
+            'rounded-full w-5 h-5 flex items-center justify-center'
+          )}
           title={`Delete ${text}`}
         >
-          <X className="w-1 h-1" />
+          <Trash2 className="w-2 h-2" />
         </Button>
       )}
+      </div>
     </div>
   );
 }

@@ -22,8 +22,13 @@ export class LabelEntity {
 class LabelService {
   async listByUser(userId: string): Promise<LabelEntity[]> {
     logger.debug('LabelService.listByUser', userId);
+    // Fetch all labels created by user, but exclude labels that are attached to any label set
     const rows = await db.select().from(labels).where(eq(labels.createdBy, userId));
-    return rows.map(r => ({
+    // Get all attached label ids from label_set_labels to filter out
+    const attached = await db.select({ labelId: labelSetLabels.labelId }).from(labelSetLabels);
+    const attachedIds = new Set(attached.map((a: any) => a.labelId));
+    const filtered = rows.filter((r: any) => !attachedIds.has(r.id));
+    return filtered.map(r => ({
       id: r.id,
       labelName: r.labelName,
       labelDescription: r.labelDescription || '',
@@ -136,6 +141,28 @@ class LabelService {
     });
 
     return created;
+  }
+
+  async listLabelsInSet(labelSetId: string) {
+    // ensure set exists
+    const [setRow] = await db.select().from(labelSets).where(eq(labelSets.id, labelSetId));
+    if (!setRow) throw new CustomError('Label set not found', ErrorCodes.NOT_FOUND);
+
+    // join label_set_labels -> labels to fetch labels attached to the set
+    const rows = await db.select()
+      .from(labelSetLabels)
+      .innerJoin(labels, eq(labelSetLabels.labelId, labels.id))
+      .where(eq(labelSetLabels.labelSetId, labelSetId));
+
+    return rows.map((r: any) => ({
+      id: r.labels.id,
+      labelName: r.labels.labelName,
+      labelDescription: r.labels.labelDescription || '',
+      labelColor: r.labels.labelColor || '',
+      createdBy: r.labels.createdBy || undefined,
+      createdAt: r.labels.createdAt?.toISOString?.() ?? '',
+      updatedAt: r.labels.updatedAt?.toISOString?.() ?? '',
+    }));
   }
 }
 

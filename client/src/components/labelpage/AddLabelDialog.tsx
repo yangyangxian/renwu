@@ -11,6 +11,8 @@ import { useLabelStore } from '@/stores/useLabelStore';
 interface AddLabelDialogProps {
   onCreated?: (id: string) => void;
   triggerClassName?: string;
+  /** If provided, create the new label inside this label set */
+  labelSetId?: string;
 }
 
 const randomColor = () => {
@@ -19,8 +21,8 @@ const randomColor = () => {
   return `#${ch()}${ch()}${ch()}`;
 };
 
-export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, triggerClassName }) => {
-  const { createLabel } = useLabelStore();
+export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, triggerClassName, labelSetId }) => {
+  const { createLabel, addLabelToSet } = useLabelStore();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -37,9 +39,9 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
       // reset form when opened
       setName('');
       setDescription('');
-  const initial = randomColor();
-  setColor(initial);
-  setDraftColor(initial);
+      const initial = randomColor();
+      setColor(initial);
+      setDraftColor(initial);
       setError(null);
       // slight delay to ensure focus after animation
       setTimeout(() => nameInputRef.current?.focus(), 50);
@@ -63,7 +65,7 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
 
   const validate = () => {
     if (!name.trim()) return 'Name is required';
-  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) return 'Color must be a valid 6‑digit hex';
+    if (!/^#[0-9A-Fa-f]{6}$/.test(color)) return 'Color must be a valid 6‑digit hex';
     return null;
   };
 
@@ -79,15 +81,20 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
     setSubmitting(true);
     setError(null);
     try {
-  const created = await createLabel({ labelName: name, description: description.trim() || undefined, color });
-      if (onCreated) onCreated((created as any).id);
+      if (labelSetId) {
+        const created = await addLabelToSet(labelSetId, { labelName: name, description: description.trim() || undefined, color });
+        if (onCreated) onCreated((created as any).id);
+      } else {
+        const created = await createLabel({ labelName: name, description: description.trim() || undefined, color });
+        if (onCreated) onCreated((created as any).id);
+      }
       setOpen(false);
     } catch (e: any) {
       setError(e?.message || 'Failed to create label');
     } finally {
       setSubmitting(false);
     }
-  }, [name, description, color, createLabel, onCreated]);
+  }, [name, description, color, createLabel, addLabelToSet, labelSetId, onCreated]);
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLFormElement> = (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -113,93 +120,91 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
           <DialogTitle className="text-base">New label</DialogTitle>
         </DialogHeader>
         <form className="flex flex-col gap-5" onKeyDown={handleKeyDown} onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-          {/* Preview */}
+          <>
             <div className="rounded-md border bg-muted/20 px-4 py-6 flex items-center justify-center">
               <LabelBadge text={name.trim() ? name.trim() : 'Label preview'} color={color} />
             </div>
-          {/* Name */}
-          <div className="flex flex-col gap-2">
-            <UILabel htmlFor="label-name" className="text-[13px] font-medium">Name</UILabel>
-            <Input
-              id="label-name"
-              ref={nameInputRef}
-              placeholder="Label name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              aria-invalid={!!error && !name.trim()}
-            />
-          </div>
-          {/* Description */}
-          <div className="flex flex-col gap-2">
-            <UILabel htmlFor="label-description" className="text-[13px] font-medium">Description <span className="text-muted-foreground font-normal">(optional)</span></UILabel>
-            <Textarea
-              id="label-description"
-              initialValue={description}
-              onValueChange={(v)=> setDescription(v)}
-              hideMarkdownHelper
-              showButtons={false}
-            />
-          </div>
-          {/* Color */}
-          <div className="flex flex-col gap-2">
-            <UILabel className="text-[13px] font-medium">Color</UILabel>
-            <div className="flex items-center gap-3" ref={colorFieldWrapperRef}>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-9 h-9 p-0 rounded-md shadow-xs border relative"
-                style={{ background: color }}
-                onClick={() => {
-                  const c = randomColor();
-                  setColor(c);
-                  setDraftColor(c);
-                }}
-                title="Randomize color"
-              >
-                <RotateCcw className="w-4 h-4" style={{ color: '#fff' }} />
-              </Button>
-              <div className="relative">
-                <Input
-                  id="label-color"
-                  value={draftColor}
-                  onFocus={() => setColorPickerOpen(true)}
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    if (!val.startsWith('#')) val = '#' + val;
-                    setDraftColor(val);
-                    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-                      setColor(val);
-                    }
-                  }}
-                  className="font-mono w-35"
-                  placeholder="#AABBCC"
-                  aria-invalid={!!error && !/^#[0-9A-Fa-f]{6}$/.test(draftColor)}
-                />
-                {colorPickerOpen && (
-                  <div className="absolute z-50 top-full left-0 mt-2 w-max rounded-md border bg-popover shadow-md p-3">
-                    <div className="grid grid-cols-5 gap-2">
-                      {COMMON_COLORS.map(c => {
-                        const active = c.toLowerCase() === color.toLowerCase();
-                        return (
-                          <button
-                            key={c}
-                            type="button"
-                            onClick={() => { setColor(c); setDraftColor(c); setColorPickerOpen(false); }}
-                            className={`h-7 w-7 rounded-md border flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-ring/50 ${active ? 'ring-2 ring-ring/70' : ''}`}
-                            style={{ background: c }}
-                            aria-label={c}
-                          >
-                            {active && <Check className="w-4 h-4 text-white" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1" />
+            <div className="flex flex-col gap-2">
+              <UILabel htmlFor="label-name" className="text-[13px] font-medium">Name</UILabel>
+              <Input
+                id="label-name"
+                ref={nameInputRef}
+                placeholder="Label name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                aria-invalid={!!error && !name.trim()}
+              />
             </div>
-          </div>
+            <div className="flex flex-col gap-2">
+              <UILabel htmlFor="label-description" className="text-[13px] font-medium">Description <span className="text-muted-foreground font-normal">(optional)</span></UILabel>
+              <Textarea
+                id="label-description"
+                initialValue={description}
+                onValueChange={(v)=> setDescription(v)}
+                hideMarkdownHelper
+                showButtons={false}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <UILabel className="text-[13px] font-medium">Color</UILabel>
+              <div className="flex items-center gap-3" ref={colorFieldWrapperRef}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-9 h-9 p-0 rounded-md shadow-xs border relative"
+                  style={{ background: color }}
+                  onClick={() => {
+                    const c = randomColor();
+                    setColor(c);
+                    setDraftColor(c);
+                  }}
+                  title="Randomize color"
+                >
+                  <RotateCcw className="w-4 h-4" style={{ color: '#fff' }} />
+                </Button>
+                <div className="relative">
+                  <Input
+                    id="label-color"
+                    value={draftColor}
+                    onFocus={() => setColorPickerOpen(true)}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (!val.startsWith('#')) val = '#' + val;
+                      setDraftColor(val);
+                      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                        setColor(val);
+                      }
+                    }}
+                    className="font-mono w-35"
+                    placeholder="#AABBCC"
+                    aria-invalid={!!error && !/^#[0-9A-Fa-f]{6}$/.test(draftColor)}
+                  />
+                  {colorPickerOpen && (
+                    <div className="absolute z-50 top-full left-0 mt-2 w-max rounded-md border bg-popover shadow-md p-3">
+                      <div className="grid grid-cols-5 gap-2">
+                        {COMMON_COLORS.map(c => {
+                          const active = c.toLowerCase() === color.toLowerCase();
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => { setColor(c); setDraftColor(c); setColorPickerOpen(false); }}
+                              className={`h-7 w-7 rounded-md border flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-ring/50 ${active ? 'ring-2 ring-ring/70' : ''}`}
+                              style={{ background: c }}
+                              aria-label={c}
+                            >
+                              {active && <Check className="w-4 h-4 text-white" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1" />
+              </div>
+            </div>
+          </>
           {error && <p className="text-xs text-destructive -mt-2">{error}</p>}
           <DialogFooter className="mt-2 flex items-center justify-end gap-2">
             <DialogClose asChild>
