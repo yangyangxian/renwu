@@ -14,6 +14,7 @@
     "worker": "cross-env NODE_ENV=development tsx dist/jobs/userSyncWorker.js"
   },
   "dependencies": {
+    "ali-oss": "^6.23.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.56.8",
     "cookie-parser": "^1.4.7",
@@ -32,6 +33,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/ali-oss": "^6.16.11",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.17",
