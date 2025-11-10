@@ -6,7 +6,7 @@ import path from 'path';
 import { serverRootDir } from '../utils/path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { useOSS, uploadToOSS, deleteFromOSS } from '../services/aliyunOSS.service';
+import { useOSS, uploadToOSS, deleteFromOSS } from '../services/AliyunOSS.service';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -137,9 +137,8 @@ const deleteFileHandler: RequestHandler = async (req, res) => {
   // If OSS is configured, prefer deleting from OSS. The service accepts either a full URL or object key.
   if (useOSS) {
     try {
-      // pass the object key (filename) to the OSS delete helper
-      logger.debug(`Deleting file from OSS: key=${filename}`);
-      await deleteFromOSS(filename);
+      const fileFolder = "uploads/";
+      await deleteFromOSS(`${fileFolder}${filename}`);
       res.json(createApiResponse<{ deleted: boolean }>({ deleted: true }));
       return;
     } catch (err) {

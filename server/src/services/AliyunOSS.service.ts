@@ -29,7 +29,7 @@ interface OSSOptions {
 
 interface OSSClient {
   put(name: string, file: Buffer | string | any): Promise<PutResult>;
-  delete?(name: string): Promise<DeleteResult>;
+  delete(name: string): Promise<DeleteResult>;
 }
 
 let ossClient: OSSClient | null = null;
@@ -94,8 +94,7 @@ export async function deleteFromOSS(key: string) {
       // leave as-is
     }
   }
-  if (typeof (ossClient as any).delete === 'function') {
-    return (ossClient as any).delete(key);
-  }
-  throw new Error('OSS client does not support delete operation');
+  logger.debug(`Deleting file from OSS: key=${key}`);
+  const result = await ossClient.delete(key);
+  return result;
 }
