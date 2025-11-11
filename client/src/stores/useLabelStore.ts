@@ -34,8 +34,8 @@ export function useLabelStore() {
     setLoading(true);
     setError(null);
     try {
-  // server exposes a convenience endpoint for current user
-  const data = await apiClient.get<LabelResDto[]>(getMyLabels());
+    // server exposes a convenience endpoint for current user
+    const data = await apiClient.get<LabelResDto[]>(getMyLabels());
       setLabels(Array.isArray(data) ? data : []);
       return data as LabelResDto[];
     } catch (err: any) {
@@ -102,18 +102,21 @@ export function useLabelStore() {
 
   const deleteLabel = useCallback(async (id: string): Promise<void> => {
     try {
-  await apiClient.delete(deleteLabelById(id));
+      await apiClient.delete(deleteLabelById(id));
       setLabels(labels.filter(l => l.id !== id));
-      // remove from any label sets as well
-      try {
-        setLabelSets((labelSets || []).map(s => ({ ...s, labels: (s.labels || []).filter((ll: any) => ll.id !== id) })));
-      } catch (e) {
-        // non-fatal
-      }
+
+      // Update labelSets by removing the label from any set it belongs to.
+      // Use current labelSets from closure (included in deps) to avoid stale updates.
+      const nextSets = (labelSets || []).map(s => ({
+        ...s,
+        labels: (s.labels || []).filter((ll: any) => ll.id !== id),
+      }));
+      setLabelSets(nextSets as any[]);
+
     } catch (err) {
       throw err;
     }
-  }, [labels, setLabels]);
+  }, [labels, setLabels, labelSets, setLabelSets]);
 
   const updateLabel = useCallback(async (id: string, payload: Partial<LabelUpdateReqDto & { name?: string }>): Promise<LabelResDto> => {
     try {
@@ -123,7 +126,7 @@ export function useLabelStore() {
         body.labelName = body.name;
         delete body.name;
       }
-  const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(updateLabelById(id), body as any);
+      const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(updateLabelById(id), body as any);
       setLabels(labels.map(l => l.id === id ? (updated as LabelResDto) : l));
       return updated as LabelResDto;
     } catch (err) {
