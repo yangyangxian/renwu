@@ -77,8 +77,12 @@ class LabelService {
 
   async delete(id: string, actorId: string) {
     const [existing] = await db.select().from(labels).where(eq(labels.id, id));
-  if (!existing) throw new CustomError('Label not found', ErrorCodes.NOT_FOUND);
-  if (existing.createdBy !== actorId) throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
+    if (!existing) 
+      throw new CustomError('Label not found', ErrorCodes.NOT_FOUND);
+
+    if (existing.createdBy !== actorId) 
+      throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
+    
     await db.delete(labels).where(eq(labels.id, id));
     // cascade cleanup for label_set_labels if FK not set to cascade
     try {

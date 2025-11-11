@@ -38,7 +38,7 @@ export function LabelBadge({ text, color, className, onClick, disabled, title, o
   const style = color ? { background: color, color: pickTextColor(color) } : undefined;
   // wrapper allows us to show delete button only on hover (group)
   return (
-    <div className={cn('inline-flex items-center px-1', onDelete ? 'group' : '')}>
+    <div className={cn('inline-flex items-center', onDelete ? 'group' : '')}>
       <div className="relative inline-block">
       <Badge
         role={onClick ? 'button' : undefined}
