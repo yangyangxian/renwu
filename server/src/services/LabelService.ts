@@ -1,6 +1,6 @@
 import { db } from '../database/databaseAccess';
 import { labels, labelSets, labelSetLabels } from '../database/schema';
-import { eq, and, ilike } from 'drizzle-orm';
+import { eq, and, ilike, inArray } from 'drizzle-orm';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes } from '@fullstack/common';
 import logger from '../utils/logger';
@@ -167,6 +167,33 @@ class LabelService {
       createdAt: r.labels.createdAt?.toISOString?.() ?? '',
       updatedAt: r.labels.updatedAt?.toISOString?.() ?? '',
     }));
+  }
+
+  async deleteSet(setId: string, actorId: string) {
+    // ensure set exists and actor is owner
+    const [existing] = await db.select().from(labelSets).where(eq(labelSets.id, setId));
+    if (!existing) throw new CustomError('Label set not found', ErrorCodes.NOT_FOUND);
+    if (existing.createdBy !== actorId) throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
+
+    // perform deletion of associations, labels, and the set in a single transaction
+    await db.transaction(async (tx) => {
+      // fetch attached label ids
+      const attached = await tx.select({ labelId: labelSetLabels.labelId }).from(labelSetLabels).where(eq(labelSetLabels.labelSetId, setId));
+      const labelIds = (attached || []).map((a: any) => a.labelId).filter(Boolean);
+
+      // delete associations (label_set_labels)
+      await tx.delete(labelSetLabels).where(eq(labelSetLabels.labelSetId, setId));
+
+      // delete labels that were attached to this set
+      if (labelIds.length > 0) {
+        await tx.delete(labels).where(inArray(labels.id, labelIds));
+      }
+
+      // delete the set itself
+      await tx.delete(labelSets).where(eq(labelSets.id, setId));
+    });
+
+    return true;
   }
 }
 

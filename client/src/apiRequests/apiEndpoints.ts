@@ -53,5 +53,6 @@ export const updateLabelById = (labelId: string) => `/api/labels/${labelId}`;
 export const deleteLabelById = (labelId: string) => `/api/labels/${labelId}`;
 export const getMyLabelSets = () => '/api/labels/sets/me';
 export const createLabelSet = () => '/api/labels/sets';
+export const deleteLabelSetById = (setId: string) => `/api/labels/sets/${setId}`;
 export const createLabelInSet = (setId: string) => `/api/labels/sets/${setId}/labels`;
 export const getLabelsInSet = (setId: string) => `/api/labels/sets/${setId}/labels`;

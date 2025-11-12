@@ -52,7 +52,7 @@ export default function LabelsPage() {
       {/* Label Sets Section */}
       <section className="flex flex-col flex-1 overflow-hidden">
         <div className="mb-5">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
             <Label className="text-xl font-medium">Label Sets</Label>
             <AddLabelSetDialog />
           </div>
@@ -60,7 +60,7 @@ export default function LabelsPage() {
             These sets can be applied to your personal tasks or linked to a project.
           </Label>
         </div>
-        <div className="overflow-x-auto pb-3 pr-2">
+        <div className="overflow-x-auto pb-3 pr-2 overflow-y-visible">
           {loading ? (
             <HomePageSkeleton />
           ) : (

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui-kit/Input';
 import { Label as UILabel } from '@/components/ui-kit/Label';
 import { apiClient } from '@/utils/APIClient';
 import { withToast } from '@/utils/toastUtils';
+import { useLabelStore } from '@/stores/useLabelStore';
 import { Plus } from 'lucide-react';
 
 interface AddLabelSetDialogProps {
@@ -13,6 +14,7 @@ interface AddLabelSetDialogProps {
 }
 
 export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated, triggerClassName }) => {
+  const { fetchLabelSets } = useLabelStore();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -35,6 +37,8 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
       await withToast(async () => {
         const created = await apiClient.post('/api/labels/sets', { labelSetName: name.trim() });
         if (onCreated && created && (created as any).id) onCreated((created as any).id);
+
+        await fetchLabelSets();
         setOpen(false);
       }, { success: 'Label set created', error: 'Failed to create label set' });
     } catch (e: any) {

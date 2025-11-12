@@ -179,4 +179,20 @@ router.get('/sets/:setId/labels',
   }
 );
 
+// DELETE /api/labels/sets/:id - delete a label set (ownership enforced)
+router.delete('/sets/:id',
+  async (
+    req: Request<{ id: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const id = req.params.id;
+      const actor = req.user!.userId;
+      await labelService.deleteSet(id, actor);
+      res.json(createApiResponse(null));
+    } catch (err) { next(err); }
+  }
+);
+
 export default router;

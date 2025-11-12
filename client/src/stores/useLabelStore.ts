@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
 import { apiClient } from '@/utils/APIClient';
-import { getMyLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, createLabelInSet, getLabelsInSet } from '@/apiRequests/apiEndpoints';
+import { getMyLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, createLabelInSet, getLabelsInSet, deleteLabelSetById } from '@/apiRequests/apiEndpoints';
 import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto } from '@fullstack/common';
 
 interface LabelStoreState {
@@ -164,6 +164,16 @@ export function useLabelStore() {
     }
   }, [labelSets, setLabelSets]);
 
+  const deleteLabelSet = useCallback(async (setId: string): Promise<void> => {
+    try {
+      await apiClient.delete(deleteLabelSetById(setId));
+      const next = (labelSets || []).filter(s => s.id !== setId);
+      setLabelSets(next as any[]);
+    } catch (err) {
+      throw err;
+    }
+  }, [labelSets, setLabelSets]);
+
   return {
     labels,
     loading,
@@ -174,6 +184,7 @@ export function useLabelStore() {
     fetchLabelSets,
     createLabel,
     deleteLabel,
+    deleteLabelSet,
     updateLabel,
     fetchLabelsForSet,
   };
