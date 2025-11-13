@@ -9,12 +9,15 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
+import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText, Plus, Check, X, PencilLine, History } from "lucide-react";
 import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { MarkdownnEditor, MarkdownEditorHandle } from "@/components/common/editor/MarkdownEditor";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui-kit/Dropdown-menu';
+import LabelBadge from '@/components/common/LabelBadge';
+import { useLabelStore } from '@/stores/useLabelStore';
 import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/common/DropDownList";
 import { logger } from "@/utils/logger";
@@ -68,6 +71,34 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   const [isDirty, setIsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [labelIds, setLabelIds] = useState<string[]>([]);
+  const [labelSearch, setLabelSearch] = useState('');
+  const { labels, labelSets, fetchLabelSets } = useLabelStore();
+  useEffect(() => { if (open && (!labelSets || labelSets.length === 0)) { fetchLabelSets(); } }, [open, labelSets, fetchLabelSets]);
+  const labelIdsInSets = new Set<string>((labelSets || []).flatMap(s => (s.labels || []).map((l: any) => l.id)));
+  const independentLabels = (labels || []).filter(l => !labelIdsInSets.has((l as any).id));
+  const normalizedSearch = labelSearch.trim().toLowerCase();
+  const filteredIndependent = normalizedSearch
+    ? independentLabels.filter(l => {
+        const name = ((l as any).name || (l as any).labelName || '').toLowerCase();
+        return name.includes(normalizedSearch);
+      })
+    : independentLabels;
+  const filteredSetsRaw = (labelSets || []).map(set => ({
+    ...set,
+    labels: normalizedSearch
+      ? (set.labels || []).filter((l: any) => {
+          const name = (l.name || l.labelName || '').toLowerCase();
+          return name.includes(normalizedSearch);
+        })
+      : (set.labels || []),
+  }));
+  const filteredSets = normalizedSearch
+    ? filteredSetsRaw.filter(s => (s.labels || []).length > 0)
+    : filteredSetsRaw;
+  const toggleLabel = (id: string) => {
+    setLabelIds(prev => prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id]);
+  };
 
   const handleSubmit = async (taskData: any) => {
     const isEditMode = !!taskData.id;
@@ -177,7 +208,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/* Title row */}
               <div className="flex flex-col gap-2">
                 <Label className="mb-1 flex items-center gap-3 font-medium">
-                  <Tag className="size-4" />
+                  <PencilLine className="size-4" />
                   Title
                 </Label>
                 <Input
@@ -272,6 +303,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </div>
               </div>
 
+
               {/* Description row */}
               <div className="flex flex-col gap-2">
                 <Label className="mb-1 flex items-center gap-3 font-medium">
@@ -291,6 +323,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         const normalized = (md ?? "") as string;
                         const taskData: any = {
                           ...taskState,
+                          labelIds,
                           description: normalized,
                         };
                         if (!taskState.id) {
@@ -328,10 +361,109 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               </div>
             </div>
           </form>
-          {/* Right panel for future content */}
+          {/* Right panel */}
           <div className="hidden lg:flex flex-col w-full border-l px-6 py-6">
-            <div className="text-lg text-muted-foreground font-bold mb-4">Changelog / Activity</div>
-            <div className="text-sm text-slate-500 dark:text-slate-400">(Coming soon: see task history, comments, etc.)</div>
+            {/* Labels selection moved here */}
+            <div className="flex flex-col gap-2 mb-6 mt-1">
+              <Label className="flex gap-3 font-medium">
+                <Tag className="size-4" />
+                Labels
+              </Label>
+              <div className="flex items-start gap-3 flex-wrap">
+                {labelIds.map(id => {
+                  const lbl = labels.find(l => l.id === id);
+                  if (!lbl) return null;
+                  return (
+                    <LabelBadge key={id} text={(lbl as any).name || (lbl as any).labelName} color={(lbl as any).color || (lbl as any).labelColor} onDelete={() => toggleLabel(id)} />
+                  );
+                })}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-7 gap-1 mt-2 ml-1">
+                      <Plus className="w-3 h-3" /> 
+                      <Label className="cursor-pointer font-light">{labelIds.length === 0 ? 'Add Label' : ''}</Label>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="p-2 w-72">
+                    <div className="flex items-center mb-2 gap-2">
+                      <Input
+                        placeholder="Search labels..."
+                        value={labelSearch}
+                        onChange={e => setLabelSearch(e.target.value)}
+                        className="h-7 text-xs px-2"
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => {}} className="ml-auto h-6 w-6 p-0 flex items-center justify-center"><X className="w-3 h-3" /></Button>
+                    </div>
+                    {/* Independent Labels group */}
+                    <DropdownMenuLabel className="text-xs uppercase tracking-wide opacity-70 px-2 py-1">Labels</DropdownMenuLabel>
+                    <div className="max-h-40 overflow-auto space-y-1 pr-1 mb-2">
+                      {filteredIndependent.length === 0 && <p className="text-xs text-muted-foreground px-2">No labels</p>}
+                      {filteredIndependent.map(l => {
+                        const id = (l as any).id;
+                        const name = (l as any).name || (l as any).labelName;
+                        const color = (l as any).color || (l as any).labelColor;
+                        const active = labelIds.includes(id);
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => toggleLabel(id)}
+                            className={`w-full text-left rounded-md px-2 py-1 text-xs flex items-center justify-between transition hover:bg-muted ${active ? 'bg-muted/70' : ''}`}
+                          >
+                            <span className="truncate flex-1">{name}</span>
+                            <span className="ml-2 flex items-center gap-1">
+                              <LabelBadge text="" color={color} className="!px-2 !py-1" />
+                              {active && <Check className="w-3 h-3" />}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Label Sets submenus */}
+                    {(filteredSets || []).length > 0 && <DropdownMenuLabel className="text-xs uppercase tracking-wide opacity-70 px-2 py-1">Label Sets</DropdownMenuLabel>}
+                    {(filteredSets || []).map(set => (
+                      <DropdownMenuSub key={set.id}>
+                        <DropdownMenuSubTrigger className="text-xs px-2 py-1">
+                          <span className="flex items-center gap-2 truncate">
+                            {set.name || 'Untitled Set'}
+                          </span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="p-1 min-w-[12rem]">
+                          <div className="max-h-60 overflow-auto">
+                            {(set.labels || []).length === 0 && !normalizedSearch && <p className="text-xs text-muted-foreground px-2 py-1">Empty set</p>}
+                            {(set.labels || []).map((l: any) => {
+                              const id = l.id;
+                              const name = l.name || l.labelName;
+                              const color = l.color || l.labelColor;
+                              const active = labelIds.includes(id);
+                              return (
+                                <button
+                                  key={id}
+                                  type="button"
+                                  onClick={() => toggleLabel(id)}
+                                  className={`w-full text-left rounded-sm px-2 py-1 text-xs flex items-center justify-between hover:bg-muted ${active ? 'bg-muted/70' : ''}`}
+                                >
+                                  <span className="truncate flex-1">{name}</span>
+                                  <span className="ml-2 flex items-center gap-1">
+                                    <LabelBadge text="" color={color} className="!px-2 !py-1" />
+                                    {active && <Check className="w-3 h-3" />}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            <Label className="font-medium flex gap-3">
+              <History className="size-4" />
+              Activity
+            </Label>
+            <Label className="mt-4">(Coming soon: see task history, comments, etc.)</Label>
           </div>
         </div>
       </DialogContent>
