@@ -29,10 +29,11 @@ export default function LabelsPage() {
           </Label>
         </div>
         <div className="flex items-start">
-          <Card className="p-3 flex flex-wrap gap-3 shadow-none rounded-md border 
-          bg-background dark:bg-muted/60 max-w-full w-[600px]">
-            {loading && <HomePageSkeleton />}
-            {!loading && (
+
+          {loading && <HomePageSkeleton />}
+          {!loading && (
+            <Card className="p-3 flex flex-wrap gap-3 shadow-none rounded-md border 
+              bg-background dark:bg-muted/60 max-w-full w-[600px]">
               <div className="flex flex-wrap items-center gap-2">
                 {labels.map((l: any) => (
                   <LabelBadge
@@ -44,8 +45,9 @@ export default function LabelsPage() {
                 ))}
                 <AddLabelDialog />
               </div>
-            )}
-          </Card>
+            </Card>
+          )}
+
         </div>
       </section>
 

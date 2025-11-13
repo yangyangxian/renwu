@@ -66,14 +66,14 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
       </div>
 
       <div className="flex-1 min-h-0 pt-1">
-        <ScrollArea className="h-full w-full px-3">
-          <div className="flex flex-col space-y-2 my-2 overflow-x-visible">
+        <ScrollArea className="h-full w-full px-3 py-2">
+          <div className="flex flex-col overflow-x-visible">
             {(set.labels ?? []).map((l: any) => (
-              <LabelBadge key={l.id} text={l.name} color={l.color} onDelete={() => deleteLabel(l.id)} />
+              <LabelBadge className="mb-2" key={l.id} text={l.name} color={l.color} onDelete={() => deleteLabel(l.id)} />
             ))}
           </div>
 
-          <AddLabelDialog labelSetId={set.id}/>
+          <AddLabelDialog labelSetId={set.id} />
 
         </ScrollArea>
       </div>
