@@ -75,7 +75,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
             <DialogClose asChild>
               <Button variant="outline" size="sm">Cancel</Button>
             </DialogClose>
-            <Button type="submit" size="sm" disabled={submitting}>{submitting ? 'Creating...' : 'Create set'}</Button>
+            <Button type="submit" size="sm" disabled={submitting}>{submitting ? 'Creating...' : 'Create'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

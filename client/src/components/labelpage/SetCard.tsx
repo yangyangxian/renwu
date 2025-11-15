@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui-kit/Card';
-import { ScrollArea } from '@/components/ui-kit/Scroll-area';
 import LabelBadge from '@/components/common/LabelBadge';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
 import { useLabelStore } from '@/stores/useLabelStore';
@@ -8,6 +7,7 @@ import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui-kit/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui-kit/Dialog';
 import { Label } from '../ui-kit/Label';
+import GradientScrollArea from '../common/GradientScrollArea';
 
 const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const { fetchLabelsForSet, deleteLabel, deleteLabelSet } = useLabelStore();
@@ -61,22 +61,24 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
         </DialogContent>
       </Dialog>
 
-      <div className="px-4 pt-3 pb-2 border-b border-border/40 shrink-0 flex items-center">
-        <label className="text-md font-medium leading-tight truncate mr-2">{set.name}</label>
+      <div className="px-3 pt-3 pb-2 border-b border-border/40 shrink-0 flex items-center">
+        <Label className="text-sm font-medium truncate">{set.name}</Label>
       </div>
 
-      <div className="flex-1 min-h-0 pt-1">
-        <ScrollArea className="h-full w-full px-3 py-2">
-          <div className="flex flex-col overflow-x-visible">
-            {(set.labels ?? []).map((l: any) => (
-              <LabelBadge className="mb-2" key={l.id} text={l.name} color={l.color} onDelete={() => deleteLabel(l.id)} />
-            ))}
-          </div>
+      <GradientScrollArea topOverlayHeight={20} bottomOverlayHeight={25} scrollAreaClassName="h-full w-full px-3 !border-r-0">
+        <div className="flex flex-col h-full my-3"> 
+          {/* why we need to add my-3 here? its because if we add py-3 on the scrollarea
+              the content edge will not be aligned with the top of scroll bar which looks
+              not good  */}    
+          {(set.labels ?? []).map((l: any) => (
+            <LabelBadge className="mb-2" key={l.id} text={l.name} color={l.color} onDelete={() => deleteLabel(l.id)} />
+          ))}
 
           <AddLabelDialog labelSetId={set.id} />
+        </div>
 
-        </ScrollArea>
-      </div>
+      </GradientScrollArea>
+
     </Card>
   );
 };
