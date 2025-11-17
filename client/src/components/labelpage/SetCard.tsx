@@ -61,12 +61,12 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
         </DialogContent>
       </Dialog>
 
-      <div className="px-3 pt-3 pb-2 border-b border-border/40 shrink-0 flex items-center">
+      <div className="px-3 pt-2 pb-1 border-b border-border/40 shrink-0 flex items-center">
         <Label className="text-sm font-medium truncate">{set.name}</Label>
       </div>
 
-      <GradientScrollArea topOverlayHeight={20} bottomOverlayHeight={25} scrollAreaClassName="h-full w-full px-3 !border-r-0">
-        <div className="flex flex-col h-full my-3"> 
+      <GradientScrollArea topOverlayHeight={20} bottomOverlayHeight={25} scrollAreaClassName='px-3 pr-4 pt-3' className="h-full w-full">
+        <div className="flex flex-col h-full"> 
           {/* why we need to add my-3 here? its because if we add py-3 on the scrollarea
               the content edge will not be aligned with the top of scroll bar which looks
               not good  */}    
