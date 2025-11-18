@@ -131,9 +131,19 @@ export function useTaskStore() {
         status: taskData.status,
         assignedTo: typeof taskData.assignedTo === 'object' ? taskData.assignedTo?.id : taskData.assignedTo,
         projectId: taskData.projectId,
-        createdBy: taskData.createdBy
+        createdBy: taskData.createdBy,
       };
-      
+
+      // Include labels if provided (frontend uses `labelIds` state)
+      if (Array.isArray(taskData.labels)) {
+        if (taskData.labels.length > 0 && typeof taskData.labels[0] === 'object') {
+          createPayload.labels = (taskData.labels as any[]).map(l => l.id);
+        } else {
+          createPayload.labels = taskData.labels as string[];
+        }
+      }
+      if (Array.isArray(taskData.labelIds)) createPayload.labels = taskData.labelIds;
+
       const newTask = await apiClient.post<TaskCreateReqDto, TaskResDto>(getTasks(), createPayload);
       addTask(newTask);
       return newTask;
@@ -147,14 +157,25 @@ export function useTaskStore() {
     try {
       // Construct the proper TaskUpdateReqDto payload, similar to the old useTasks hook
       const updatePayload: TaskUpdateReqDto = {
-        title: updateData.title,
-        description: updateData.description,
-        dueDate: updateData.dueDate,
-        status: updateData.status,
+        // Only include fields that are present on updateData
+        ...(updateData.title !== undefined ? { title: updateData.title } : {}),
+        ...(updateData.description !== undefined ? { description: updateData.description } : {}),
+        ...(updateData.dueDate !== undefined ? { dueDate: updateData.dueDate } : {}),
+        ...(updateData.status !== undefined ? { status: updateData.status } : {}),
+        ...(updateData.projectId !== undefined ? { projectId: updateData.projectId } : {}),
         assignedTo: typeof updateData.assignedTo === 'object' ? updateData.assignedTo?.id : updateData.assignedTo,
-        projectId: updateData.projectId,
       };
-      
+
+      // Include labels if provided (frontend uses `labelIds` state)
+      if (Array.isArray(updateData.labels)) {
+        if (updateData.labels.length > 0 && typeof updateData.labels[0] === 'object') {
+          updatePayload.labels = (updateData.labels as any[]).map(l => l.id);
+        } else {
+          updatePayload.labels = updateData.labels as string[];
+        }
+      }
+      if (Array.isArray(updateData.labelIds)) updatePayload.labels = updateData.labelIds;
+
       const updatedTask = await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskByIdEndpoint(taskId), updatePayload);
       updateTask(updatedTask);
       setCurrentTask(updatedTask);

@@ -43,7 +43,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   showBadges = true,
   emptyText = 'Add Label',
 }) => {
-  const { labels, labelSets, fetchLabelSets } = useLabelStore();
+  const { labels, labelSets, fetchLabelSets, fetchLabels } = useLabelStore();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState<string[]>(value);
@@ -54,10 +54,9 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   }, [open, value]);
 
   useEffect(() => {
-    if (open && (!labelSets || labelSets.length === 0)) {
-      fetchLabelSets();
-    }
-  }, [open, labelSets, fetchLabelSets]);
+    if (!labels || labels.length === 0) fetchLabels();
+    if (!labelSets || labelSets.length === 0) fetchLabelSets();
+  }, [labels, labelSets, fetchLabels, fetchLabelSets]);
 
   const labelIdsInSets = new Set<string>((labelSets || []).flatMap(s => (s.labels || []).map((l: any) => l.id)));
   const independentLabels = (labels || []).filter(l => !labelIdsInSets.has((l as any).id));
@@ -94,7 +93,6 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
             key={id}
             text={(lbl as any).name || (lbl as any).labelName}
             color={(lbl as any).color || (lbl as any).labelColor}
-            onDelete={() => onChange(value.filter(l => l !== id))}
             className="flex items-center"
           />
         );

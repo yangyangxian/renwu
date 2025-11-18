@@ -36,6 +36,13 @@
       "when": 1756816116575,
       "tag": "0004_addlabeltable",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1763367222166,
+      "tag": "0005_createtasklabeltable",
+      "breakpoints": true
     }
   ]
 }

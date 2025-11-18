@@ -173,3 +173,17 @@ export const labelSetLabels = pgTable(
     primaryKey({ columns: [table.labelSetId, table.labelId] }),
   ]
 );
+
+// ---------- TABLE: Task ↔ Label (junction) ----------
+export const taskLabels = pgTable(
+  'task_labels',
+  {
+    taskId: uuid('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+    labelId: uuid('label_id').notNull().references(() => labels.id, { onDelete: 'cascade' }),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.labelId] }),
+  ]
+);

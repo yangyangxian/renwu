@@ -1,11 +1,12 @@
 import { db } from '../database/databaseAccess';
-import { tasks, projects, users, taskView } from '../database/schema';
-import { eq, and } from 'drizzle-orm';
+import { tasks, projects, users, taskView, taskLabels, labels } from '../database/schema';
+import { eq, and, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
 import logger from '../utils/logger';
 import { mapDbToEntity } from '../utils/mappers';
+import { LabelEntity } from './LabelService';
 import { UserEntity } from './UserService';
 
 export class TaskEntity {
@@ -15,6 +16,7 @@ export class TaskEntity {
   title: string = '';
   description: string = '';
   status: string = '';
+  labels?: LabelEntity[] = [];
   projectId?: string = '';
   projectName?: string = '';
   dueDate?: string = '';
@@ -199,9 +201,10 @@ class TaskService {
       .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
       .where(eq(tasks.assignedTo, userId));
     
-    return result.map((task: any) => {
+    // For each task, also fetch labels (N+1). Could optimize later with a batch query.
+    const entities: TaskEntity[] = [];
+    for (const task of result) {
       const entity = mapDbToEntity(task, new TaskEntity());
-      // Set assignedTo and createdBy manually to avoid recursion
       if (task.assignedToId) {
         entity.assignedTo = new UserEntity({
           id: task.assignedToId,
@@ -218,8 +221,15 @@ class TaskService {
           createdAt: task.createdByCreatedAt?.toISOString() || '',
         };
       }
-      return entity;
-    });
+      const lblRows = await db
+        .select({ id: labels.id, labelName: labels.labelName })
+        .from(labels)
+        .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
+        .where(eq(taskLabels.taskId, task.id));
+      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
+      entities.push(entity);
+    }
+    return entities;
   }
 
   async getTasksByProjectId(projectId: string): Promise<TaskEntity[]> {
@@ -252,9 +262,9 @@ class TaskService {
       .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
       .where(eq(tasks.projectId, projectId));
     
-    return result.map((task: any) => {
+    const entities: TaskEntity[] = [];
+    for (const task of result) {
       const entity = mapDbToEntity(task, new TaskEntity());
-      // Set assignedTo and createdBy manually to avoid recursion
       if (task.assignedToId) {
         entity.assignedTo = new UserEntity({
           id: task.assignedToId,
@@ -271,8 +281,15 @@ class TaskService {
           createdAt: task.createdByCreatedAt?.toISOString() || '',
         };
       }
-      return entity;
-    });
+      const lblRows = await db
+        .select({ id: labels.id, labelName: labels.labelName })
+        .from(labels)
+        .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
+        .where(eq(taskLabels.taskId, task.id));
+      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
+      entities.push(entity);
+    }
+    return entities;
   }
 
   /**
@@ -352,7 +369,45 @@ class TaskService {
         createdAt: taskWithDetails.createdByCreatedAt?.toISOString() || '',
       };
     }
+    // Fetch labels for the task via join to task_labels and include name
+    const lblRows = await db
+      .select({ id: labels.id, labelName: labels.labelName })
+      .from(labels)
+      .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
+      .where(eq(taskLabels.taskId, taskId));
+    entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
     return entity;
+  }
+
+  /**
+   * Replace the labels for a task with the provided list. This will remove any existing
+   * label associations and insert the new ones in a single transaction.
+   */
+  async updateTaskLabels(taskId: string, labelIds: string[], actorId: string): Promise<void> {
+    // Ensure task exists
+    const [existingTask] = await db.select().from(tasks).where(eq(tasks.id, taskId));
+    if (!existingTask) throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
+
+    await db.transaction(async (tx) => {
+      // delete existing associations for the task
+      await tx.delete(taskLabels).where(eq(taskLabels.taskId, taskId));
+
+      if (!labelIds || labelIds.length === 0) return;
+
+      // Optionally, validate labels exist. We'll filter to labels that actually exist to avoid FK errors.
+      const existing = await tx.select({ id: labels.id }).from(labels).where(inArray(labels.id, labelIds));
+      const existingIds = (existing || []).map((r: any) => r.id);
+      if (existingIds.length === 0) return;
+
+      // Insert new associations
+      for (const lid of existingIds) {
+        try {
+          await tx.insert(taskLabels).values({ taskId, labelId: lid, createdBy: actorId }).onConflictDoNothing().execute();
+        } catch (err) {
+          logger.debug('updateTaskLabels: failed to insert label association (non-fatal)', err);
+        }
+      }
+    });
   }
 }
 
