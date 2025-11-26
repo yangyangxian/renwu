@@ -33,7 +33,7 @@ class AppConfig {
     this.dbUrl = this.getEnv('DATABASE_URL', '');
     this.envMode = this.getEnv('NODE_ENV', 'development');
     this.corsEnabled = this.getEnv('CORS_ENABLED', 'false').toLowerCase() === 'true';
-    this.corsOrigins = this.getEnv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000')
+    this.corsOrigins = this.getEnv('CORS_ORIGINS', 'http://localhost:5183,http://localhost:3000')
       .split(',')
       .map(origin => origin.trim());
     this.staticDir = this.getEnv('STATIC_DIR', '../../client/dist');

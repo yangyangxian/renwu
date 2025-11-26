@@ -265,7 +265,7 @@ router.post(
         await emailService.sendEmail({
           to: email,
           subject: 'You have been invited to join a project',
-          html: `<p>You have been invited to join a project on Renwu.<br/>Click <a href="http://localhost:5173/signup?token=${token}">here</a> to accept the invitation.</p>`,
+          html: `<p>You have been invited to join a project on Renwu.<br/>Click <a href="http://localhost:5183/signup?token=${token}">here</a> to accept the invitation.</p>`,
         });
         invited = true;
       } catch (err) {
