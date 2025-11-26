@@ -6,6 +6,13 @@ import { mapObject } from '../utils/mappers';
 
 const router = Router();
 
+// Field mapping used to map DB/entity keys to DTO properties for labels
+const labelFieldMap: Record<string, string> = {
+  labelName: 'name',
+  labelDescription: 'description',
+  labelColor: 'color',
+};
+
 // Convenience: GET /api/labels/me (declare before /:id to avoid collision)
 router.get('/me',
   async (
@@ -16,12 +23,8 @@ router.get('/me',
     try {
       const userId = req.user!.userId;
       const raw = await labelService.listByUser(userId);
-      const rows: LabelResDto[] = raw.map(r => mapObject(r, new LabelResDto(), {
-        labelName: 'name',
-        labelDescription: 'description',
-        labelColor: 'color',
-      }));
-      res.json(createApiResponse(rows));
+      const rows: LabelResDto[] = raw.map(r => mapObject(r, new LabelResDto(), labelFieldMap));
+      res.json(createApiResponse<LabelResDto[]>(rows));
     } catch (err) { next(err); }
   }
 );
@@ -38,12 +41,8 @@ router.post('/',
       // expect new DTO shape: { labelName, description?, color? }
       const { labelName, description, color } = req.body;
       const createdRaw = await labelService.create({ labelName: labelName as string, labelDescription: description, labelColor: color, createdBy: userId });
-      const created: LabelResDto = mapObject(createdRaw, new LabelResDto(), {
-        labelName: 'name',
-        labelDescription: 'description',
-        labelColor: 'color',
-      });
-      res.json(createApiResponse(created));
+      const created: LabelResDto = mapObject(createdRaw, new LabelResDto(), labelFieldMap);
+      res.json(createApiResponse<LabelResDto>(created));
     } catch (err) { next(err); }
   }
 );
@@ -58,12 +57,8 @@ router.get('/:id',
     try {
       const id = req.params.id;
       const foundRaw = await labelService.getById(id);
-      const found: LabelResDto | null = foundRaw ? mapObject(foundRaw, new LabelResDto(), {
-        labelName: 'name',
-        labelDescription: 'description',
-        labelColor: 'color',
-      }) : null;
-      res.json(createApiResponse(found || undefined));
+      const found: LabelResDto | null = foundRaw ? mapObject(foundRaw, new LabelResDto(), labelFieldMap) : null;
+      res.json(createApiResponse<LabelResDto | null>(found || undefined));
     } catch (err) { next(err); }
   }
 );
@@ -80,12 +75,8 @@ router.put('/:id',
       const actor = req.user!.userId;
       const { name, description, color } = req.body;
       const patched = await labelService.update(id, actor, { labelName: name, labelDescription: description, labelColor: color });
-      const updated: LabelResDto = mapObject(patched, new LabelResDto(), {
-        labelName: 'name',
-        labelDescription: 'description',
-        labelColor: 'color',
-      });
-      res.json(createApiResponse(updated));
+      const updated: LabelResDto = mapObject(patched, new LabelResDto(), labelFieldMap);
+      res.json(createApiResponse<LabelResDto>(updated));
     } catch (err) { next(err); }
   }
 );
@@ -149,17 +140,13 @@ router.post('/sets/:setId/labels',
       // expect new DTO shape: { name, description?, color? }
       const { labelName, description, color } = req.body;
       const createdRaw = await labelService.createLabelInSet({ labelName: labelName as string, labelDescription: description, labelColor: color }, setId, userId);
-      const created: LabelResDto = mapObject(createdRaw, new LabelResDto(), {
-        labelName: 'name',
-        labelDescription: 'description',
-        labelColor: 'color',
-      });
-      res.json(createApiResponse(created));
+      const created: LabelResDto = mapObject(createdRaw, new LabelResDto(), labelFieldMap);
+      res.json(createApiResponse<LabelResDto>(created));
     } catch (err) { next(err); }
   }
 );
 
-// GET labels for a specific set (ownership enforced)
+// GET labels for a specific set
 router.get('/sets/:setId/labels',
   async (
     req: Request<{ setId: string }>,
@@ -169,12 +156,8 @@ router.get('/sets/:setId/labels',
     try {
       const { setId } = req.params;
       const rows = await labelService.listLabelsInSet(setId);
-      const mapped: LabelResDto[] = rows.map(r => mapObject(r, new LabelResDto(), {
-        labelName: 'name',
-        labelDescription: 'description',
-        labelColor: 'color',
-      }));
-      res.json(createApiResponse(mapped));
+      const mapped: LabelResDto[] = rows.map(r => mapObject(r, new LabelResDto(), labelFieldMap));
+      res.json(createApiResponse<LabelResDto[]>(mapped));
     } catch (err) { next(err); }
   }
 );
