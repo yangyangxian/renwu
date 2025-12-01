@@ -30,8 +30,8 @@ const GradientScrollArea = forwardRef<GradientScrollAreaHandle, GradientScrollAr
     bottomOverlayHeight = 60,
     disableTop = false,
     disableBottom = false,
-    mildBlur = 2,
-    strongBlur = 7,
+    mildBlur = 5,
+    strongBlur = 5,
     onScroll,
   },
   ref

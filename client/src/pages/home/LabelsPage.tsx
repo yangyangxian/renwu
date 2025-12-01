@@ -25,7 +25,7 @@ export default function LabelsPage() {
         <div className="mb-4">
           <Label className="text-xl font-medium">Labels</Label>
           <Label className="block text-[13px] text-muted-foreground leading-relaxed font-normal">
-            Personal labels you create here can be applied to your own tasks or attached to a project later.
+            Personal labels you create here can be applied to your own tasks or copied to a project later.
           </Label>
         </div>
         <div className="flex items-start">
@@ -43,23 +43,22 @@ export default function LabelsPage() {
                     onDelete={() => deleteLabel(l.id)}
                   />
                 ))}
-                <AddLabelDialog />
+                <AddLabelDialog triggerClassName="ml-1" />
               </div>
             </Card>
           )}
-
         </div>
       </section>
 
       {/* Label Sets Section */}
       <section className="flex flex-col flex-1 overflow-hidden">
         <div className="mb-5">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Label className="text-xl font-medium">Label Sets</Label>
             <AddLabelSetDialog />
           </div>
           <Label className="block text-[13px] text-muted-foreground leading-relaxed font-normal">
-            These sets can be applied to your personal tasks or linked to a project.
+            These sets can be applied to your personal tasks or copied to a project.
           </Label>
         </div>
         <div className="overflow-x-auto pb-3 pr-2 overflow-y-visible">
