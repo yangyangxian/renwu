@@ -1,7 +1,7 @@
 // schema.ts
 // To generate migration: npx drizzle-kit generate --config src/drizzle.config.ts --name= 
 // To generate a empty migration for running seed data: npx drizzle-kit generate --config src/drizzle.config.ts --custom --name=
-// To push migration to database: npx drizzle-kit push --config src/drizzle.config.ts
+// To push migration to database the app is connecting: npx drizzle-kit push --config src/drizzle.config.ts
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb } from 'drizzle-orm/pg-core';
@@ -147,6 +147,7 @@ export const labels = pgTable('labels', {
   labelName: varchar('label_name', { length: 255 }).notNull(),
   labelDescription: text('label_description'),
   labelColor: varchar('label_color', { length: 30 }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -157,6 +158,7 @@ export const labelSets = pgTable('label_sets', {
   id: uuid('id').primaryKey().defaultRandom(),
   labelSetName: varchar('label_set_name', { length: 255 }).notNull(),
   labelSetDescription: text('label_set_description'),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

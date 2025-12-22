@@ -3,6 +3,7 @@ export class LabelResDto {
   name: string = '';
   description?: string = '';
   color?: string = '';
+  projectId?: string = '';
   createdBy?: string = '';
   createdAt?: string = '';
   updatedAt?: string = '';
@@ -13,10 +14,12 @@ export class LabelCreateReqDto {
   labelName!: string;
   description?: string = '';
   color?: string = '';
+  projectId?: string;
 }
 
 export class LabelUpdateReqDto {
   name?: string;
   description?: string;
   color?: string;
+  projectId?: string | null;
 }
