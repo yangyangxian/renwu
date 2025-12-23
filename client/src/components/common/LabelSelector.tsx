@@ -106,13 +106,13 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            className={value.length === 0 ? cn('h-6 !px-2', triggerClassName) : cn('h-6 gap-1 !px-1', triggerClassName)}
+            className={value.length === 0 ? cn('h-7 !px-2', triggerClassName) : cn('h-6 gap-1 !px-1', triggerClassName)}
           >
             <Plus className="w-3 h-3" />
             {value.length === 0 && <Label className='text-[13px] cursor-pointer'>{emptyText}</Label>}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="p-2 w-60">
+        <DropdownMenuContent className="p-3 w-60">
           <div className="flex items-center mb-2 gap-2">
             <Input
               placeholder="Search labels..."
@@ -122,7 +122,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
             />
             <Button type="button" variant="ghost" size="icon" onClick={commitAndClose} className="ml-auto h-6 w-6 p-0 flex items-center justify-center"><X className="w-3 h-3" /></Button>
           </div>
-          <DropdownMenuLabel className="text-sm uppercase tracking-wide opacity-70 px-2 py-1">Labels</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-sm uppercase px-1 pt-2">Labels</DropdownMenuLabel>
           <div className="max-h-40 overflow-auto space-y-1 pr-1 mb-2">
             {matchesIndependent.length === 0 && <p className="text-xs text-muted-foreground px-2">No labels</p>}
             {matchesIndependent.map(l => {
@@ -138,18 +138,18 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   className={`w-full text-left rounded-md px-2 py-1 text-sm flex items-center justify-between transition hover:bg-muted cursor-pointer ${active ? 'bg-muted/70' : ''}`}
                 >
                   <span className="flex items-center gap-2 flex-1 min-w-0">
-                    <LabelBadge text="" color={color} className="!px-3 !py-1.5 mt-[2px]" />
+                    <LabelBadge text="" color={color} className="!px-3 !py-1.5" />
                     <span className="truncate">{name}</span>
                   </span>
-                  {active && <Check className="w-3 h-3 ml-2" />}
+                  {active && <Check className="w-4 h-4 ml-2 text-green-600" />}
                 </button>
               );
             })}
           </div>
-          {(matchesSets || []).length > 0 && <DropdownMenuLabel className="text-sm uppercase tracking-wide opacity-70 px-2 py-1">Label Sets</DropdownMenuLabel>}
+          {(matchesSets || []).length > 0 && <DropdownMenuLabel className="text-sm uppercase px-1 pt-2">Label Sets</DropdownMenuLabel>}
           {(matchesSets || []).map(set => (
             <DropdownMenuSub key={set.id}>
-              <DropdownMenuSubTrigger className="p-2">
+              <DropdownMenuSubTrigger className="pt-2 pb-1">
                 <Label className="gap-2">
                   {set.name || 'Untitled Set'}
                 </Label>
@@ -170,10 +170,10 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                         className={`w-full text-left rounded-sm px-2 py-1 text-sm flex items-center justify-between hover:bg-muted cursor-pointer ${active ? 'bg-muted/70' : ''}`}
                       >
                         <span className="flex items-center gap-2 flex-1 min-w-0">
-                          <LabelBadge text="" color={color} className="!px-3 !py-1.5 mt-[2px]" />
+                          <LabelBadge text="" color={color} className="!px-3 !py-1.5" />
                           <span className="truncate">{name}</span>
                         </span>
-                        {active && <Check className="w-3 h-3 ml-2 shrink-0" />}
+                        {active && <Check className="w-4 h-4 ml-2 text-green-600 shrink-0" />}
                       </button>
                     );
                   })}
