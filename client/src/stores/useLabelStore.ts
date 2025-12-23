@@ -54,6 +54,8 @@ export function useLabelStore() {
       const normalized = Array.isArray(data) ? data.map(r => ({
         id: r.id,
         name: r.labelSetName || r.name || '',
+        // preserve project association for filtering (may be null for personal sets)
+        projectId: (r as any).projectId ?? (r as any).project_id ?? null,
         // server doesn't return labels in this endpoint; we'll try to fetch them separately
         labels: [] as any[],
         // keep original raw row for future use if needed

@@ -1,3 +1,4 @@
+import LabelSelector from '@/components/common/LabelSelector';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { TaskStatus } from "@fullstack/common";
@@ -39,6 +40,47 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const [isDirty, setIsDirty] = useState(false);
   const task = currentTask!;
   const { projects } = useProjectStore();
+
+  // Optimistic labels state (component scope)
+  const [localLabelIds, setLocalLabelIds] = useState<string[]>([]);
+
+  const currentLabelIds = localLabelIds;
+  // Normalize projectId: use `null` to indicate personal (no project), matching TaskDialog
+  const projectId = currentTask?.projectId ? currentTask.projectId : null;
+
+  useEffect(() => {
+    if (!currentTask || !Array.isArray(currentTask.labels)) {
+      setLocalLabelIds([]);
+    } else {
+      setLocalLabelIds((currentTask.labels || []).map((l: any) => l.id));
+    }
+  }, [currentTask]);
+
+  const handleLabelsChange = async (next: string[]) => {
+    if (!taskId) return;
+    const previous = localLabelIds;
+    // If selection didn't change, avoid unnecessary API call
+    const prevSet = new Set(previous || []);
+    const nextSet = new Set(next || []);
+    let equal = prevSet.size === nextSet.size;
+    if (equal) {
+      for (const v of prevSet) {
+        if (!nextSet.has(v)) { equal = false; break; }
+      }
+    }
+    if (equal) return; // no change, skip
+
+    // optimistic update
+    setLocalLabelIds(next);
+    try {
+      await updateTaskById(taskId, { labels: next });
+      toast.success('Labels updated');
+    } catch (err) {
+      // rollback
+      setLocalLabelIds(previous);
+      toast.error('Failed to update labels');
+    }
+  };
 
   useEffect(() => {
     if (!taskId) return;
@@ -153,7 +195,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       <div className="mb-4 ml-2">
         {/* restore larger title font and ensure the leading icon is visible in dark mode */}
         <div className="text-2xl font-bold flex items-center gap-3">
-          <Tag className="size-5 text-muted-foreground dark:text-white" />
           <div className="flex items-center gap-2 min-w-0">
             {editingTitle ? (
               <Input
@@ -195,6 +236,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,11fr)_minmax(280px,5fr)] gap-6 px-3 w-full">
         {/* Left column: Description and future comments */}
         <div className="flex flex-col gap-4">
+          {/* Labels selector (above description) */}
+          <div className={fieldLabelContainerClass}>
+            <div className="flex flex-col w-full">
+              <Label className={fieldLabelClass}>
+                <Tag className="size-4" />
+                Labels:
+              </Label>
+              <div className="mt-4 px-6">
+                <LabelSelector value={currentLabelIds} onChange={handleLabelsChange} projectId={projectId} />
+              </div>
+            </div>
+          </div>
           {/* Description */}
           <div className="flex flex-col gap-3 min-h-[48px]">
             <div className="flex items-center justify-between">

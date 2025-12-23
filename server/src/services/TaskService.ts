@@ -222,10 +222,11 @@ class TaskService {
         };
       }
       const lblRows = await db
-        .select({ id: labels.id, labelName: labels.labelName })
+        .select({ id: labels.id, labelName: labels.labelName, addedAt: taskLabels.createdAt })
         .from(labels)
         .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
-        .where(eq(taskLabels.taskId, task.id));
+        .where(eq(taskLabels.taskId, task.id))
+        .orderBy(taskLabels.createdAt);
       entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
       entities.push(entity);
     }
@@ -282,10 +283,11 @@ class TaskService {
         };
       }
       const lblRows = await db
-        .select({ id: labels.id, labelName: labels.labelName })
+        .select({ id: labels.id, labelName: labels.labelName, addedAt: taskLabels.createdAt })
         .from(labels)
         .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
-        .where(eq(taskLabels.taskId, task.id));
+        .where(eq(taskLabels.taskId, task.id))
+        .orderBy(taskLabels.createdAt);
       entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
       entities.push(entity);
     }
@@ -301,9 +303,16 @@ class TaskService {
     // Reuse toTaskEntityForDb for normalization, do not include createdBy
     const updateValues = this.toTaskEntityForUpdate(updateData);
     logger.debug("updateValues update:", updateValues);
-    await db.update(tasks)
-      .set(updateValues)
-      .where(eq(tasks.id, taskId));
+    // If there are no values to set (e.g. caller only sent labels which are
+    // handled separately), skip the DB update to avoid errors from the ORM
+    // when .set({}) is called with an empty object.
+    if (Object.keys(updateValues).length > 0) {
+      await db.update(tasks)
+        .set(updateValues)
+        .where(eq(tasks.id, taskId));
+    } else {
+      logger.debug('updateTask: no non-label fields to update, skipping DB update');
+    }
     // Use the common getTaskById function to fetch the updated task with details
     const updatedTask = await this.getTaskById(taskId);
     if (!updatedTask) {
@@ -371,10 +380,11 @@ class TaskService {
     }
     // Fetch labels for the task via join to task_labels and include name
     const lblRows = await db
-      .select({ id: labels.id, labelName: labels.labelName })
+      .select({ id: labels.id, labelName: labels.labelName, addedAt: taskLabels.createdAt })
       .from(labels)
       .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
-      .where(eq(taskLabels.taskId, taskId));
+      .where(eq(taskLabels.taskId, taskId))
+      .orderBy(taskLabels.createdAt);
     entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
     return entity;
   }
@@ -396,13 +406,16 @@ class TaskService {
 
       // Optionally, validate labels exist. We'll filter to labels that actually exist to avoid FK errors.
       const existing = await tx.select({ id: labels.id }).from(labels).where(inArray(labels.id, labelIds));
-      const existingIds = (existing || []).map((r: any) => r.id);
-      if (existingIds.length === 0) return;
+      const existingSet = new Set((existing || []).map((r: any) => r.id));
+      // Preserve the order of the incoming labelIds when inserting associations
+      const orderedExistingIds = (labelIds || []).filter((id) => existingSet.has(id));
+      if (orderedExistingIds.length === 0) return;
 
-      // Insert new associations
-      for (const lid of existingIds) {
+      // Insert new associations in the requested order. Set createdAt explicitly
+      // per-insert so timestamps reflect insertion order even inside one transaction.
+      for (const lid of orderedExistingIds) {
         try {
-          await tx.insert(taskLabels).values({ taskId, labelId: lid, createdBy: actorId }).onConflictDoNothing().execute();
+          await tx.insert(taskLabels).values({ taskId, labelId: lid, createdBy: actorId, createdAt: new Date() }).onConflictDoNothing().execute();
         } catch (err) {
           logger.debug('updateTaskLabels: failed to insert label association (non-fatal)', err);
         }

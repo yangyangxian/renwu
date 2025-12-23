@@ -93,11 +93,17 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   const currentSelection = deferCommit ? draft : value;
 
   const toggleDraft = (id: string) => {
-    setDraft(prev => prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id]);
+    setDraft(prev => {
+      const next = prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id];
+      if (!deferCommit) {
+        try { onChange(next); } catch (e) { /* swallow */ }
+      }
+      return next;
+    });
   };
 
   const commitAndClose = () => {
-    if (deferCommit) onChange(draft);
+    try { onChange(draft); } catch (e) { /* swallow */ }
     setOpen(false);
   };
 
@@ -116,7 +122,9 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
         );
       })}
       <DropdownMenu open={open} onOpenChange={(o: boolean) => {
-        if (!o && deferCommit) onChange(draft);
+        if (!o) {
+          try { onChange(draft); } catch (e) { /* swallow */ }
+        }
         setOpen(o);
       }}>
         <DropdownMenuTrigger asChild>
