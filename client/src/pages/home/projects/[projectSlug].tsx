@@ -5,7 +5,8 @@ import { ProjectOverviewTab } from "@/components/projectspage/OverviewTab";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
-import { LayoutDashboard, List, Users, Settings } from "lucide-react";
+import { LayoutDashboard, List, Users, Settings, Tag } from "lucide-react";
+import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
@@ -24,7 +25,7 @@ export default function ProjectDetailPage() {
     fetchProjectTasks,
   } = useTaskStore();
   const [activeTab, handleTabChange] = useTabHash(
-    ['overview', 'tasks', 'team', 'settings'],
+    ['overview', 'tasks', 'labels', 'team', 'settings'],
     'tasks'
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -86,6 +87,10 @@ export default function ProjectDetailPage() {
             <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Users className="w-4 h-4" />
               Team
+            </TabsTrigger>
+            <TabsTrigger value="labels" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+              <Tag className="w-4 h-4" />
+              Labels
             </TabsTrigger>
             <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
               <Settings className="w-4 h-4" />
@@ -153,6 +158,7 @@ export default function ProjectDetailPage() {
           }}
         />
       )}
+      {activeTab === 'labels' && <ProjectLabelsTab />}
       {activeTab === 'team' && <ProjectTeamTab project={project} />}
       {activeTab === 'settings' && <ProjectSettingsTab />}
     </div>

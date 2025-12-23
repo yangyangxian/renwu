@@ -192,7 +192,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
       className="w-full h-full"
       >
       {/* Title block above columns */}
-      <div className="mb-4 ml-2">
+      <div className="mb-5 ml-2">
         {/* restore larger title font and ensure the leading icon is visible in dark mode */}
         <div className="text-2xl font-bold flex items-center gap-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -243,7 +243,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                 <Tag className="size-4" />
                 Labels:
               </Label>
-              <div className="mt-4 px-6">
+              <div className="mt-4">
                 <LabelSelector value={currentLabelIds} onChange={handleLabelsChange} projectId={projectId} />
               </div>
             </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui-kit/Card';
 import LabelBadge from '@/components/common/LabelBadge';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
+import { useProjectStore } from '@/stores/useProjectStore';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui-kit/Button';
@@ -11,6 +12,7 @@ import GradientScrollArea from '../common/GradientScrollArea';
 
 const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const { fetchLabelsForSet, deleteLabel, deleteLabelSet } = useLabelStore();
+  const { currentProject } = useProjectStore();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
@@ -74,7 +76,7 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
             <LabelBadge className="mb-2" key={l.id} text={l.name} color={l.color} onDelete={() => deleteLabel(l.id)} />
           ))}
 
-          <AddLabelDialog labelSetId={set.id} />
+          <AddLabelDialog labelSetId={set.id} projectId={currentProject?.id} />
         </div>
 
       </GradientScrollArea>

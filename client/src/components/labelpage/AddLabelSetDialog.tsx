@@ -11,9 +11,10 @@ import { Plus } from 'lucide-react';
 interface AddLabelSetDialogProps {
   onCreated?: (id: string) => void;
   triggerClassName?: string;
+  projectId?: string;
 }
 
-export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated, triggerClassName }) => {
+export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated, triggerClassName, projectId }) => {
   const { fetchLabelSets } = useLabelStore();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -35,10 +36,10 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
     setError(null);
     try {
       await withToast(async () => {
-        const created = await apiClient.post('/api/labels/sets', { labelSetName: name.trim() });
+        const created = await apiClient.post('/api/labels/sets', { labelSetName: name.trim(), projectId });
         if (onCreated && created && (created as any).id) onCreated((created as any).id);
 
-        await fetchLabelSets();
+        await fetchLabelSets(projectId);
         setOpen(false);
       }, { success: 'Label set created', error: 'Failed to create label set' });
     } catch (e: any) {
@@ -46,7 +47,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
     } finally {
       setSubmitting(false);
     }
-  }, [name, onCreated]);
+  }, [name, onCreated, fetchLabelSets, projectId]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

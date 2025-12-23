@@ -47,11 +47,13 @@ export const apiFile = () => '/api/file';
 
 // --- Labels ---
 export const getMyLabels = () => '/api/labels/me';
+export const getProjectLabels = (projectId: string) => `/api/labels/project/${projectId}`;
 export const createLabel = () => '/api/labels';
 export const getLabelById = (labelId: string) => `/api/labels/${labelId}`;
 export const updateLabelById = (labelId: string) => `/api/labels/${labelId}`;
 export const deleteLabelById = (labelId: string) => `/api/labels/${labelId}`;
 export const getMyLabelSets = () => '/api/labels/sets/me';
+export const getProjectLabelSets = (projectId: string) => `/api/labels/sets/project/${projectId}`;
 export const createLabelSet = () => '/api/labels/sets';
 export const deleteLabelSetById = (setId: string) => `/api/labels/sets/${setId}`;
 export const createLabelInSet = (setId: string) => `/api/labels/sets/${setId}/labels`;

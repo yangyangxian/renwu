@@ -29,6 +29,23 @@ router.get('/me',
   }
 );
 
+// GET /api/labels/project/:projectId - list labels by project
+router.get('/project/:projectId',
+  async (
+    req: Request<{ projectId: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user!.userId;
+      const { projectId } = req.params;
+      const raw = await labelService.listByProject(projectId, userId);
+      const rows: LabelResDto[] = raw.map(r => mapObject(r, new LabelResDto(), labelFieldMap));
+      res.json(createApiResponse<LabelResDto[]>(rows));
+    } catch (err) { next(err); }
+  }
+);
+
 // POST /api/labels - create (actor must be the creator)
 router.post('/',
   async (
@@ -39,8 +56,8 @@ router.post('/',
     try {
       const userId = req.user!.userId;
       // expect new DTO shape: { labelName, description?, color? }
-      const { labelName, description, color } = req.body;
-      const createdRaw = await labelService.create({ labelName: labelName as string, labelDescription: description, labelColor: color, createdBy: userId });
+      const { labelName, description, color, projectId } = req.body as any;
+      const createdRaw = await labelService.create({ labelName: labelName as string, labelDescription: description, labelColor: color, projectId: projectId ?? null, createdBy: userId });
       const created: LabelResDto = mapObject(createdRaw, new LabelResDto(), labelFieldMap);
       res.json(createApiResponse<LabelResDto>(created));
     } catch (err) { next(err); }
@@ -112,6 +129,22 @@ router.get('/sets/me',
   }
 );
 
+// GET /api/labels/sets/project/:projectId - list label sets by project
+router.get('/sets/project/:projectId',
+  async (
+    req: Request<{ projectId: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user!.userId;
+      const { projectId } = req.params;
+      const rows = await labelService.listSetsByProject(projectId, userId);
+      res.json(createApiResponse(rows));
+    } catch (err) { next(err); }
+  }
+);
+
 router.post('/sets',
   async (
     req: Request,
@@ -120,8 +153,8 @@ router.post('/sets',
   ) => {
     try {
       const userId = req.user!.userId;
-      const { labelSetName, labelSetDescription } = req.body;
-      const created = await labelService.createSet({ labelSetName, labelSetDescription, createdBy: userId });
+      const { labelSetName, labelSetDescription, projectId } = req.body as any;
+      const created = await labelService.createSet({ labelSetName, labelSetDescription, projectId: projectId ?? null, createdBy: userId });
       res.json(createApiResponse(created));
     } catch (err) { next(err); }
   }

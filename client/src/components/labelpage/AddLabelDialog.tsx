@@ -13,6 +13,8 @@ interface AddLabelDialogProps {
   triggerClassName?: string;
   /** If provided, create the new label inside this label set */
   labelSetId?: string;
+  /** If provided, create the new label under this project */
+  projectId?: string;
 }
 
 const randomColor = () => {
@@ -21,7 +23,7 @@ const randomColor = () => {
   return `#${ch()}${ch()}${ch()}`;
 };
 
-export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, triggerClassName, labelSetId }) => {
+export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, triggerClassName, labelSetId, projectId }) => {
   const { createLabel, addLabelToSet } = useLabelStore();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -32,7 +34,7 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-    const colorFieldWrapperRef = useRef<HTMLDivElement | null>(null);
+  const colorFieldWrapperRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -82,10 +84,10 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
     setError(null);
     try {
       if (labelSetId) {
-        const created = await addLabelToSet(labelSetId, { labelName: name, description: description.trim() || undefined, color });
+        const created = await addLabelToSet(labelSetId, { labelName: name, description: description.trim() || undefined, color, projectId });
         if (onCreated) onCreated((created as any).id);
       } else {
-        const created = await createLabel({ labelName: name, description: description.trim() || undefined, color });
+        const created = await createLabel({ labelName: name, description: description.trim() || undefined, color, projectId });
         if (onCreated) onCreated((created as any).id);
       }
       setOpen(false);
