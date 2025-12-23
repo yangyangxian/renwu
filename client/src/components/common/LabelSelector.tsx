@@ -32,6 +32,12 @@ export interface LabelSelectorProps {
   deferCommit?: boolean;
   showBadges?: boolean;
   emptyText?: string;
+  /**
+   * If provided: show labels/sets for this project id.
+   * If null: show personal (non-project) labels/sets.
+   * If undefined: show all available labels/sets.
+   */
+  projectId?: string | null;
 }
 
 export const LabelSelector: React.FC<LabelSelectorProps> = ({
@@ -42,6 +48,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   deferCommit = true,
   showBadges = true,
   emptyText = 'Add Label',
+  projectId,
 }) => {
   const { labels, labelSets, fetchLabelSets, fetchLabels } = useLabelStore();
   const [open, setOpen] = useState(false);
@@ -54,17 +61,28 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   }, [open, value]);
 
   useEffect(() => {
+    // Fetch labels/sets lazily. If a projectId is provided, the store endpoints
+    // currently return all items — we'll filter locally here. Still fetch if empty.
     if (!labels || labels.length === 0) fetchLabels();
     if (!labelSets || labelSets.length === 0) fetchLabelSets();
   }, [labels, labelSets, fetchLabels, fetchLabelSets]);
 
-  const labelIdsInSets = new Set<string>((labelSets || []).flatMap(s => (s.labels || []).map((l: any) => l.id)));
-  const independentLabels = (labels || []).filter(l => !labelIdsInSets.has((l as any).id));
+  // Filter labelSets by projectId (undefined = all, null = personal only, string = project only)
+  const filteredLabelSets = (labelSets || []).filter(s => {
+    if (projectId === undefined) return true;
+    if (projectId === null) return !s.projectId;
+    return s.projectId === projectId;
+  });
+
+  const labelIdsInSets = new Set<string>(filteredLabelSets.flatMap(s => (s.labels || []).map((l: any) => l.id)));
+  const independentLabels = (labels || []).filter(l => !labelIdsInSets.has((l as any).id) && (
+    projectId === undefined ? true : (projectId === null ? !l.projectId : l.projectId === projectId)
+  ));
   const normalizedSearch = search.trim().toLowerCase();
   const matchesIndependent = normalizedSearch
     ? independentLabels.filter(l => ((l as any).name || (l as any).labelName || '').toLowerCase().includes(normalizedSearch))
     : independentLabels;
-  const filteredSetsRaw = (labelSets || []).map(set => ({
+  const filteredSetsRaw = filteredLabelSets.map(set => ({
     ...set,
     labels: normalizedSearch
       ? (set.labels || []).filter((l: any) => ((l.name || l.labelName || '') as string).toLowerCase().includes(normalizedSearch))

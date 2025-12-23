@@ -346,6 +346,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 <LabelSelector
                   value={taskState.labels}
                   onChange={(next) => dispatch({ type: 'SET_FIELD', field: 'labels', value: next })}
+                  projectId={taskState.projectId ? taskState.projectId : null}
                 />
               </div>
             </div>
