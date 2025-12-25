@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui-kit/Button';
 import { Input } from '@/components/ui-kit/Input';
 import { Plus, Check, X } from 'lucide-react';
@@ -35,7 +35,7 @@ export interface LabelSelectorProps {
   /**
    * If provided: show labels/sets for this project id.
    * If null: show personal (non-project) labels/sets.
-   * If undefined: show all available labels/sets.
+  * If undefined: treat as personal (non-project) labels/sets.
    */
   projectId?: string | null;
 }
@@ -61,22 +61,20 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   }, [open, value]);
 
   useEffect(() => {
-    // Fetch labels/sets lazily. If a projectId is provided, the store endpoints
-    // currently return all items — we'll filter locally here. Still fetch if empty.
-    if (!labels || labels.length === 0) fetchLabels();
-    if (!labelSets || labelSets.length === 0) fetchLabelSets();
-  }, [labels, labelSets, fetchLabels, fetchLabelSets]);
+    if (!open) return;
+    if (!labels || labels.length === 0) fetchLabels(projectId === null ? undefined : projectId);
+    if (!labelSets || labelSets.length === 0) fetchLabelSets(projectId === null ? undefined : projectId);
+  }, [open, projectId, fetchLabels, fetchLabelSets]);
 
-  // Filter labelSets by projectId (undefined = all, null = personal only, string = project only)
+  // Filter labelSets by projectId (undefined/null = personal only, string = project only)
   const filteredLabelSets = (labelSets || []).filter(s => {
-    if (projectId === undefined) return true;
-    if (projectId === null) return !s.projectId;
+    if (projectId == null) return !s.projectId;
     return s.projectId === projectId;
   });
 
   const labelIdsInSets = new Set<string>(filteredLabelSets.flatMap(s => (s.labels || []).map((l: any) => l.id)));
   const independentLabels = (labels || []).filter(l => !labelIdsInSets.has((l as any).id) && (
-    projectId === undefined ? true : (projectId === null ? !l.projectId : l.projectId === projectId)
+    projectId == null ? !l.projectId : l.projectId === projectId
   ));
   const normalizedSearch = search.trim().toLowerCase();
   const matchesIndependent = normalizedSearch

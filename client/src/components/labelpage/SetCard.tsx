@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui-kit/Card';
 import LabelBadge from '@/components/common/LabelBadge';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
@@ -11,13 +11,9 @@ import { Label } from '../ui-kit/Label';
 import GradientScrollArea from '../common/GradientScrollArea';
 
 const SetCard: React.FC<{ set: any }> = ({ set }) => {
-  const { fetchLabelsForSet, deleteLabel, deleteLabelSet } = useLabelStore();
+  const { deleteLabel, deleteLabelSet } = useLabelStore();
   const { currentProject } = useProjectStore();
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  useEffect(() => {
-    if (!set.labels || set.labels.length === 0) fetchLabelsForSet(set.id);
-  }, [set.id]);
 
   return (
     <Card className="relative flex flex-col rounded-md shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">

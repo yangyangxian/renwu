@@ -14,7 +14,6 @@ export function ProjectLabelsTab() {
   const { labels, loading, fetchLabels, deleteLabel, labelSets, fetchLabelSets } = useLabelStore();
 
   useEffect(() => {
-    // Avoid flicker to personal scope while project is still loading
     if (!currentProject?.id) return;
     fetchLabels(currentProject.id);
     fetchLabelSets(currentProject.id);

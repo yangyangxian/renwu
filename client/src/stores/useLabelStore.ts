@@ -60,9 +60,10 @@ export function useLabelStore() {
   const labels = labelsByScope[activeScopeKey] ?? [];
   const labelSets = labelSetsByScope[activeScopeKey] ?? [];
 
-  const fetchLabels = useCallback(async (projectId?: string) => {
+  const fetchLabels = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean }) => {
     const scopeKey = scopeKeyFromProjectId(projectId);
-    setActiveScopeKey(scopeKey);
+    const shouldSetActiveScope = opts?.setActiveScope ?? true;
+    if (shouldSetActiveScope) setActiveScopeKey(scopeKey);
     setLoading(true);
     setError(null);
     try {
@@ -79,10 +80,11 @@ export function useLabelStore() {
     }
   }, [setActiveScopeKey, setLabelsForScope, setLoading, setError]);
 
-  const fetchLabelSets = useCallback(async (projectId?: string) => {
+  const fetchLabelSets = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean }) => {
     try {
       const scopeKey = scopeKeyFromProjectId(projectId);
-      setActiveScopeKey(scopeKey);
+      const shouldSetActiveScope = opts?.setActiveScope ?? true;
+      if (shouldSetActiveScope) setActiveScopeKey(scopeKey);
       const data = await apiClient.get<any[]>(projectId ? getProjectLabelSets(projectId) : getMyLabelSets());
       // Normalize server rows to UI-friendly shape: { id, name, labels }
       const normalized = Array.isArray(data) ? data.map(r => ({
@@ -224,9 +226,8 @@ export function useLabelStore() {
     loading,
     error,
     labelSets,
-    activeScope: activeScopeKey === 'me'
-      ? ({ kind: 'me' } as LabelScope)
-      : ({ kind: 'project', projectId: activeScopeKey.replace(/^project:/, '') } as LabelScope),
+  // Allow pages to switch the active display scope explicitly.
+  setActiveScopeKey,
     addLabelToSet,
     fetchLabels,
     fetchLabelSets,
