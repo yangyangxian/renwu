@@ -10,13 +10,16 @@ function scopeKeyFromProjectId(projectId?: string): string {
   return projectId ? `project:${projectId}` : 'me';
 }
 
+function projectIdFromScopeKey(scopeKey: string): string | undefined {
+  if (scopeKey.startsWith('project:')) return scopeKey.replace(/^project:/, '');
+  return undefined;
+}
+
 interface LabelStoreState {
   // Scope-aware caches
   labelsByScope: Record<string, LabelResDto[]>;
   labelSetsByScope: Record<string, any[]>;
-  // Active scope used by pages (personal labels page / project labels tab)
   activeScopeKey: string;
-
   loading: boolean;
   error: string | null;
   setActiveScopeKey: (scopeKey: string) => void;
@@ -188,10 +191,16 @@ export function useLabelStore() {
       // (labels attached to any set should not appear there)
       const payloadProjectId = (payload as any)?.projectId as string | undefined;
       const setProjectId = (labelSets || []).find(s => s.id === setId)?.projectId as string | undefined;
-      const scopeProjectId = activeScopeKey.startsWith('project:')
-        ? activeScopeKey.replace(/^project:/, '')
-        : undefined;
-      await fetchLabels(payloadProjectId ?? setProjectId ?? scopeProjectId);
+      const scopeProjectId = projectIdFromScopeKey(activeScopeKey);
+      const effectiveProjectId = payloadProjectId ?? setProjectId ?? scopeProjectId;
+
+      // Never refetch with `undefined` while in a project scope.
+      // Doing so switches active scope back to personal ('me'), which makes the page look empty.
+      if (projectIdFromScopeKey(activeScopeKey) && !effectiveProjectId) {
+        return created;
+      }
+
+      await fetchLabels(effectiveProjectId);
       return created;
     } catch (err) {
       throw err;
@@ -226,8 +235,8 @@ export function useLabelStore() {
     loading,
     error,
     labelSets,
-  // Allow pages to switch the active display scope explicitly.
-  setActiveScopeKey,
+    // Allow pages to switch the active display scope explicitly.
+    //setActiveScopeKey,
     addLabelToSet,
     fetchLabels,
     fetchLabelSets,

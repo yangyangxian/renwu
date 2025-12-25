@@ -62,8 +62,9 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   useEffect(() => {
     if (!open) return;
-    if (!labels || labels.length === 0) fetchLabels(projectId === null ? undefined : projectId);
-    if (!labelSets || labelSets.length === 0) fetchLabelSets(projectId === null ? undefined : projectId);
+    // When projectId is null/undefined, treat as personal scope.
+    if (!labels || labels.length === 0) fetchLabels(projectId == null ? undefined : projectId);
+    if (!labelSets || labelSets.length === 0) fetchLabelSets(projectId == null ? undefined : projectId);
   }, [open, projectId, fetchLabels, fetchLabelSets]);
 
   // Filter labelSets by projectId (undefined/null = personal only, string = project only)
