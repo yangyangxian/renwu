@@ -91,9 +91,45 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   const currentSelection = deferCommit ? draft : value;
 
+  // Map labelId -> labelSetId (only for labels in the currently visible sets)
+  const labelIdToSetId = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    const map = new Map<string, string>();
+    for (const s of (matchesSets || [])) {
+      for (const l of (s.labels || [])) {
+        if (l?.id) map.set(l.id, s.id);
+      }
+    }
+    labelIdToSetId.current = map;
+  }, [matchesSets]);
+
   const toggleDraft = (id: string) => {
     setDraft(prev => {
-      const next = prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id];
+      const isSelected = prev.includes(id);
+      if (isSelected) {
+        const next = prev.filter(l => l !== id);
+        if (!deferCommit) {
+          try { onChange(next); } catch (e) { /* swallow */ }
+        }
+        return next;
+      }
+
+      // If this label belongs to a set, enforce "only one label per set"
+      const setId = labelIdToSetId.current.get(id);
+      let next = [...prev, id];
+      if (setId) {
+        const toRemove = new Set<string>();
+        for (const existingId of prev) {
+          if (existingId === id) continue;
+          const existingSetId = labelIdToSetId.current.get(existingId);
+          if (existingSetId && existingSetId === setId) {
+            toRemove.add(existingId);
+          }
+        }
+        if (toRemove.size > 0) {
+          next = next.filter(x => !toRemove.has(x));
+        }
+      }
       if (!deferCommit) {
         try { onChange(next); } catch (e) { /* swallow */ }
       }
