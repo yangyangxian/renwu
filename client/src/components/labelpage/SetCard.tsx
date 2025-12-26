@@ -16,7 +16,7 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
-    <Card className="relative flex flex-col rounded-md shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">
+    <Card className="relative flex flex-col px-1 rounded-md shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogTrigger asChild>
           <Button

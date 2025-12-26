@@ -137,10 +137,125 @@ class LabelService {
     return rows;
   }
 
+  /**
+   * List personal label sets (created by user, no projectId) with their labels embedded.
+   * This avoids N+1 requests from the client.
+   */
+  async listSetsByUserWithLabels(userId: string) {
+    const rows = await db
+      .select({
+        setId: labelSets.id,
+        labelSetName: labelSets.labelSetName,
+        labelSetDescription: labelSets.labelSetDescription,
+        projectId: labelSets.projectId,
+        createdBy: labelSets.createdBy,
+        createdAt: labelSets.createdAt,
+        updatedAt: labelSets.updatedAt,
+        labelId: labels.id,
+        labelName: labels.labelName,
+        labelDescription: labels.labelDescription,
+        labelColor: labels.labelColor,
+        labelCreatedBy: labels.createdBy,
+        labelCreatedAt: labels.createdAt,
+        labelUpdatedAt: labels.updatedAt,
+      })
+      .from(labelSets)
+      .leftJoin(labelSetLabels, eq(labelSetLabels.labelSetId, labelSets.id))
+      .leftJoin(labels, eq(labelSetLabels.labelId, labels.id))
+      .where(and(eq(labelSets.createdBy, userId), isNull(labelSets.projectId)));
+
+    const bySet = new Map<string, any>();
+    for (const r of rows) {
+      if (!bySet.has(r.setId)) {
+        bySet.set(r.setId, {
+          id: r.setId,
+          labelSetName: r.labelSetName,
+          labelSetDescription: r.labelSetDescription,
+          projectId: r.projectId ?? null,
+          createdBy: r.createdBy,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          labels: [] as any[],
+        });
+      }
+      if (r.labelId) {
+        bySet.get(r.setId).labels.push({
+          id: r.labelId,
+          labelName: r.labelName,
+          labelDescription: r.labelDescription || '',
+          labelColor: r.labelColor || '',
+          createdBy: r.labelCreatedBy || undefined,
+          createdAt: r.labelCreatedAt?.toISOString?.() ?? '',
+          updatedAt: r.labelUpdatedAt?.toISOString?.() ?? '',
+        });
+      }
+    }
+
+    return Array.from(bySet.values());
+  }
+
   async listSetsByProject(projectId: string, actorId: string) {
     await this.assertProjectMember(projectId, actorId);
     const rows = await db.select().from(labelSets).where(eq(labelSets.projectId, projectId));
     return rows;
+  }
+
+  /**
+   * List project label sets with their labels embedded.
+   */
+  async listSetsByProjectWithLabels(projectId: string, actorId: string) {
+    await this.assertProjectMember(projectId, actorId);
+
+    const rows = await db
+      .select({
+        setId: labelSets.id,
+        labelSetName: labelSets.labelSetName,
+        labelSetDescription: labelSets.labelSetDescription,
+        projectId: labelSets.projectId,
+        createdBy: labelSets.createdBy,
+        createdAt: labelSets.createdAt,
+        updatedAt: labelSets.updatedAt,
+        labelId: labels.id,
+        labelName: labels.labelName,
+        labelDescription: labels.labelDescription,
+        labelColor: labels.labelColor,
+        labelCreatedBy: labels.createdBy,
+        labelCreatedAt: labels.createdAt,
+        labelUpdatedAt: labels.updatedAt,
+      })
+      .from(labelSets)
+      .leftJoin(labelSetLabels, eq(labelSetLabels.labelSetId, labelSets.id))
+      .leftJoin(labels, eq(labelSetLabels.labelId, labels.id))
+      .where(eq(labelSets.projectId, projectId));
+
+    const bySet = new Map<string, any>();
+    for (const r of rows) {
+      if (!bySet.has(r.setId)) {
+        bySet.set(r.setId, {
+          id: r.setId,
+          labelSetName: r.labelSetName,
+          labelSetDescription: r.labelSetDescription,
+          projectId: r.projectId ?? null,
+          createdBy: r.createdBy,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          labels: [] as any[],
+        });
+      }
+      if (r.labelId) {
+        bySet.get(r.setId).labels.push({
+          id: r.labelId,
+          labelName: r.labelName,
+          labelDescription: r.labelDescription || '',
+          labelColor: r.labelColor || '',
+          createdBy: r.labelCreatedBy || undefined,
+          createdAt: r.labelCreatedAt?.toISOString?.() ?? '',
+          updatedAt: r.labelUpdatedAt?.toISOString?.() ?? '',
+        });
+      }
+    }
+
+    return Array.from(bySet.values());
   }
 
   async createSet(data: { labelSetName: string; labelSetDescription?: string; createdBy: string; projectId?: string | null }) {

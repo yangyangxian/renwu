@@ -123,7 +123,7 @@ router.get('/sets/me',
   ) => {
     try {
       const userId = req.user!.userId;
-      const rows = await labelService.listSetsByUser(userId);
+  const rows = await labelService.listSetsByUserWithLabels(userId);
       res.json(createApiResponse(rows));
     } catch (err) { next(err); }
   }
@@ -139,7 +139,7 @@ router.get('/sets/project/:projectId',
     try {
       const userId = req.user!.userId;
       const { projectId } = req.params;
-      const rows = await labelService.listSetsByProject(projectId, userId);
+  const rows = await labelService.listSetsByProjectWithLabels(projectId, userId);
       res.json(createApiResponse(rows));
     } catch (err) { next(err); }
   }

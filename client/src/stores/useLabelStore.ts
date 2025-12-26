@@ -84,46 +84,47 @@ export function useLabelStore() {
   }, [setActiveScopeKey, setLabelsForScope, setLoading, setError]);
 
   const fetchLabelSets = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean }) => {
+    const scopeKey = scopeKeyFromProjectId(projectId);
+    const shouldSetActiveScope = opts?.setActiveScope ?? true;
+    if (shouldSetActiveScope) setActiveScopeKey(scopeKey);
+    setLoading(true);
+    setError(null);
     try {
-      const scopeKey = scopeKeyFromProjectId(projectId);
-      const shouldSetActiveScope = opts?.setActiveScope ?? true;
-      if (shouldSetActiveScope) setActiveScopeKey(scopeKey);
       const data = await apiClient.get<any[]>(projectId ? getProjectLabelSets(projectId) : getMyLabelSets());
-      // Normalize server rows to UI-friendly shape: { id, name, labels }
-      const normalized = Array.isArray(data) ? data.map(r => ({
-        id: r.id,
-        name: r.labelSetName || r.name || '',
-        // preserve project association for filtering (may be null for personal sets)
-        projectId: (r as any).projectId ?? (r as any).project_id ?? null,
-        // server doesn't return labels in this endpoint; we'll try to fetch them separately
-        labels: [] as any[],
-        // keep original raw row for future use if needed
-        _raw: r,
-      })) : [];
 
-      // fetch labels for each set concurrently, but don't fail the whole flow if one set fails
-      const settled = await Promise.allSettled(normalized.map(async (s) => {
-        try {
-          const labels = await apiClient.get<any[]>(getLabelsInSet(s.id));
-          return { id: s.id, labels: Array.isArray(labels) ? labels : [] };
-        } catch (e) {
-          return { id: s.id, labels: [] };
-        }
-      }));
+      // Normalize server rows to UI-friendly shape: { id, name, labels: [{id,name,color,...}] }
+      const normalized = Array.isArray(data)
+        ? data.map((r: any) => {
+          const rawLabels = Array.isArray(r?.labels) ? r.labels : [];
+          const labels = rawLabels.map((l: any) => ({
+            ...l,
+            // server label DTO is { name }, but DB/entity may come back as { labelName }
+            name: l?.name ?? l?.labelName ?? '',
+            color: l?.color ?? l?.labelColor,
+            description: l?.description ?? l?.labelDescription,
+          }));
 
-      const labelsBySet = (settled || []).reduce((acc: Record<string, any[]>, s: any) => {
-        if (s.status === 'fulfilled' && s.value) acc[s.value.id] = s.value.labels || [];
-        return acc;
-      }, {} as Record<string, any[]>);
+          return {
+            id: r.id,
+            name: r.labelSetName || r.name || '',
+            // preserve project association for filtering (may be null for personal sets)
+            projectId: r?.projectId ?? r?.project_id ?? null,
+            labels,
+            _raw: r,
+          };
+        })
+        : [];
 
-      const withLabels = normalized.map(s => ({ ...s, labels: labelsBySet[s.id] ?? [] }));
-      setLabelSetsForScope(scopeKey, withLabels as any[]);
-      return withLabels as any[];
+      setLabelSetsForScope(scopeKey, normalized as any[]);
+      return normalized as any[];
     } catch (err: any) {
-      // keep existing mock sets if api fails — do not override
+      setError(err?.message || 'Failed to fetch label sets');
+      setLabelSetsForScope(scopeKey, []);
       return [] as any[];
+    } finally {
+      setLoading(false);
     }
-  }, [setActiveScopeKey, setLabelSetsForScope]);
+  }, [setActiveScopeKey, setLabelSetsForScope, setLoading, setError]);
 
   const createLabel = useCallback(async (payload: Partial<LabelCreateReqDto>): Promise<LabelResDto> => {
     try {
