@@ -47,6 +47,10 @@ const useZustandLabelStore = create<LabelStoreState>((set) => ({
 }));
 
 export function useLabelStore() {
+  // NOTE:
+  // Don’t close over `labels` / `labelSets` in async actions. That pattern can easily create
+  // dependency cycles in callbacks/effects, plus stale updates.
+  // Instead, read the latest state via `useZustandLabelStore.getState()` inside actions.
   const {
     labelsByScope,
     labelSetsByScope,
@@ -62,6 +66,16 @@ export function useLabelStore() {
 
   const labels = labelsByScope[activeScopeKey] ?? [];
   const labelSets = labelSetsByScope[activeScopeKey] ?? [];
+
+  const getScopeState = () => {
+    const s = useZustandLabelStore.getState();
+    const scopeKey = s.activeScopeKey;
+    return {
+      scopeKey,
+      labels: s.labelsByScope[scopeKey] ?? [],
+      labelSets: s.labelSetsByScope[scopeKey] ?? [],
+    };
+  };
 
   const fetchLabels = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean }) => {
     const scopeKey = scopeKeyFromProjectId(projectId);
@@ -135,30 +149,31 @@ export function useLabelStore() {
         delete body.name;
       }
       const created = await apiClient.post<LabelCreateReqDto, LabelResDto>(createLabelEndpoint(), body as any);
-      setLabelsForScope(activeScopeKey, [...labels, (created as LabelResDto)]);
+      const { scopeKey, labels: currentLabels } = getScopeState();
+      setLabelsForScope(scopeKey, [...currentLabels, (created as LabelResDto)]);
       return created as LabelResDto;
     } catch (err) {
       throw err;
     }
-  }, [activeScopeKey, labels, setLabelsForScope]);
+  }, [setLabelsForScope]);
 
   const deleteLabel = useCallback(async (id: string): Promise<void> => {
     try {
       await apiClient.delete(deleteLabelById(id));
-      setLabelsForScope(activeScopeKey, labels.filter(l => l.id !== id));
+      const { scopeKey, labels: currentLabels, labelSets: currentSets } = getScopeState();
+      setLabelsForScope(scopeKey, currentLabels.filter(l => l.id !== id));
 
       // Update labelSets by removing the label from any set it belongs to.
-      // Use current labelSets from closure (included in deps) to avoid stale updates.
-      const nextSets = (labelSets || []).map(s => ({
+      const nextSets = (currentSets || []).map((s: any) => ({
         ...s,
         labels: (s.labels || []).filter((ll: any) => ll.id !== id),
       }));
-      setLabelSetsForScope(activeScopeKey, nextSets as any[]);
+      setLabelSetsForScope(scopeKey, nextSets as any[]);
 
     } catch (err) {
       throw err;
     }
-  }, [activeScopeKey, labels, setLabelsForScope, labelSets, setLabelSetsForScope]);
+  }, [setLabelsForScope, setLabelSetsForScope]);
 
   const updateLabel = useCallback(async (id: string, payload: Partial<LabelUpdateReqDto & { name?: string }>): Promise<LabelResDto> => {
     try {
@@ -169,12 +184,13 @@ export function useLabelStore() {
         delete body.name;
       }
       const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(updateLabelById(id), body as any);
-      setLabelsForScope(activeScopeKey, labels.map(l => l.id === id ? (updated as LabelResDto) : l));
+      const { scopeKey, labels: currentLabels } = getScopeState();
+      setLabelsForScope(scopeKey, currentLabels.map(l => l.id === id ? (updated as LabelResDto) : l));
       return updated as LabelResDto;
     } catch (err) {
       throw err;
     }
-  }, [activeScopeKey, labels, setLabelsForScope]);
+  }, [setLabelsForScope]);
 
   const addLabelToSet = useCallback(async (setId: string, payload: Partial<LabelCreateReqDto>): Promise<any> => {
     try {
@@ -184,52 +200,63 @@ export function useLabelStore() {
         delete body.name;
       }
       const created = await apiClient.post(createLabelInSet(setId), body as any);
-      // optimistic update: append to set's labels if present
-      const next = (labelSets || []).map(s => s.id === setId ? ({ ...s, labels: [...(s.labels || []), created] }) : s);
-      setLabelSetsForScope(activeScopeKey, next as any[]);
+      const createdAny = created as any;
 
-      // Ensure the free Labels area stays consistent with server-side filtering
-      // (labels attached to any set should not appear there)
-      const payloadProjectId = (payload as any)?.projectId as string | undefined;
-      const setProjectId = (labelSets || []).find(s => s.id === setId)?.projectId as string | undefined;
-      const scopeProjectId = projectIdFromScopeKey(activeScopeKey);
-      const effectiveProjectId = payloadProjectId ?? setProjectId ?? scopeProjectId;
+      // Normalize shape to what the UI expects.
+      const normalizedCreated: any = {
+        ...(createdAny ?? {}),
+        name: createdAny?.name ?? createdAny?.labelName ?? body.labelName ?? '',
+        color: createdAny?.color ?? createdAny?.labelColor ?? body.color,
+        description: createdAny?.description ?? createdAny?.labelDescription ?? body.description,
+      };
 
-      // Never refetch with `undefined` while in a project scope.
-      // Doing so switches active scope back to personal ('me'), which makes the page look empty.
-      if (projectIdFromScopeKey(activeScopeKey) && !effectiveProjectId) {
-        return created;
-      }
+      // Targeted update: only touch the edited set.
+      const { scopeKey, labels: currentLabels, labelSets: currentSets } = getScopeState();
+      const nextSets = (currentSets || []).map((s: any) =>
+        s.id === setId
+          ? ({
+            ...s,
+            labels: [...(s.labels || []), normalizedCreated],
+          })
+          : s
+      );
+      setLabelSetsForScope(scopeKey, nextSets as any[]);
 
-      await fetchLabels(effectiveProjectId);
-      return created;
+      // If the API returns a label that also appears in the global label list, remove it there.
+      // (This keeps UI consistent without triggering a full refetch.)
+      const createdId = (normalizedCreated as any)?.id;
+      if (createdId) setLabelsForScope(scopeKey, (currentLabels || []).filter((l) => l.id !== createdId));
+
+      return normalizedCreated;
     } catch (err) {
       throw err;
     }
-  }, [activeScopeKey, labelSets, setLabelSetsForScope, fetchLabels]);
+  }, [setLabelSetsForScope, setLabelsForScope]);
 
   const fetchLabelsForSet = useCallback(async (setId: string) => {
     try {
       const data = await apiClient.get<any[]>(getLabelsInSet(setId));
       const labels = Array.isArray(data) ? data : [];
-      const next = (labelSets || []).map(s => s.id === setId ? ({ ...s, labels }) : s);
-      setLabelSetsForScope(activeScopeKey, next as any[]);
+      const { scopeKey, labelSets: currentSets } = getScopeState();
+      const next = (currentSets || []).map((s: any) => s.id === setId ? ({ ...s, labels }) : s);
+      setLabelSetsForScope(scopeKey, next as any[]);
       return labels;
     } catch (err) {
       // don't fail if fetching labels per set fails; return empty
       return [] as any[];
     }
-  }, [activeScopeKey, labelSets, setLabelSetsForScope]);
+  }, [setLabelSetsForScope]);
 
   const deleteLabelSet = useCallback(async (setId: string): Promise<void> => {
     try {
       await apiClient.delete(deleteLabelSetById(setId));
-      const next = (labelSets || []).filter(s => s.id !== setId);
-      setLabelSetsForScope(activeScopeKey, next as any[]);
+      const { scopeKey, labelSets: currentSets } = getScopeState();
+      const next = (currentSets || []).filter((s: any) => s.id !== setId);
+      setLabelSetsForScope(scopeKey, next as any[]);
     } catch (err) {
       throw err;
     }
-  }, [activeScopeKey, labelSets, setLabelSetsForScope]);
+  }, [setLabelSetsForScope]);
 
   return {
     labels,
