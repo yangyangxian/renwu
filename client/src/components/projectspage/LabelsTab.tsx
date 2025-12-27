@@ -8,10 +8,14 @@ import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
 import AddLabelSetDialog from '@/components/labelpage/AddLabelSetDialog';
 import SetCard from '@/components/labelpage/SetCard';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { useState } from 'react';
 
 export function ProjectLabelsTab() {
   const { currentProject } = useProjectStore();
   const { labels, loading, fetchLabels, deleteLabel, labelSets, fetchLabelSets } = useLabelStore();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!currentProject?.id) return;
@@ -21,6 +25,26 @@ export function ProjectLabelsTab() {
 
   return (
     <div className="w-full h-full p-3 py-3 flex flex-col gap-8 overflow-hidden">
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete label"
+        description={
+          <Label className="text-sm">
+            This will permanently delete the label{labelToDelete?.name ? ` "${labelToDelete.name}"` : ''} from this
+            project. This action cannot be undone. Are you sure you want to continue?
+          </Label>
+        }
+        confirmText="Delete"
+        confirmVariant="destructive"
+        confirmDisabled={!labelToDelete}
+        onConfirm={async () => {
+          if (!labelToDelete) return;
+          await deleteLabel(labelToDelete.id);
+          setLabelToDelete(null);
+        }}
+        onCancel={() => setLabelToDelete(null)}
+      />
       <section>
         <div className="mb-4">
           <Label className="text-xl font-medium">Labels</Label>
@@ -41,7 +65,10 @@ export function ProjectLabelsTab() {
                     key={l.id}
                     text={l.name}
                     color={l.color}
-                    onDelete={() => deleteLabel(l.id)}
+                    onDelete={() => {
+                      setLabelToDelete({ id: l.id, name: l.name });
+                      setDeleteConfirmOpen(true);
+                    }}
                   />
                 ))}
                 <AddLabelDialog triggerClassName="ml-1" projectId={currentProject?.id} />

@@ -9,14 +9,37 @@ import { Button } from '@/components/ui-kit/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui-kit/Dialog';
 import { Label } from '../ui-kit/Label';
 import GradientScrollArea from '../common/GradientScrollArea';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 
 const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const { deleteLabel, deleteLabelSet } = useLabelStore();
   const { currentProject } = useProjectStore();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteLabelConfirmOpen, setDeleteLabelConfirmOpen] = useState(false);
+  const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
 
   return (
     <Card className="relative flex flex-col px-1 rounded-md shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">
+      <ConfirmDialog
+        open={deleteLabelConfirmOpen}
+        onOpenChange={setDeleteLabelConfirmOpen}
+        title="Delete label"
+        description={
+          <Label className="text-sm">
+            This will permanently delete the label{labelToDelete?.name ? ` "${labelToDelete.name}"` : ''}. This action
+            cannot be undone. Are you sure you want to continue?
+          </Label>
+        }
+        confirmText="Delete"
+        confirmVariant="destructive"
+        confirmDisabled={!labelToDelete}
+        onConfirm={async () => {
+          if (!labelToDelete) return;
+          await deleteLabel(labelToDelete.id);
+          setLabelToDelete(null);
+        }}
+        onCancel={() => setLabelToDelete(null)}
+      />
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogTrigger asChild>
           <Button
@@ -69,7 +92,16 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
               the content edge will not be aligned with the top of scroll bar which looks
               not good  */}    
           {(set.labels ?? []).map((l: any) => (
-            <LabelBadge className="mb-2" key={l.id} text={l.name} color={l.color} onDelete={() => deleteLabel(l.id)} />
+            <LabelBadge
+              className="mb-2"
+              key={l.id}
+              text={l.name}
+              color={l.color}
+              onDelete={() => {
+                setLabelToDelete({ id: l.id, name: l.name });
+                setDeleteLabelConfirmOpen(true);
+              }}
+            />
           ))}
 
           <AddLabelDialog labelSetId={set.id} projectId={currentProject?.id} />

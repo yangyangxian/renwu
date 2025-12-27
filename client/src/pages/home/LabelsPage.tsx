@@ -1,5 +1,5 @@
 import LabelBadge from '@/components/common/LabelBadge';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { Label } from '@/components/ui-kit/Label';
 import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
@@ -7,8 +7,11 @@ import { Card } from '@/components/ui-kit/Card';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
 import AddLabelSetDialog from '@/components/labelpage/AddLabelSetDialog';
 import SetCard from '@/components/labelpage/SetCard';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 export default function LabelsPage() {
   const { labels, loading, fetchLabels, deleteLabel, labelSets, fetchLabelSets } = useLabelStore();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchLabels();
@@ -20,6 +23,26 @@ export default function LabelsPage() {
 
   return (
     <div className="w-full h-full p-3 flex flex-col gap-8 overflow-hidden">
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete label"
+        description={
+          <Label className="text-sm">
+            This will permanently delete the label{labelToDelete?.name ? ` "${labelToDelete.name}"` : ''}. This action
+            cannot be undone. Are you sure you want to continue?
+          </Label>
+        }
+        confirmText="Delete"
+        confirmVariant="destructive"
+        confirmDisabled={!labelToDelete}
+        onConfirm={async () => {
+          if (!labelToDelete) return;
+          await deleteLabel(labelToDelete.id);
+          setLabelToDelete(null);
+        }}
+        onCancel={() => setLabelToDelete(null)}
+      />
       {/* My Labels Section */}
       <section>
         <div className="mb-4">
@@ -40,7 +63,10 @@ export default function LabelsPage() {
                     key={l.id}
                     text={l.name}
                     color={l.color}
-                    onDelete={() => deleteLabel(l.id)}
+                    onDelete={() => {
+                      setLabelToDelete({ id: l.id, name: l.name });
+                      setDeleteConfirmOpen(true);
+                    }}
                   />
                 ))}
                 <AddLabelDialog triggerClassName="ml-1" />
