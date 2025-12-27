@@ -125,8 +125,8 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
               </CardHeader>
               <CardContent className="flex flex-col flex-1 min-h-0 p-0">
                 <GradientScrollArea
-                  topOverlayHeight={35}
-                  bottomOverlayHeight={50}
+                  topOverlayHeight={50}
+                  bottomOverlayHeight={60}
                   scrollAreaClassName="p-3 flex flex-col gap-3"
                   className="flex-1"
                 >

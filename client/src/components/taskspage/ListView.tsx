@@ -163,8 +163,11 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <GradientScrollArea topOverlayHeight={60} bottomOverlayHeight={70} className="flex-1" scrollAreaClassName="flex flex-col min-h-0">
-          {sortedTasks.length ? (
+        <GradientScrollArea 
+          topOverlayHeight={50}
+          bottomOverlayHeight={60}
+          className="flex-1" scrollAreaClassName="flex flex-col min-h-0">
+            {sortedTasks.length ? (
             sortedTasks.map((task, idx) => {
               const showDeleteButton = hasPermission(
                 PermissionAction.DELETE_OTHERS_TASK,
