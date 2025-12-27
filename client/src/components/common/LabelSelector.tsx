@@ -196,7 +196,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   key={id}
                   type="button"
                   onClick={() => toggleDraft(id)}
-                  className={`w-full text-left rounded-md px-2 py-1 text-sm flex items-center justify-between transition hover:bg-muted cursor-pointer ${active ? 'bg-muted/70' : ''}`}
+                  className={`w-full text-left rounded-md px-2 py-1 text-sm flex items-center justify-between transition hover:bg-muted cursor-pointer`}
                 >
                   <span className="flex items-center gap-2 flex-1 min-w-0">
                     <LabelBadge text="" color={color} className="!px-3 !py-1.5" />
@@ -228,7 +228,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                         key={id}
                         type="button"
                         onClick={() => toggleDraft(id)}
-                        className={`w-full text-left rounded-sm px-2 py-1 text-sm flex items-center justify-between hover:bg-muted cursor-pointer ${active ? 'bg-muted/70' : ''}`}
+                        className={`w-full text-left rounded-sm px-2 py-1 text-sm flex items-center justify-between hover:bg-muted cursor-pointer`}
                       >
                         <span className="flex items-center gap-2 flex-1 min-w-0">
                           <LabelBadge text="" color={color} className="!px-3 !py-1.5" />

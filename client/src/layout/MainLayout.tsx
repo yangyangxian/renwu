@@ -18,7 +18,7 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
-  const { toggleDark, setDark, setLight, setSystem, mode } = useDarkMode();
+  const { setDark, setLight, setSystem, mode } = useDarkMode();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const location = useLocation();

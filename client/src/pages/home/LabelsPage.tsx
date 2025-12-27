@@ -19,7 +19,7 @@ export default function LabelsPage() {
   }, [fetchLabelSets]);
 
   return (
-    <div className="w-full h-full p-3 py-3 flex flex-col gap-8 overflow-hidden">
+    <div className="w-full h-full p-3 flex flex-col gap-8 overflow-hidden">
       {/* My Labels Section */}
       <section>
         <div className="mb-4">
@@ -32,7 +32,7 @@ export default function LabelsPage() {
 
           {loading && <HomePageSkeleton />}
           {!loading && (
-            <Card className="p-3 flex flex-wrap gap-3 shadow-none rounded-md border 
+            <Card className="p-3 px-4 flex flex-wrap gap-3 shadow-none rounded-md border 
               bg-background dark:bg-muted/60 max-w-full w-[600px]">
               <div className="flex flex-wrap items-center gap-2">
                 {labels.map((l: any) => (
