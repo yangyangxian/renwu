@@ -12,7 +12,7 @@ export class TaskResDto {
   dueDate: string = '';
   status: TaskStatus = TaskStatus.TODO;
   assignedTo: UserResDto = new UserResDto();
-  labels?: { id: string; labelName: string }[] = [];
+  labels?: { id: string; labelName: string; color?: string }[] = [];
   createdAt: string = '';
   updatedAt: string = '';
   projectId: string = '';

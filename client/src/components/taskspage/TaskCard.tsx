@@ -8,6 +8,7 @@ import { TaskStatus, UserResDto } from "@fullstack/common";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import LabelBadge from "@/components/common/LabelBadge";
 
 interface TaskCardProps {
   taskId: string; // Add taskId prop for deletion
@@ -16,6 +17,7 @@ interface TaskCardProps {
   dueDate?: string;
   projectName?: string;
   assignedTo?: UserResDto;
+  labels?: Array<{ id: string; labelName?: string; name?: string; color?: string; labelColor?: string }>;
   status?: TaskStatus;
   onClick?: () => void;
   className?: string;
@@ -30,7 +32,7 @@ const statusToColor: Record<TaskStatus, string> = {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
-  status, onClick, description, className, showDeleteButton }) => {
+  status, onClick, description, className, showDeleteButton, labels }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
 
@@ -58,6 +60,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       aria-label={title}
       onClick={onClick}
     >
+      {!!labels?.length && (
+        <div className="absolute top-2 right-2 flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none">
+          {labels
+            .filter(l => l && (l.labelName || l.name))
+            .map(l => (
+              <LabelBadge
+                key={l.id}
+                text={(l.labelName || l.name) as string}
+                color={l.color ?? l.labelColor}
+                className="px-1.5 py-[2px] text-[10px]"
+              />
+            ))}
+        </div>
+      )}
       {/* Delete icon, only visible on hover or focus */}
       {showDeleteButton && (
         <Button

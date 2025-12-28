@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui-kit/Button';
 import { Input } from '@/components/ui-kit/Input';
 import { Plus, Check, X } from 'lucide-react';
@@ -50,10 +50,13 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   emptyText = 'Add Label',
   projectId,
 }) => {
-  const { labels, labelSets, fetchLabelSets, fetchLabels } = useLabelStore();
+  const { fetchLabelSets, fetchLabels, getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState<string[]>(value);
+
+  const scopedLabels = useMemo(() => getLabelsForProjectId(projectId), [getLabelsForProjectId, projectId]);
+  const scopedLabelSets = useMemo(() => getLabelSetsForProjectId(projectId), [getLabelSetsForProjectId, projectId]);
 
   // sync draft when menu opens
   useEffect(() => {
@@ -62,19 +65,28 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   useEffect(() => {
     if (!open) return;
-    // When projectId is null/undefined, treat as personal scope.
-    if (!labels || labels.length === 0) fetchLabels(projectId == null ? undefined : projectId);
-    if (!labelSets || labelSets.length === 0) fetchLabelSets(projectId == null ? undefined : projectId);
+    // Load the correct scope, but don't flip the global active scope.
+    fetchLabels(projectId == null ? undefined : projectId, { setActiveScope: false });
+    fetchLabelSets(projectId == null ? undefined : projectId, { setActiveScope: false });
   }, [open, projectId, fetchLabels, fetchLabelSets]);
 
+  // Ensure selected badges can render even before opening the dropdown.
+  useEffect(() => {
+    if (!value || value.length === 0) return;
+    const hasAny = (scopedLabels?.length ?? 0) > 0 || (scopedLabelSets?.length ?? 0) > 0;
+    if (hasAny) return;
+    fetchLabels(projectId == null ? undefined : projectId, { setActiveScope: false });
+    fetchLabelSets(projectId == null ? undefined : projectId, { setActiveScope: false });
+  }, [value, scopedLabels, scopedLabelSets, projectId, fetchLabels, fetchLabelSets]);
+
   // Filter labelSets by projectId (undefined/null = personal only, string = project only)
-  const filteredLabelSets = (labelSets || []).filter(s => {
+  const filteredLabelSets = (scopedLabelSets || []).filter(s => {
     if (projectId == null) return !s.projectId;
     return s.projectId === projectId;
   });
 
   const labelIdsInSets = new Set<string>(filteredLabelSets.flatMap(s => (s.labels || []).map((l: any) => l.id)));
-  const independentLabels = (labels || []).filter(l => !labelIdsInSets.has((l as any).id) && (
+  const independentLabels = (scopedLabels || []).filter(l => !labelIdsInSets.has((l as any).id) && (
     projectId == null ? !l.projectId : l.projectId === projectId
   ));
   const normalizedSearch = search.trim().toLowerCase();
@@ -145,7 +157,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   return (
     <div className={cn('flex items-center gap-2 flex-wrap', className)}>
       {showBadges && value.map(id => {
-        const lbl = labels.find(l => l.id === id) || (labelSets || []).flatMap(s => s.labels || []).find((l: any) => l.id === id);
+        const lbl = (scopedLabels || []).find(l => l.id === id) || (scopedLabelSets || []).flatMap(s => s.labels || []).find((l: any) => l.id === id);
         if (!lbl) return null;
         return (
           <LabelBadge

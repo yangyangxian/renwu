@@ -29,7 +29,7 @@ router.post('/',
       // refresh createdTask to include labels
       const refreshed = await taskService.getTaskById(createdTask.id);
       const dto = mapObject(refreshed!, new TaskResDto());
-      dto.labels = (refreshed!.labels || []).map(l => ({ id: l.id, labelName: l.labelName }));
+      dto.labels = (refreshed!.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
       res.json(createApiResponse<TaskResDto>(dto));
     } catch (err) {
       next(err);
@@ -53,7 +53,7 @@ router.put('/:taskId',
 
         const updatedTask = await taskService.updateTask(taskId, req.body as any);
         const dto = mapObject(updatedTask, new TaskResDto());
-        dto.labels = (updatedTask.labels || []).map(l => ({ id: l.id, labelName: l.labelName }));
+        dto.labels = (updatedTask.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
         res.json(createApiResponse<TaskResDto>(dto));
       } catch (err) {
         next(err);
@@ -93,7 +93,7 @@ router.get('/project/id/:projectId',
     const tasks = await taskService.getTasksByProjectId(projectId);
     const data: TaskResDto[] = tasks.map(task => {
       const dto = mapObject(task, new TaskResDto());
-      dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName }));
+      dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
       return dto;
     });
     res.json(createApiResponse<TaskResDto[]>(data));
@@ -111,7 +111,7 @@ publicRouter.get('/id/:taskId',
       const task = await taskService.getTaskById(req.params.taskId);
       if (!task) return res.json(createApiResponse<TaskResDto>(undefined));
       const dto = mapObject(task, new TaskResDto());
-      dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName }));
+      dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
       res.json(createApiResponse<TaskResDto>(dto));
     } catch (err) {
       next(err);

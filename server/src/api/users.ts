@@ -74,7 +74,11 @@ router.get('/me/tasks', async (req: Request, res: Response<ApiResponse<TaskResDt
   try {
     const userId = req.user!.userId;
     const tasks = await taskService.getTasksByUserId(userId);
-    const data = tasks.map((task: any) => mapObject(task, new TaskResDto()));
+    const data = tasks.map((task: any) => {
+      const dto = mapObject(task, new TaskResDto());
+      dto.labels = (task.labels || []).map((l: any) => ({ id: l.id, labelName: l.labelName, color: l.labelColor }));
+      return dto;
+    });
     res.json(createApiResponse(data));
   } catch (err) {
     next(err);

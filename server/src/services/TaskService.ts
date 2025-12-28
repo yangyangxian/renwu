@@ -222,12 +222,12 @@ class TaskService {
         };
       }
       const lblRows = await db
-        .select({ id: labels.id, labelName: labels.labelName, addedAt: taskLabels.createdAt })
+        .select({ id: labels.id, labelName: labels.labelName, labelColor: labels.labelColor, addedAt: taskLabels.createdAt })
         .from(labels)
         .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
         .where(eq(taskLabels.taskId, task.id))
         .orderBy(taskLabels.createdAt);
-      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
+      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName, labelColor: r.labelColor }));
       entities.push(entity);
     }
     return entities;
@@ -283,12 +283,12 @@ class TaskService {
         };
       }
       const lblRows = await db
-        .select({ id: labels.id, labelName: labels.labelName, addedAt: taskLabels.createdAt })
+        .select({ id: labels.id, labelName: labels.labelName, labelColor: labels.labelColor, addedAt: taskLabels.createdAt })
         .from(labels)
         .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
         .where(eq(taskLabels.taskId, task.id))
         .orderBy(taskLabels.createdAt);
-      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
+      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName, labelColor: r.labelColor }));
       entities.push(entity);
     }
     return entities;
@@ -380,12 +380,12 @@ class TaskService {
     }
     // Fetch labels for the task via join to task_labels and include name
     const lblRows = await db
-      .select({ id: labels.id, labelName: labels.labelName, addedAt: taskLabels.createdAt })
+      .select({ id: labels.id, labelName: labels.labelName, labelColor: labels.labelColor, addedAt: taskLabels.createdAt })
       .from(labels)
       .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
       .where(eq(taskLabels.taskId, taskId))
       .orderBy(taskLabels.createdAt);
-    entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName }));
+    entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName, labelColor: r.labelColor }));
     return entity;
   }
 

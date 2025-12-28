@@ -172,6 +172,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                             dueDate={task.dueDate}
                             projectName={task.projectName}
                             assignedTo={showAssignedTo ? task.assignedTo : undefined}
+                            labels={task.labels}
                             status={task.status}
                             onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
                             showDeleteButton={hasPermission(PermissionAction.DELETE_OTHERS_TASK, { resourceType: PermissionResourceType.TASK, loggedUserId: user?.id!, projectId: task.projectId!, assignedUserId: task.assignedTo!.id })}
@@ -194,6 +195,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
             dueDate={activeTask.dueDate}
             projectName={activeTask.projectName}
             assignedTo={activeTask.assignedTo}
+            labels={activeTask.labels}
             status={activeTask.status}
             showDeleteButton={false}
           />

@@ -67,6 +67,16 @@ export function useLabelStore() {
   const labels = labelsByScope[activeScopeKey] ?? [];
   const labelSets = labelSetsByScope[activeScopeKey] ?? [];
 
+  const getLabelsForProjectId = useCallback((projectId?: string | null) => {
+    const scopeKey = scopeKeyFromProjectId(projectId ?? undefined);
+    return labelsByScope[scopeKey] ?? [];
+  }, [labelsByScope]);
+
+  const getLabelSetsForProjectId = useCallback((projectId?: string | null) => {
+    const scopeKey = scopeKeyFromProjectId(projectId ?? undefined);
+    return labelSetsByScope[scopeKey] ?? [];
+  }, [labelSetsByScope]);
+
   const getScopeState = () => {
     const s = useZustandLabelStore.getState();
     const scopeKey = s.activeScopeKey;
@@ -263,6 +273,8 @@ export function useLabelStore() {
     loading,
     error,
     labelSets,
+    getLabelsForProjectId,
+    getLabelSetsForProjectId,
     // Allow pages to switch the active display scope explicitly.
     //setActiveScopeKey,
     addLabelToSet,
