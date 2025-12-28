@@ -35,6 +35,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
   status, onClick, description, className, showDeleteButton, labels }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
+  const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
 
   const handleDeleteTask = async () => {
     await withToast(
@@ -61,7 +62,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       onClick={onClick}
     >
       {!!labels?.length && (
-        <div className="absolute top-2 right-2 flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none">
+        <div className={`absolute top-3 ${labelsRightClass} flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none transition-[right] duration-150`}>
           {labels
             .filter(l => l && (l.labelName || l.name))
             .map(l => (
@@ -79,7 +80,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-1.5 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
+          className="absolute top-2 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
           transition-opacity duration-150 p-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 
           focus:opacity-100 focus-visible:opacity-100 pointer-events-none group-hover:pointer-events-auto 
           group-focus-within:pointer-events-auto focus:pointer-events-auto focus-visible:pointer-events-auto 
