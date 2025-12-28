@@ -112,7 +112,7 @@ export const AddLabelDialog: React.FC<AddLabelDialogProps> = ({ onCreated, trigg
           variant="outline"
           size="icon"
           aria-label="Add new label"
-          className={`!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-gray-200 dark:bg-muted/70 hover:bg-gray-200/70 text-muted-foreground ${triggerClassName || ''}`}
+          className={`!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-primary-purple/60 dark:bg-muted/70 hover:bg-primary-purple hover:text-white text-white ${triggerClassName || ''}`}
         >
           <Plus className="w-3 h-3" />
         </Button>

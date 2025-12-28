@@ -55,7 +55,7 @@ export default function LabelsPage() {
 
           {loading && <HomePageSkeleton />}
           {!loading && (
-            <Card className="p-3 px-4 flex flex-wrap gap-3 shadow-none rounded-md border 
+            <Card className="p-3 px-4 flex flex-wrap gap-3 card-border
               bg-background dark:bg-muted/60 max-w-full w-[600px]">
               <div className="flex flex-wrap items-center gap-2">
                 {labels.map((l: any) => (
