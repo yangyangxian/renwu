@@ -55,8 +55,11 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState<string[]>(value);
 
-  const scopedLabels = useMemo(() => getLabelsForProjectId(projectId), [getLabelsForProjectId, projectId]);
-  const scopedLabelSets = useMemo(() => getLabelSetsForProjectId(projectId), [getLabelSetsForProjectId, projectId]);
+  // Normalize: treat '' as personal (null) to avoid scope bugs.
+  const normalizedProjectId = projectId && projectId.trim() ? projectId : null;
+
+  const scopedLabels = useMemo(() => getLabelsForProjectId(normalizedProjectId), [getLabelsForProjectId, normalizedProjectId]);
+  const scopedLabelSets = useMemo(() => getLabelSetsForProjectId(normalizedProjectId), [getLabelSetsForProjectId, normalizedProjectId]);
 
   // sync draft when menu opens
   useEffect(() => {
@@ -66,29 +69,25 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   useEffect(() => {
     if (!open) return;
     // Load the correct scope, but don't flip the global active scope.
-    fetchLabels(projectId == null ? undefined : projectId, { setActiveScope: false });
-    fetchLabelSets(projectId == null ? undefined : projectId, { setActiveScope: false });
-  }, [open, projectId, fetchLabels, fetchLabelSets]);
+    fetchLabels(normalizedProjectId ?? undefined, { setActiveScope: false });
+    fetchLabelSets(normalizedProjectId ?? undefined, { setActiveScope: false });
+  }, [open, normalizedProjectId, fetchLabels, fetchLabelSets]);
 
   // Ensure selected badges can render even before opening the dropdown.
   useEffect(() => {
     if (!value || value.length === 0) return;
     const hasAny = (scopedLabels?.length ?? 0) > 0 || (scopedLabelSets?.length ?? 0) > 0;
     if (hasAny) return;
-    fetchLabels(projectId == null ? undefined : projectId, { setActiveScope: false });
-    fetchLabelSets(projectId == null ? undefined : projectId, { setActiveScope: false });
-  }, [value, scopedLabels, scopedLabelSets, projectId, fetchLabels, fetchLabelSets]);
+    fetchLabels(normalizedProjectId ?? undefined, { setActiveScope: false });
+    fetchLabelSets(normalizedProjectId ?? undefined, { setActiveScope: false });
+  }, [value, scopedLabels, scopedLabelSets, normalizedProjectId, fetchLabels, fetchLabelSets]);
 
-  // Filter labelSets by projectId (undefined/null = personal only, string = project only)
-  const filteredLabelSets = (scopedLabelSets || []).filter(s => {
-    if (projectId == null) return !s.projectId;
-    return s.projectId === projectId;
-  });
+  // NOTE: We rely on the store's scope-aware caches; avoid filtering by projectId
+  // on each label/set because some endpoints don't populate projectId consistently.
+  const filteredLabelSets = scopedLabelSets || [];
 
   const labelIdsInSets = new Set<string>(filteredLabelSets.flatMap(s => (s.labels || []).map((l: any) => l.id)));
-  const independentLabels = (scopedLabels || []).filter(l => !labelIdsInSets.has((l as any).id) && (
-    projectId == null ? !l.projectId : l.projectId === projectId
-  ));
+  const independentLabels = (scopedLabels || []).filter(l => !labelIdsInSets.has((l as any).id));
   const normalizedSearch = search.trim().toLowerCase();
   const matchesIndependent = normalizedSearch
     ? independentLabels.filter(l => ((l as any).name || (l as any).labelName || '').toLowerCase().includes(normalizedSearch))
