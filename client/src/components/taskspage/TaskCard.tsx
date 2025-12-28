@@ -53,7 +53,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
     : false;
   return (
     <Card
-      className={`group bg-muted/60 dark:bg-black p-3 shadow hover:scale-102 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
+      className={`group dark:bg-black p-3 card-border hover:scale-102 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}

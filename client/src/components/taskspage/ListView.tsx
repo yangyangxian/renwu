@@ -189,7 +189,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
                       projectName={task.projectName}
                       status={task.status}
                       assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                      className={`hover:scale-100 cursor-pointer rounded-none bg-white-black py-3 pl-4 min-h-22 border-border shadow-none ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
+                      className={`hover:scale-100 cursor-pointer rounded-none! bg-white-black py-3 pl-4 min-h-22 border-none! shadow-none! ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
                       showDeleteButton={showDeleteButton}
                     />
                   </div>
