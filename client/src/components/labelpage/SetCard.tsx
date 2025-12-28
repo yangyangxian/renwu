@@ -19,7 +19,7 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
 
   return (
-    <Card className="relative flex flex-col px-1 rounded-md shadow-none bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">
+    <Card className="relative flex flex-col px-1 card-border bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">
       <ConfirmDialog
         open={deleteLabelConfirmOpen}
         onOpenChange={setDeleteLabelConfirmOpen}
