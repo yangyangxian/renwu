@@ -144,7 +144,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
             <div className="flex flex-col gap-2">
               <UILabel className="text-[13px] font-medium">Personal label set</UILabel>
               <Select value={selectedPersonalSetId} onValueChange={setSelectedPersonalSetId}>
-                <SelectTrigger>
+                <SelectTrigger className="text-foreground dark:text-white">
                   <SelectValue placeholder={personalSets.length ? 'Select a label set' : 'No personal label sets'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -159,7 +159,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
 
             <button
               type="button"
-              className="text-xs underline underline-offset-4 text-left cursor-pointer"
+              className="text-xs underline text-primary underline-offset-4 text-left cursor-pointer"
               onClick={() => { setError(null); setMode('create'); setTimeout(() => inputRef.current?.focus(), 50); }}
             >
               Back to create new label set
