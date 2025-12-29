@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
 import { apiClient } from '@/utils/APIClient';
-import { getMyLabels, getProjectLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, getProjectLabelSets, createLabelInSet, getLabelsInSet, deleteLabelSetById } from '@/apiRequests/apiEndpoints';
+import { getMyLabels, getProjectLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, getProjectLabelSets, createLabelInSet, getLabelsInSet, deleteLabelSetById, deleteLabelFromSet } from '@/apiRequests/apiEndpoints';
 import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto } from '@fullstack/common';
 
 type LabelScope = { kind: 'me' } | { kind: 'project'; projectId: string };
@@ -185,6 +185,35 @@ export function useLabelStore() {
     }
   }, [setLabelsForScope, setLabelSetsForScope]);
 
+  const removeLabelFromSet = useCallback(async (setId: string, labelId: string): Promise<void> => {
+    // Optimistic targeted update: only update the edited set.
+    const { scopeKey, labelSets: currentSets, labels: currentLabels } = getScopeState();
+    const prevSets = currentSets || [];
+    const prevLabels = currentLabels || [];
+
+    const nextSets = prevSets.map((s: any) =>
+      s.id === setId
+        ? ({
+          ...s,
+          labels: (s.labels || []).filter((l: any) => l.id !== labelId),
+        })
+        : s
+    );
+
+    setLabelSetsForScope(scopeKey, nextSets as any[]);
+    // labels are exclusive to a single set, so deleting from set also deletes the label record
+    setLabelsForScope(scopeKey, prevLabels.filter((l: any) => l.id !== labelId));
+
+    try {
+      await apiClient.delete(deleteLabelFromSet(setId, labelId));
+    } catch (err) {
+      // Roll back on failure.
+      setLabelSetsForScope(scopeKey, prevSets as any[]);
+      setLabelsForScope(scopeKey, prevLabels as any[]);
+      throw err;
+    }
+  }, [setLabelSetsForScope, setLabelsForScope]);
+
   const updateLabel = useCallback(async (id: string, payload: Partial<LabelUpdateReqDto & { name?: string }>): Promise<LabelResDto> => {
     try {
       const body: any = { ...payload };
@@ -278,6 +307,7 @@ export function useLabelStore() {
     // Allow pages to switch the active display scope explicitly.
     //setActiveScopeKey,
     addLabelToSet,
+  removeLabelFromSet,
     fetchLabels,
     fetchLabelSets,
     createLabel,

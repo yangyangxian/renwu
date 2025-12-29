@@ -62,7 +62,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       onClick={onClick}
     >
       {!!labels?.length && (
-        <div className={`absolute top-3 ${labelsRightClass} flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none transition-[right] duration-150`}>
+        <div className={`absolute top-3 ${labelsRightClass} flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none transition-[right] duration-200`}>
           {labels
             .filter(l => l && (l.labelName || l.name))
             .map(l => (

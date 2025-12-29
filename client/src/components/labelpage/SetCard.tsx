@@ -12,7 +12,7 @@ import GradientScrollArea from '../common/GradientScrollArea';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 
 const SetCard: React.FC<{ set: any }> = ({ set }) => {
-  const { deleteLabel, deleteLabelSet } = useLabelStore();
+  const { removeLabelFromSet, deleteLabelSet } = useLabelStore();
   const { currentProject } = useProjectStore();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteLabelConfirmOpen, setDeleteLabelConfirmOpen] = useState(false);
@@ -35,7 +35,7 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
         confirmDisabled={!labelToDelete}
         onConfirm={async () => {
           if (!labelToDelete) return;
-          await deleteLabel(labelToDelete.id);
+          await removeLabelFromSet(set.id, labelToDelete.id);
           setLabelToDelete(null);
         }}
         onCancel={() => setLabelToDelete(null)}

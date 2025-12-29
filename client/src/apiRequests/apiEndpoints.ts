@@ -56,5 +56,7 @@ export const getMyLabelSets = () => '/api/labels/sets/me';
 export const getProjectLabelSets = (projectId: string) => `/api/labels/sets/project/${projectId}`;
 export const createLabelSet = () => '/api/labels/sets';
 export const deleteLabelSetById = (setId: string) => `/api/labels/sets/${setId}`;
+export const importPersonalLabelSetToProject = (setId: string, projectId: string) => `/api/labels/sets/${setId}/import-to-project/${projectId}`;
 export const createLabelInSet = (setId: string) => `/api/labels/sets/${setId}/labels`;
 export const getLabelsInSet = (setId: string) => `/api/labels/sets/${setId}/labels`;
+export const deleteLabelFromSet = (setId: string, labelId: string) => `/api/labels/sets/${setId}/labels/${labelId}`;

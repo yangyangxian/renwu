@@ -96,8 +96,8 @@ class LabelService {
   async update(id: string, actorId: string, patch: Partial<{ labelName: string; labelDescription?: string; labelColor?: string }>) {
     // ensure ownership
     const [existing] = await db.select().from(labels).where(eq(labels.id, id));
-  if (!existing) throw new CustomError('Label not found', ErrorCodes.NOT_FOUND);
-  if (existing.createdBy !== actorId) throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
+    if (!existing) throw new CustomError('Label not found', ErrorCodes.NOT_FOUND);
+    if (existing.createdBy !== actorId) throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
 
     const updateFields: any = {};
     if (patch.labelName !== undefined) updateFields.labelName = patch.labelName.trim();
@@ -118,12 +118,7 @@ class LabelService {
       throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
     
     await db.delete(labels).where(eq(labels.id, id));
-    // cascade cleanup for label_set_labels if FK not set to cascade
-    try {
-      await db.delete(labelSetLabels).where(eq(labelSetLabels.labelId, id));
-    } catch (err) {
-      logger.debug('LabelService.delete: cleanup error (non-fatal)', err);
-    }
+
     return true;
   }
 
@@ -358,6 +353,98 @@ class LabelService {
     });
 
     return true;
+  }
+
+  async removeLabelFromSet(labelSetId: string, labelId: string, actorId: string) {
+    const [setRow] = await db.select().from(labelSets).where(eq(labelSets.id, labelSetId));
+    if (!setRow) throw new CustomError('Label set not found', ErrorCodes.NOT_FOUND);
+
+    // keep consistent with other set mutations: only the set owner can modify it
+    if (setRow.createdBy !== actorId) throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
+
+    await db.transaction(async (tx) => {
+      // delete only the association for this set/label
+      await tx
+        .delete(labelSetLabels)
+        .where(and(eq(labelSetLabels.labelSetId, labelSetId), eq(labelSetLabels.labelId, labelId)));
+
+      // since labels are exclusive to a single set, delete the label record too
+      await tx.delete(labels).where(eq(labels.id, labelId));
+    });
+
+    return true;
+  }
+
+  /**
+   * Clone a personal label set (projectId is null) and its labels into a project.
+   * Creates exactly ONE new label set in the project and creates NEW label rows for each source label.
+   */
+  async importPersonalSetToProject(sourceSetId: string, projectId: string, actorId: string) {
+    await this.assertProjectMember(projectId, actorId);
+
+    const [sourceSet] = await db.select().from(labelSets).where(eq(labelSets.id, sourceSetId));
+    if (!sourceSet) throw new CustomError('Label set not found', ErrorCodes.NOT_FOUND);
+
+    // Only allow importing personal sets (no projectId) owned by the actor.
+    if ((sourceSet as any).projectId) throw new CustomError('Only personal label sets can be imported', ErrorCodes.VALIDATION_ERROR);
+    if (sourceSet.createdBy !== actorId) throw new CustomError('Forbidden', ErrorCodes.UNAUTHORIZED);
+
+    return await db.transaction(async (tx) => {
+      // 1) Create the new project label set
+      const [createdSet] = await tx.insert(labelSets).values({
+        labelSetName: sourceSet.labelSetName,
+        labelSetDescription: sourceSet.labelSetDescription || null,
+        projectId,
+        createdBy: actorId,
+      }).returning();
+      if (!createdSet) throw new CustomError('Failed to create label set', ErrorCodes.INTERNAL_ERROR);
+
+      // 2) Fetch source labels (in set order is not guaranteed in old schema; keep DB order)
+      const sourceRows = await tx
+        .select({
+          labelId: labels.id,
+          labelName: labels.labelName,
+          labelDescription: labels.labelDescription,
+          labelColor: labels.labelColor,
+        })
+        .from(labelSetLabels)
+        .innerJoin(labels, eq(labelSetLabels.labelId, labels.id))
+        .where(eq(labelSetLabels.labelSetId, sourceSetId));
+
+      // 3) Clone labels + attach
+      const clonedLabels: any[] = [];
+      for (const r of sourceRows) {
+        const [newLabel] = await tx.insert(labels).values({
+          labelName: (r.labelName || '').trim(),
+          labelDescription: r.labelDescription || null,
+          labelColor: r.labelColor || null,
+          projectId,
+          createdBy: actorId,
+        }).returning();
+        if (!newLabel) continue;
+        await tx.insert(labelSetLabels).values({ labelSetId: createdSet.id, labelId: newLabel.id }).onConflictDoNothing().execute();
+        clonedLabels.push({
+          id: newLabel.id,
+          labelName: newLabel.labelName,
+          labelDescription: newLabel.labelDescription || '',
+          labelColor: newLabel.labelColor || '',
+          createdBy: newLabel.createdBy || undefined,
+          createdAt: newLabel.createdAt?.toISOString?.() ?? '',
+          updatedAt: newLabel.updatedAt?.toISOString?.() ?? '',
+        });
+      }
+
+      return {
+        id: createdSet.id,
+        labelSetName: createdSet.labelSetName,
+        labelSetDescription: createdSet.labelSetDescription,
+        projectId: createdSet.projectId ?? null,
+        createdBy: createdSet.createdBy,
+        createdAt: createdSet.createdAt,
+        updatedAt: createdSet.updatedAt,
+        labels: clonedLabels,
+      };
+    });
   }
 }
 

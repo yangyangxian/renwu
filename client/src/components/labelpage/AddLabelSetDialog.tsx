@@ -8,7 +8,7 @@ import { withToast } from '@/utils/toastUtils';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { Plus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui-kit/Select';
-import { createLabelInSet, createLabelSet, getMyLabelSets } from '@/apiRequests/apiEndpoints';
+import { createLabelSet, getMyLabelSets, importPersonalLabelSetToProject } from '@/apiRequests/apiEndpoints';
 
 interface AddLabelSetDialogProps {
   onCreated?: (id: string) => void;
@@ -84,27 +84,8 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
     setError(null);
     try {
       await withToast(async () => {
-        const source = personalSets.find(s => s.id === selectedPersonalSetId);
-        if (!source) throw new Error('Selected label set not found');
-
-        // 1) create project label set
-        const createdSet = await apiClient.post(createLabelSet(), {
-          labelSetName: (source.labelSetName || source.name || 'Imported set') as string,
-          labelSetDescription: source.labelSetDescription || undefined,
-          projectId,
-        });
-        const newSetId = (createdSet as any)?.id;
-        if (!newSetId) throw new Error('Failed to create project label set');
-
-        // 2) copy labels into the new set (create new labels under project)
-        const sourceLabels = Array.isArray(source.labels) ? source.labels : [];
-        for (const l of sourceLabels) {
-          await apiClient.post(createLabelInSet(newSetId), {
-            labelName: l.labelName || l.name || '',
-            description: l.labelDescription || l.description || undefined,
-            color: l.labelColor || l.color || undefined,
-          });
-        }
+  // Server clones set + labels atomically (avoids duplicate/split sets from client loops).
+  await apiClient.post(importPersonalLabelSetToProject(selectedPersonalSetId, projectId), {} as any);
 
         await fetchLabelSets(projectId);
         setOpen(false);

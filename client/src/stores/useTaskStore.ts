@@ -166,15 +166,13 @@ export function useTaskStore() {
         assignedTo: typeof updateData.assignedTo === 'object' ? updateData.assignedTo?.id : updateData.assignedTo,
       };
 
-      // Include labels if provided (frontend uses `labelIds` state)
-      if (Array.isArray(updateData.labels)) {
-        if (updateData.labels.length > 0 && typeof updateData.labels[0] === 'object') {
-          updatePayload.labels = (updateData.labels as any[]).map(l => l.id);
-        } else {
-          updatePayload.labels = updateData.labels as string[];
-        }
+      // Include labels if provided.
+      // Contract: server expects `labels` to be string[] of label IDs (including empty array to clear all).
+      if (Array.isArray(updateData.labelIds)) {
+        updatePayload.labels = updateData.labelIds as string[];
+      } else if (Array.isArray(updateData.labels)) {
+        updatePayload.labels = (updateData.labels as any[]).map((l: any) => (typeof l === 'string' ? l : l?.id)).filter(Boolean);
       }
-      if (Array.isArray(updateData.labelIds)) updatePayload.labels = updateData.labelIds;
 
       const updatedTask = await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskByIdEndpoint(taskId), updatePayload);
       updateTask(updatedTask);

@@ -123,7 +123,7 @@ router.get('/sets/me',
   ) => {
     try {
       const userId = req.user!.userId;
-  const rows = await labelService.listSetsByUserWithLabels(userId);
+      const rows = await labelService.listSetsByUserWithLabels(userId);
       res.json(createApiResponse(rows));
     } catch (err) { next(err); }
   }
@@ -160,6 +160,23 @@ router.post('/sets',
   }
 );
 
+// POST /api/labels/sets/:setId/import-to-project/:projectId
+// Clone a personal label set (and its labels) into a project in one transaction.
+router.post('/sets/:setId/import-to-project/:projectId',
+  async (
+    req: Request<{ setId: string; projectId: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const actorId = req.user!.userId;
+      const { setId, projectId } = req.params;
+      const created = await labelService.importPersonalSetToProject(setId, projectId, actorId);
+      res.json(createApiResponse(created));
+    } catch (err) { next(err); }
+  }
+);
+
 // create a new label and attach to set in one call
 router.post('/sets/:setId/labels',
   async (
@@ -191,6 +208,22 @@ router.get('/sets/:setId/labels',
       const rows = await labelService.listLabelsInSet(setId);
       const mapped: LabelResDto[] = rows.map(r => mapObject(r, new LabelResDto(), labelFieldMap));
       res.json(createApiResponse<LabelResDto[]>(mapped));
+    } catch (err) { next(err); }
+  }
+);
+
+// DELETE /api/labels/sets/:setId/labels/:labelId - detach a label from a set (does not delete label)
+router.delete('/sets/:setId/labels/:labelId',
+  async (
+    req: Request<{ setId: string; labelId: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const actorId = req.user!.userId;
+      const { setId, labelId } = req.params;
+      await labelService.removeLabelFromSet(setId, labelId, actorId);
+      res.json(createApiResponse(null));
     } catch (err) { next(err); }
   }
 );
