@@ -10,7 +10,6 @@ import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
-import { Button } from "@/components/ui-kit/Button";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { TaskResDto, TaskViewMode } from '@fullstack/common';
 import logger from "@/utils/logger";
@@ -98,37 +97,6 @@ export default function ProjectDetailPage() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-
-        {activeTab === 'tasks' && (
-          <div className="flex items-center gap-2 ml-auto">
-            <Tabs value={taskView} onValueChange={v => setTaskView(v as TaskViewMode)}>
-              <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
-                <TabsTrigger value={TaskViewMode.BOARD} className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Board
-                </TabsTrigger>
-                <TabsTrigger value={TaskViewMode.LIST} className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
-                  <List className="w-4 h-4" />
-                  List
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button
-              variant="default"
-              className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
-              onClick={() => {
-                setEditingTask(null);
-                setIsDialogOpen(true);
-              }}
-            >
-              <span className="sr-only">Add Task</span>
-              <span className="flex items-center gap-1">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-                Add Task
-              </span>
-            </Button>
-          </div>
-        )}
       </div>
       {isDialogOpen && (
         <TaskDialog
@@ -151,6 +119,11 @@ export default function ProjectDetailPage() {
       {activeTab === 'tasks' && projectSlug && (
         <ProjectTasksTab
           view={taskView}
+          onViewChange={setTaskView}
+          onAddTask={() => {
+            setEditingTask(null);
+            setIsDialogOpen(true);
+          }}
           onTaskClick={taskId => {
             const fullTask = tasks.find(t => t.id === taskId) || null;
             setEditingTask(fullTask);

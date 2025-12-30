@@ -1,10 +1,10 @@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Input } from "@/components/ui-kit/Input";
-import { Calendar, Folder } from "lucide-react";
-import { Search } from "lucide-react";
+import { Folder, Search } from "lucide-react";
 import { TaskResDto, TaskDateRange } from "@fullstack/common";
 import { useEffect } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { TaskFilterDropdown } from "@/components/taskspage/TaskFilterDropdown";
 
 interface TaskFilterMenuProps {
   showProjectSelect?: boolean;
@@ -108,19 +108,10 @@ export function TaskFilterMenu({
       )}
 
       {showDateRange && (
-        <div className="flex items-center">
-      <Select value={dateRange} onValueChange={v => onDateRangeChange?.(v as TaskDateRange)}>
-        <SelectTrigger className="min-w-[10rem] px-2 bg-white dark:text-primary flex gap-2" id="date-range-select">
-          <Calendar className="w-4 h-4" />
-          <SelectValue placeholder="Date range" />
-        </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={TaskDateRange.LAST_3_MONTHS}>Last 3 months</SelectItem>
-        <SelectItem value={TaskDateRange.LAST_1_YEAR}>Last 1 year</SelectItem>
-        <SelectItem value={TaskDateRange.ALL_TIME}>All Time</SelectItem>
-      </SelectContent>
-      </Select>
-        </div>
+      <TaskFilterDropdown
+          value={dateRange}
+          onChange={(v) => onDateRangeChange?.(v)}
+        />
       )}
 
       {showSearch && (

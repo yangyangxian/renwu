@@ -190,11 +190,11 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
               placeholder="Search labels..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="h-7 text-xs px-2"
+              className="h-8 text-xs px-2"
             />
             <Button type="button" variant="ghost" size="icon" onClick={commitAndClose} className="ml-auto h-6 w-6 p-0 flex items-center justify-center"><X className="w-3 h-3" /></Button>
           </div>
-          <DropdownMenuLabel className="text-sm uppercase px-1 pt-2">Labels</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-sm px-1 pt-2">Labels</DropdownMenuLabel>
           <div className="max-h-40 overflow-auto space-y-1 pr-1 mb-2">
             {matchesIndependent.length === 0 && <p className="text-xs text-muted-foreground px-2">No labels</p>}
             {matchesIndependent.map(l => {
@@ -218,15 +218,15 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
               );
             })}
           </div>
-          {(matchesSets || []).length > 0 && <DropdownMenuLabel className="text-sm uppercase px-1 pt-2">Label Sets</DropdownMenuLabel>}
+          {(matchesSets || []).length > 0 && <DropdownMenuLabel className="text-sm px-1 pt-2">Label Sets</DropdownMenuLabel>}
           {(matchesSets || []).map(set => (
             <DropdownMenuSub key={set.id}>
-              <DropdownMenuSubTrigger className="pt-2 pb-1">
-                <Label className="gap-2">
+              <DropdownMenuSubTrigger className="pt-1.5">
+                <Label>
                   {set.name || 'Untitled Set'}
                 </Label>
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="p-1 min-w-[12rem]">
+              <DropdownMenuSubContent className="p-1 py-2 min-w-[8rem]">
                 <div className="max-h-60 overflow-auto">
                   {(set.labels || []).length === 0 && !normalizedSearch && <p className="text-sm text-muted-foreground px-2 py-1">Empty set</p>}
                   {(set.labels || []).map((l: any) => {
@@ -242,8 +242,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                         className={`w-full text-left rounded-sm px-2 py-1 text-sm flex items-center justify-between hover:bg-muted cursor-pointer`}
                       >
                         <span className="flex items-center gap-2 flex-1 min-w-0">
-                          <LabelBadge text="" color={color} className="!px-3 !py-1.5" />
-                          <span className="truncate">{name}</span>
+                          <LabelBadge text={name} color={color} className="!px-2 !py-0.5" />
                         </span>
                         {active && <Check className="w-4 h-4 ml-2 text-green-600 shrink-0" />}
                       </button>
