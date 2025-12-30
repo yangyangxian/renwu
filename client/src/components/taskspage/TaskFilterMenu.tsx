@@ -39,6 +39,12 @@ export function TaskFilterMenu({
 
   // Filtering depends on controlled values from parent
   useEffect(() => {
+    // If the search box was cleared, restore unfiltered tasks immediately
+    if (showSearch && searchTerm.trim() === '') {
+      onFilter(tasks);
+      return;
+    }
+    
     const filtered = tasks.filter(t => {
       // Date filter
       let dateOk = true;
