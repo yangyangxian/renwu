@@ -48,7 +48,7 @@ Why not just show me a textarea right away â€” like opening the iOS Notes app â€
 3. Start the development servers:
    - Frontend: `npm run dev` in `client/`
    - Backend: `npm run dev` in `server/`
-   - Frontend andd Backend concurrently: `npm run dev` in `renwu` which is your root path
+   - Frontend and Backend concurrently: `npm run dev` in `renwu` which is your root path
 
 ### Deploy with Docker Compose
 
