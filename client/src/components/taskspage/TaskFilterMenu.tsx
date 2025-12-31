@@ -1,9 +1,7 @@
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui-kit/Select";
 import { Input } from "@/components/ui-kit/Input";
-import { Folder, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { TaskResDto, TaskDateRange } from "@fullstack/common";
 import { useEffect } from "react";
-import { useProjectStore } from "@/stores/useProjectStore";
 import { TaskFilterDropdown } from "@/components/taskspage/TaskFilterDropdown";
 
 interface TaskFilterMenuProps {
@@ -35,8 +33,6 @@ export function TaskFilterMenu({
   onDateRangeChange,
   onSearchTermChange,
 }: TaskFilterMenuProps) {
-  const { projects } = useProjectStore();
-
   // Filtering depends on controlled values from parent
   useEffect(() => {
     const filtered = tasks.filter(t => {
@@ -86,35 +82,11 @@ export function TaskFilterMenu({
 
   return (
     <div className="flex gap-3 items-center flex-grow">
-      {showProjectSelect && (
-        <Select
-          value={selectedProject}
-          onValueChange={v => {
-            onSelectedProjectChange?.(v);
-          }}
-          defaultValue="all"
-        >
-          <SelectTrigger
-            className="px-3 bg-white dark:text-primary flex items-center min-w-[9rem]"
-            id="project-select"
-          >
-            <Folder className="w-4 h-4" />
-            <SelectValue placeholder="Select project..." className="text-left w-full" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="text-left">All Tasks</SelectItem>
-            <SelectItem value="personal" className="text-left">Personal Tasks</SelectItem>
-            {/* Divider */}
-            {projects.length > 0 && <div className="h-px bg-gray-200 my-1" role="separator" />}
-            {projects.map(project => (
-              <SelectItem key={project.id} value={project.id} className="text-left">{project.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {showDateRange && (
-      <TaskFilterDropdown
+      {(showProjectSelect || showDateRange) && (
+        <TaskFilterDropdown
+          showProjectSelect={showProjectSelect}
+          selectedProject={selectedProject}
+          onSelectedProjectChange={onSelectedProjectChange}
           value={dateRange}
           onChange={(v) => onDateRangeChange?.(v)}
         />
