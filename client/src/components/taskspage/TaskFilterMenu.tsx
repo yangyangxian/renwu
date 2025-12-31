@@ -39,12 +39,6 @@ export function TaskFilterMenu({
 
   // Filtering depends on controlled values from parent
   useEffect(() => {
-    // If the search box was cleared, restore unfiltered tasks immediately
-    if (showSearch && searchTerm.trim() === '') {
-      onFilter(tasks);
-      return;
-    }
-    
     const filtered = tasks.filter(t => {
       // Date filter
       let dateOk = true;
@@ -76,7 +70,13 @@ export function TaskFilterMenu({
       // Search filter
       let searchOk = true;
       if (showSearch) {
-        searchOk = t.title.toLowerCase().includes(searchTerm.trim().toLowerCase()) || (t.description || '').toLowerCase().includes(searchTerm.trim().toLowerCase());
+        const q = searchTerm.trim().toLowerCase();
+        // Empty search means "no search filter" (but keep other filters)
+        if (q) {
+          searchOk =
+            t.title.toLowerCase().includes(q) ||
+            (t.description || '').toLowerCase().includes(q);
+        }
       }
 
       return dateOk && projectOk && searchOk;

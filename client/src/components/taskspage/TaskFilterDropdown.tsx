@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Calendar, Check, ChevronDown, FilterIcon } from 'lucide-react';
+import { Check, FilterIcon } from 'lucide-react';
 import { TaskDateRange } from '@fullstack/common';
 import { Button } from '@/components/ui-kit/Button';
 import {
@@ -65,7 +65,10 @@ export function TaskFilterDropdown({
             return (
               <DropdownMenuItem
                 key={opt.value}
-                onSelect={() => {
+                onSelect={(e) => {
+                  // Radix DropdownMenuItem triggers `onSelect` with a custom event.
+                  // Prevent default so it doesn't interfere with our controlled state update.
+                  e.preventDefault();
                   onChange(opt.value);
                   setOpen(false);
                 }}
