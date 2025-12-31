@@ -77,7 +77,7 @@ export function TaskFilterDropdown({
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="min-w-64 p-2">
+        <DropdownMenuContent className="min-w-64 p-1.5">
           {showProjectSelect && (
             <>
               <button

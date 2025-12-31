@@ -109,58 +109,60 @@ export default function ProjectDetailPage() {
           </Tabs>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="mr-2">
-            <TaskFilterMenu
-              showProjectSelect={false}
-              showDateRange={true}
-              showSearch={true}
-              tasks={tasks}
-              onFilter={setFilteredTasks}
-              selectedProject="all"
-              dateRange={dateRange}
-              searchTerm={searchTerm}
-              onDateRangeChange={setDateRange}
-              onSearchTermChange={setSearchTerm}
-            />
-          </div>
+        {activeTab === 'tasks' && (
+          <div className="flex items-center gap-1">
+            <div className="mr-2">
+              <TaskFilterMenu
+                showProjectSelect={false}
+                showDateRange={true}
+                showSearch={true}
+                tasks={tasks}
+                onFilter={setFilteredTasks}
+                selectedProject="all"
+                dateRange={dateRange}
+                searchTerm={searchTerm}
+                onDateRangeChange={setDateRange}
+                onSearchTermChange={setSearchTerm}
+              />
+            </div>
 
-          <div className='flex items-center gap-2'>
-            <Tabs value={taskView} onValueChange={(v) => setTaskView(v as TaskViewMode)}>
-              <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
-                <TabsTrigger
-                  value={TaskViewMode.BOARD}
-                  className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Board
-                </TabsTrigger>
-                <TabsTrigger
-                  value={TaskViewMode.LIST}
-                  className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
-                >
-                  <List className="w-4 h-4" />
-                  List
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className='flex items-center gap-2'>
+              <Tabs value={taskView} onValueChange={(v) => setTaskView(v as TaskViewMode)}>
+                <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
+                  <TabsTrigger
+                    value={TaskViewMode.BOARD}
+                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Board
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value={TaskViewMode.LIST}
+                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
+                  >
+                    <List className="w-4 h-4" />
+                    List
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-            <Button
-              variant="default"
-              className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
-              onClick={() => {
-                setEditingTask(null);
-                setIsDialogOpen(true);
-              }}
-            >
-              <span className="sr-only">Add Task</span>
-              <span className="flex items-center gap-1">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-                Add Task
-              </span>
-            </Button>
+              <Button
+                variant="default"
+                className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
+                onClick={() => {
+                  setEditingTask(null);
+                  setIsDialogOpen(true);
+                }}
+              >
+                <span className="sr-only">Add Task</span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                  Add Task
+                </span>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {isDialogOpen && (
         <TaskDialog
