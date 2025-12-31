@@ -4,4 +4,5 @@ export * from './project.dto.js';
 export * from './task.dto.js';
 export * from './user.dto.js';
 export * from './file.dto.js'
+export * from './label.dto.js';
 

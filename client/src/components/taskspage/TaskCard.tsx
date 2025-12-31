@@ -8,6 +8,7 @@ import { TaskStatus, UserResDto } from "@fullstack/common";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import LabelBadge from "@/components/common/LabelBadge";
 
 interface TaskCardProps {
   taskId: string; // Add taskId prop for deletion
@@ -16,6 +17,7 @@ interface TaskCardProps {
   dueDate?: string;
   projectName?: string;
   assignedTo?: UserResDto;
+  labels?: Array<{ id: string; labelName?: string; name?: string; color?: string; labelColor?: string }>;
   status?: TaskStatus;
   onClick?: () => void;
   className?: string;
@@ -30,9 +32,10 @@ const statusToColor: Record<TaskStatus, string> = {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
-  status, onClick, description, className, showDeleteButton }) => {
+  status, onClick, description, className, showDeleteButton, labels }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
+  const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
 
   const handleDeleteTask = async () => {
     await withToast(
@@ -53,17 +56,31 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
     : false;
   return (
     <Card
-      className={`group bg-muted/60 dark:bg-black p-3 shadow hover:scale-102 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
+      className={`group dark:bg-gray-950 p-3 card-border hover:scale-102 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}
     >
+      {!!labels?.length && (
+        <div className={`absolute top-3 ${labelsRightClass} flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none transition-[right] duration-200`}>
+          {labels
+            .filter(l => l && (l.labelName || l.name))
+            .map(l => (
+              <LabelBadge
+                key={l.id}
+                text={(l.labelName || l.name) as string}
+                color={l.color ?? l.labelColor}
+                className="px-1.5 py-[2px] text-[10px]"
+              />
+            ))}
+        </div>
+      )}
       {/* Delete icon, only visible on hover or focus */}
       {showDeleteButton && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-1.5 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
+          className="absolute top-2 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
           transition-opacity duration-150 p-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 
           focus:opacity-100 focus-visible:opacity-100 pointer-events-none group-hover:pointer-events-auto 
           group-focus-within:pointer-events-auto focus:pointer-events-auto focus-visible:pointer-events-auto 

@@ -21,14 +21,22 @@ router.post('/',
       logger.debug('Creating task with body:', req.params);
       const userId = req.user!.userId;
       const createdTask = await taskService.createTask({ ...req.body, createdBy: userId });
-      res.json(createApiResponse<TaskResDto>(mapObject(createdTask, new TaskResDto())));
+
+      // If labels were provided in the create request, apply them now
+      if (Array.isArray((req.body as TaskCreateReqDto).labels)) {
+        await taskService.updateTaskLabels(createdTask.id, (req.body as any).labels, userId);
+      }
+      // refresh createdTask to include labels
+      const refreshed = await taskService.getTaskById(createdTask.id);
+      const dto = mapObject(refreshed!, new TaskResDto());
+      dto.labels = (refreshed!.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
+      res.json(createApiResponse<TaskResDto>(dto));
     } catch (err) {
       next(err);
     }
   }
 );
 
-// Update a task by ID
 router.put('/:taskId',
   async (
     req: express.Request<{ taskId: string }, {}, TaskUpdateReqDto>,
@@ -36,9 +44,20 @@ router.put('/:taskId',
     next: express.NextFunction
   ) => {
       const { taskId } = req.params;
-      const updatedTask = await taskService.updateTask(taskId, req.body);
-      // Map to DTO for type safety
-      res.json(createApiResponse<TaskResDto>(mapObject(updatedTask, new TaskResDto())));
+      try {
+        // If labels array present, update task labels first
+        if (Array.isArray((req.body as any).labels)) {
+          const userId = req.user!.userId;
+          await taskService.updateTaskLabels(taskId, (req.body as any).labels, userId);
+        }
+
+        const updatedTask = await taskService.updateTask(taskId, req.body as any);
+        const dto = mapObject(updatedTask, new TaskResDto());
+        dto.labels = (updatedTask.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
+        res.json(createApiResponse<TaskResDto>(dto));
+      } catch (err) {
+        next(err);
+      }
   }
 );
 
@@ -72,7 +91,11 @@ router.get('/project/id/:projectId',
   ) => {
     const { projectId } = req.params;
     const tasks = await taskService.getTasksByProjectId(projectId);
-    const data: TaskResDto[] = tasks.map(task => mapObject(task, new TaskResDto()));
+    const data: TaskResDto[] = tasks.map(task => {
+      const dto = mapObject(task, new TaskResDto());
+      dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
+      return dto;
+    });
     res.json(createApiResponse<TaskResDto[]>(data));
   }
 );
@@ -86,7 +109,10 @@ publicRouter.get('/id/:taskId',
 
     try {
       const task = await taskService.getTaskById(req.params.taskId);
-      res.json(createApiResponse<TaskResDto>(task ? mapObject(task, new TaskResDto()) : undefined));
+      if (!task) return res.json(createApiResponse<TaskResDto>(undefined));
+      const dto = mapObject(task, new TaskResDto());
+      dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
+      res.json(createApiResponse<TaskResDto>(dto));
     } catch (err) {
       next(err);
     }

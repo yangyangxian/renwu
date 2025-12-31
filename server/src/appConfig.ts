@@ -16,6 +16,12 @@ class AppConfig {
   public readonly schemaPath: string;
   public readonly resendApiKey: string;
   public readonly logLevel: string;
+  // Aliyun OSS config
+  public readonly ossAccessKeyId: string;
+  public readonly ossAccessKeySecret: string;
+  public readonly ossBucket: string;
+  public readonly ossEndpoint: string;
+  public readonly ossRegion: string;
 
   constructor() {
     // Load environment variables
@@ -27,7 +33,7 @@ class AppConfig {
     this.dbUrl = this.getEnv('DATABASE_URL', '');
     this.envMode = this.getEnv('NODE_ENV', 'development');
     this.corsEnabled = this.getEnv('CORS_ENABLED', 'false').toLowerCase() === 'true';
-    this.corsOrigins = this.getEnv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000')
+    this.corsOrigins = this.getEnv('CORS_ORIGINS', 'http://localhost:5183,http://localhost:3000')
       .split(',')
       .map(origin => origin.trim());
     this.staticDir = this.getEnv('STATIC_DIR', '../../client/dist');
@@ -37,6 +43,12 @@ class AppConfig {
     this.schemaPath = this.envMode === 'production' ? '/app/server/dist/database/schema.js' : './src/database/schema.ts';
     this.resendApiKey = this.getEnv('RESEND_API_KEY', '');
     this.logLevel = this.getEnv('LOG_LEVEL', 'info'); // Default log level
+    // Aliyun OSS config - prefer OSS_* names, fall back to ALI_OSS_*; use getEnv for consistent access
+    this.ossAccessKeyId = this.getEnv('OSS_ACCESS_KEY_ID', this.getEnv('ALI_OSS_ACCESS_KEY_ID', ''));
+    this.ossAccessKeySecret = this.getEnv('OSS_ACCESS_KEY_SECRET', this.getEnv('ALI_OSS_ACCESS_KEY_SECRET', ''));
+    this.ossBucket = this.getEnv('OSS_BUCKET', this.getEnv('ALI_OSS_BUCKET', ''));
+    this.ossEndpoint = this.getEnv('OSS_ENDPOINT', this.getEnv('ALI_OSS_ENDPOINT', ''));
+    this.ossRegion = this.getEnv('OSS_REGION', this.getEnv('ALI_OSS_REGION', ''));
   }
 
   /**

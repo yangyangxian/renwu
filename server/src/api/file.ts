@@ -6,10 +6,12 @@ import path from 'path';
 import { serverRootDir } from '../utils/path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { useOSS, uploadToOSS, deleteFromOSS } from '../services/AliyunOSS.service';
+import logger from '../utils/logger';
 
 const router = Router();
 
-// Configure multer for file uploads
+// Aliyun OSS client is initialized in src/services/aliyunOSS and exported as helpers
 const uploadDir = path.resolve(serverRootDir, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -23,10 +25,12 @@ const storage = multer.diskStorage({
     cb(null, uuidv4() + ext);
   },
 });
-const upload = multer({ storage });
+// Keep disk storage to preserve existing behavior; but accept buffer when OSS is used
+const memoryStorage = multer.memoryStorage();
+const upload = multer({ storage: useOSS ? memoryStorage : storage });
 
 // POST /api/file
-const uploadHandler: RequestHandler = (req, res) => {
+const uploadHandler: RequestHandler = async (req, res) => {
   const file = req.file as Express.Multer.File | undefined;
   if (!file) {
     res.status(400).json(createApiResponse<null>(undefined, {
@@ -36,8 +40,29 @@ const uploadHandler: RequestHandler = (req, res) => {
     }));
     return;
   }
-  // Return an authenticated URL endpoint to retrieve the file
-  const fileUrl = `/api/file/${file.filename}`;
+  logger.debug(`Received file upload: originalname=${file.originalname}, size=${file.size} bytes`);
+  // If OSS is configured, upload buffer to OSS and return OSS URL
+  if (useOSS) {
+    try {
+      const buffer: Buffer | undefined = (file.buffer as Buffer) ?? undefined;
+      const localPath: string | undefined = (file as any).path ?? undefined;
+      const result = await uploadToOSS({ buffer, localPath, originalName: file.originalname });
+      const dto: FileUploadResDto = { url: result.url };
+      res.json(createApiResponse<FileUploadResDto>(dto));
+      return;
+    } catch (err) {
+      logger.error('Failed to upload file to OSS:', err);
+      res.status(500).json(createApiResponse<null>(undefined, {
+        code: 'OSS_UPLOAD_FAILED',
+        message: 'Failed to upload file to OSS',
+        timestamp: new Date().toISOString(),
+      }));
+      return;
+    }
+  }
+
+  // Fallback: local disk storage
+  const fileUrl = `/api/file/${(file as any).filename || file.filename}`;
   const dto: FileUploadResDto = { url: fileUrl };
   res.json(createApiResponse<FileUploadResDto>(dto));
 };
@@ -56,6 +81,13 @@ const getFileHandler: RequestHandler = (req, res) => {
     return;
   }
   const filePath = path.join(uploadDir, filename);
+
+  // If filename looks like a full URL, redirect to it
+  if (filename.startsWith('http')) {
+    res.redirect(filename);
+    return;
+  }
+
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       res.status(404).json(createApiResponse<null>(undefined, {
@@ -90,7 +122,7 @@ const getFileHandler: RequestHandler = (req, res) => {
 router.get('/:filename', getFileHandler);
 
 // DELETE /api/file/:filename - delete an uploaded file
-const deleteFileHandler: RequestHandler = (req, res) => {
+const deleteFileHandler: RequestHandler = async (req, res) => {
   const raw = req.params.filename || '';
   const filename = path.basename(raw);
   if (!filename) {
@@ -101,6 +133,26 @@ const deleteFileHandler: RequestHandler = (req, res) => {
     }));
     return;
   }
+
+  // If OSS is configured, prefer deleting from OSS. The service accepts either a full URL or object key.
+  if (useOSS) {
+    try {
+      const fileFolder = "uploads/";
+      await deleteFromOSS(`${fileFolder}${filename}`);
+      res.json(createApiResponse<{ deleted: boolean }>({ deleted: true }));
+      return;
+    } catch (err) {
+      logger.error('Failed to delete file from OSS:', err);
+      res.status(500).json(createApiResponse<null>(undefined, {
+        code: 'DELETE_FAILED',
+        message: 'Failed to delete file from OSS',
+        timestamp: new Date().toISOString(),
+      }));
+      return;
+    }
+  }
+
+  // Fallback: delete local file
   const filePath = path.join(uploadDir, filename);
   fs.unlink(filePath, (err) => {
     if (err && err.code !== 'ENOENT') {
@@ -114,6 +166,7 @@ const deleteFileHandler: RequestHandler = (req, res) => {
     res.json(createApiResponse<{ deleted: boolean }>({ deleted: true }));
   });
 };
+// Use wildcard so the param may include slashes (for full URLs)
 router.delete('/:filename', deleteFileHandler);
 
 export default router;

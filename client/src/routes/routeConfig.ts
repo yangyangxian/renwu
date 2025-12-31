@@ -5,6 +5,7 @@ export const MYTASKS_PATH = '/mytasks';
 export const PROJECTS_PATH = '/projects';
 export const TASK_PATH = '/task/[taskId]';
 export const LANDING_PATH = '/landing';
+export const LABELS_PATH = '/labels';
 
 export const publicRoutes: string[] = [
   ROOT_PATH,

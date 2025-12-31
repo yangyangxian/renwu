@@ -12,6 +12,7 @@ export class TaskResDto {
   dueDate: string = '';
   status: TaskStatus = TaskStatus.TODO;
   assignedTo: UserResDto = new UserResDto();
+  labels?: { id: string; labelName: string; color?: string }[] = [];
   createdAt: string = '';
   updatedAt: string = '';
   projectId: string = '';
@@ -25,6 +26,7 @@ export class TaskUpdateReqDto {
   status?: TaskStatus;
   assignedTo?: string;
   projectId?: string;
+  labels?: string[];
 }
 
 export class TaskCreateReqDto {
@@ -34,6 +36,7 @@ export class TaskCreateReqDto {
   status?: TaskStatus = TaskStatus.TODO;
   assignedTo!: string;
   projectId?: string = '';
+  labels?: string[];
   createdBy!: string;
 }
 

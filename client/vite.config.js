@@ -21,6 +21,7 @@ export default defineConfig({
     include: ['recharts'],
   },
   server: {
+    port: 5183,
     proxy: {
       // Proxy API requests starting with /api to the backend server
       '/api': {

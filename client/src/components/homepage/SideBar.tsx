@@ -12,9 +12,9 @@ import { useState, useEffect, useRef } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { ProjectDialog } from "@/components/projectspage/AddProjectDialog";
 import { withToast } from "@/utils/toastUtils";
-import logger from "@/utils/logger";
 import { TasksMenuItem } from "./TasksMenuItem";
 import { ProjectsMenuItem } from "./ProjectsMenuItem";
+import { LabelsMenuItem } from "./LabelsMenuItem";
 
 export interface HomeSideBarProps {}
 
@@ -30,7 +30,6 @@ function getInitialSidebarIsFixed(): boolean {
 }
 
 export function HomeSideBar() {
-  logger.debug("Rendering HomeSideBar component");
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarIsFixed, setSidebarIsFixed] = useState<boolean>(getInitialSidebarIsFixed());
@@ -115,10 +114,18 @@ export function HomeSideBar() {
   };
 
   return (
-    <SidebarProvider defaultOpen={true} open={expanded} onOpenChange={setExpanded}>
+    <SidebarProvider
+      defaultOpen={true}
+      open={expanded}
+      onOpenChange={setExpanded}
+      style={{
+        // local override to make the sidebar narrower without editing the ui-kit
+        "--sidebar-width": "15rem"
+      } as React.CSSProperties}
+    >
       <Sidebar
         collapsible="icon"
-        className="h-full pt-3 p-3 pl-2 relative max-w-[14rem] border-r-0!"
+        className="h-full pt-3 px-2 relative border-r-0!"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
@@ -138,6 +145,7 @@ export function HomeSideBar() {
             loading={projectLoading}
             location={location}
           />
+          <LabelsMenuItem showText={showText} />
         </SidebarMenu>
         {/* Pin/Unpin button at bottom right: only show when expanded */}
         {expanded && (

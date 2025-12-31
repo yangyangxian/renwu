@@ -194,111 +194,117 @@ export function ProjectSettingsTab() {
   return (
     <Card className="shadow-none m-2 py-3 px-1 w-1/2">
       <div className="flex flex-col w-full py-1 px-4 shadow-none">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-1">
           <Label className="text-xl font-medium">General Settings</Label>
           {hasUnsavedChanges && <UnsavedChangesIndicator />}
         </div>
-        <Label className="text-muted-foreground mb-6 block">Basic project information and settings.</Label>
-        <div className="flex flex-row gap-8">
-          <div className="flex flex-col w-1/2">
-            <div className="flex items-center gap-2 mb-3">
-              <Label className="font-medium">Project Name</Label>
-              <Label className="text-xs text-muted-foreground">(best ≤ 22 characters)</Label>
+        <Label className="text-muted-foreground mb-6 block">
+          Basic project information and settings.
+        </Label>
+        <div className="px-2">
+          <div className="flex flex-row gap-8">
+            <div className="flex flex-col w-1/2">
+              <div className="flex items-center gap-2 mb-3">
+                <Label className="font-medium">Project Name</Label>
+                <Label className="text-xs text-muted-foreground">(best ≤ 22 characters)</Label>
+              </div>
+              <Input
+                value={projectName}
+                onChange={e => {
+                  setProjectName(e.target.value);
+                  validateField('name', e.target.value);
+                }}
+                placeholder="Project Name"
+                className={validationErrors.name ? 'border-red-500' : ''}
+                disabled={!canEditProject}
+              />
+              <div className="h-5 mt-1">
+                {validationErrors.name && (
+                  <span className="text-sm text-red-500">{validationErrors.name}</span>
+                )}
+              </div>
             </div>
-            <Input
-              value={projectName}
-              onChange={e => {
-                setProjectName(e.target.value);
-                validateField('name', e.target.value);
-              }}
-              placeholder="Project Name"
-              className={validationErrors.name ? 'border-red-500' : ''}
-              disabled={!canEditProject}
-            />
-            <div className="h-5 mt-1">
-              {validationErrors.name && (
-                <span className="text-sm text-red-500">{validationErrors.name}</span>
-              )}
+            <div className="flex flex-col w-1/2">
+              <div className="flex items-center gap-2 mb-3">
+                <Label className="font-medium">Project ID</Label>
+                <Label className="text-xs text-muted-foreground">(2-3 characters)</Label>
+              </div>
+              <Input
+                value={projectSlug}
+                onChange={e => {
+                  setProjectSlug(e.target.value);
+                  validateField('slug', e.target.value);
+                }}
+                placeholder="Project Slug"
+                className={validationErrors.slug ? 'border-red-500' : ''}
+                disabled={!canEditProject}
+              />
+              <div className="h-5 mt-1">
+                {validationErrors.slug && (
+                  <span className="text-sm text-red-500">{validationErrors.slug}</span>
+                )}
+              </div>
             </div>
+          </div>        
+          {/* Save and Cancel buttons */}
+          <div className="flex gap-3">
+            <Button 
+              size="sm"
+              onClick={handleSave}
+              disabled={!isFormValid || !hasUnsavedChanges || !canEditProject}
+            >
+              Save Changes
+            </Button>
+            <Button 
+              size="sm"
+              variant="outline" 
+              onClick={handleCancel}
+              disabled={!hasUnsavedChanges || !canEditProject}
+            >
+              Cancel
+            </Button>
           </div>
-          <div className="flex flex-col w-1/2">
-            <div className="flex items-center gap-2 mb-3">
-              <Label className="font-medium">Project ID</Label>
-              <Label className="text-xs text-muted-foreground">(2-3 characters)</Label>
-            </div>
-            <Input
-              value={projectSlug}
-              onChange={e => {
-                setProjectSlug(e.target.value);
-                validateField('slug', e.target.value);
-              }}
-              placeholder="Project Slug"
-              className={validationErrors.slug ? 'border-red-500' : ''}
-              disabled={!canEditProject}
-            />
-            <div className="h-5 mt-1">
-              {validationErrors.slug && (
-                <span className="text-sm text-red-500">{validationErrors.slug}</span>
-              )}
-            </div>
-          </div>
-        </div>        
-        {/* Save and Cancel buttons */}
-        <div className="flex gap-3">
-          <Button 
-            size="sm"
-            onClick={handleSave}
-            disabled={!isFormValid || !hasUnsavedChanges || !canEditProject}
-          >
-            Save Changes
-          </Button>
-          <Button 
-            size="sm"
-            variant="outline" 
-            onClick={handleCancel}
-            disabled={!hasUnsavedChanges || !canEditProject}
-          >
-            Cancel
-          </Button>
         </div>
         
         <div className="py-2 mt-7">
           <div className="flex items-center gap-2 mb-3">
             <Label className="text-xl font-medium">Danger Zone</Label>
           </div>
-          <div className="border border-red-200 dark:border-red-800 rounded-md p-3 mb-4 bg-red-50 dark:bg-red-950/30">
-            <div className="flex items-start">
-              <div>
-                <ul className="space-y-2 text-red-600 dark:text-red-400 text-sm">
-                  <li className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                    All tasks will be permanently deleted
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                    Project settings will be deleted
-                  </li>
-                </ul>
+          <div className="px-2 pt-1">
+            <div className="border border-red-200 dark:border-red-800 rounded-md p-3 mb-4 bg-red-50 dark:bg-red-950/30">
+              <div className="flex items-start">
+                <div>
+                  <ul className="space-y-2 text-red-600 dark:text-red-400 text-sm">
+                    <li className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      All tasks will be permanently deleted
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      Project settings will be deleted
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Enter "{project?.name || 'project name'}" to permanently delete this project:</Label>
-            <div className="flex flex-col items-start gap-6">
-              <Input
-                value={deleteConfirmation}
-                onChange={e => setDeleteConfirmation(e.target.value)}
-                placeholder={project?.name || 'project name'}
-                disabled={!canDeleteProject}
-              />
-              <Button
-                size="sm"
-                variant="destructive"
-                disabled={deleteConfirmation !== (project?.name || '') || isDeleting}
-                onClick={handleDeleteProject}
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Project'}
-              </Button>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Enter "{project?.name || 'project name'}" to permanently delete this project:</Label>
+              <div className="flex flex-col items-start gap-6">
+                <Input
+                  value={deleteConfirmation}
+                  onChange={e => setDeleteConfirmation(e.target.value)}
+                  placeholder={project?.name || 'project name'}
+                  disabled={!canDeleteProject}
+                />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={deleteConfirmation !== (project?.name || '') || isDeleting}
+                  onClick={handleDeleteProject}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Project'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

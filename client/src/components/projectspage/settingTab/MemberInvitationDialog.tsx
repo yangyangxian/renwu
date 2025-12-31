@@ -7,7 +7,7 @@ import { Label } from '@/components/ui-kit/Label';
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { UserPlus } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui-kit/Select';
-import { ProjectAddMemberResDto, ProjectRole, UserResDto, ProjectAddMemberReqSchema } from '@fullstack/common';
+import { UserResDto, ProjectAddMemberReqSchema } from '@fullstack/common';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui-kit/Dialog';
 import { Check, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,6 @@ import { Input } from '@/components/ui-kit/Input';
 import { apiClient } from '@/utils/APIClient';
 import { withToast } from '@/utils/toastUtils';
 import { getErrorMessage } from '@/resources/errorMessages';
-import logger from '@/utils/logger';
 import { roleOptions } from '@/consts/roleOptions';
 
 interface MemberInvitationDialogProps {

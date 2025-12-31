@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useRef } from "react";
+import React, { useState, useEffect, useReducer, useRef, useMemo } from "react";
 import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText } from "lucide-react";
+import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText, PencilLine, History } from "lucide-react";
 import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/common/DropDownList";
 import { logger } from "@/utils/logger";
 import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
+import LabelSelector from '@/components/common/LabelSelector';
 
 interface TaskDialogProps {
   open: boolean;
@@ -27,11 +28,12 @@ interface TaskDialogProps {
     id?: string;
     title?: string;
     dueDate?: string;
-    assignedTo?: UserResDto; // Only new format (user object)
+    assignedTo?: UserResDto;
     status?: TaskStatus;
     description?: string;
     projectId?: string;
     projectName?: string;
+    labels?: { id: string; labelName: string }[] | string[];
   };
   title?: string;
 }
@@ -51,15 +53,20 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const { projects } = useProjectStore();
   // Ref for Markdown editor imperative handle
   const mdEditorRef = useRef<MarkdownEditorHandle | null>(null);
-  // Convert initialValues to ensure assignedTo is a string
-  const processedInitialValues = {
+  // Extract label ids (objects or plain strings) once; avoid extra effects
+  const initialLabelIds = useMemo(() => {
+    const ls: any[] = (initialValues.labels as any[]) || [];
+    return ls.map(l => (typeof l === 'object' && l ? l.id : l)).filter(Boolean);
+  }, [initialValues.labels]);
+
+  const seedState = useMemo(() => ({
+    ...initialTaskFormState,
     ...initialValues,
-    assignedTo: initialValues.assignedTo?.id || ''
-  };
-  
-  const [taskState, dispatch] = useReducer(
-    taskFormReducer, { ...initialTaskFormState, ...processedInitialValues }
-  );
+    assignedTo: initialValues.assignedTo?.id || '',
+    labels: initialLabelIds,
+  }), [initialValues, initialLabelIds]);
+
+  const [taskState, dispatch] = useReducer(taskFormReducer, seedState);
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
   
   const handleAssignedToChange = (value: string) => {
@@ -68,6 +75,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   const [isDirty, setIsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Removed effect that re-dispatched labels to prevent unnecessary rerenders
 
   const handleSubmit = async (taskData: any) => {
     const isEditMode = !!taskData.id;
@@ -105,9 +113,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       }));  
   };
 
-
   useEffect(() => {
-
     if (!taskState.projectId) {
       setAssignedToSelectOptions([{ value: String(user?.id || ""), label: String(user?.name || "Me") }]);
       handleAssignedToChange(String(user?.id || ""));
@@ -177,7 +183,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               {/* Title row */}
               <div className="flex flex-col gap-2">
                 <Label className="mb-1 flex items-center gap-3 font-medium">
-                  <Tag className="size-4" />
+                  <PencilLine className="size-4" />
                   Title
                 </Label>
                 <Input
@@ -328,10 +334,27 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               </div>
             </div>
           </form>
-          {/* Right panel for future content */}
+          {/* Right panel */}
           <div className="hidden lg:flex flex-col w-full border-l px-6 py-6">
-            <div className="text-lg text-muted-foreground font-bold mb-4">Changelog / Activity</div>
-            <div className="text-sm text-slate-500 dark:text-slate-400">(Coming soon: see task history, comments, etc.)</div>
+            {/* Labels selection moved here */}
+            <div className="flex flex-col gap-2 mb-6 mt-1">
+              <Label className="flex gap-3 font-medium">
+                <Tag className="size-4" />
+                Labels
+              </Label>
+              <div className="mt-2">
+                <LabelSelector
+                  value={taskState.labels}
+                  onChange={(next) => dispatch({ type: 'SET_FIELD', field: 'labels', value: next })}
+                  projectId={taskState.projectId ? taskState.projectId : null}
+                />
+              </div>
+            </div>
+            <Label className="font-medium flex gap-3">
+              <History className="size-4" />
+              Activity
+            </Label>
+            <Label className="mt-4">(Coming soon: see task history, comments, etc.)</Label>
           </div>
         </div>
       </DialogContent>

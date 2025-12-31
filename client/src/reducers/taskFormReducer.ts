@@ -9,6 +9,7 @@ export type TaskFormState = {
   status: TaskStatus;
   description: string;
   projectId?: string;
+  labels: string[]; // array of label ids
 };
 
 export type TaskFormAction =
@@ -23,6 +24,7 @@ export const initialTaskFormState: TaskFormState = {
   status: TaskStatus.TODO,
   description: '',
   projectId: '',
+  labels: [],
 };
 
 export function taskFormReducer(state: TaskFormState, action: TaskFormAction): TaskFormState {

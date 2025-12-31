@@ -29,6 +29,34 @@
       "when": 1754127174799,
       "tag": "0003_addtaskview",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1756816116575,
+      "tag": "0004_addlabeltable",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1763367222166,
+      "tag": "0005_createtasklabeltable",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764826208001,
+      "tag": "0006_add_projectId_to_label",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1767109509050,
+      "tag": "0007_add_projectid_to_taskview",
+      "breakpoints": true
     }
   ]
 }

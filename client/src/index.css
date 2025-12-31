@@ -26,4 +26,8 @@ body {
   .shadow-even-purple {
     box-shadow: 0 0 6px rgba(183, 3, 233, 0.969);
   }
+
+  .card-border {
+    @apply rounded-md shadow-sm border-1;
+  }
 }

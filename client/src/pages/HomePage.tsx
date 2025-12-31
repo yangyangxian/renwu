@@ -1,22 +1,18 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui-kit/Button";
-import LandingPage from "./LandingPage";
 import { useAuth } from "@/providers/AuthProvider";
-import { HomeSideBar } from "@/components/homepage/SideBar";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { apiClient } from "@/utils/APIClient";
 import { Input } from "@/components/ui-kit/Input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui-kit/Dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { updateMe } from "@/apiRequests/apiEndpoints";
-import logger from "@/utils/logger";
 
 export default function HomePage() {
-  const location = useLocation();
   const { isAuthenticated, user, setUser, logout } = useAuth();
-  // Name dialog state
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [pendingName, setPendingName] = useState("");
+
   // Show name dialog if user is logged in and has no name
   useEffect(() => {
     if (isAuthenticated && user && (!user.name || user.name.trim() === "")) {
@@ -41,14 +37,6 @@ export default function HomePage() {
 
   return (
     <div className="flex w-full h-full">
-      {/* Sidebar with icon and text */}
-      {isAuthenticated && (
-        <aside className="h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
-          <HomeSideBar />
-        </aside>
-      )}
-      
-      {/* Main Content or Outlet */}
       <section className="flex w-full max-h-full pl-2 p-2">
         <Outlet />
       </section>

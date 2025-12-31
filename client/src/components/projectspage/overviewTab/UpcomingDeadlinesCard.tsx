@@ -34,7 +34,7 @@ export const UpcomingDeadlinesCard: React.FC<UpcomingDeadlinesCardProps> = ({ ta
   }, [tasks]);
 
   return (
-    <Card className={` flex-1 flex-col gap-3 overflow-y-auto${className ? ` ${className}` : ''}`}>
+    <Card className={`flex-1 flex-col gap-3 overflow-y-auto${className ? ` ${className}` : ''}`}>
       <div className="font-bold text-md pl-1">Upcoming Deadlines</div>
       <div className="flex flex-col gap-2 justify-center">
         {sortedTasks.length === 0 ? (
@@ -46,7 +46,7 @@ export const UpcomingDeadlinesCard: React.FC<UpcomingDeadlinesCardProps> = ({ ta
             const statusIcon = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG[TaskStatus.TODO];
             const isOverdue = new Date(task.dueDate!) < now;
             return (
-              <div key={task.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 bg-white-black">
+              <div key={task.id} className="flex items-center gap-2 card-border px-3 py-2 bg-white-black">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center mb-1">
                     <span className="text-sm text-primary truncate">{task.title}</span>

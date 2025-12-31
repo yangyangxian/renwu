@@ -217,7 +217,10 @@ export default function MyTasksPage() {
               if (!open) setEditingTask(null);
             }}
             title={editingTask ? "Edit Task" : "Add New Task"}
-            initialValues={editingTask || ((selectedProject !== 'all' && selectedProject !== 'personal') ? { projectId: selectedProject } : {})}
+            initialValues={editingTask ? {
+              ...editingTask,
+              labels: (editingTask.labels as any[]) || [],
+            } : ((selectedProject !== 'all' && selectedProject !== 'personal') ? { projectId: selectedProject } : {})}
           />
         )}
       </div>

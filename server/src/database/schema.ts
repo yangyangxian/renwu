@@ -1,7 +1,7 @@
 // schema.ts
 // To generate migration: npx drizzle-kit generate --config src/drizzle.config.ts --name= 
 // To generate a empty migration for running seed data: npx drizzle-kit generate --config src/drizzle.config.ts --custom --name=
-// To push migration to database: npx drizzle-kit push --config src/drizzle.config.ts
+// To push migration to database the app is connecting: npx drizzle-kit push --config src/drizzle.config.ts
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb } from 'drizzle-orm/pg-core';
@@ -62,6 +62,7 @@ export const taskView = pgTable('task_view', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 64 }).notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
   viewConfig: jsonb('view_config').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -138,5 +139,54 @@ export const rolePermissions = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.roleId, table.permissionId] }),
+  ]
+);
+
+// ---------- TABLE: Labels ----------
+export const labels = pgTable('labels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  labelName: varchar('label_name', { length: 255 }).notNull(),
+  labelDescription: text('label_description'),
+  labelColor: varchar('label_color', { length: 30 }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ---------- TABLE: Label Sets ----------
+export const labelSets = pgTable('label_sets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  labelSetName: varchar('label_set_name', { length: 255 }).notNull(),
+  labelSetDescription: text('label_set_description'),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ---------- TABLE: Label Set ↔ Label (junction) ----------
+export const labelSetLabels = pgTable(
+  'label_set_labels',
+  {
+    labelSetId: uuid('label_set_id').notNull().references(() => labelSets.id, { onDelete: 'cascade' }),
+    labelId: uuid('label_id').notNull().references(() => labels.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.labelSetId, table.labelId] }),
+  ]
+);
+
+// ---------- TABLE: Task ↔ Label (junction) ----------
+export const taskLabels = pgTable(
+  'task_labels',
+  {
+    taskId: uuid('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+    labelId: uuid('label_id').notNull().references(() => labels.id, { onDelete: 'cascade' }),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.labelId] }),
   ]
 );
