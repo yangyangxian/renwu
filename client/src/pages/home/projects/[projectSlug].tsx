@@ -61,10 +61,6 @@ export default function ProjectDetailPage() {
     }
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
-  useEffect(() => {
-    setFilteredTasks(tasks);
-  }, [tasks]);
-
   if (!projectId || loadingCurrentProject) {
     return <HomePageSkeleton />;
   }
