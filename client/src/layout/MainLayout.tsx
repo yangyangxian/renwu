@@ -97,7 +97,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       {/* Main Content */}
       <main className="flex h-[calc(100vh-56px)]">
         {showSidebar && (
-          <aside className="h-full flex overflow-y-auto overflow-x-hidden bg-white-black">
+          <aside className="h-full rounded-xl shadow-sm flex overflow-y-auto overflow-x-hidden bg-white-black">
             <HomeSideBar />
           </aside>
         )}

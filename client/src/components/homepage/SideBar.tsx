@@ -12,7 +12,6 @@ import { useState, useEffect, useRef } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { ProjectDialog } from "@/components/projectspage/AddProjectDialog";
 import { withToast } from "@/utils/toastUtils";
-import logger from "@/utils/logger";
 import { TasksMenuItem } from "./TasksMenuItem";
 import { ProjectsMenuItem } from "./ProjectsMenuItem";
 import { LabelsMenuItem } from "./LabelsMenuItem";
@@ -31,7 +30,6 @@ function getInitialSidebarIsFixed(): boolean {
 }
 
 export function HomeSideBar() {
-  logger.debug("Rendering HomeSideBar component");
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarIsFixed, setSidebarIsFixed] = useState<boolean>(getInitialSidebarIsFixed());
