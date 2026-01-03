@@ -146,7 +146,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="p-0 !max-w-[1200px] w-[75vw] gap-0"
+        className="p-0 !max-w-[1400px] w-[75vw] gap-0"
         onInteractOutside={e => e.preventDefault()}
       >
         <VisuallyHidden>
@@ -159,7 +159,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           </span>
           <span className="w-8" /> {/* Spacer for symmetry */}
         </nav>
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] w-full min-h-[300px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] w-full min-h-[300px] overflow-auto">
           {/* Main form */}
           <form
             onSubmit={e => {
@@ -285,7 +285,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   Description
                 </Label>
                 <div
-                  className="markdown-body min-h-[200px] max-h-[400px] px-3 py-2 overflow-auto !bg-muted/40 dark:!bg-muted/65"
+                  className="markdown-body min-h-[380px] px-3 py-2 overflow-auto !bg-muted/40 dark:!bg-muted/65"
                 >
                   <MarkdownnEditor
                     ref={mdEditorRef}
