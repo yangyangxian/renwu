@@ -97,7 +97,7 @@ const GradientScrollArea = forwardRef<GradientScrollAreaHandle, GradientScrollAr
     <div className={cn('relative flex flex-col min-h-0', className)}>
       <div
         ref={scrollRef}
-        className={cn('overflow-auto min-h-0 scroll-smooth', scrollAreaClassName)}
+        className={cn('overflow-auto min-h-0 scroll-smooth gradient-scroll-area-scrollbar', scrollAreaClassName)}
       >
         {children}
       </div>
