@@ -107,13 +107,13 @@ const GradientScrollArea = forwardRef<GradientScrollAreaHandle, GradientScrollAr
           className={cn('pointer-events-none absolute left-0 right-0 top-0 z-10 transition-opacity duration-300', atTop ? 'opacity-0' : 'opacity-100')}
           style={{ height: topOverlayHeight }}
         >
-          <div className="absolute inset-0 rounded-t-xl bg-gradient-to-b from-background/98 via-background/70 to-transparent dark:from-neutral-900/98 dark:via-neutral-900/60" />
+          <div className=" rounded-none absolute inset-0 bg-gradient-to-b from-background/98 via-background/70 to-transparent dark:from-neutral-900/98 dark:via-neutral-900/60" />
           <div
-            className="absolute inset-0 rounded-t-xl"
+            className="absolute inset-0"
             style={{ backdropFilter: `blur(${mildBlur}px)`, WebkitBackdropFilter: `blur(${mildBlur}px)`, WebkitMaskImage: mildMaskTop, maskImage: mildMaskTop }}
           />
           <div
-            className="absolute inset-0 rounded-t-xl"
+            className="absolute inset-0"
             style={{ backdropFilter: `blur(${strongBlur}px)`, WebkitBackdropFilter: `blur(${strongBlur}px)`, WebkitMaskImage: strongMaskTop, maskImage: strongMaskTop }}
           />
         </div>
@@ -124,13 +124,13 @@ const GradientScrollArea = forwardRef<GradientScrollAreaHandle, GradientScrollAr
           className={cn('pointer-events-none absolute left-0 right-0 bottom-0 z-10 transition-opacity duration-300', atBottom ? 'opacity-0' : 'opacity-100')}
           style={{ height: bottomOverlayHeight }}
         >
-          <div className="absolute inset-0 rounded-b-xl bg-gradient-to-t from-background/90 via-background/60 to-transparent dark:from-neutral-900/90 dark:via-neutral-900/50" />
+          <div className="absolute inset-0 rounded-bl-lg bg-gradient-to-t from-background/90 via-background/60 to-transparent dark:from-neutral-900/90 dark:via-neutral-900/50" />
           <div
-            className="absolute inset-0 rounded-b-xl"
+            className="absolute inset-0"
             style={{ backdropFilter: `blur(${mildBlur}px)`, WebkitBackdropFilter: `blur(${mildBlur}px)`, WebkitMaskImage: mildMaskBottom, maskImage: mildMaskBottom }}
           />
           <div
-            className="absolute inset-0 rounded-b-xl"
+            className="absolute inset-0"
             style={{ backdropFilter: `blur(${strongBlur}px)`, WebkitBackdropFilter: `blur(${strongBlur}px)`, WebkitMaskImage: strongMaskBottom, maskImage: strongMaskBottom }}
           />
         </div>
