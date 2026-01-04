@@ -285,7 +285,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   Description
                 </Label>
                 <div
-                  className="markdown-body min-h-[380px] max-h-[50vh] px-3 py-2 overflow-auto !bg-muted/40 dark:!bg-muted/65"
+                  className="markdown-body min-h-[300px] max-h-[40vh] px-3 py-2 overflow-auto !bg-muted/40 dark:!bg-muted/65"
                 >
                   <MarkdownnEditor
                     ref={mdEditorRef}
