@@ -308,10 +308,14 @@ class TaskService {
     // when .set({}) is called with an empty object.
     if (Object.keys(updateValues).length > 0) {
       await db.update(tasks)
-        .set(updateValues)
+        .set({ ...updateValues, updatedAt: new Date() })
         .where(eq(tasks.id, taskId));
     } else {
-      logger.debug('updateTask: no non-label fields to update, skipping DB update');
+      // If there are no other fields to update (for example caller only sent labels),
+      // still update the `updated_at` timestamp so the task modification time reflects
+      // the latest change.
+      logger.debug('updateTask: no non-label fields to update, updating updatedAt only');
+      await db.update(tasks).set({ updatedAt: new Date() }).where(eq(tasks.id, taskId));
     }
     // Use the common getTaskById function to fetch the updated task with details
     const updatedTask = await this.getTaskById(taskId);
@@ -420,6 +424,8 @@ class TaskService {
           logger.debug('updateTaskLabels: failed to insert label association (non-fatal)', err);
         }
       }
+      // After changing the labels, update the parent task's updated_at to reflect modification
+      await tx.update(tasks).set({ updatedAt: new Date() }).where(eq(tasks.id, taskId));
     });
   }
 }
