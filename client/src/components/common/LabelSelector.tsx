@@ -141,7 +141,11 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
           next = next.filter(x => !toRemove.has(x));
         }
       }
-      if (!deferCommit) {
+      // If this label belongs to a set, commit immediately so "one-per-set" changes
+      // take effect without requiring the user to close the dropdown.
+      if (setId) {
+        try { onChange(next); } catch (e) { /* swallow */ }
+      } else if (!deferCommit) {
         try { onChange(next); } catch (e) { /* swallow */ }
       }
       return next;
