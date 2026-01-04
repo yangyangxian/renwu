@@ -22,7 +22,7 @@ interface TaskViewStoreState {
 
 const defaultDisplayViewConfig: ViewConfig = {
   projectId: 'all',
-  dateRange: TaskDateRange.LAST_3_MONTHS,
+  dateRange: TaskDateRange.ALL_TIME,
   searchTerm: '',
   status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
   sortField: TaskSortField.DUE_DATE,

@@ -28,9 +28,9 @@ export interface TaskFilterDropdownProps {
 }
 
 const RANGE_OPTIONS: Array<{ value: TaskDateRange; label: string }> = [
+  { value: TaskDateRange.ALL_TIME, label: 'All Time' },
   { value: TaskDateRange.LAST_3_MONTHS, label: 'Last 3 months' },
   { value: TaskDateRange.LAST_1_YEAR, label: 'Last 1 year' },
-  { value: TaskDateRange.ALL_TIME, label: 'All Time' },
 ];
 
 export function TaskFilterDropdown({

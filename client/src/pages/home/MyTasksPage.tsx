@@ -45,7 +45,7 @@ export default function MyTasksPage() {
   // Controlled filter values (lifted from TaskFilterMenu)
   logger.debug("Current display view config:", currentDisplayViewConfig);
   const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
-  const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.LAST_3_MONTHS;
+  const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
 
   useEffect(() => {

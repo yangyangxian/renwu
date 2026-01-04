@@ -37,7 +37,7 @@ export default function ProjectDetailPage() {
   const [taskView, setTaskView] = useState<TaskViewMode>(TaskViewMode.BOARD);
   const [loadingCurrentProject, setLoadingCurrentProject] = useState(true);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
-  const [dateRange, setDateRange] = useState<TaskDateRange>(TaskDateRange.LAST_3_MONTHS);
+  const [dateRange, setDateRange] = useState<TaskDateRange>(TaskDateRange.ALL_TIME);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Get projectId from global projects object using slug
