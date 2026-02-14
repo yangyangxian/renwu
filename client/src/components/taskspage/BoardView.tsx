@@ -58,10 +58,13 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
   const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     const task = tasks.find(t => String(t.id) === String(taskId));
     if (!task) return;
-    
+
+    // Only send the minimal payload needed (status). Spreading the whole task
+    // can unintentionally include stale label arrays and cause races where old
+    // labels are re-applied.
     await withToast(
       async () => {
-        await updateTaskById(task.id, { ...task, status: newStatus });
+        await updateTaskById(task.id, { status: newStatus });
       },
       {
         success: 'Task status updated!',

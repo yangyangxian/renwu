@@ -102,17 +102,20 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   const currentSelection = deferCommit ? draft : value;
 
-  // Map labelId -> labelSetId (only for labels in the currently visible sets)
+  // Map labelId -> labelSetId for all labels in the scoped label sets (not just
+  // the currently visible/matched subset). This ensures the "one-per-set"
+  // enforcement removes any existing label from the same set even if that
+  // existing label is currently filtered out or not visible.
   const labelIdToSetId = useRef<Map<string, string>>(new Map());
   useEffect(() => {
     const map = new Map<string, string>();
-    for (const s of (matchesSets || [])) {
+    for (const s of (filteredLabelSets || [])) {
       for (const l of (s.labels || [])) {
         if (l?.id) map.set(l.id, s.id);
       }
     }
     labelIdToSetId.current = map;
-  }, [matchesSets]);
+  }, [filteredLabelSets]);
 
   const toggleDraft = (id: string) => {
     setDraft(prev => {
