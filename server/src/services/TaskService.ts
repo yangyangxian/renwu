@@ -402,30 +402,47 @@ class TaskService {
     const [existingTask] = await db.select().from(tasks).where(eq(tasks.id, taskId));
     if (!existingTask) throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
 
+    // New algorithm: incremental add/remove
+    // 1. Load existing label associations for the task
+    // 2. Compute inserts = requested - existing; deletes = existing - requested
+    // 3. Insert new label associations, delete removed ones
+    // 4. Update tasks.updatedAt only if any DB changes occurred
     await db.transaction(async (tx) => {
-      // delete existing associations for the task
-      await tx.delete(taskLabels).where(eq(taskLabels.taskId, taskId));
+      const existingRows = await tx.select({ id: taskLabels.labelId }).from(taskLabels).where(eq(taskLabels.taskId, taskId));
+      const existingIds: string[] = (existingRows || []).map((r: any) => r.id);
 
-      if (!labelIds || labelIds.length === 0) return;
+      const requested = labelIds || [];
 
-      // Optionally, validate labels exist. We'll filter to labels that actually exist to avoid FK errors.
-      const existing = await tx.select({ id: labels.id }).from(labels).where(inArray(labels.id, labelIds));
-      const existingSet = new Set((existing || []).map((r: any) => r.id));
-      // Preserve the order of the incoming labelIds when inserting associations
-      const orderedExistingIds = (labelIds || []).filter((id) => existingSet.has(id));
-      if (orderedExistingIds.length === 0) return;
+      // Validate requested labels exist in labels table to avoid FK errors
+      const validLabelRows = await tx.select({ id: labels.id }).from(labels).where(inArray(labels.id, requested));
+      const validSet = new Set((validLabelRows || []).map((r: any) => r.id));
+      const validRequested = requested.filter((id) => validSet.has(id));
 
-      // Insert new associations in the requested order. Set createdAt explicitly
-      // per-insert so timestamps reflect insertion order even inside one transaction.
-      for (const lid of orderedExistingIds) {
-        try {
-          await tx.insert(taskLabels).values({ taskId, labelId: lid, createdBy: actorId, createdAt: new Date() }).onConflictDoNothing().execute();
-        } catch (err) {
-          logger.debug('updateTaskLabels: failed to insert label association (non-fatal)', err);
-        }
+      // Determine which labels to insert and which to delete
+      const existingSet = new Set(existingIds);
+      const requestedSet = new Set(validRequested);
+
+      const toInsert = validRequested.filter((id) => !existingSet.has(id));
+      const toDelete = existingIds.filter((id) => !requestedSet.has(id));
+
+      let changed = false;
+
+      // Insert new associations in the requested order
+      for (const lid of toInsert) {
+        await tx.insert(taskLabels).values({ taskId, labelId: lid, createdBy: actorId, createdAt: new Date() }).onConflictDoNothing().execute();
+        changed = true;
       }
-      // After changing the labels, update the parent task's updated_at to reflect modification
-      await tx.update(tasks).set({ updatedAt: new Date() }).where(eq(tasks.id, taskId));
+
+      // Delete associations that were removed in the request
+      if (toDelete.length > 0) {
+        await tx.delete(taskLabels).where(and(eq(taskLabels.taskId, taskId), inArray(taskLabels.labelId, toDelete)));
+        changed = true;
+      }
+
+      // If any DB changes occurred, update the task's updatedAt
+      if (changed) {
+        await tx.update(tasks).set({ updatedAt: new Date() }).where(eq(tasks.id, taskId));
+      }
     });
   }
 }
