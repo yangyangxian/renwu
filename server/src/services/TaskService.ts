@@ -231,8 +231,13 @@ class TaskService {
       .leftJoin(assignedUser, eq(tasks.assignedTo, assignedUser.id))
       .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
       .where(eq(tasks.assignedTo, userId));
-    
-    // For each task, also fetch labels (N+1). Could optimize later with a batch query.
+
+    if (result.length === 0) {
+      return [];
+    }
+
+    const labelsByTaskId = await this.getLabelsByTaskIds(result.map(task => task.id));
+
     const entities: TaskEntity[] = [];
     for (const task of result) {
       const entity = mapDbToEntity(task, new TaskEntity());
@@ -252,13 +257,7 @@ class TaskService {
           createdAt: task.createdByCreatedAt?.toISOString() || '',
         };
       }
-      const lblRows = await db
-        .select({ id: labels.id, labelName: labels.labelName, labelColor: labels.labelColor, addedAt: taskLabels.createdAt })
-        .from(labels)
-        .innerJoin(taskLabels, eq(taskLabels.labelId, labels.id))
-        .where(eq(taskLabels.taskId, task.id))
-        .orderBy(taskLabels.createdAt);
-      entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName, labelColor: r.labelColor }));
+      entity.labels = labelsByTaskId.get(task.id) || [];
       entities.push(entity);
     }
     return entities;
