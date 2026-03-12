@@ -12,6 +12,7 @@ class AppConfig {
   public readonly staticDir: string;
   public readonly jwtSecret: string;
   public readonly jwtMaxAge: number; // in milliseconds
+  public readonly redisEnabled: boolean;
   public readonly redisUrl: string;
   public readonly schemaPath: string;
   public readonly resendApiKey: string;
@@ -39,6 +40,7 @@ class AppConfig {
     this.staticDir = this.getEnv('STATIC_DIR', '../../client/dist');
     this.jwtSecret = this.getEnv('JWT_SECRET', '');
     this.jwtMaxAge = parseInt(this.getEnv('JWT_MAX_AGE', '604800000'), 10); // Default to 7 days in ms
+    this.redisEnabled = this.getEnv('REDIS_ENABLED', 'false').toLowerCase() === 'true';
     this.redisUrl = this.getEnv('REDIS_URL', 'redis://localhost:6379');
     this.schemaPath = this.envMode === 'production' ? '/app/server/dist/database/schema.js' : './src/database/schema.ts';
     this.resendApiKey = this.getEnv('RESEND_API_KEY', '');

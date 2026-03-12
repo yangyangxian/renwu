@@ -1,5 +1,6 @@
 // @ts-ignore
 import { redisClient, isRedisAvailable } from './redisClient';
+import appConfig from '../appConfig';
 import logger from '../utils/logger';
 
 export async function getCachedValue<T = any>(cacheKey: string): Promise<T | undefined> {
@@ -12,7 +13,7 @@ export async function getCachedValue<T = any>(cacheKey: string): Promise<T | und
     } catch (err) {
       logger.error('Redis error (get):', err);
     }
-  } else {
+  } else if (appConfig.redisEnabled) {
     logger.warn('Redis client is not available or Redis is not configured.');
   }
   return undefined;

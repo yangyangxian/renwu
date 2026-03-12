@@ -29,6 +29,14 @@ const storage = multer.diskStorage({
 const memoryStorage = multer.memoryStorage();
 const upload = multer({ storage: useOSS ? memoryStorage : storage });
 
+function getSingleRouteParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
 // POST /api/file
 const uploadHandler: RequestHandler = async (req, res) => {
   const file = req.file as Express.Multer.File | undefined;
@@ -70,7 +78,7 @@ router.post('/', upload.single('file'), uploadHandler);
 
 // GET /api/file/:filename - stream file (authenticated)
 const getFileHandler: RequestHandler = (req, res) => {
-  const raw = req.params.filename || '';
+  const raw = getSingleRouteParam(req.params.filename);
   const filename = path.basename(raw); // prevent path traversal
   if (!filename) {
     res.status(400).json(createApiResponse<null>(undefined, {
@@ -123,7 +131,7 @@ router.get('/:filename', getFileHandler);
 
 // DELETE /api/file/:filename - delete an uploaded file
 const deleteFileHandler: RequestHandler = async (req, res) => {
-  const raw = req.params.filename || '';
+  const raw = getSingleRouteParam(req.params.filename);
   const filename = path.basename(raw);
   if (!filename) {
     res.status(400).json(createApiResponse<null>(undefined, {

@@ -20,7 +20,8 @@
     "install:client": "npm install --prefix client",
     "install:common": "npm install --prefix common",
     "install": "npm install --prefix server && npm install --prefix client && npm run install:common",
-    "test": "npm --prefix server run test"
+    "test": "npm --prefix server run test",
+    "docker:build": "docker build -t renwu:test ."
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
