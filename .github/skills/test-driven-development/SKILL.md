@@ -25,6 +25,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Throwaway prototypes
 - Generated code
 - Configuration files
+- One-time operational or infrastructure toggles that do not change application behavior
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
