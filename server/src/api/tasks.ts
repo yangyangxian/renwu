@@ -109,7 +109,10 @@ publicRouter.get('/id/:taskId',
 
     try {
       const task = await taskService.getTaskById(req.params.taskId);
-      if (!task) return res.json(createApiResponse<TaskResDto>(undefined));
+      if (!task) {
+        res.json(createApiResponse<TaskResDto>(undefined));
+        return;
+      }
       const dto = mapObject(task, new TaskResDto());
       dto.labels = (task.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
       res.json(createApiResponse<TaskResDto>(dto));

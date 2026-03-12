@@ -8,7 +8,7 @@
     "clean": "tsc --build --clean"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +20,6 @@
     "./*": "./dist/*.js"
   },
   "dependencies": {
-    "zod": "^4.0.5"
+    "zod": "^4.3.6"
   }
 }

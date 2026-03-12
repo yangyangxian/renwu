@@ -24,7 +24,7 @@
     "docker:build": "docker build -t renwu:test ."
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "cross-env": "^7.0.3"
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0"
   }
 }

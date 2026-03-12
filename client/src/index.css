@@ -28,7 +28,7 @@ body {
   }
 
   .card-border {
-    @apply rounded-md shadow-sm border-1;
+    @apply rounded-lg shadow-sm border-1;
   }
 }
 
