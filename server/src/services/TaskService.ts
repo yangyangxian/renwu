@@ -194,12 +194,7 @@ class TaskService {
       throw new CustomError('Failed to create task', ErrorCodes.INTERNAL_ERROR);
     }
 
-    // Use the common getTaskById function to fetch the created task with details
-    const task = await this.getTaskById(created.id);
-    if (task == null) {
-      throw new CustomError('Created task not found', ErrorCodes.INTERNAL_ERROR);
-    }
-    return task;
+    return mapDbToEntity(created, new TaskEntity());
   }
 
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {

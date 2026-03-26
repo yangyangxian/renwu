@@ -20,6 +20,7 @@ import { DropDownList } from "@/components/common/DropDownList";
 import { logger } from "@/utils/logger";
 import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
 import LabelSelector from '@/components/common/LabelSelector';
+import { shouldIncludeTaskUpdateLabels } from '@/utils/taskUpdatePayload';
 
 interface TaskDialogProps {
   open: boolean;
@@ -83,7 +84,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     await withToast(
       async () => {
         if (isEditMode) {
-          const { id, createdAt, updatedAt, projectName, ...updateData } = taskData;
+          const { id, createdAt, updatedAt, projectName, ...rawUpdateData } = taskData;
+          const updateData = { ...rawUpdateData };
+          if (!shouldIncludeTaskUpdateLabels(initialValues.labels, taskData.labels)) {
+            delete updateData.labels;
+          }
           await updateTaskById(String(taskData.id), updateData);
         } else {
           // For create mode, only send the fields that are part of TaskCreateReqDto
