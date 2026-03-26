@@ -6,7 +6,7 @@ import path from 'path';
 import { serverRootDir } from '../utils/path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { useOSS, uploadToOSS, deleteFromOSS } from '../services/AliyunOSS.service';
+import { useOSS, uploadToOSS, deleteFromOSS } from '../services/AliyunOSS.service.js';
 import logger from '../utils/logger';
 
 const router = Router();

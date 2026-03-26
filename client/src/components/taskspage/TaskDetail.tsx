@@ -1,7 +1,7 @@
 import LabelSelector from '@/components/common/LabelSelector';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { format } from "date-fns";
-import { TaskStatus } from "@fullstack/common";
+import { TaskResDto, TaskStatus } from "@fullstack/common";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioItem } from "@/components/ui-kit/Dropdown-menu";
 import { Badge } from "@/components/ui-kit/Badge";
 import { Label } from "@/components/ui-kit/Label";
@@ -19,15 +19,17 @@ import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/t
 import { marked } from 'marked';
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
+import { resolveRenderableTaskDetail } from '@/utils/taskDetailState';
 
 interface TaskDetailProps {
   taskId: string;
+  previewTask?: TaskResDto | null;
 }
 
 const fieldLabelContainerClass = "flex items-center gap-3 min-h-[44px]";
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
+const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState<string>(currentTask?.title || "");
@@ -38,7 +40,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const [descContainerHeight, setDescContainerHeight] = useState<number | undefined>(undefined);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  const task = currentTask!;
+  const task = resolveRenderableTaskDetail({ requestedTaskId: taskId, currentTask, previewTask });
   const { projects } = useProjectStore();
 
   // Optimistic labels state (component scope)
@@ -46,15 +48,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
 
   const currentLabelIds = localLabelIds;
   // Normalize projectId: use `null` to indicate personal (no project), matching TaskDialog
-  const projectId = currentTask?.projectId ? currentTask.projectId : null;
+  const projectId = task?.projectId ? task.projectId : null;
 
   useEffect(() => {
-    if (!currentTask || !Array.isArray(currentTask.labels)) {
+    if (!task || !Array.isArray(task.labels)) {
       setLocalLabelIds([]);
     } else {
-      setLocalLabelIds((currentTask.labels || []).map((l: any) => l.id));
+      setLocalLabelIds((task.labels || []).map((l: any) => l.id));
     }
-  }, [currentTask]);
+  }, [task]);
 
   const handleLabelsChange = async (next: string[]) => {
     if (!taskId) return;
@@ -88,24 +90,24 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   }, [taskId, fetchCurrentTask]);
 
   useEffect(() => {
-    setLocalDueDate(currentTask?.dueDate);
-    if (currentTask) {
-      setDescInput(currentTask.description || "");
-      setTitleInput(currentTask.title || "");
+    setLocalDueDate(task?.dueDate);
+    if (task) {
+      setDescInput(task.description || "");
+      setTitleInput(task.title || "");
     }
     setEditingDesc(false);
-  }, [currentTask?.dueDate, currentTask]);
+  }, [task?.dueDate, task]);
 
   const saveTitle = async (value: string) => {
-    if (!currentTask) return;
+    if (!task) return;
     const newTitle = value.trim();
-    if (newTitle === currentTask.title) return;
+    if (newTitle === task.title) return;
     try {
       await updateTaskById(taskId, { title: newTitle });
       toast.success('Task title updated');
     } catch (err) {
       toast.error('Failed to update title');
-      setTitleInput(currentTask.title || "");
+      setTitleInput(task.title || "");
     }
   };
 
@@ -121,7 +123,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     } else if (e.key === 'Escape') {
       // cancel on Escape
       setEditingTitle(false);
-      setTitleInput(currentTask?.title || "");
+      setTitleInput(task?.title || "");
     }
   };
 
@@ -143,14 +145,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const handleSubmitDesc = async (newValue: string) => {
     setEditingDesc(false);
     setDescInput(newValue);
-    if (!currentTask) return;
+    if (!task) return;
     try {
       await updateTaskById(taskId, { description: newValue });
       toast.success('Task description updated');
       setDescContainerHeight(undefined);
     } catch {
       toast.error('Failed to update description');
-      setDescInput(currentTask.description || "");
+      setDescInput(task.description || "");
       setDescContainerHeight(undefined);
     }
   };
@@ -183,7 +185,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
 
   return (
       <>
-      { !loadingCurrentTask && task &&
+      { task &&
       <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -278,7 +280,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
                       ref={editorRef}
                       value={descInput}
                       onSave={(val) => { handleSubmitDesc(val); setEditingDesc(false); setIsDirty(false); }}
-                      onCancel={() => { setEditingDesc(false); setDescInput(currentTask?.description || ""); setIsDirty(false); setDescContainerHeight(undefined); }}
+                      onCancel={() => { setEditingDesc(false); setDescInput(task?.description || ""); setIsDirty(false); setDescContainerHeight(undefined); }}
                       showSaveCancel={false}
                       onDirtyChange={setIsDirty}
                     />
@@ -446,6 +448,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         </div>
       </div>
       </motion.div>
+      }
+      { !task && loadingCurrentTask &&
+      <div className="text-muted-foreground">Loading task...</div>
       }
       </>
   );

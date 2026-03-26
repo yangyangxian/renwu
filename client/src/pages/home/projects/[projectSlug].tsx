@@ -182,6 +182,7 @@ export default function ProjectDetailPage() {
         <ProjectTasksTab
           view={taskView}
           onViewChange={setTaskView}
+          selectionScopeKey={projectId ?? projectSlug ?? null}
           onAddTask={() => {
             setEditingTask(null);
             setIsDialogOpen(true);

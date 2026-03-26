@@ -1,5 +1,5 @@
 import { ArrowDownWideNarrow } from "lucide-react";
-import { useEffect, useState, useMemo, Fragment } from "react";
+import { useEffect, useState, useMemo, Fragment, useRef } from "react";
 import { TaskResDto, TaskStatus } from "@fullstack/common";
 import { TaskSortField, TaskSortOrder } from "@fullstack/common";
 import TaskCard from "./TaskCard";
@@ -14,17 +14,20 @@ import { usePermissionStore } from '@/stores/usePermissionStore';
 import { PermissionAction, PermissionResourceType } from '@fullstack/common';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
+import { resolveSelectedTaskId } from '@/utils/taskSelection';
 
 interface TaskListViewProps {
   tasks: TaskResDto[];
 
-  showAssignedTo?: boolean; 
+  showAssignedTo?: boolean;
+  selectionScopeKey?: string | null;
 }
 
-const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo, selectionScopeKey = null }) => {
   const { hasPermission } = usePermissionStore();
   const { user } = useAuth();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const previousSelectionScopeKey = useRef<string | null>(selectionScopeKey);
   const allStatuses: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
   const { currentDisplayViewConfig, setCurrentDisplayViewConfig } = useTaskViewStore();
   // Use only currentDisplayViewConfig for all filter/sort logic
@@ -79,16 +82,24 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
     return tasksCopy;
   }, [filteredTasks, sortField, sortOrder]);
 
+  const resolvedSelectedTaskId = useMemo(() => resolveSelectedTaskId({
+    currentSelectedTaskId: selectedTaskId,
+    taskIds: sortedTasks.map(task => task.id),
+    selectionScopeChanged: previousSelectionScopeKey.current !== selectionScopeKey,
+  }), [selectedTaskId, selectionScopeKey, sortedTasks]);
+
+  const resolvedSelectedTask = useMemo(
+    () => sortedTasks.find((task) => task.id === resolvedSelectedTaskId) ?? null,
+    [resolvedSelectedTaskId, sortedTasks]
+  );
+
   // Select the first task by default when tasks change
   useEffect(() => {
-    if (sortedTasks && sortedTasks.length > 0) {
-      if (!selectedTaskId || !sortedTasks.some(t => t.id === selectedTaskId)) {
-        setSelectedTaskId(sortedTasks[0].id);
-      }
-    } else {
-      setSelectedTaskId(null);
+    previousSelectionScopeKey.current = selectionScopeKey;
+    if (resolvedSelectedTaskId !== selectedTaskId) {
+      setSelectedTaskId(resolvedSelectedTaskId);
     }
-  }, [sortedTasks]);
+  }, [resolvedSelectedTaskId, selectedTaskId, selectionScopeKey]);
 
   return (
     <div className="flex h-full w-full rounded-lg">
@@ -189,7 +200,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
                       projectName={task.projectName}
                       status={task.status}
                       assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                      className={`hover:scale-100 cursor-pointer rounded-none! bg-white-black py-3 pl-4 min-h-22 border-none! shadow-none! ${selectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
+                      className={`hover:scale-100 cursor-pointer rounded-none! bg-white-black py-3 pl-4 min-h-22 border-none! shadow-none! ${resolvedSelectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
                       showDeleteButton={showDeleteButton}
                     />
                   </div>
@@ -206,8 +217,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo }) =>
       </div>
       {/* Right: Task Details */}
       <div className="flex-1 p-5 overflow-y-auto shadow-xs bg-white-black rounded-r-lg border border-input dark:border-[1.5px] border-l-0 dark:border-l-0">
-        {selectedTaskId ? (
-          <TaskDetail taskId={selectedTaskId} />
+        {resolvedSelectedTaskId ? (
+          <TaskDetail taskId={resolvedSelectedTaskId} previewTask={resolvedSelectedTask} />
         ) : (
           <div className="text-muted-foreground">Select a task to view details.</div>
         )}

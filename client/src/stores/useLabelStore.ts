@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { apiClient } from '@/utils/APIClient';
 import { getMyLabels, getProjectLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, getProjectLabelSets, createLabelInSet, getLabelsInSet, deleteLabelSetById, deleteLabelFromSet } from '@/apiRequests/apiEndpoints';
 import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto } from '@fullstack/common';
+import { resolveScopedFetchPolicy } from '@/utils/scopedFetchPolicy';
 
 type LabelScope = { kind: 'me' } | { kind: 'project'; projectId: string };
 
@@ -14,6 +15,11 @@ function projectIdFromScopeKey(scopeKey: string): string | undefined {
   if (scopeKey.startsWith('project:')) return scopeKey.replace(/^project:/, '');
   return undefined;
 }
+
+const loadedLabelScopes = new Set<string>();
+const loadedLabelSetScopes = new Set<string>();
+const inFlightLabelRequests = new Map<string, Promise<LabelResDto[]>>();
+const inFlightLabelSetRequests = new Map<string, Promise<any[]>>();
 
 interface LabelStoreState {
   // Scope-aware caches
@@ -87,67 +93,110 @@ export function useLabelStore() {
     };
   };
 
-  const fetchLabels = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean }) => {
+  const fetchLabels = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean; force?: boolean }) => {
     const scopeKey = scopeKeyFromProjectId(projectId);
     const shouldSetActiveScope = opts?.setActiveScope ?? true;
     if (shouldSetActiveScope) setActiveScopeKey(scopeKey);
+    const policy = resolveScopedFetchPolicy({
+      hasLoadedScope: loadedLabelScopes.has(scopeKey),
+      hasInFlightRequest: inFlightLabelRequests.has(scopeKey),
+      force: opts?.force ?? false,
+    });
+
+    if (policy === 'skip') {
+      return useZustandLabelStore.getState().labelsByScope[scopeKey] ?? [];
+    }
+
+    if (policy === 'join') {
+      return inFlightLabelRequests.get(scopeKey)!;
+    }
+
     setLoading(true);
     setError(null);
-    try {
-    // server exposes convenience endpoints for current user and for a project's labels
-    const data = await apiClient.get<LabelResDto[]>(projectId ? getProjectLabels(projectId) : getMyLabels());
-      setLabelsForScope(scopeKey, Array.isArray(data) ? data : []);
-      return data as LabelResDto[];
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch labels');
-      setLabelsForScope(scopeKey, []);
-      return [] as LabelResDto[];
-    } finally {
-      setLoading(false);
-    }
+    const request = (async () => {
+      try {
+        // server exposes convenience endpoints for current user and for a project's labels
+        const data = await apiClient.get<LabelResDto[]>(projectId ? getProjectLabels(projectId) : getMyLabels());
+        const normalized = Array.isArray(data) ? data : [];
+        setLabelsForScope(scopeKey, normalized);
+        loadedLabelScopes.add(scopeKey);
+        return normalized;
+      } catch (err: any) {
+        setError(err?.message || 'Failed to fetch labels');
+        setLabelsForScope(scopeKey, []);
+        return [] as LabelResDto[];
+      } finally {
+        inFlightLabelRequests.delete(scopeKey);
+        setLoading(false);
+      }
+    })();
+
+    inFlightLabelRequests.set(scopeKey, request);
+    return request;
   }, [setActiveScopeKey, setLabelsForScope, setLoading, setError]);
 
-  const fetchLabelSets = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean }) => {
+  const fetchLabelSets = useCallback(async (projectId?: string, opts?: { setActiveScope?: boolean; force?: boolean }) => {
     const scopeKey = scopeKeyFromProjectId(projectId);
     const shouldSetActiveScope = opts?.setActiveScope ?? true;
     if (shouldSetActiveScope) setActiveScopeKey(scopeKey);
+    const policy = resolveScopedFetchPolicy({
+      hasLoadedScope: loadedLabelSetScopes.has(scopeKey),
+      hasInFlightRequest: inFlightLabelSetRequests.has(scopeKey),
+      force: opts?.force ?? false,
+    });
+
+    if (policy === 'skip') {
+      return useZustandLabelStore.getState().labelSetsByScope[scopeKey] ?? [];
+    }
+
+    if (policy === 'join') {
+      return inFlightLabelSetRequests.get(scopeKey)!;
+    }
+
     setLoading(true);
     setError(null);
-    try {
-      const data = await apiClient.get<any[]>(projectId ? getProjectLabelSets(projectId) : getMyLabelSets());
+    const request = (async () => {
+      try {
+        const data = await apiClient.get<any[]>(projectId ? getProjectLabelSets(projectId) : getMyLabelSets());
 
-      // Normalize server rows to UI-friendly shape: { id, name, labels: [{id,name,color,...}] }
-      const normalized = Array.isArray(data)
-        ? data.map((r: any) => {
-          const rawLabels = Array.isArray(r?.labels) ? r.labels : [];
-          const labels = rawLabels.map((l: any) => ({
-            ...l,
-            // server label DTO is { name }, but DB/entity may come back as { labelName }
-            name: l?.name ?? l?.labelName ?? '',
-            color: l?.color ?? l?.labelColor,
-            description: l?.description ?? l?.labelDescription,
-          }));
+        // Normalize server rows to UI-friendly shape: { id, name, labels: [{id,name,color,...}] }
+        const normalized = Array.isArray(data)
+          ? data.map((r: any) => {
+            const rawLabels = Array.isArray(r?.labels) ? r.labels : [];
+            const labels = rawLabels.map((l: any) => ({
+              ...l,
+              // server label DTO is { name }, but DB/entity may come back as { labelName }
+              name: l?.name ?? l?.labelName ?? '',
+              color: l?.color ?? l?.labelColor,
+              description: l?.description ?? l?.labelDescription,
+            }));
 
-          return {
-            id: r.id,
-            name: r.labelSetName || r.name || '',
-            // preserve project association for filtering (may be null for personal sets)
-            projectId: r?.projectId ?? r?.project_id ?? null,
-            labels,
-            _raw: r,
-          };
-        })
-        : [];
+            return {
+              id: r.id,
+              name: r.labelSetName || r.name || '',
+              // preserve project association for filtering (may be null for personal sets)
+              projectId: r?.projectId ?? r?.project_id ?? null,
+              labels,
+              _raw: r,
+            };
+          })
+          : [];
 
-      setLabelSetsForScope(scopeKey, normalized as any[]);
-      return normalized as any[];
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch label sets');
-      setLabelSetsForScope(scopeKey, []);
-      return [] as any[];
-    } finally {
-      setLoading(false);
-    }
+        setLabelSetsForScope(scopeKey, normalized as any[]);
+        loadedLabelSetScopes.add(scopeKey);
+        return normalized as any[];
+      } catch (err: any) {
+        setError(err?.message || 'Failed to fetch label sets');
+        setLabelSetsForScope(scopeKey, []);
+        return [] as any[];
+      } finally {
+        inFlightLabelSetRequests.delete(scopeKey);
+        setLoading(false);
+      }
+    })();
+
+    inFlightLabelSetRequests.set(scopeKey, request);
+    return request;
   }, [setActiveScopeKey, setLabelSetsForScope, setLoading, setError]);
 
   const createLabel = useCallback(async (payload: Partial<LabelCreateReqDto>): Promise<LabelResDto> => {

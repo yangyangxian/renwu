@@ -14,6 +14,7 @@ interface ProjectTasksTabProps {
   onViewChange?: (view: TaskViewMode) => void;
   onAddTask?: () => void;
   tasks?: TaskResDto[];
+  selectionScopeKey?: string | null;
 }
 
 export function ProjectTasksTab({
@@ -22,6 +23,7 @@ export function ProjectTasksTab({
   onViewChange,
   onAddTask,
   tasks = [],
+  selectionScopeKey = null,
 }: ProjectTasksTabProps) {
   const filteredTasks = tasks;
 
@@ -37,6 +39,7 @@ export function ProjectTasksTab({
         <TaskListView
           tasks={filteredTasks}
           showAssignedTo={true}
+          selectionScopeKey={selectionScopeKey}
         />
       )}
     </div>
