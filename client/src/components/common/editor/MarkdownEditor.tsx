@@ -2,8 +2,8 @@ import { defaultValueCtx, Editor, rootCtx, editorViewOptionsCtx } from '@milkdow
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
 import { commonmark } from '@milkdown/kit/preset/commonmark';
-import { Milkdown, useEditor } from '@milkdown/react';
-import { usePluginViewFactory, useNodeViewFactory } from '@prosemirror-adapter/react';
+import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
+import { ProsemirrorAdapterProvider, usePluginViewFactory, useNodeViewFactory } from '@prosemirror-adapter/react';
 import { tooltip, TooltipView } from './Tooltip';
 import { CodeBlockView } from './CodeBlockView';
 import { EditorFooterHandle } from './EditorFooterHandle';
@@ -32,6 +32,7 @@ export interface MarkdownnEditorProps {
   onSave?: (markdown: string) => void;
   onCancel?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onReadyChange?: (ready: boolean) => void;
   ref: React.Ref<MarkdownEditorHandle> | null;
 }
 
@@ -41,7 +42,17 @@ export interface MarkdownEditorHandle {
 }
 
 export function MarkdownnEditor(props: MarkdownnEditorProps) {
-  const { value, ref, showSaveCancel, onSave, onCancel, onDirtyChange } = props;
+  return (
+    <MilkdownProvider>
+      <ProsemirrorAdapterProvider>
+        <MarkdownEditorContent {...props} />
+      </ProsemirrorAdapterProvider>
+    </MilkdownProvider>
+  );
+}
+
+function MarkdownEditorContent(props: MarkdownnEditorProps) {
+  const { value, ref, showSaveCancel, onSave, onCancel, onDirtyChange, onReadyChange } = props;
   const pluginViewFactory = usePluginViewFactory();
   const nodeViewFactory = useNodeViewFactory();
   const [dirty, setDirty] = useState(false);
@@ -142,6 +153,45 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
   return () => root.removeEventListener('paste', handlePaste, true);
   }, [editorRef.current?.ctx]);
 
+  useEffect(() => {
+    let frameId = 0;
+    let active = true;
+    let stableFrameCount = 0;
+
+    onReadyChange?.(false);
+
+    const detectStableEditor = () => {
+      if (!active) return;
+
+      const root = editorRef.current?.ctx.get(rootCtx);
+      if (!(root instanceof HTMLElement)) {
+        frameId = window.requestAnimationFrame(detectStableEditor);
+        return;
+      }
+
+      const editorCount = root.querySelectorAll('.editor').length;
+      const proseMirrorCount = root.querySelectorAll('.ProseMirror').length;
+      const hasSingleStableEditor = editorCount === 1 && proseMirrorCount === 1;
+
+      stableFrameCount = hasSingleStableEditor ? stableFrameCount + 1 : 0;
+
+      if (stableFrameCount >= 2) {
+        onReadyChange?.(true);
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(detectStableEditor);
+    };
+
+    frameId = window.requestAnimationFrame(detectStableEditor);
+
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frameId);
+      onReadyChange?.(false);
+    };
+  }, [value, onReadyChange]);
+
   // Helper: upload image data URL
   const uploadImage = async (dataUrl: string): Promise<string> => {
     const blob = dataUrlToBlob(dataUrl);
@@ -211,9 +261,55 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
         .markdown-body .editor {
           outline: none !important;
         }
+
+        .markdown-body .editor,
+        .markdown-body .editor .ProseMirror,
+        .markdown-body .editor [contenteditable='true'] {
+          line-height: 1.5;
+          word-break: normal;
+          overflow-wrap: break-word;
+        }
+
+        .markdown-body .editor :where(h1, h2, h3, h4, h5, h6) {
+          margin-top: 1.1rem;
+          margin-bottom: 1rem;
+          font-weight: 600;
+          line-height: 1.25;
+        }
+
+        .markdown-body .editor :where(p, blockquote, ul, ol, dl, table, pre, details) {
+          margin-top: 0;
+          margin-bottom: 1rem;
+        }
+
+        .markdown-body .editor :where(ul, ol) {
+          padding-left: 1.5em;
+        }
+
+        .markdown-body .editor :where(ul ul, ul ol, ol ol, ol ul) {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .markdown-body .editor li > p {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .markdown-body .editor li + li {
+          margin-top: .25em;
+        }
+
+        .markdown-body .editor :where(.ProseMirror, [contenteditable='true']) > *:first-child {
+          margin-top: 0 !important;
+        }
+
+        .markdown-body .editor :where(.ProseMirror, [contenteditable='true']) > *:last-child {
+          margin-bottom: 0 !important;
+        }
       `}</style>
       
-      <div className="markdown-body break-all w-full">
+      <div className="markdown-body w-full">
         <Milkdown />
       </div>
       <EditorFooterHandle />

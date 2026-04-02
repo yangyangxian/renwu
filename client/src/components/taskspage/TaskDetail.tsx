@@ -28,6 +28,11 @@ interface TaskDetailProps {
 
 const fieldLabelContainerClass = "flex items-center gap-3 min-h-[44px]";
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
+const descriptionSurfaceClass = "markdown-body w-full rounded border border-transparent !bg-muted/40 dark:!bg-muted/65 transition-colors";
+const descriptionEditSurfaceClass = `${descriptionSurfaceClass} border-primary/30 ring-1 ring-primary/10 dark:border-primary/40 dark:ring-primary/15 !bg-background dark:!bg-muted/75`;
+const descriptionScrollClass = "overflow-auto min-h-[200px] max-h-[600px] relative";
+const descriptionPaddingClass = "px-3 py-2";
+const descriptionContentClass = "task-detail-description-content w-full";
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
@@ -40,9 +45,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
   const descViewScrollRef = useRef<HTMLDivElement | null>(null);
   const descEditScrollRef = useRef<HTMLDivElement | null>(null);
   const descScrollTopRef = useRef(0);
+  const lastTaskIdRef = useRef<string | null>(null);
   const [descContainerHeight, setDescContainerHeight] = useState<number | undefined>(undefined);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [isDescEditorReady, setIsDescEditorReady] = useState(false);
   const task = resolveRenderableTaskDetail({ requestedTaskId: taskId, currentTask, previewTask });
   const { projects } = useProjectStore();
 
@@ -93,13 +100,43 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
   }, [taskId, fetchCurrentTask]);
 
   useEffect(() => {
+    const nextTaskId = task?.id ?? null;
+    const taskIdentityChanged = nextTaskId !== lastTaskIdRef.current;
+
     setLocalDueDate(task?.dueDate);
-    if (task) {
+
+    if (!task) {
+      if (taskIdentityChanged) {
+        setDescInput("");
+        setTitleInput("");
+        setIsDescEditorReady(false);
+        setEditingDesc(false);
+        setEditingTitle(false);
+      }
+      lastTaskIdRef.current = nextTaskId;
+      return;
+    }
+
+    if (taskIdentityChanged) {
       setDescInput(task.description || "");
       setTitleInput(task.title || "");
+      setIsDescEditorReady(false);
+      setEditingDesc(false);
+      setEditingTitle(false);
+      lastTaskIdRef.current = nextTaskId;
+      return;
     }
-    setEditingDesc(false);
-  }, [task?.dueDate, task]);
+
+    if (!editingDesc) {
+      setDescInput(task.description || "");
+    }
+
+    if (!editingTitle) {
+      setTitleInput(task.title || "");
+    }
+
+    lastTaskIdRef.current = nextTaskId;
+  }, [task, editingDesc, editingTitle]);
 
   const saveTitle = async (value: string) => {
     if (!task) return;
@@ -143,6 +180,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
     const h = descViewRef.current?.clientHeight;
     if (h) setDescContainerHeight(h);
     descScrollTopRef.current = descViewScrollRef.current?.scrollTop ?? 0;
+    setIsDescEditorReady(false);
     setEditingDesc(true);
   };
 
@@ -168,6 +206,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
     };
   }, [editingDesc]);
 
+  useLayoutEffect(() => {
+    if (editingDesc || descContainerHeight === undefined) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setDescContainerHeight(undefined);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [editingDesc, descContainerHeight, descInput]);
+
   const handleSubmitDesc = async (newValue: string) => {
     setEditingDesc(false);
     setDescInput(newValue);
@@ -175,11 +225,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
     try {
       await updateTaskById(taskId, { description: newValue });
       toast.success('Task description updated');
-      setDescContainerHeight(undefined);
     } catch {
       toast.error('Failed to update description');
       setDescInput(task.description || "");
-      setDescContainerHeight(undefined);
     }
   };
 
@@ -187,6 +235,25 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
     const out = marked.parse(descInput) as unknown;
     return typeof out === 'string' ? out : '';
   }, [descInput]);
+
+  const renderDescriptionPreview = (interactive: boolean) => {
+    if (descInput) {
+      return (
+        <div className={`${descriptionPaddingClass} ${descriptionContentClass}`}>
+          <div className={descriptionContentClass} dangerouslySetInnerHTML={{ __html: renderedHtml }} />
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className={`${descriptionPaddingClass} min-h-[200px] !text-sm rounded text-muted-foreground italic flex items-start`}
+        onClick={interactive ? handleDescClick : undefined}
+      >
+        Enter a task description… (Markdown supported!)
+      </div>
+    );
+  };
 
   const memberOptions = useMemo(() => {
     if (!task?.projectId) return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [{ value: '', label: 'Unassigned', avatarText: '-' }];
@@ -213,12 +280,33 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
       <>
       { task &&
       <motion.div
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
       className="w-full h-full"
       >
+      <style>{`
+        .task-detail-description-content :where(ul, ol) {
+          padding-left: 1.5em;
+          margin-top: 0;
+          margin-bottom: 1rem;
+        }
+
+        .task-detail-description-content :where(ul ul, ul ol, ol ol, ol ul) {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .task-detail-description-content li > p {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .task-detail-description-content li + li {
+          margin-top: .25em;
+        }
+      `}</style>
       {/* Title block above columns */}
       <div className="mb-5 ml-2">
         {/* restore larger title font and ensure the leading icon is visible in dark mode */}
@@ -283,7 +371,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
                 <FileText className="size-4" />
                 Description:
               </Label>
-              <div className="ml-3 flex items-center gap-2">
+              <div className="ml-3 flex min-h-9 items-center gap-2">
                 {editingDesc ? (
                   <>
                     {isDirty && <UnsavedChangesIndicator />}
@@ -311,32 +399,40 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
               <>
                 <div
                   ref={descEditScrollRef}
-                  className='markdown-body overflow-auto min-h-[200px] max-h-[600px] !bg-muted/40 dark:!bg-muted/65 flex w-full h-full'
+                  className={`${descriptionEditSurfaceClass} ${descriptionScrollClass}`}
                   style={descContainerHeight ? { height: descContainerHeight } : undefined}
                 >
-                  <div className="px-3 py-2 w-full">
-                    <MarkdownnEditor
-                      ref={editorRef}
-                      value={descInput}
-                      onSave={(val) => { handleSubmitDesc(val); setEditingDesc(false); setIsDirty(false); }}
-                      onCancel={() => { setEditingDesc(false); setDescInput(task?.description || ""); setIsDirty(false); setDescContainerHeight(undefined); }}
-                      showSaveCancel={false}
-                      onDirtyChange={setIsDirty}
-                    />
+                  <div className="relative min-h-full w-full">
+                    {!isDescEditorReady && (
+                      <div className="absolute inset-0 z-10 pointer-events-none">
+                        {renderDescriptionPreview(false)}
+                      </div>
+                    )}
+                    <div className={`${descriptionPaddingClass} ${descriptionContentClass} ${isDescEditorReady ? 'visible' : 'invisible'}`}>
+                      <MarkdownnEditor
+                        ref={editorRef}
+                        value={descInput}
+                        onSave={(val) => { handleSubmitDesc(val); setEditingDesc(false); setIsDirty(false); setIsDescEditorReady(false); }}
+                        onCancel={() => { setEditingDesc(false); setDescInput(task?.description || ""); setIsDirty(false); setIsDescEditorReady(false); }}
+                        showSaveCancel={false}
+                        onDirtyChange={setIsDirty}
+                        onReadyChange={setIsDescEditorReady}
+                      />
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
               <>
                 {descInput ? (
-                <div ref={descViewRef} className="markdown-body w-full !bg-muted/40 dark:!bg-muted/65">
-                  <div ref={descViewScrollRef} className="overflow-auto min-h-[200px] max-h-[600px] px-3 py-2">
-                    <div className="w-full" dangerouslySetInnerHTML={{ __html: renderedHtml }} />
+                <div ref={descViewRef} className={descriptionSurfaceClass} style={descContainerHeight ? { height: descContainerHeight } : undefined}>
+                  <div ref={descViewScrollRef} className={descriptionScrollClass}>
+                    {renderDescriptionPreview(false)}
                   </div>
                 </div>
                 ) : (
                   <div
-                    className="markdown-body min-h-[200px] !text-sm !bg-muted/40 dark:!bg-muted/65 !p-3 rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start"
+                    className={`${descriptionSurfaceClass} ${descriptionPaddingClass} min-h-[200px] !text-sm rounded cursor-pointer text-muted-foreground italic border border-transparent hover:border-muted-foreground/20 transition-colors flex items-start`}
                     onClick={handleDescClick}
                   >
                     Enter a task description… (Markdown supported!)

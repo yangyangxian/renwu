@@ -218,7 +218,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo, sele
       {/* Right: Task Details */}
       <div className="flex-1 p-5 overflow-y-auto shadow-xs bg-white-black rounded-r-lg border border-input dark:border-[1.5px] border-l-0 dark:border-l-0">
         {resolvedSelectedTaskId ? (
-          <TaskDetail taskId={resolvedSelectedTaskId} previewTask={resolvedSelectedTask} />
+          <TaskDetail key={resolvedSelectedTaskId} taskId={resolvedSelectedTaskId} previewTask={resolvedSelectedTask} />
         ) : (
           <div className="text-muted-foreground">Select a task to view details.</div>
         )}
