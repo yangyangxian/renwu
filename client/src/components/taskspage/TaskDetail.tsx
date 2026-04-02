@@ -1,5 +1,5 @@
 import LabelSelector from '@/components/common/LabelSelector';
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from "react";
 import { format } from "date-fns";
 import { TaskResDto, TaskStatus } from "@fullstack/common";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioItem } from "@/components/ui-kit/Dropdown-menu";
@@ -37,6 +37,9 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
   const [editingDesc, setEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
   const descViewRef = useRef<HTMLDivElement | null>(null);
+  const descViewScrollRef = useRef<HTMLDivElement | null>(null);
+  const descEditScrollRef = useRef<HTMLDivElement | null>(null);
+  const descScrollTopRef = useRef(0);
   const [descContainerHeight, setDescContainerHeight] = useState<number | undefined>(undefined);
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -139,8 +142,31 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
     // capture current viewer height to avoid layout jumps when mounting editor
     const h = descViewRef.current?.clientHeight;
     if (h) setDescContainerHeight(h);
+    descScrollTopRef.current = descViewScrollRef.current?.scrollTop ?? 0;
     setEditingDesc(true);
   };
+
+  useLayoutEffect(() => {
+    if (!editingDesc) return;
+
+    const restoreScrollPosition = () => {
+      if (descEditScrollRef.current) {
+        descEditScrollRef.current.scrollTop = descScrollTopRef.current;
+      }
+    };
+
+    restoreScrollPosition();
+    const frameA = window.requestAnimationFrame(() => {
+      restoreScrollPosition();
+      window.requestAnimationFrame(restoreScrollPosition);
+    });
+    const timeoutId = window.setTimeout(restoreScrollPosition, 0);
+
+    return () => {
+      window.cancelAnimationFrame(frameA);
+      window.clearTimeout(timeoutId);
+    };
+  }, [editingDesc]);
 
   const handleSubmitDesc = async (newValue: string) => {
     setEditingDesc(false);
@@ -257,21 +283,34 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
                 <FileText className="size-4" />
                 Description:
               </Label>
-              <div className="ml-3">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="opacity-80 hover:opacity-100 transition-opacity text-muted-foreground dark:text-white"
-                  onClick={handleDescClick}
-                  title="Edit description"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
+              <div className="ml-3 flex items-center gap-2">
+                {editingDesc ? (
+                  <>
+                    {isDirty && <UnsavedChangesIndicator />}
+                    <Button size="sm" variant="secondary" onClick={() => editorRef.current?.cancel()}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" variant="default" disabled={!isDirty} onClick={() => editorRef.current?.save()}>
+                      Save
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="opacity-80 hover:opacity-100 transition-opacity text-muted-foreground dark:text-white"
+                    onClick={handleDescClick}
+                    title="Edit description"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </div>
             {editingDesc ? (
               <>
                 <div
+                  ref={descEditScrollRef}
                   className='markdown-body overflow-auto min-h-[200px] max-h-[600px] !bg-muted/40 dark:!bg-muted/65 flex w-full h-full'
                   style={descContainerHeight ? { height: descContainerHeight } : undefined}
                 >
@@ -286,25 +325,12 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
                     />
                   </div>
                 </div>
-                <div className="flex justify-end items-center gap-2 my-2 mt-2 mr-3">
-                  {isDirty && (
-                    <div className='mr-3'>
-                      <UnsavedChangesIndicator />
-                    </div>
-                  )}
-                  <Button size="sm" variant="default" disabled={!isDirty} onClick={() => editorRef.current?.save()}>
-                    Save
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={() => editorRef.current?.cancel()}>
-                    Cancel
-                  </Button>
-                </div>
               </>
             ) : (
               <>
                 {descInput ? (
                 <div ref={descViewRef} className="markdown-body w-full !bg-muted/40 dark:!bg-muted/65">
-                  <div className="overflow-auto min-h-[200px] max-h-[600px] px-3 py-2">
+                  <div ref={descViewScrollRef} className="overflow-auto min-h-[200px] max-h-[600px] px-3 py-2">
                     <div className="w-full" dangerouslySetInnerHTML={{ __html: renderedHtml }} />
                   </div>
                 </div>
