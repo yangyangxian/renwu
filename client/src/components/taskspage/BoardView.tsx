@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DndContext, closestCorners, useDraggable, useDroppable, DragOverlay, useSensors, useSensor, PointerSensor } from "@dnd-kit/core";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui-kit/Card";
 import GradientScrollArea from "../common/GradientScrollArea";
@@ -9,6 +9,11 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { usePermissionStore } from "@/stores/usePermissionStore";
 import { useAuth } from "@/providers/AuthProvider";
+import {
+  mergeOptimisticTaskStatuses,
+  pruneResolvedOptimisticTaskStatuses,
+  type OptimisticTaskStatuses,
+} from "./boardViewOptimisticState";
 
 interface BoardViewProps {
   tasks: TaskResDto[];
@@ -54,34 +59,66 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
   const { updateTaskById } = useTaskStore();
   const { hasPermission } = usePermissionStore();
   const { user } = useAuth();
+  const [optimisticStatuses, setOptimisticStatuses] = useState<OptimisticTaskStatuses<TaskStatus>>({});
+
+  useEffect(() => {
+    setOptimisticStatuses((currentStatuses) => pruneResolvedOptimisticTaskStatuses(tasks, currentStatuses));
+  }, [tasks]);
+
+  const displayedTasks = mergeOptimisticTaskStatuses(tasks, optimisticStatuses);
 
   const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
-    const task = tasks.find(t => String(t.id) === String(taskId));
-    if (!task) return;
+    const sourceTask = tasks.find((task) => String(task.id) === String(taskId));
+    const displayedTask = displayedTasks.find((task) => String(task.id) === String(taskId));
+    if (!sourceTask || !displayedTask) return;
+
+    const previousVisibleStatus = displayedTask.status;
+
+    setOptimisticStatuses((currentStatuses) => ({
+      ...currentStatuses,
+      [String(taskId)]: newStatus,
+    }));
 
     // Only send the minimal payload needed (status). Spreading the whole task
     // can unintentionally include stale label arrays and cause races where old
     // labels are re-applied.
-    await withToast(
+    const updatedTask = await withToast(
       async () => {
-        await updateTaskById(task.id, { status: newStatus });
+        return updateTaskById(sourceTask.id, { status: newStatus });
       },
       {
         success: 'Task status updated!',
         error: 'Failed to update task status.'
       }
     );
+
+    if (!updatedTask) {
+      setOptimisticStatuses((currentStatuses) => {
+        if (currentStatuses[String(taskId)] !== newStatus) {
+          return currentStatuses;
+        }
+
+        const nextStatuses = { ...currentStatuses };
+        if (previousVisibleStatus === sourceTask.status) {
+          delete nextStatuses[String(taskId)];
+        } else {
+          nextStatuses[String(taskId)] = previousVisibleStatus;
+        }
+
+        return nextStatuses;
+      });
+    }
   };
 
   // Group tasks by status
   const tasksByStatus: Record<string, TaskResDto[]> = {};
   statusColumns.forEach(col => {
-    tasksByStatus[col.key] = tasks.filter(t => t.status === col.key);
+    tasksByStatus[col.key] = displayedTasks.filter(t => t.status === col.key);
   });
 
   // Track currently dragged task id
   const [activeId, setActiveId] = useState<string | null>(null);
-  const activeTask = activeId ? tasks.find(t => String(t.id) === activeId) : null;
+  const activeTask = activeId ? displayedTasks.find(t => String(t.id) === activeId) : null;
 
   // Handle drag events
   const handleDragStart = (event: any) => {
@@ -94,7 +131,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
     const taskId = String(active.id);
     const newStatus = over.id as TaskStatus;
     // Find the current status of the task
-    const currentTask = tasks.find(t => String(t.id) === taskId);
+    const currentTask = displayedTasks.find(t => String(t.id) === taskId);
     if (!currentTask) return;
     if (currentTask.status !== newStatus) {
       handleTaskStatusChange(taskId, newStatus);
@@ -119,10 +156,10 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 h-full">
         {statusColumns.map((col) => (
-          <DroppableColumn key={col.key} id={String(col.key)} className="h-full w-full min-h-[200px]">
+          <DroppableColumn key={col.key} id={String(col.key)} className="h-full w-full min-h-50">
             <Card className="h-full flex flex-col w-full">
               <CardHeader
-                className={`py-[10px] px-3 flex items-center ${col.titleBg} sticky top-0 z-10`}
+                className={`py-2.5 px-3 flex items-center ${col.titleBg} sticky top-0 z-10`}
               >
                 <CardTitle className="font-light text-white">{col.label}</CardTitle>
               </CardHeader>
