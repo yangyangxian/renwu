@@ -16,6 +16,8 @@ import { useTaskStore } from '@/stores/useTaskStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
 import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
 
+import { getEditableTaskTableRowClassName } from './taskTableRowStyles';
+
 interface EditableTaskTableRowProps {
   task: TaskResDto;
   columnWidths: TaskTableColumnWidths;
@@ -23,6 +25,7 @@ interface EditableTaskTableRowProps {
 }
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
+const editableTaskTableRowClassName = getEditableTaskTableRowClassName();
 
 export default function EditableTaskTableRow({ task, columnWidths, onOpenDetail }: EditableTaskTableRowProps) {
   const { updateTaskById } = useTaskStore();
@@ -133,7 +136,7 @@ export default function EditableTaskTableRow({ task, columnWidths, onOpenDetail 
 
   return (
     <div
-      className="group relative grid min-h-14 items-center bg-background text-sm transition-colors hover:bg-muted/30"
+      className={editableTaskTableRowClassName}
       style={{
         gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths),
         minWidth: getTaskTableMinWidth(columnWidths),
