@@ -87,7 +87,8 @@ export class ViewConfig {
   sortOrder: TaskSortOrder;
   viewMode: TaskViewMode;
   searchTerm: string;
-  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string) {
+  groupByLabelSetId?: string | null;
+  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, groupByLabelSetId: string | null = null) {
     this.projectId = projectId;
     this.dateRange = dateRange;
     this.status = status;
@@ -95,5 +96,6 @@ export class ViewConfig {
     this.sortOrder = sortOrder;
     this.viewMode = viewMode;
     this.searchTerm = searchTerm;
+    this.groupByLabelSetId = groupByLabelSetId;
   }
 }

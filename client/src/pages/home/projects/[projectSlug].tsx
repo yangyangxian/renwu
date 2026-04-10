@@ -5,7 +5,7 @@ import { ProjectOverviewTab } from "@/components/projectspage/OverviewTab";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
-import { LayoutDashboard, List, Users, Settings, Tag } from "lucide-react";
+import { LayoutDashboard, List, Users, Settings, Tag, Table2 } from "lucide-react";
 import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -139,6 +139,13 @@ export default function ProjectDetailPage() {
                     <List className="w-4 h-4" />
                     List
                   </TabsTrigger>
+                  <TabsTrigger
+                    value={TaskViewMode.TABLE}
+                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
+                  >
+                    <Table2 className="w-4 h-4" />
+                    Table
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -183,6 +190,7 @@ export default function ProjectDetailPage() {
           view={taskView}
           onViewChange={setTaskView}
           selectionScopeKey={projectId ?? projectSlug ?? null}
+          scopeProjectId={projectId ?? null}
           onAddTask={() => {
             setEditingTask(null);
             setIsDialogOpen(true);

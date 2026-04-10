@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from 'framer-motion';
 import { useTabHash } from "@/hooks/useTabHash";
 import { useTaskStore } from '@/stores/useTaskStore';
 import BoardView from "@/components/taskspage/BoardView";
 import TaskListView from "@/components/taskspage/ListView";
+import TableView from "@/components/taskspage/TableView";
 import { TaskResDto, TaskViewMode, TaskDateRange } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
-import { Plus, Kanban, List, Bookmark, Home } from "lucide-react";
+import { Plus, Kanban, List, Bookmark, Table2 } from "lucide-react";
 import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
@@ -30,7 +31,7 @@ export default function MyTasksPage() {
     setCurrentDisplayViewConfig,
   } = useTaskViewStore();
 
-  const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST];
+  const tabOptions = [TaskViewMode.BOARD, TaskViewMode.LIST, TaskViewMode.TABLE];
   const [view, setView] = useTabHash(tabOptions, currentDisplayViewConfig.viewMode,
     currentDisplayViewConfig.viewMode, setCurrentDisplayViewConfigViewMode
   );
@@ -191,6 +192,10 @@ export default function MyTasksPage() {
                     <List className="w-4 h-4" />
                     List
                   </TabsTrigger>
+                  <TabsTrigger value="table" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black">
+                    <Table2 className="w-4 h-4" />
+                    Table
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
               <Button
@@ -219,7 +224,7 @@ export default function MyTasksPage() {
             title={editingTask ? "Edit Task" : "Add New Task"}
             initialValues={editingTask ? {
               ...editingTask,
-              labels: (editingTask.labels as any[]) || [],
+              labels: editingTask.labels || [],
             } : ((selectedProject !== 'all' && selectedProject !== 'personal') ? { projectId: selectedProject } : {})}
           />
         )}
@@ -240,6 +245,19 @@ export default function MyTasksPage() {
         {currentDisplayViewConfig.viewMode === TaskViewMode.LIST && (
           <TaskListView 
             tasks={filteredTasks} 
+          />
+        )}
+
+        {currentDisplayViewConfig.viewMode === TaskViewMode.TABLE && (
+          <TableView
+            tasks={filteredTasks}
+            scopeProjectId={selectedProject as string | 'all' | null}
+            storageScopeKey={`my-tasks:${selectedProject}`}
+            onOpenTask={(taskId) => {
+              const fullTask = tasks.find((task) => task.id === taskId) || null;
+              setEditingTask(fullTask);
+              setIsDialogOpen(true);
+            }}
           />
         )}
       </div>

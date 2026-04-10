@@ -2,14 +2,15 @@ import { Dialog, DialogContent } from "@/components/ui-kit/Dialog";
 import { Button } from "@/components/ui-kit/Button";
 import { Input } from "@/components/ui-kit/Input";
 import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
-import { Folder, CalendarRange, Search, Filter, SortAsc, SortDesc, Kanban, List, ArrowUpDown } from "lucide-react";
+import { Folder, CalendarRange, Search, Filter, SortAsc, SortDesc, Kanban, List, Table2, ArrowUpDown, Rows3 } from "lucide-react";
 import { TaskViewMode } from "@fullstack/common";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui-kit/Label";
-import { TaskDateRange, TaskSortField, TaskSortOrder } from "@fullstack/common";
+import { LabelSetResDto, TaskDateRange, TaskSortField, TaskSortOrder } from "@fullstack/common";
 import { useTaskViewStore } from "@/stores/useTaskViewStore";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useLabelStore } from "@/stores/useLabelStore";
 import { useNavigate } from "react-router-dom";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
 interface SaveTaskViewDialogProps {
@@ -22,8 +23,20 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
 }) => {
   const { currentDisplayViewConfig, createTaskView, setCurrentSelectedTaskView } = useTaskViewStore();
   const { projects } = useProjectStore();
+  const { getLabelSetsForProjectId } = useLabelStore();
   const [viewName, setViewName] = useState("");
   const navigate = useNavigate();
+
+  const normalizedProjectId = currentDisplayViewConfig.projectId === 'personal'
+    ? null
+    : currentDisplayViewConfig.projectId === 'all'
+      ? undefined
+      : currentDisplayViewConfig.projectId;
+  const scopedLabelSets = getLabelSetsForProjectId(normalizedProjectId) as LabelSetResDto[];
+
+  const selectedLabelSet = currentDisplayViewConfig.groupByLabelSetId
+    ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.groupByLabelSetId)
+    : null;
 
   const handleSave = async () => {
     if (!viewName.trim()) return;
@@ -35,7 +48,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
       setViewName("");
       // Auto-navigate to the new view
       navigate(`${MYTASKS_PATH}?view=${newView.name.replace(/\s+/g, '-')}`);
-    } catch (err) {
+    } catch {
       toast.error("Failed to save task view.");
     }
   };
@@ -117,11 +130,20 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
               </div>
             </>
           )}
+          {currentDisplayViewConfig.viewMode === TaskViewMode.TABLE && (
+            <div className="flex items-center gap-3">
+              <Rows3 className="w-4 h-4 text-primary" />
+              <Label className="font-medium min-w-[90px]">Grouping:</Label>
+              <span>
+                {selectedLabelSet?.name || 'No grouping'}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3">
-            {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? <Kanban className="w-4 h-4 text-primary" /> : <List className="w-4 h-4 text-primary" />}
+            {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? <Kanban className="w-4 h-4 text-primary" /> : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? <Table2 className="w-4 h-4 text-primary" /> : <List className="w-4 h-4 text-primary" />}
             <Label className="font-medium min-w-[90px]">View Mode:</Label>
             <span>
-              {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? "Board" : "List"}
+              {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? "Board" : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? "Table" : "List"}
             </span>
           </div>
         </div>

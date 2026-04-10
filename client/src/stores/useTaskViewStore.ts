@@ -5,6 +5,7 @@ import { TaskSortField, TaskSortOrder, TaskViewCreateReqDto, TaskViewMode, TaskV
   TaskStatus} from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { updateTaskViewById, createTaskView as createTaskViewEndpoint, deleteTaskViewById } from '@/apiRequests/apiEndpoints';
+import { defaultTaskViewConfig, normalizeTaskViewConfig } from '@/utils/taskViewConfig';
 
 interface TaskViewStoreState {
   taskViews: TaskViewResDto[];
@@ -20,15 +21,7 @@ interface TaskViewStoreState {
   setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => void;
 }
 
-const defaultDisplayViewConfig: ViewConfig = {
-  projectId: 'all',
-  dateRange: TaskDateRange.ALL_TIME,
-  searchTerm: '',
-  status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
-  sortField: TaskSortField.DUE_DATE,
-  sortOrder: TaskSortOrder.ASC,
-  viewMode: TaskViewMode.BOARD
-};
+const defaultDisplayViewConfig: ViewConfig = defaultTaskViewConfig;
 
 const useZustandTaskViewStore = create<TaskViewStoreState>((set) => ({
   taskViews: [],
@@ -40,7 +33,7 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set) => ({
   currentSelectedTaskView: null,
   setCurrentSelectedTaskView: (view) => set({ currentSelectedTaskView: view }),
   currentDisplayViewConfig: defaultDisplayViewConfig,
-  setCurrentDisplayViewConfig: (view) => set({ currentDisplayViewConfig: view }),
+  setCurrentDisplayViewConfig: (view) => set({ currentDisplayViewConfig: normalizeTaskViewConfig(view) }),
   setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => set((state) => ({
     currentDisplayViewConfig: {
       ...state.currentDisplayViewConfig,
@@ -126,7 +119,7 @@ export function useTaskViewStore() {
   const applyTaskView = useCallback((viewConfig: ViewConfig) => {
     // This function will be used by components to apply a saved view configuration
     // The actual application logic will be handled by the consuming components
-    return viewConfig;
+    return normalizeTaskViewConfig(viewConfig);
   }, []);
 
   return {

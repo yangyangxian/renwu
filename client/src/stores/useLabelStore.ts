@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { create } from 'zustand';
 import { apiClient } from '@/utils/APIClient';
 import { getMyLabels, getProjectLabels, createLabel as createLabelEndpoint, updateLabelById, deleteLabelById, getMyLabelSets, getProjectLabelSets, createLabelInSet, getLabelsInSet, deleteLabelSetById, deleteLabelFromSet } from '@/apiRequests/apiEndpoints';
-import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto } from '@fullstack/common';
+import { LabelResDto, LabelCreateReqDto, LabelUpdateReqDto, LabelSetResDto } from '@fullstack/common';
 import { resolveScopedFetchPolicy } from '@/utils/scopedFetchPolicy';
 
 type LabelScope = { kind: 'me' } | { kind: 'project'; projectId: string };
@@ -19,12 +19,12 @@ function projectIdFromScopeKey(scopeKey: string): string | undefined {
 const loadedLabelScopes = new Set<string>();
 const loadedLabelSetScopes = new Set<string>();
 const inFlightLabelRequests = new Map<string, Promise<LabelResDto[]>>();
-const inFlightLabelSetRequests = new Map<string, Promise<any[]>>();
+const inFlightLabelSetRequests = new Map<string, Promise<LabelSetResDto[]>>();
 
 interface LabelStoreState {
   // Scope-aware caches
   labelsByScope: Record<string, LabelResDto[]>;
-  labelSetsByScope: Record<string, any[]>;
+  labelSetsByScope: Record<string, LabelSetResDto[]>;
   activeScopeKey: string;
   loading: boolean;
   error: string | null;
@@ -32,12 +32,12 @@ interface LabelStoreState {
   setLabelsForScope: (scopeKey: string, labels: LabelResDto[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setLabelSetsForScope: (scopeKey: string, sets: any[]) => void;
+  setLabelSetsForScope: (scopeKey: string, sets: LabelSetResDto[]) => void;
 }
 
 const useZustandLabelStore = create<LabelStoreState>((set) => ({
   labelsByScope: {} as Record<string, LabelResDto[]>,
-  labelSetsByScope: {} as Record<string, any[]>,
+  labelSetsByScope: {} as Record<string, LabelSetResDto[]>,
   activeScopeKey: 'me',
   loading: false,
   error: null,
@@ -160,35 +160,38 @@ export function useLabelStore() {
         const data = await apiClient.get<any[]>(projectId ? getProjectLabelSets(projectId) : getMyLabelSets());
 
         // Normalize server rows to UI-friendly shape: { id, name, labels: [{id,name,color,...}] }
-        const normalized = Array.isArray(data)
+        const normalized: LabelSetResDto[] = Array.isArray(data)
           ? data.map((r: any) => {
             const rawLabels = Array.isArray(r?.labels) ? r.labels : [];
-            const labels = rawLabels.map((l: any) => ({
-              ...l,
+            const labels: LabelResDto[] = rawLabels.map((l: any) => ({
+              id: l?.id ?? '',
               // server label DTO is { name }, but DB/entity may come back as { labelName }
               name: l?.name ?? l?.labelName ?? '',
               color: l?.color ?? l?.labelColor,
               description: l?.description ?? l?.labelDescription,
+              projectId: l?.projectId ?? null,
+              createdBy: l?.createdBy,
+              createdAt: l?.createdAt,
+              updatedAt: l?.updatedAt,
             }));
 
             return {
-              id: r.id,
+              id: r.id ?? '',
               name: r.labelSetName || r.name || '',
               // preserve project association for filtering (may be null for personal sets)
               projectId: r?.projectId ?? r?.project_id ?? null,
               labels,
-              _raw: r,
             };
           })
           : [];
 
-        setLabelSetsForScope(scopeKey, normalized as any[]);
+        setLabelSetsForScope(scopeKey, normalized);
         loadedLabelSetScopes.add(scopeKey);
-        return normalized as any[];
+        return normalized;
       } catch (err: any) {
         setError(err?.message || 'Failed to fetch label sets');
         setLabelSetsForScope(scopeKey, []);
-        return [] as any[];
+        return [] as LabelSetResDto[];
       } finally {
         inFlightLabelSetRequests.delete(scopeKey);
         setLoading(false);
@@ -227,7 +230,7 @@ export function useLabelStore() {
         ...s,
         labels: (s.labels || []).filter((ll: any) => ll.id !== id),
       }));
-      setLabelSetsForScope(scopeKey, nextSets as any[]);
+      setLabelSetsForScope(scopeKey, nextSets);
 
     } catch (err) {
       throw err;
@@ -249,7 +252,7 @@ export function useLabelStore() {
         : s
     );
 
-    setLabelSetsForScope(scopeKey, nextSets as any[]);
+    setLabelSetsForScope(scopeKey, nextSets);
     // labels are exclusive to a single set, so deleting from set also deletes the label record
     setLabelsForScope(scopeKey, prevLabels.filter((l: any) => l.id !== labelId));
 
@@ -257,7 +260,7 @@ export function useLabelStore() {
       await apiClient.delete(deleteLabelFromSet(setId, labelId));
     } catch (err) {
       // Roll back on failure.
-      setLabelSetsForScope(scopeKey, prevSets as any[]);
+      setLabelSetsForScope(scopeKey, prevSets);
       setLabelsForScope(scopeKey, prevLabels as any[]);
       throw err;
     }
@@ -300,7 +303,7 @@ export function useLabelStore() {
 
       // Targeted update: only touch the edited set.
       const { scopeKey, labels: currentLabels, labelSets: currentSets } = getScopeState();
-      const nextSets = (currentSets || []).map((s: any) =>
+      const nextSets: LabelSetResDto[] = (currentSets || []).map((s: any) =>
         s.id === setId
           ? ({
             ...s,
@@ -308,7 +311,7 @@ export function useLabelStore() {
           })
           : s
       );
-      setLabelSetsForScope(scopeKey, nextSets as any[]);
+      setLabelSetsForScope(scopeKey, nextSets);
 
       // If the API returns a label that also appears in the global label list, remove it there.
       // (This keeps UI consistent without triggering a full refetch.)
@@ -326,8 +329,8 @@ export function useLabelStore() {
       const data = await apiClient.get<any[]>(getLabelsInSet(setId));
       const labels = Array.isArray(data) ? data : [];
       const { scopeKey, labelSets: currentSets } = getScopeState();
-      const next = (currentSets || []).map((s: any) => s.id === setId ? ({ ...s, labels }) : s);
-      setLabelSetsForScope(scopeKey, next as any[]);
+      const next: LabelSetResDto[] = (currentSets || []).map((s: any) => s.id === setId ? ({ ...s, labels }) : s);
+      setLabelSetsForScope(scopeKey, next);
       return labels;
     } catch (err) {
       // don't fail if fetching labels per set fails; return empty
@@ -339,8 +342,8 @@ export function useLabelStore() {
     try {
       await apiClient.delete(deleteLabelSetById(setId));
       const { scopeKey, labelSets: currentSets } = getScopeState();
-      const next = (currentSets || []).filter((s: any) => s.id !== setId);
-      setLabelSetsForScope(scopeKey, next as any[]);
+      const next: LabelSetResDto[] = (currentSets || []).filter((s: any) => s.id !== setId);
+      setLabelSetsForScope(scopeKey, next);
     } catch (err) {
       throw err;
     }

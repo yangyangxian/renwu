@@ -1,12 +1,7 @@
 import BoardView from '@/components/taskspage/BoardView';
 import TaskListView from '@/components/taskspage/ListView';
-import { useTaskStore } from '@/stores/useTaskStore';
-import { TaskDateRange, TaskResDto, TaskViewMode } from '@fullstack/common';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui-kit/Tabs';
-import { LayoutDashboard, List } from 'lucide-react';
-import { Button } from '@/components/ui-kit/Button';
-import { TaskFilterMenu } from '@/components/taskspage/TaskFilterMenu';
-import { useEffect, useState } from 'react';
+import TableView from '@/components/taskspage/TableView';
+import { TaskResDto, TaskViewMode } from '@fullstack/common';
 
 interface ProjectTasksTabProps {
   onTaskClick: (taskId: string) => void;
@@ -15,6 +10,7 @@ interface ProjectTasksTabProps {
   onAddTask?: () => void;
   tasks?: TaskResDto[];
   selectionScopeKey?: string | null;
+  scopeProjectId?: string | null;
 }
 
 export function ProjectTasksTab({
@@ -24,6 +20,7 @@ export function ProjectTasksTab({
   onAddTask,
   tasks = [],
   selectionScopeKey = null,
+  scopeProjectId = null,
 }: ProjectTasksTabProps) {
   const filteredTasks = tasks;
 
@@ -35,11 +32,18 @@ export function ProjectTasksTab({
           onTaskClick={onTaskClick}
           showAssignedTo={true}
         />
-      ) : (
+      ) : view === TaskViewMode.LIST ? (
         <TaskListView
           tasks={filteredTasks}
           showAssignedTo={true}
           selectionScopeKey={selectionScopeKey}
+        />
+      ) : (
+        <TableView
+          tasks={filteredTasks}
+          scopeProjectId={scopeProjectId}
+          storageScopeKey={`project:${scopeProjectId ?? 'unknown'}`}
+          onOpenTask={onTaskClick}
         />
       )}
     </div>

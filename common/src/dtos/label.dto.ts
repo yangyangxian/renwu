@@ -23,3 +23,10 @@ export class LabelUpdateReqDto {
   color?: string;
   projectId?: string | null;
 }
+
+export class LabelSetResDto {
+  id: string = '';
+  name: string = '';
+  projectId?: string | null = null;
+  labels: LabelResDto[] = [];
+}
