@@ -153,7 +153,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                 </div>
               )}
 
-              <div className="overflow-hidden rounded-lg border border-border bg-background">
+              <div className="overflow-hidden rounded-lg border border-none bg-background">
                 <div className="border-b border-border bg-muted/40">
                   <div className="overflow-x-auto px-4">
                     <div className="min-w-fit">

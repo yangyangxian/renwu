@@ -81,7 +81,7 @@ export function TaskFilterMenu({
   }, [tasks, dateRange, selectedProject, searchTerm, onFilter, showProjectSelect, showDateRange, showSearch]);
 
   return (
-    <div className="flex gap-3 items-center flex-grow">
+    <div className="flex gap-3 items-center grow">
       {(showProjectSelect || showDateRange) && (
         <TaskFilterDropdown
           showProjectSelect={showProjectSelect}
