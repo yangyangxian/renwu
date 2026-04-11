@@ -143,7 +143,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
               {showSectionTitle && section.title && (
                 <div className="flex items-center gap-2 px-1">
                   {sectionLabel ? (
-                    <LabelBadge text={sectionLabel.name} color={sectionLabel.color} className="!px-2.5 !py-1 text-xs" />
+                    <LabelBadge text={sectionLabel.name} color={sectionLabel.color} className="px-2.5! py-1! text-xs" />
                   ) : (
                     <Badge variant="outline" className="px-2.5 py-1 text-xs font-normal text-muted-foreground shadow-none">
                       {section.title}

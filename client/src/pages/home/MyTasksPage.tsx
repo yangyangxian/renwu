@@ -200,7 +200,7 @@ export default function MyTasksPage() {
               </Tabs>
               <Button
                 variant="default"
-                className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r
+                className="px-3 py-2 flex items-center gap-2 text-white bg-linear-to-r
                 from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
                 onClick={() => {
                   setEditingTask(null);
