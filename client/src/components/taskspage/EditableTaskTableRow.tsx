@@ -16,7 +16,10 @@ import { useTaskStore } from '@/stores/useTaskStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
 import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
 
-import { getEditableTaskTableRowClassName } from './taskTableRowStyles';
+import {
+  getEditableTaskTableRowClassName,
+  getTaskTableDetailButtonClassName,
+} from './taskTableRowStyles';
 
 interface EditableTaskTableRowProps {
   task: TaskResDto;
@@ -27,6 +30,7 @@ interface EditableTaskTableRowProps {
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
 const editableTaskTableRowClassName = getEditableTaskTableRowClassName();
+const taskTableDetailButtonClassName = getTaskTableDetailButtonClassName();
 
 export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail }: EditableTaskTableRowProps) {
   const { updateTaskById } = useTaskStore();
@@ -220,7 +224,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
           type="button"
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 rounded-full opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100"
+          className={taskTableDetailButtonClassName}
           onClick={() => onOpenDetail(task.id)}
           aria-label={`Open details for ${task.title}`}
           title="Open details"

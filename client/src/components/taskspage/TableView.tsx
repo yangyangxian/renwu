@@ -24,6 +24,7 @@ import {
 import EditableTaskTableRow from './EditableTaskTableRow';
 import TaskTableGroupByControl from './TaskTableGroupByControl';
 import TaskTableHeader from './TaskTableHeader';
+import { getTaskTableCardClassName } from './taskTableSurfaceStyles';
 
 interface TableViewProps {
   tasks: TaskResDto[];
@@ -37,6 +38,8 @@ function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | 
   if (scopeProjectId === 'personal') return null;
   return scopeProjectId;
 }
+
+const taskTableCardClassName = getTaskTableCardClassName();
 
 export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOpenTask }: TableViewProps) {
   const { currentDisplayViewConfig } = useTaskViewStore();
@@ -153,7 +156,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                 </div>
               )}
 
-              <div className="overflow-hidden rounded-lg border border-none bg-background">
+              <div className={taskTableCardClassName}>
                 <div className="border-b border-border bg-muted/40">
                   <div className="overflow-x-auto px-4">
                     <div className="min-w-fit">

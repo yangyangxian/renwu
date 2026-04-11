@@ -14,6 +14,11 @@ import {
 } from '@/utils/taskTableGroupByPreference';
 import { getTaskTableGroupByTriggerWidth } from '@/utils/taskTableGroupBySizing';
 
+import {
+  getTaskTableGroupByCardClassName,
+  getTaskTableGroupByTriggerClassName,
+} from './taskTableSurfaceStyles';
+
 interface TaskTableGroupByControlProps {
   scopeProjectId: string | 'all' | null;
   storageScopeKey: string;
@@ -24,6 +29,9 @@ function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | 
   if (scopeProjectId === 'personal') return null;
   return scopeProjectId;
 }
+
+const taskTableGroupByCardClassName = getTaskTableGroupByCardClassName();
+const taskTableGroupByTriggerClassName = getTaskTableGroupByTriggerClassName();
 
 export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKey }: TaskTableGroupByControlProps) {
   const {
@@ -121,7 +129,7 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
   );
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-none bg-background py-2 pl-5 pr-3">
+    <div className={taskTableGroupByCardClassName}>
       <Rows3 className="h-4 w-4 text-muted-foreground" />
       <Label className="mb-0 mr-2 text-sm font-medium">Group by</Label>
       <div className="w-fit min-w-[16ch]" style={{ width: triggerWidth }}>
@@ -136,7 +144,7 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
             });
           }}
         >
-          <SelectTrigger className="w-full bg-background" size="sm">
+          <SelectTrigger className={taskTableGroupByTriggerClassName} size="sm">
             <SelectValue placeholder={hasLabelSets ? 'Select label set' : 'No label set'} />
           </SelectTrigger>
           <SelectContent>
