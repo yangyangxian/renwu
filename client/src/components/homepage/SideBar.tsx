@@ -129,7 +129,7 @@ export function HomeSideBar() {
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
-        <SidebarMenu className="gap-2 bg-white-black">
+        <SidebarMenu className="gap-2 bg-sidebar">
           <TasksMenuItem 
             showText={showText}
             taskViews={taskViews}

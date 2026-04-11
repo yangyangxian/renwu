@@ -37,7 +37,7 @@ export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumn
 
   return (
     <div
-      className="grid text-xs font-semibold tracking-wide text-muted-foreground"
+      className="grid text-sm tracking-wide text-muted-foreground"
       style={{
         gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
         minWidth: getTaskTableMinWidth(columnWidths),
