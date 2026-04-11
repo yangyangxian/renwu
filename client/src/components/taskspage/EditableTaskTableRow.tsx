@@ -143,7 +143,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
         minWidth: getTaskTableMinWidth(columnWidths),
       }}
     >
-      <div className="min-w-0 py-2 pr-3">
+      <div className="min-w-0 pr-3">
         {editingTitle ? (
           <Input
             value={titleDraft}

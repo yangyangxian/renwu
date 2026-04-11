@@ -176,7 +176,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                         ))}
                       </div>
                     ) : (
-                      <div className="px-4 py-4 text-sm text-muted-foreground">
+                      <div className="px-4 py-3 text-sm text-muted-foreground">
                         {section.title === UNASSIGNED_SECTION_TITLE ? 'No unassigned tasks.' : 'No tasks in this group yet.'}
                       </div>
                     )}

@@ -44,7 +44,7 @@ export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumn
       }}
     >
       {(Object.keys(COLUMN_LABELS) as TaskTableColumnId[]).map((columnId) => (
-        <div key={columnId} className={`relative flex min-h-11 items-center px-3 ${columnId === 'detail' ? 'justify-center' : ''}`}>
+        <div key={columnId} className={`relative flex min-h-10 items-center px-3 ${columnId === 'detail' ? 'justify-center' : ''}`}>
           <span>{COLUMN_LABELS[columnId]}</span>
           {RESIZABLE_COLUMNS.includes(columnId) && (
             <button
