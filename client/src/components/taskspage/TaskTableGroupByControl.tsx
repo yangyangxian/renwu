@@ -121,7 +121,7 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
   );
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-background py-2 pl-5 pr-3">
+    <div className="flex items-center gap-2 rounded-md border border-none bg-background py-2 pl-5 pr-3">
       <Rows3 className="h-4 w-4 text-muted-foreground" />
       <Label className="mb-0 mr-2 text-sm font-medium">Group by</Label>
       <div className="w-fit min-w-[16ch]" style={{ width: triggerWidth }}>

@@ -4,10 +4,11 @@ import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableCo
 
 interface TaskTableHeaderProps {
   columnWidths: TaskTableColumnWidths;
+  titleAutoWidth: boolean;
   onColumnResize: (columnId: TaskTableColumnId, width: number) => void;
 }
 
-const RESIZABLE_COLUMNS: TaskTableColumnId[] = ['assignee', 'status', 'updatedAt'];
+const RESIZABLE_COLUMNS: TaskTableColumnId[] = ['title', 'assignee', 'status', 'updatedAt'];
 
 const COLUMN_LABELS: Record<TaskTableColumnId, string> = {
   title: 'Title',
@@ -17,7 +18,7 @@ const COLUMN_LABELS: Record<TaskTableColumnId, string> = {
   detail: 'Detail',
 };
 
-export default function TaskTableHeader({ columnWidths, onColumnResize }: TaskTableHeaderProps) {
+export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumnResize }: TaskTableHeaderProps) {
   const handleResizeStart = useCallback((columnId: TaskTableColumnId, startWidth: number, startClientX: number) => {
     const handlePointerMove = (event: PointerEvent) => {
       onColumnResize(columnId, startWidth + event.clientX - startClientX);
@@ -38,7 +39,7 @@ export default function TaskTableHeader({ columnWidths, onColumnResize }: TaskTa
     <div
       className="grid text-xs font-semibold tracking-wide text-muted-foreground"
       style={{
-        gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths),
+        gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
         minWidth: getTaskTableMinWidth(columnWidths),
       }}
     >

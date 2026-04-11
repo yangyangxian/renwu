@@ -15,6 +15,7 @@ import {
 import {
   getDefaultTaskTableColumnWidths,
   getTaskTableColumnWidthStorageKey,
+  getTaskTableTitleAutoWidthStorageKey,
   resizeTaskTableColumn,
   sanitizeTaskTableColumnWidths,
   TaskTableColumnId,
@@ -40,14 +41,24 @@ function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | 
 export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOpenTask }: TableViewProps) {
   const { currentDisplayViewConfig } = useTaskViewStore();
   const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
+  const defaultColumnWidths = useMemo(() => getDefaultTaskTableColumnWidths(), []);
 
   const storageKey = getTaskTableColumnWidthStorageKey(storageScopeKey);
-  const [storedWidths, setStoredWidths] = useWebStorage(storageKey, getDefaultTaskTableColumnWidths());
+  const titleAutoStorageKey = getTaskTableTitleAutoWidthStorageKey(storageScopeKey);
+  const [storedWidths, setStoredWidths] = useWebStorage(storageKey, defaultColumnWidths);
+  const [titleAutoWidth, setTitleAutoWidth] = useWebStorage(titleAutoStorageKey, true);
 
-  const columnWidths = useMemo(
-    () => sanitizeTaskTableColumnWidths(storedWidths),
-    [storedWidths]
-  );
+  const columnWidths = useMemo(() => {
+    const sanitizedWidths = sanitizeTaskTableColumnWidths(storedWidths);
+    if (titleAutoWidth) {
+      return {
+        ...sanitizedWidths,
+        title: defaultColumnWidths.title,
+      };
+    }
+
+    return sanitizedWidths;
+  }, [defaultColumnWidths, storedWidths, titleAutoWidth]);
 
   const normalizedProjectId = normalizeProjectScope(scopeProjectId);
   const scopedLabelSets = getLabelSetsForProjectId(normalizedProjectId) as LabelSetResDto[];
@@ -108,11 +119,14 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   );
 
   const handleColumnResize = (columnId: TaskTableColumnId, width: number) => {
+    if (columnId === 'title') {
+      setTitleAutoWidth(false);
+    }
     setStoredWidths((current) => resizeTaskTableColumn(sanitizeTaskTableColumnWidths(current), columnId, width));
   };
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full flex-col gap-3">
       <TaskTableGroupByControl scopeProjectId={scopeProjectId} storageScopeKey={storageScopeKey} />
 
       <div className="flex flex-col gap-4 overflow-y-auto pr-1">
@@ -143,7 +157,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                 <div className="border-b border-border bg-muted/40">
                   <div className="overflow-x-auto px-4">
                     <div className="min-w-fit">
-                      <TaskTableHeader columnWidths={columnWidths} onColumnResize={handleColumnResize} />
+                      <TaskTableHeader columnWidths={columnWidths} titleAutoWidth={titleAutoWidth} onColumnResize={handleColumnResize} />
                     </div>
                   </div>
                 </div>
@@ -156,6 +170,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                             key={task.id}
                             task={task}
                             columnWidths={columnWidths}
+                            titleAutoWidth={titleAutoWidth}
                             onOpenDetail={onOpenTask}
                           />
                         ))}

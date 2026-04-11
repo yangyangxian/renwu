@@ -40,6 +40,9 @@ const COLUMN_IDS = Object.keys(COLUMN_CONSTRAINTS) as TaskTableColumnId[];
 
 function clampColumnWidth(columnId: TaskTableColumnId, width: number): number {
   const { minWidth, maxWidth } = COLUMN_CONSTRAINTS[columnId];
+  if (columnId === 'title') {
+    return Math.max(width, minWidth);
+  }
   return Math.min(Math.max(width, minWidth), maxWidth);
 }
 
@@ -74,8 +77,18 @@ export function getTaskTableColumnWidthStorageKey(scopeKey: string): string {
   return `task-table-widths:${scopeKey}`;
 }
 
-export function getTaskTableGridTemplateColumns(columnWidths: TaskTableColumnWidths): string {
-  return `minmax(${columnWidths.title}px, ${COLUMN_CONSTRAINTS.title.maxWidth}px) ${columnWidths.assignee}px ${columnWidths.status}px ${columnWidths.updatedAt}px ${columnWidths.detail}px`;
+export function getTaskTableTitleAutoWidthStorageKey(scopeKey: string): string {
+  return `task-table-title-auto:${scopeKey}`;
+}
+
+export function getTaskTableGridTemplateColumns(
+  columnWidths: TaskTableColumnWidths,
+  options?: { titleAutoWidth?: boolean },
+): string {
+  const titleTrack = options?.titleAutoWidth !== false
+    ? `minmax(${columnWidths.title}px, ${COLUMN_CONSTRAINTS.title.maxWidth}px)`
+    : `${columnWidths.title}px`;
+  return `${titleTrack} ${columnWidths.assignee}px ${columnWidths.status}px ${columnWidths.updatedAt}px ${columnWidths.detail}px`;
 }
 
 export function getTaskTableMinWidth(columnWidths: TaskTableColumnWidths): number {

@@ -21,13 +21,14 @@ import { getEditableTaskTableRowClassName } from './taskTableRowStyles';
 interface EditableTaskTableRowProps {
   task: TaskResDto;
   columnWidths: TaskTableColumnWidths;
+  titleAutoWidth: boolean;
   onOpenDetail: (taskId: string) => void;
 }
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
 const editableTaskTableRowClassName = getEditableTaskTableRowClassName();
 
-export default function EditableTaskTableRow({ task, columnWidths, onOpenDetail }: EditableTaskTableRowProps) {
+export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail }: EditableTaskTableRowProps) {
   const { updateTaskById } = useTaskStore();
   const { currentProject, projects } = useProjectStore();
   const { user } = useAuth();
@@ -138,7 +139,7 @@ export default function EditableTaskTableRow({ task, columnWidths, onOpenDetail 
     <div
       className={editableTaskTableRowClassName}
       style={{
-        gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths),
+        gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
         minWidth: getTaskTableMinWidth(columnWidths),
       }}
     >
