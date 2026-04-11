@@ -31,6 +31,7 @@ export function ProjectTasksTab({
           tasks={filteredTasks}
           onTaskClick={onTaskClick}
           showAssignedTo={true}
+          showProjectName={false}
         />
       ) : view === TaskViewMode.LIST ? (
         <TaskListView

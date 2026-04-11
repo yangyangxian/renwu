@@ -16,6 +16,7 @@ interface TaskCardProps {
   description: string;
   dueDate?: string;
   projectName?: string;
+  showProjectName?: boolean;
   assignedTo?: UserResDto;
   labels?: Array<{ id: string; labelName?: string; name?: string; color?: string; labelColor?: string }>;
   status?: TaskStatus;
@@ -32,7 +33,7 @@ const statusToColor: Record<TaskStatus, string> = {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
-  status, onClick, description, className, showDeleteButton, labels }) => {
+  showProjectName = true, status, onClick, description, className, showDeleteButton, labels }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
   const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
@@ -70,7 +71,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
                 key={l.id}
                 text={(l.labelName || l.name) as string}
                 color={l.color ?? l.labelColor}
-                className="px-1.5 py-[2px] text-[10px]"
+                className="px-1.5 py-0.5 text-[10px]"
               />
             ))}
         </div>
@@ -111,12 +112,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
         cancelText="Cancel"
       />
       <div className="flex items-center w-3/4 mb-2">
+          {showProjectName && (
           <div className={`text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
             {!projectName || projectName === "" ? "Personal" : projectName}
           </div>
+          )}
           {/* Assigned to user info - moved next to project name */}
           {assignedTo && (
-            <div className="flex items-center gap-1 ml-3">
+            <div className={`flex items-center gap-1 ${showProjectName ? 'ml-3' : ''}`}>
               <User className="w-3 h-3 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">{assignedTo.name}</span>
             </div>
@@ -131,7 +134,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
           {description && description.trim() !== "" && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <ChevronRight className="w-3 h-3 flex-shrink-0 text-muted-foreground" aria-label="Has description" />
+                <ChevronRight className="w-3 h-3 shrink-0 text-muted-foreground" aria-label="Has description" />
               </TooltipTrigger>
               <TooltipContent side="top" align="center">
                 See description

@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
                   </TabsTrigger>
                   <TabsTrigger
                     value={TaskViewMode.TABLE}
-                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
+                    className="px-4 flex items-center gap-1.5 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
                   >
                     <Table2 className="w-4 h-4" />
                     Table
@@ -151,7 +151,7 @@ export default function ProjectDetailPage() {
 
               <Button
                 variant="default"
-                className="px-3 py-2 flex items-center gap-2 text-white bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
+                className="px-3 py-2 flex items-center gap-2 text-white bg-linear-to-r from-purple-400 to-purple-500 dark:from-purple-600 dark:to-purple-800 transition-transform duration-200 hover:scale-105"
                 onClick={() => {
                   setEditingTask(null);
                   setIsDialogOpen(true);

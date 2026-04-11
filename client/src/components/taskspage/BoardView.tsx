@@ -19,6 +19,7 @@ interface BoardViewProps {
   tasks: TaskResDto[];
   onTaskClick?: (taskId: string) => void;
   showAssignedTo?: boolean;
+  showProjectName?: boolean;
 }
 
 const statusColumns = [
@@ -55,7 +56,7 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
   );
 }
 
-const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedTo }) => {
+const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedTo, showProjectName = true }) => {
   const { updateTaskById } = useTaskStore();
   const { hasPermission } = usePermissionStore();
   const { user } = useAuth();
@@ -210,7 +211,8 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                             title={task.title}
                             description={task.description}
                             dueDate={task.dueDate}
-                            projectName={task.projectName}
+                            projectName={showProjectName ? task.projectName : undefined}
+                            showProjectName={showProjectName}
                             assignedTo={showAssignedTo ? task.assignedTo : undefined}
                             labels={task.labels}
                             status={task.status}
@@ -233,7 +235,8 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
             title={activeTask.title}
             description={activeTask.description}
             dueDate={activeTask.dueDate}
-            projectName={activeTask.projectName}
+            projectName={showProjectName ? activeTask.projectName : undefined}
+            showProjectName={showProjectName}
             assignedTo={activeTask.assignedTo}
             labels={activeTask.labels}
             status={activeTask.status}
