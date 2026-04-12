@@ -6,16 +6,19 @@ import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
 import { Card } from '@/components/ui-kit/Card';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
 import AddLabelSetDialog from '@/components/labelpage/AddLabelSetDialog';
+import EditLabelDialog from '@/components/labelpage/EditLabelDialog';
 import SetCard from '@/components/labelpage/SetCard';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useState } from 'react';
+import { LabelResDto } from '@fullstack/common';
 
 export function ProjectLabelsTab() {
   const { currentProject } = useProjectStore();
   const { labels, loading, fetchLabels, deleteLabel, labelSets, fetchLabelSets } = useLabelStore();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [editingLabel, setEditingLabel] = useState<LabelResDto | null>(null);
 
   useEffect(() => {
     if (!currentProject?.id) return;
@@ -45,6 +48,13 @@ export function ProjectLabelsTab() {
         }}
         onCancel={() => setLabelToDelete(null)}
       />
+      <EditLabelDialog
+        open={!!editingLabel}
+        onOpenChange={(open: boolean) => {
+          if (!open) setEditingLabel(null);
+        }}
+        label={editingLabel}
+      />
       <section>
         <div className="mb-4">
           <Label className="text-xl font-medium">Labels</Label>
@@ -56,7 +66,7 @@ export function ProjectLabelsTab() {
           {loading && <HomePageSkeleton />}
           {!loading && (
             <Card
-              className="p-3 px-4 flex flex-wrap gap-3 card-border max-w-full w-[600px]"
+              className="p-3 px-4 flex flex-wrap gap-3 card-border max-w-full w-150"
             >
               <div className="flex flex-wrap items-center gap-2">
                 {labels.map((l: any) => (
@@ -64,6 +74,7 @@ export function ProjectLabelsTab() {
                     key={l.id}
                     text={l.name}
                     color={l.color}
+                    onClick={() => setEditingLabel(l)}
                     onDelete={() => {
                       setLabelToDelete({ id: l.id, name: l.name });
                       setDeleteConfirmOpen(true);

@@ -6,12 +6,15 @@ import { HomePageSkeleton } from '@/components/homepage/HomePageSkeleton';
 import { Card } from '@/components/ui-kit/Card';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
 import AddLabelSetDialog from '@/components/labelpage/AddLabelSetDialog';
+import EditLabelDialog from '@/components/labelpage/EditLabelDialog';
 import SetCard from '@/components/labelpage/SetCard';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { LabelResDto } from '@fullstack/common';
 export default function LabelsPage() {
   const { labels, loading, fetchLabels, deleteLabel, labelSets, fetchLabelSets } = useLabelStore();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [editingLabel, setEditingLabel] = useState<LabelResDto | null>(null);
 
   useEffect(() => {
     fetchLabels();
@@ -43,6 +46,13 @@ export default function LabelsPage() {
         }}
         onCancel={() => setLabelToDelete(null)}
       />
+      <EditLabelDialog
+        open={!!editingLabel}
+        onOpenChange={(open: boolean) => {
+          if (!open) setEditingLabel(null);
+        }}
+        label={editingLabel}
+      />
       {/* My Labels Section */}
       <section>
         <div className="mb-4">
@@ -56,13 +66,14 @@ export default function LabelsPage() {
           {loading && <HomePageSkeleton />}
           {!loading && (
             <Card className="p-3 px-4 flex flex-wrap gap-3 card-border
-              bg-background dark:bg-muted/60 max-w-full w-[600px]">
+              bg-background dark:bg-muted/60 max-w-full w-150">
               <div className="flex flex-wrap items-center gap-2">
                 {labels.map((l: any) => (
                   <LabelBadge
                     key={l.id}
                     text={l.name}
                     color={l.color}
+                    onClick={() => setEditingLabel(l)}
                     onDelete={() => {
                       setLabelToDelete({ id: l.id, name: l.name });
                       setDeleteConfirmOpen(true);

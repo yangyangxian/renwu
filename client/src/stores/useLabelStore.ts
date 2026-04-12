@@ -268,20 +268,21 @@ export function useLabelStore() {
 
   const updateLabel = useCallback(async (id: string, payload: Partial<LabelUpdateReqDto & { name?: string }>): Promise<LabelResDto> => {
     try {
-      const body: any = { ...payload };
-      // map `name` -> `labelName` if provided to align with server
-      if (body.name && !body.labelName) {
-        body.labelName = body.name;
-        delete body.name;
-      }
-      const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(updateLabelById(id), body as any);
-      const { scopeKey, labels: currentLabels } = getScopeState();
+      const updated = await apiClient.put<LabelUpdateReqDto, LabelResDto>(updateLabelById(id), payload);
+      const { scopeKey, labels: currentLabels, labelSets: currentSets } = getScopeState();
       setLabelsForScope(scopeKey, currentLabels.map(l => l.id === id ? (updated as LabelResDto) : l));
+      setLabelSetsForScope(
+        scopeKey,
+        (currentSets || []).map((set: any) => ({
+          ...set,
+          labels: (set.labels || []).map((label: any) => label.id === id ? { ...label, ...(updated as LabelResDto) } : label),
+        }))
+      );
       return updated as LabelResDto;
     } catch (err) {
       throw err;
     }
-  }, [setLabelsForScope]);
+  }, [setLabelsForScope, setLabelSetsForScope]);
 
   const addLabelToSet = useCallback(async (setId: string, payload: Partial<LabelCreateReqDto>): Promise<any> => {
     try {

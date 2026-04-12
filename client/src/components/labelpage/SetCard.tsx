@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui-kit/Card';
 import LabelBadge from '@/components/common/LabelBadge';
 import AddLabelDialog from '@/components/labelpage/AddLabelDialog';
+import EditLabelDialog from '@/components/labelpage/EditLabelDialog';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { Trash2 } from 'lucide-react';
@@ -10,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Label } from '../ui-kit/Label';
 import GradientScrollArea from '../common/GradientScrollArea';
 import { ConfirmDialog } from '../common/ConfirmDialog';
+import { LabelResDto } from '@fullstack/common';
 
 const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const { removeLabelFromSet, deleteLabelSet } = useLabelStore();
@@ -17,9 +19,10 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteLabelConfirmOpen, setDeleteLabelConfirmOpen] = useState(false);
   const [labelToDelete, setLabelToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [editingLabel, setEditingLabel] = useState<LabelResDto | null>(null);
 
   return (
-    <Card className="relative flex flex-col px-1 card-border bg-background dark:bg-muted/60 max-w-[260px] w-auto h-[400px]">
+    <Card className="relative flex flex-col px-1 card-border bg-background dark:bg-muted/60 max-w-65 w-auto h-100">
       <ConfirmDialog
         open={deleteLabelConfirmOpen}
         onOpenChange={setDeleteLabelConfirmOpen}
@@ -39,6 +42,13 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
           setLabelToDelete(null);
         }}
         onCancel={() => setLabelToDelete(null)}
+      />
+      <EditLabelDialog
+        open={!!editingLabel}
+        onOpenChange={(open: boolean) => {
+          if (!open) setEditingLabel(null);
+        }}
+        label={editingLabel}
       />
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogTrigger asChild>
@@ -82,7 +92,7 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
         </DialogContent>
       </Dialog>
 
-      <div className="px-[14px] pt-2 pb-1 border-b border-border/40 shrink-0 flex items-center">
+      <div className="px-3.5 pt-2 pb-1 border-b border-border/40 shrink-0 flex items-center">
         <Label className="text-sm font-medium truncate">{set.name}</Label>
       </div>
 
@@ -97,6 +107,7 @@ const SetCard: React.FC<{ set: any }> = ({ set }) => {
               key={l.id}
               text={l.name}
               color={l.color}
+              onClick={() => setEditingLabel(l)}
               onDelete={() => {
                 setLabelToDelete({ id: l.id, name: l.name });
                 setDeleteLabelConfirmOpen(true);
