@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnId, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
+import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, TASK_TABLE_COLUMN_ORDER, type TaskTableColumnId, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
 
 interface TaskTableHeaderProps {
   columnWidths: TaskTableColumnWidths;
@@ -43,7 +43,7 @@ export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumn
         minWidth: getTaskTableMinWidth(columnWidths),
       }}
     >
-      {(Object.keys(COLUMN_LABELS) as TaskTableColumnId[]).map((columnId) => (
+      {TASK_TABLE_COLUMN_ORDER.map((columnId) => (
         <div key={columnId} className={`relative flex min-h-10 items-center px-3 ${columnId === 'detail' ? 'justify-center' : ''}`}>
           <span>{COLUMN_LABELS[columnId]}</span>
           {RESIZABLE_COLUMNS.includes(columnId) && (

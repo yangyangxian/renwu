@@ -256,7 +256,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
   };
 
   const memberOptions = useMemo(() => {
-    if (!task?.projectId) return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [{ value: '', label: 'Unassigned', avatarText: '-' }];
+    if (!task?.projectId) return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [];
     const project = projects.find((p: any) => String(p.id) === String(task.projectId));
     if (!project || !Array.isArray(project.members)) {
       return task?.assignedTo ? [{ value: String(task.assignedTo.id), label: String(task.assignedTo.name || task.assignedTo.id), avatarText: String(task.assignedTo.name || '').charAt(0).toUpperCase() }] : [];

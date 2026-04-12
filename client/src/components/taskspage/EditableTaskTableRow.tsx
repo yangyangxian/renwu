@@ -58,7 +58,6 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
           avatarText: String(user.name || 'M').charAt(0).toUpperCase(),
         });
       }
-      options.push({ value: '', label: 'Unassigned', avatarText: '-' });
       return options;
     }
 
@@ -79,10 +78,6 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
         label: String(task.assignedTo.name || task.assignedTo.id),
         avatarText: String(task.assignedTo.name || task.assignedTo.id).charAt(0).toUpperCase(),
       });
-    }
-
-    if (!options.some((option) => option.value === '')) {
-      options.push({ value: '', label: 'Unassigned', avatarText: '-' });
     }
 
     return options;
@@ -140,6 +135,15 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
         minWidth: getTaskTableMinWidth(columnWidths),
       }}
     >
+      <div className="px-3 py-2">
+        <UserSelector
+          options={memberOptions}
+          currentValue={assigneeDraft && (assigneeDraft as any).id ? assigneeDraft : null}
+          onSelect={handleAssigneeSelect}
+          triggerLabelClassName="font-normal"
+        />
+      </div>
+
       <div className="min-w-0 pr-3">
         {editingTitle ? (
           <Input
@@ -167,14 +171,6 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
             {task.title}
           </button>
         )}
-      </div>
-
-      <div className="px-3 py-2">
-        <UserSelector
-          options={memberOptions}
-          currentValue={assigneeDraft && (assigneeDraft as any).id ? assigneeDraft : null}
-          onSelect={handleAssigneeSelect}
-        />
       </div>
 
       <div className="px-3 py-2">

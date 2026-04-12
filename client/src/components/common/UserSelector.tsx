@@ -3,6 +3,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui-kit/Pop
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { Button } from '@/components/ui-kit/Button';
 import { Label } from '@/components/ui-kit/Label';
+import { cn } from '@/lib/utils';
 
 interface Option {
   value: string;
@@ -14,9 +15,10 @@ interface UserSelectorProps {
   options: Option[];
   currentValue?: { id?: string | number; name?: string } | null;
   onSelect: (userId: string) => Promise<void> | void;
+  triggerLabelClassName?: string;
 }
 
-const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSelect }) => {
+const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSelect, triggerLabelClassName }) => {
   const [open, setOpen] = useState(false);
 
   const handleSelect = useCallback(async (value: string) => {
@@ -36,7 +38,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSe
                 {currentValue && currentValue.name ? String(currentValue.name).charAt(0).toUpperCase() : '-'}
               </AvatarFallback>
             </Avatar>
-            <Label className='cursor-pointer'>{currentValue && currentValue.name ? currentValue.name : 'Unassigned'}</Label>
+            <Label className={cn('cursor-pointer', triggerLabelClassName)}>{currentValue && currentValue.name ? currentValue.name : 'Unassigned'}</Label>
         </Button>
       </PopoverTrigger>
 

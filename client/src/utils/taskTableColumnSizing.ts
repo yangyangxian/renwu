@@ -2,6 +2,8 @@ export type TaskTableColumnId = 'title' | 'assignee' | 'status' | 'updatedAt' | 
 
 export type TaskTableColumnWidths = Record<TaskTableColumnId, number>;
 
+export const TASK_TABLE_COLUMN_ORDER: TaskTableColumnId[] = ['assignee', 'title', 'status', 'updatedAt', 'detail'];
+
 type ColumnConstraint = {
   defaultWidth: number;
   minWidth: number;
@@ -88,7 +90,15 @@ export function getTaskTableGridTemplateColumns(
   const titleTrack = options?.titleAutoWidth !== false
     ? `minmax(${columnWidths.title}px, ${COLUMN_CONSTRAINTS.title.maxWidth}px)`
     : `${columnWidths.title}px`;
-  return `${titleTrack} ${columnWidths.assignee}px ${columnWidths.status}px ${columnWidths.updatedAt}px ${columnWidths.detail}px`;
+  const trackByColumnId: Record<TaskTableColumnId, string> = {
+    assignee: `${columnWidths.assignee}px`,
+    title: titleTrack,
+    status: `${columnWidths.status}px`,
+    updatedAt: `${columnWidths.updatedAt}px`,
+    detail: `${columnWidths.detail}px`,
+  };
+
+  return TASK_TABLE_COLUMN_ORDER.map((columnId) => trackByColumnId[columnId]).join(' ');
 }
 
 export function getTaskTableMinWidth(columnWidths: TaskTableColumnWidths): number {
