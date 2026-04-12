@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveRenderableTaskDetail } from './taskDetailState';
+import { resolveRenderableTaskDetail } from './TaskDetail';
 
 test('resolveRenderableTaskDetail prefers the fetched current task when it matches the requested task', () => {
   const previewTask = { id: 'task-new', title: 'Preview task' };

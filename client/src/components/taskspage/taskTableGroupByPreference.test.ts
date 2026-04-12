@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveTaskTableGroupBySelection } from './taskTableGroupByPreference';
+import { resolveTaskTableGroupBySelection } from './TaskTableGroupByControl';
 
 const labelSets = [
   { id: 'label-set-1' },

@@ -5,7 +5,25 @@ import { TaskSortField, TaskSortOrder, TaskViewCreateReqDto, TaskViewMode, TaskV
   TaskStatus} from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { updateTaskViewById, createTaskView as createTaskViewEndpoint, deleteTaskViewById } from '@/apiRequests/apiEndpoints';
-import { defaultTaskViewConfig, normalizeTaskViewConfig } from '@/utils/taskViewConfig';
+
+export const defaultTaskViewConfig: ViewConfig = {
+  projectId: 'all',
+  dateRange: TaskDateRange.ALL_TIME,
+  searchTerm: '',
+  status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
+  sortField: TaskSortField.DUE_DATE,
+  sortOrder: TaskSortOrder.ASC,
+  viewMode: TaskViewMode.BOARD,
+  groupByLabelSetId: null,
+};
+
+export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
+  return {
+    ...defaultTaskViewConfig,
+    ...view,
+    status: view.status ?? defaultTaskViewConfig.status,
+  };
+}
 
 interface TaskViewStoreState {
   taskViews: TaskViewResDto[];

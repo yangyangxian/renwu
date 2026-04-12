@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveSelectedTaskId } from './taskSelection';
+import { resolveSelectedTaskId } from './ListView';
 
 test('resolveSelectedTaskId resets to the first task when the selection scope changes', () => {
   assert.equal(

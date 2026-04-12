@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { TaskDateRange, TaskSortField, TaskSortOrder, TaskStatus, TaskViewMode } from '@fullstack/common';
 
-import { defaultTaskViewConfig, normalizeTaskViewConfig } from './taskViewConfig';
+import { defaultTaskViewConfig, normalizeTaskViewConfig } from './useTaskViewStore';
 
 test('normalizeTaskViewConfig fills missing values from defaults', () => {
   assert.deepEqual(

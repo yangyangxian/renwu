@@ -17,7 +17,7 @@ import { useProjectStore } from '@/stores/useProjectStore';
 import { useTaskStore } from '@/stores/useTaskStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
 import { withToast } from '@/utils/toastUtils';
-import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
+import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from './taskTableColumnSizing';
 
 interface EditableTaskTableRowProps {
   task: TaskResDto;

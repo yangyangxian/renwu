@@ -8,15 +8,50 @@ import { Label } from '@/components/ui-kit/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui-kit/Select';
 import { useLabelStore } from '@/stores/useLabelStore';
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
-import {
-  getTaskTableGroupByStorageKey,
-  resolveTaskTableGroupBySelection,
-} from '@/utils/taskTableGroupByPreference';
-import { getTaskTableGroupByTriggerWidth } from '@/utils/taskTableGroupBySizing';
+
+const MIN_GROUP_BY_TRIGGER_CH = 16;
+const MAX_GROUP_BY_TRIGGER_CH = 28;
+const GROUP_BY_TRIGGER_PADDING_CH = 5;
 
 interface TaskTableGroupByControlProps {
   scopeProjectId: string | 'all' | null;
   storageScopeKey: string;
+}
+
+interface TaskTableGroupByOption {
+  id: string;
+}
+
+export function getTaskTableGroupByStorageKey(scopeKey: string) {
+  return `task-table-group-by:${scopeKey}`;
+}
+
+export function resolveTaskTableGroupBySelection({
+  currentGroupByLabelSetId = null,
+  rememberedGroupByValue = null,
+  labelSets,
+  isDisabled = false,
+}: {
+  currentGroupByLabelSetId?: string | null;
+  rememberedGroupByValue?: string | null;
+  labelSets: TaskTableGroupByOption[];
+  isDisabled?: boolean;
+}): string | null {
+  if (isDisabled || labelSets.length === 0) {
+    return null;
+  }
+
+  const availableLabelSetIds = new Set(labelSets.map((labelSet) => labelSet.id));
+
+  if (currentGroupByLabelSetId && availableLabelSetIds.has(currentGroupByLabelSetId)) {
+    return currentGroupByLabelSetId;
+  }
+
+  if (rememberedGroupByValue && availableLabelSetIds.has(rememberedGroupByValue)) {
+    return rememberedGroupByValue;
+  }
+
+  return labelSets[0]?.id ?? null;
 }
 
 function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | null | undefined {
@@ -116,7 +151,18 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
     ? resolvedGroupByLabelSetId ?? undefined
     : undefined;
   const triggerWidth = useMemo(
-    () => getTaskTableGroupByTriggerWidth(labelSets.map((labelSet) => labelSet.name)),
+    () => {
+      const longestOptionLength = labelSets.reduce((maxLength, labelSet) => {
+        return Math.max(maxLength, labelSet.name.trim().length);
+      }, 0);
+
+      const width = Math.min(
+        Math.max(longestOptionLength + GROUP_BY_TRIGGER_PADDING_CH, MIN_GROUP_BY_TRIGGER_CH),
+        MAX_GROUP_BY_TRIGGER_CH
+      );
+
+      return `${width}ch`;
+    },
     [labelSets]
   );
 

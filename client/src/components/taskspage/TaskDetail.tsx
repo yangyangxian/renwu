@@ -19,7 +19,30 @@ import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/t
 import { marked } from 'marked';
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
-import { resolveRenderableTaskDetail } from '@/utils/taskDetailState';
+
+interface TaskLike {
+  id: string;
+}
+
+export function resolveRenderableTaskDetail<TTask extends TaskLike>({
+  requestedTaskId,
+  currentTask,
+  previewTask,
+}: {
+  requestedTaskId: string;
+  currentTask?: TTask | null;
+  previewTask?: TTask | null;
+}): TTask | null {
+  if (currentTask && currentTask.id === requestedTaskId) {
+    return currentTask;
+  }
+
+  if (previewTask && previewTask.id === requestedTaskId) {
+    return previewTask;
+  }
+
+  return null;
+}
 
 interface TaskDetailProps {
   taskId: string;

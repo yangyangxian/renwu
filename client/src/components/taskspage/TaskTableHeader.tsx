@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, TASK_TABLE_COLUMN_ORDER, type TaskTableColumnId, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
+import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, TASK_TABLE_COLUMN_ORDER, type TaskTableColumnId, type TaskTableColumnWidths } from './taskTableColumnSizing';
 
 interface TaskTableHeaderProps {
   columnWidths: TaskTableColumnWidths;
