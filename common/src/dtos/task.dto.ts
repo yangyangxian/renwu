@@ -46,6 +46,8 @@ export class TaskCreateReqDto {
 export class TaskViewCreateReqDto {
   /** Name of the view (user-facing label) */
   name!: string;
+  /** Project scope for shared project views; null means personal view */
+  projectId?: string | null;
   /** View configuration (filters, sort, etc) as JSON */
   viewConfig!: ViewConfig;
 }
@@ -56,6 +58,8 @@ export class TaskViewCreateReqDto {
 export class TaskViewUpdateReqDto {
   /** Name of the view (user-facing label) */
   name?: string;
+  /** Project scope for shared project views; null means personal view */
+  projectId?: string | null;
   /** View configuration (filters, sort, etc) as JSON */
   viewConfig?: ViewConfig;
 }
@@ -68,13 +72,15 @@ export class TaskViewResDto {
   id: string;
   userId: string;
   name: string;
+  projectId: string | null;
   viewConfig: ViewConfig;
 
   // constructor is used to require every fields
-  constructor(id: string, userId: string, name: string, viewConfig: ViewConfig) {
+  constructor(id: string, userId: string, name: string, viewConfig: ViewConfig, projectId: string | null = null) {
     this.id = id;
     this.userId = userId;
     this.name = name;
+    this.projectId = projectId;
     this.viewConfig = viewConfig;
   }
 }
@@ -87,8 +93,9 @@ export class ViewConfig {
   sortOrder: TaskSortOrder;
   viewMode: TaskViewMode;
   searchTerm: string;
+  filterLabelSetId?: string | null;
   groupByLabelSetId?: string | null;
-  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, groupByLabelSetId: string | null = null) {
+  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, filterLabelSetId: string | null = null, groupByLabelSetId: string | null = null) {
     this.projectId = projectId;
     this.dateRange = dateRange;
     this.status = status;
@@ -96,6 +103,7 @@ export class ViewConfig {
     this.sortOrder = sortOrder;
     this.viewMode = viewMode;
     this.searchTerm = searchTerm;
+    this.filterLabelSetId = filterLabelSetId;
     this.groupByLabelSetId = groupByLabelSetId;
   }
 }

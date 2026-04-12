@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Calendar, Check, ChevronDown, FilterIcon, Folder } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Calendar, Check, ChevronDown, FilterIcon, Folder, Rows3 } from 'lucide-react';
 import { TaskDateRange } from '@fullstack/common';
 import { Button } from '@/components/ui-kit/Button';
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui-kit/Dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { useLabelStore } from '@/stores/useLabelStore';
 
 export interface TaskFilterDropdownProps {
   value: TaskDateRange;
@@ -21,6 +22,9 @@ export interface TaskFilterDropdownProps {
   showProjectSelect?: boolean;
   selectedProject?: string;
   onSelectedProjectChange?: (projectId: string) => void;
+  showLabelSetFilter?: boolean;
+  selectedLabelSetId?: string | null;
+  onSelectedLabelSetChange?: (labelSetId: string | null) => void;
 
   disabled?: boolean;
   className?: string;
@@ -39,6 +43,9 @@ export function TaskFilterDropdown({
   showProjectSelect,
   selectedProject,
   onSelectedProjectChange,
+  showLabelSetFilter,
+  selectedLabelSetId,
+  onSelectedLabelSetChange,
   disabled,
   className,
   triggerClassName,
@@ -46,18 +53,30 @@ export function TaskFilterDropdown({
   const [open, setOpen] = useState(false);
   const [projectExpanded, setProjectExpanded] = useState(true);
   const [dateRangeExpanded, setDateRangeExpanded] = useState(true);
+  const [labelSetExpanded, setLabelSetExpanded] = useState(true);
   const { projects } = useProjectStore();
+  const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
 
-  const label = useMemo(() => {
-    return RANGE_OPTIONS.find((o) => o.value === value)?.label ?? 'Date range';
-  }, [value]);
+  const normalizedLabelSetScopeProjectId = useMemo(() => {
+    if (!showLabelSetFilter) return undefined;
+    if (!selectedProject || selectedProject === 'all') return undefined;
+    if (selectedProject === 'personal') return null;
+    return selectedProject;
+  }, [selectedProject, showLabelSetFilter]);
 
-  const projectLabel = useMemo(() => {
-    if (!showProjectSelect) return '';
-    if (!selectedProject || selectedProject === 'all') return 'All tasks';
-    if (selectedProject === 'personal') return 'Personal tasks';
-    return projects.find((p) => p.id === selectedProject)?.name ?? 'Project';
-  }, [projects, selectedProject, showProjectSelect]);
+  const canFilterByLabelSet = showLabelSetFilter && selectedProject !== 'all';
+  const scopedLabelSets = useMemo(
+    () => getLabelSetsForProjectId(normalizedLabelSetScopeProjectId),
+    [getLabelSetsForProjectId, normalizedLabelSetScopeProjectId]
+  );
+
+  useEffect(() => {
+    if (!open || !canFilterByLabelSet) {
+      return;
+    }
+
+    fetchLabelSets(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
+  }, [canFilterByLabelSet, fetchLabelSets, normalizedLabelSetScopeProjectId, open]);
 
   return (
     <div className={cn('flex items-center', className)}>
@@ -139,6 +158,74 @@ export function TaskFilterDropdown({
                       {selectedProject === p.id && <Check className="w-4 h-4 text-green-600" />}
                     </DropdownMenuItem>
                   ))}
+                </>
+              )}
+
+              <DropdownMenuSeparator />
+            </>
+          )}
+
+          {showLabelSetFilter && (
+            <>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLabelSetExpanded((value) => !value);
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Rows3 className="w-4 h-4 text-muted-foreground" />
+                  Label set
+                </span>
+                <ChevronDown
+                  className={cn(
+                    'w-4 h-4 text-muted-foreground transition-transform',
+                    labelSetExpanded ? 'rotate-180' : 'rotate-0'
+                  )}
+                />
+              </button>
+
+              {labelSetExpanded && (
+                <>
+                  {!canFilterByLabelSet ? (
+                    <DropdownMenuLabel className="ml-2 text-xs text-muted-foreground font-normal">
+                      Select a concrete project or personal scope first.
+                    </DropdownMenuLabel>
+                  ) : scopedLabelSets.length === 0 ? (
+                    <DropdownMenuLabel className="ml-2 text-xs text-muted-foreground font-normal">
+                      No label sets available.
+                    </DropdownMenuLabel>
+                  ) : (
+                    <>
+                      <DropdownMenuItem
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          onSelectedLabelSetChange?.(null);
+                          setOpen(false);
+                        }}
+                        className="flex items-center justify-between ml-2"
+                      >
+                        <span>All label sets</span>
+                        {selectedLabelSetId == null && <Check className="w-4 h-4 text-green-600" />}
+                      </DropdownMenuItem>
+                      {scopedLabelSets.map((labelSet) => (
+                        <DropdownMenuItem
+                          key={labelSet.id}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            onSelectedLabelSetChange?.(labelSet.id);
+                            setOpen(false);
+                          }}
+                          className="flex items-center justify-between ml-2"
+                        >
+                          <span className="truncate">{labelSet.name}</span>
+                          {selectedLabelSetId === labelSet.id && <Check className="w-4 h-4 text-green-600" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                 </>
               )}
 

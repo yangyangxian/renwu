@@ -1,6 +1,6 @@
 import { db } from '../database/databaseAccess';
-import { tasks, projects, users, taskView, taskLabels, labels } from '../database/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { tasks, projects, users, taskView, taskLabels, labels, projectMembers } from '../database/schema';
+import { eq, and, inArray, or, isNull } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
@@ -28,12 +28,24 @@ export class TaskViewEntity {
   id: string = '';
   userId: string = '';
   name: string = '';
+  projectId: string | null = null;
   viewConfig: any = null;
 }
 
 type DbTask = typeof tasks.$inferInsert;
 
 class TaskService {
+  private async assertProjectMember(projectId: string, userId: string): Promise<void> {
+    const membership = await db
+      .select({ projectId: projectMembers.projectId })
+      .from(projectMembers)
+      .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)));
+
+    if (membership.length === 0) {
+      throw new CustomError('Project not found or not accessible', ErrorCodes.UNAUTHORIZED);
+    }
+  }
+
   private async getLabelsByTaskIds(taskIds: string[]): Promise<Map<string, LabelEntity[]>> {
     const labelsByTaskId = new Map<string, LabelEntity[]>();
 
@@ -131,12 +143,17 @@ class TaskService {
         id: taskView.id,
         userId: taskView.userId,
         name: taskView.name,
+        projectId: taskView.projectId,
         viewConfig: taskView.viewConfig,
         createdAt: taskView.createdAt,
         updatedAt: taskView.updatedAt,
       })
       .from(taskView)
-      .where(eq(taskView.userId, userId));
+      .leftJoin(projectMembers, eq(taskView.projectId, projectMembers.projectId))
+      .where(or(
+        and(eq(taskView.userId, userId), isNull(taskView.projectId)),
+        eq(projectMembers.userId, userId)
+      ));
     return rows.map(row => {
       const entity = Object.assign(new TaskViewEntity(), row);
       return entity;
@@ -146,8 +163,12 @@ class TaskService {
   /**
    * Create a new task view for a user
    */
-  async createTaskView(userId: string, name: string, viewConfig: any) {
-    const [created] = await db.insert(taskView).values({ userId, name, viewConfig }).returning();
+  async createTaskView(userId: string, name: string, viewConfig: any, projectId: string | null = null) {
+    if (projectId) {
+      await this.assertProjectMember(projectId, userId);
+    }
+
+    const [created] = await db.insert(taskView).values({ userId, name, projectId, viewConfig }).returning();
     if (!created) throw new CustomError('Failed to create task view', ErrorCodes.INTERNAL_ERROR);
     return created;
   }
@@ -155,7 +176,11 @@ class TaskService {
   /**
    * Update a task view (must belong to user)
    */
-  async updateTaskView(userId: string, viewId: string, update: { name?: string; viewConfig?: any }) {
+  async updateTaskView(userId: string, viewId: string, update: { name?: string; viewConfig?: any; projectId?: string | null }) {
+    if (update.projectId) {
+      await this.assertProjectMember(update.projectId, userId);
+    }
+
     const [updated] = await db
       .update(taskView)
       .set({ ...update, updatedAt: new Date() })

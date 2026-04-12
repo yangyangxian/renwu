@@ -40,7 +40,7 @@ export function HomeSideBar() {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   const { projects, loading: projectLoading, fetchProjectRoles, fetchProjects, createProject } = useProjectStore();
-  const { taskViews, loading: taskViewLoading, fetchTaskViews } = useTaskViewStore();
+  const { taskViews, personalTaskViews, loading: taskViewLoading, fetchTaskViews } = useTaskViewStore();
 
   // Fetch projects on mount
   useEffect(() => {
@@ -132,16 +132,16 @@ export function HomeSideBar() {
         <SidebarMenu className="gap-2 bg-sidebar">
           <TasksMenuItem 
             showText={showText}
-            taskViews={taskViews}
+            taskViews={personalTaskViews}
             navigate={navigate}
             location={location}
             loading={taskViewLoading}
           />
           <ProjectsMenuItem
             showText={showText}
-            setExpanded={setExpanded}
             onAddProject={() => setProjectDialogOpen(true)}
             projects={projects}
+            taskViews={taskViews}
             loading={projectLoading}
             location={location}
           />

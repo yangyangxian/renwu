@@ -96,3 +96,36 @@ test('createTaskTableSections keeps empty label sections so every label can rend
     },
   ]);
 });
+
+test('createTaskTableSections hides an empty Unassigned section when label-set filtering is active', () => {
+  const sections = createTaskTableSections({
+    tasks: [
+      { id: 'task-1', labels: [{ id: 'sprint-1', labelName: 'Sprint 1' }] },
+      { id: 'task-2', labels: [{ id: 'sprint-2', labelName: 'Sprint 2' }] },
+    ],
+    labelSet: {
+      id: 'set-sprint',
+      name: 'Sprint',
+      labels: [
+        { id: 'sprint-1', name: 'Sprint 1' },
+        { id: 'sprint-2', name: 'Sprint 2' },
+      ],
+    },
+    hideEmptyUnassignedSection: true,
+  });
+
+  assert.deepEqual(sections, [
+    {
+      key: 'label:sprint-1',
+      title: 'Sprint 1',
+      taskIds: ['task-1'],
+      isUngrouped: false,
+    },
+    {
+      key: 'label:sprint-2',
+      title: 'Sprint 2',
+      taskIds: ['task-2'],
+      isUngrouped: false,
+    },
+  ]);
+});

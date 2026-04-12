@@ -14,6 +14,7 @@ export const defaultTaskViewConfig: ViewConfig = {
   sortField: TaskSortField.DUE_DATE,
   sortOrder: TaskSortOrder.ASC,
   viewMode: TaskViewMode.BOARD,
+  filterLabelSetId: null,
   groupByLabelSetId: null,
 };
 
@@ -22,6 +23,30 @@ export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
     ...defaultTaskViewConfig,
     ...view,
     status: view.status ?? defaultTaskViewConfig.status,
+    filterLabelSetId: view.filterLabelSetId ?? defaultTaskViewConfig.filterLabelSetId,
+  };
+}
+
+export function createProjectTaskViewConfig(projectId: string, overrides: Partial<ViewConfig> = {}): ViewConfig {
+  return normalizeTaskViewConfig({
+    ...defaultTaskViewConfig,
+    projectId,
+    ...overrides,
+  });
+}
+
+export function sanitizeTaskViewConfigForPersistence(view: Partial<ViewConfig>): ViewConfig {
+  const normalized = normalizeTaskViewConfig(view);
+
+  if (normalized.viewMode !== TaskViewMode.TABLE) {
+    return normalized;
+  }
+
+  return {
+    ...normalized,
+    status: defaultTaskViewConfig.status,
+    sortField: defaultTaskViewConfig.sortField,
+    sortOrder: defaultTaskViewConfig.sortOrder,
   };
 }
 
@@ -73,7 +98,6 @@ export function useTaskViewStore() {
       setTaskViews(taskViews.filter(tv => tv.id !== viewId));
       if (currentSelectedTaskView && currentSelectedTaskView.id === viewId) {
         setCurrentSelectedTaskView(null);
-        setCurrentDisplayViewConfig(defaultDisplayViewConfig);
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to delete task view');
@@ -81,7 +105,7 @@ export function useTaskViewStore() {
     } finally {
       setLoading(false);
     }
-  }, [taskViews, setTaskViews, setLoading, setError, currentSelectedTaskView, setCurrentSelectedTaskView, setCurrentDisplayViewConfig, defaultDisplayViewConfig]);
+  }, [taskViews, setTaskViews, setLoading, setError, currentSelectedTaskView, setCurrentSelectedTaskView]);
 
   const fetchTaskViews = useCallback(async () => {
     setLoading(true);
@@ -97,11 +121,15 @@ export function useTaskViewStore() {
   }, [setLoading, setError, setTaskViews]);
 
 
-  const createTaskView = useCallback(async (name: string, viewConfig: ViewConfig): Promise<TaskViewResDto> => {
+  const createTaskView = useCallback(async (name: string, viewConfig: ViewConfig, projectId: string | null = null): Promise<TaskViewResDto> => {
     setLoading(true);
     setError(null);
     try {
-      const reqBody: TaskViewCreateReqDto = { name, viewConfig };
+      const reqBody: TaskViewCreateReqDto = {
+        name,
+        projectId,
+        viewConfig: sanitizeTaskViewConfigForPersistence(viewConfig),
+      };
       const created = await apiClient.post<TaskViewCreateReqDto, TaskViewResDto>(createTaskViewEndpoint(), reqBody);
       setTaskViews([...taskViews, created]);
       return created;
@@ -113,13 +141,17 @@ export function useTaskViewStore() {
     }
   }, [taskViews, setTaskViews, setLoading, setError]);
 
-  const updateTaskView = useCallback(async (viewId: string, name: string, viewConfig: ViewConfig): Promise<TaskViewResDto> => {
+  const updateTaskView = useCallback(async (viewId: string, name: string, viewConfig: ViewConfig, projectId?: string | null): Promise<TaskViewResDto> => {
     setLoading(true);
     setError(null);
     try {
-      const updated = await apiClient.put<{ name: string; viewConfig: ViewConfig }, TaskViewResDto>(
+      const updated = await apiClient.put<{ name: string; projectId?: string | null; viewConfig: ViewConfig }, TaskViewResDto>(
         updateTaskViewById(viewId),
-        { name, viewConfig }
+        {
+          name,
+          projectId,
+          viewConfig: sanitizeTaskViewConfigForPersistence(viewConfig),
+        }
       );
       setTaskViews(taskViews.map(tv => tv.id === viewId ? updated : tv));
       if (updated.id === currentSelectedTaskView?.id) {
@@ -142,6 +174,8 @@ export function useTaskViewStore() {
 
   return {
     taskViews,
+    personalTaskViews: taskViews.filter(view => !view.projectId),
+    getProjectTaskViews: (projectId: string) => taskViews.filter(view => view.projectId === projectId),
     loading,
     error,
     fetchTaskViews,

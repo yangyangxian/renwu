@@ -78,9 +78,10 @@ interface CreateRowState {
 interface CreateTaskTableSectionsOptions {
   tasks: TaskTableLikeTask[];
   labelSet: TaskTableLikeLabelSet;
+  hideEmptyUnassignedSection?: boolean;
 }
 
-export function createTaskTableSections({ tasks, labelSet }: CreateTaskTableSectionsOptions): TaskTableSection[] {
+export function createTaskTableSections({ tasks, labelSet, hideEmptyUnassignedSection = false }: CreateTaskTableSectionsOptions): TaskTableSection[] {
   if (!labelSet) {
     return [
       {
@@ -122,6 +123,10 @@ export function createTaskTableSections({ tasks, labelSet }: CreateTaskTableSect
     } else {
       unassignedSection.taskIds.push(task.id);
     }
+  }
+
+  if (hideEmptyUnassignedSection && unassignedSection.taskIds.length === 0) {
+    return sections;
   }
 
   return [...sections, unassignedSection];
@@ -492,8 +497,12 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   }, [selectedLabelSet, sortedTasks, visibleOptimisticTaskLabels]);
 
   const sections = useMemo(
-    () => createTaskTableSections({ tasks: displayedSortedTasks, labelSet: selectedLabelSet }),
-    [displayedSortedTasks, selectedLabelSet]
+    () => createTaskTableSections({
+      tasks: displayedSortedTasks,
+      labelSet: selectedLabelSet,
+      hideEmptyUnassignedSection: !!currentDisplayViewConfig.filterLabelSetId,
+    }),
+    [currentDisplayViewConfig.filterLabelSetId, displayedSortedTasks, selectedLabelSet]
   );
 
   const groupedLabelBySectionKey = useMemo(

@@ -1,11 +1,11 @@
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTabHash } from "@/hooks/useTabHash";
 import { useEffect, useState } from "react";
 import { ProjectOverviewTab } from "@/components/projectspage/OverviewTab";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
-import { LayoutDashboard, List, Users, Settings, Tag, Table2 } from "lucide-react";
+import { LayoutDashboard, List, Users, Settings, Tag, Table2, Bookmark } from "lucide-react";
 import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -18,32 +18,70 @@ import { Button } from '@/components/ui-kit/Button';
 import logger from "@/utils/logger";
 import { motion } from "framer-motion";
 import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
+import { SaveTaskViewPopover } from "@/components/taskspage/SaveTaskViewPopover";
+import { SaveTaskViewDialog } from "@/components/taskspage/SaveTaskViewDialog";
+import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
+import { createProjectTaskViewConfig, sanitizeTaskViewConfigForPersistence, useTaskViewStore } from "@/stores/useTaskViewStore";
+import { PROJECTS_PATH } from "@/routes/routeConfig";
+import { toast } from "sonner";
+import isEqual from "lodash/isEqual";
+import { Input } from "@/components/ui-kit/Input";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function ProjectDetailPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { currentProject: project, projects, fetchCurrentProject } = useProjectStore();
   const {
     projectTasks: tasks,
     fetchProjectTasks,
   } = useTaskStore();
+  const {
+    taskViews,
+    currentSelectedTaskView,
+    currentDisplayViewConfig,
+    setCurrentDisplayViewConfig,
+    setCurrentDisplayViewConfigViewMode,
+    setCurrentSelectedTaskView,
+    updateTaskView,
+  } = useTaskViewStore();
   const [activeTab, handleTabChange] = useTabHash(
     ['overview', 'tasks', 'labels', 'team', 'settings'],
     'tasks'
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
-
-  // Local state for task view (list or board)
-  const [taskView, setTaskView] = useState<TaskViewMode>(TaskViewMode.BOARD);
   const [loadingCurrentProject, setLoadingCurrentProject] = useState(true);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
-  const [dateRange, setDateRange] = useState<TaskDateRange>(TaskDateRange.ALL_TIME);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isBookmarkDialogOpen, setIsBookmarkDialogOpen] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Get projectId from global projects object using slug
   const projectId = projectSlug && projects
     ? Object.values(projects).find(p => p.slug === projectSlug)?.id
     : undefined;
+  const projectTaskViews = projectId
+    ? taskViews.filter((view) => view.projectId === projectId)
+    : [];
+  const activeViewSlug = new URLSearchParams(location.search).get('view');
+  const activeProjectView = projectTaskViews.find(
+    (view) => view.name.replace(/\s+/g, '-') === activeViewSlug
+  ) ?? (activeViewSlug && currentSelectedTaskView && currentSelectedTaskView.projectId === projectId
+    ? projectTaskViews.find((view) => view.id === currentSelectedTaskView.id) ?? null
+    : null);
+  const dateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
+  const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
+  const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
+  const isSavedView = !!currentSelectedTaskView && currentSelectedTaskView.projectId === projectId;
+  const canRenameActiveView = !!activeProjectView && user?.id === activeProjectView.userId;
+  const [isEditingViewName, setIsEditingViewName] = useState(false);
+  const [viewNameDraft, setViewNameDraft] = useState('');
+  const [isRenamingView, setIsRenamingView] = useState(false);
+
+  const buildViewSlug = (viewName: string) => encodeURIComponent(viewName.replace(/\s+/g, '-'));
 
   // Fetch project and tasks together when projectId changes
   useEffect(() => {
@@ -61,6 +99,139 @@ export default function ProjectDetailPage() {
     }
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
+  useEffect(() => {
+    if (!projectId || activeProjectView || currentDisplayViewConfig.projectId === projectId) {
+      return;
+    }
+
+    setCurrentDisplayViewConfig(
+      createProjectTaskViewConfig(projectId, {
+        viewMode: currentDisplayViewConfig.viewMode,
+      })
+    );
+  }, [
+    projectId,
+    activeProjectView,
+    currentDisplayViewConfig.projectId,
+    currentDisplayViewConfig.viewMode,
+    setCurrentDisplayViewConfig,
+  ]);
+
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    if (activeProjectView) {
+      if (currentSelectedTaskView?.id !== activeProjectView.id) {
+        setCurrentSelectedTaskView(activeProjectView);
+        setCurrentDisplayViewConfig(createProjectTaskViewConfig(projectId, activeProjectView.viewConfig));
+      }
+      return;
+    }
+
+    if (currentSelectedTaskView) {
+      setCurrentSelectedTaskView(null);
+      setCurrentDisplayViewConfig(
+        createProjectTaskViewConfig(projectId, {
+          viewMode: currentDisplayViewConfig.viewMode,
+        })
+      );
+    }
+  }, [
+    projectId,
+    activeProjectView,
+    currentSelectedTaskView,
+    currentDisplayViewConfig.viewMode,
+    setCurrentDisplayViewConfig,
+    setCurrentSelectedTaskView,
+  ]);
+
+  useEffect(() => {
+    if (!projectId || !activeProjectView) {
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    setHasUnsavedChanges(
+      !isEqual(
+        sanitizeTaskViewConfigForPersistence(createProjectTaskViewConfig(projectId, activeProjectView.viewConfig)),
+        sanitizeTaskViewConfigForPersistence(currentDisplayViewConfig)
+      )
+    );
+  }, [activeProjectView, currentDisplayViewConfig, projectId]);
+
+  useEffect(() => {
+    if (activeProjectView && activeTab !== 'tasks') {
+      handleTabChange('tasks');
+    }
+  }, [activeProjectView, activeTab, handleTabChange]);
+
+  useEffect(() => {
+    setViewNameDraft(activeProjectView?.name ?? '');
+    setIsEditingViewName(false);
+  }, [activeProjectView?.id, activeProjectView?.name]);
+
+  const handleSaveAsNew = () => {
+    if (!currentSelectedTaskView) {
+      setIsBookmarkDialogOpen(true);
+    }
+  };
+
+  const handleOverride = async () => {
+    if (!currentSelectedTaskView || !projectId) {
+      return;
+    }
+
+    try {
+      await updateTaskView(
+        currentSelectedTaskView.id,
+        currentSelectedTaskView.name,
+        createProjectTaskViewConfig(projectId, currentDisplayViewConfig),
+        projectId
+      );
+      setHasUnsavedChanges(false);
+      toast.success('Project view updated successfully!');
+    } catch {
+      toast.error('Failed to update project view.');
+    }
+  };
+
+  const handleRenameView = async () => {
+    if (!activeProjectView || !projectId || !canRenameActiveView || isRenamingView) {
+      return;
+    }
+
+    const trimmedName = viewNameDraft.trim();
+    if (!trimmedName) {
+      setViewNameDraft(activeProjectView.name);
+      setIsEditingViewName(false);
+      return;
+    }
+
+    if (trimmedName === activeProjectView.name) {
+      setIsEditingViewName(false);
+      return;
+    }
+
+    setIsRenamingView(true);
+    try {
+      const updatedView = await updateTaskView(
+        activeProjectView.id,
+        trimmedName,
+        createProjectTaskViewConfig(projectId, currentDisplayViewConfig),
+        projectId
+      );
+      navigate(`${PROJECTS_PATH}/${projectSlug}?view=${buildViewSlug(updatedView.name)}`, { replace: true });
+      setIsEditingViewName(false);
+      toast.success('Project view renamed successfully!');
+    } catch {
+      toast.error('Failed to rename project view.');
+    } finally {
+      setIsRenamingView(false);
+    }
+  };
+
   if (!projectId || loadingCurrentProject) {
     return <HomePageSkeleton />;
   }
@@ -76,54 +247,170 @@ export default function ProjectDetailPage() {
     <div className="h-full w-full flex flex-col mt-1">
       <div className="flex items-center px-2 my-1">
         <div className="flex-1">
-          <Tabs
-            value={activeTab}
-            onValueChange={val => handleTabChange(val as typeof activeTab)}
-          >
-            <TabsList className="bg-white dark:bg-muted">
-              <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                <LayoutDashboard className="w-4 h-4" />
-                Tasks
-              </TabsTrigger>
-              <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                <List className="w-4 h-4" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                <Users className="w-4 h-4" />
-                Team
-              </TabsTrigger>
-              <TabsTrigger value="labels" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                <Tag className="w-4 h-4" />
-                Labels
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                <Settings className="w-4 h-4" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {activeProjectView ? (
+            <div className="px-1">
+              {isEditingViewName ? (
+                <Input
+                  value={viewNameDraft}
+                  onChange={(event) => setViewNameDraft(event.target.value)}
+                  onBlur={() => {
+                    void handleRenameView();
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      event.currentTarget.blur();
+                    }
+                    if (event.key === 'Escape') {
+                      setViewNameDraft(activeProjectView.name);
+                      setIsEditingViewName(false);
+                    }
+                  }}
+                  className="h-8 min-w-[16rem] max-w-[24rem] text-lg font-semibold text-foreground dark:text-slate-100"
+                  autoFocus
+                  disabled={isRenamingView}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="max-w-[24rem] rounded-md px-2 py-1 -ml-2 text-left text-foreground dark:text-slate-100 hover:bg-accent focus:bg-accent focus:outline-none"
+                  onClick={() => {
+                    if (canRenameActiveView) {
+                      setViewNameDraft(activeProjectView.name);
+                      setIsEditingViewName(true);
+                    }
+                  }}
+                  disabled={!canRenameActiveView}
+                >
+                  <h1 className="text-lg font-semibold leading-none truncate text-foreground dark:text-slate-100">
+                    {activeProjectView.name}
+                  </h1>
+                </button>
+              )}
+            </div>
+          ) : (
+            <Tabs
+              value={activeTab}
+              onValueChange={val => handleTabChange(val as typeof activeTab)}
+            >
+              <TabsList className="bg-white dark:bg-muted">
+                <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Tasks
+                </TabsTrigger>
+                <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <List className="w-4 h-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <Users className="w-4 h-4" />
+                  Team
+                </TabsTrigger>
+                <TabsTrigger value="labels" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <Tag className="w-4 h-4" />
+                  Labels
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
         </div>
 
         {activeTab === 'tasks' && (
           <div className="flex items-center gap-1">
-            <div className="mr-2">
-              <TaskFilterMenu
-                showProjectSelect={false}
-                showDateRange={true}
-                showSearch={true}
-                tasks={tasks}
-                onFilter={setFilteredTasks}
-                selectedProject="all"
-                dateRange={dateRange}
-                searchTerm={searchTerm}
-                onDateRangeChange={setDateRange}
-                onSearchTermChange={setSearchTerm}
-              />
-            </div>
-
             <div className='flex items-center gap-2'>
-              <Tabs value={taskView} onValueChange={(v) => setTaskView(v as TaskViewMode)}>
+              <div className="flex items-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={currentSelectedTaskView ? 'Show saved views' : 'Add new project view'}
+                        className="rounded-md p-2 cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none transition-colors"
+                        onClick={() => {
+                          if (!currentSelectedTaskView) {
+                            setIsBookmarkDialogOpen(true);
+                          }
+                        }}
+                      >
+                        {currentSelectedTaskView ? (
+                          <SaveTaskViewPopover
+                            onSaveNew={handleSaveAsNew}
+                            onOverride={handleOverride}
+                            onOpenDialog={() => setIsBookmarkDialogOpen(true)}
+                            disabled={!hasUnsavedChanges || !isSavedView}
+                          >
+                            <Bookmark
+                              className={
+                                hasUnsavedChanges
+                                  ? 'w-4 h-4 hover:scale-110 transition-transform duration-200 text-purple-500 stroke-2 fill-none'
+                                  : isSavedView
+                                    ? 'w-4 h-4 hover:scale-110 transition-transform duration-200 text-purple-500 fill-purple-500'
+                                    : 'w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground'
+                              }
+                              style={hasUnsavedChanges ? { stroke: '#a855f7' } : {}}
+                            />
+                          </SaveTaskViewPopover>
+                        ) : (
+                          <Bookmark className="w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground" />
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="center">
+                      {hasUnsavedChanges
+                        ? 'Click to save'
+                        : isSavedView
+                          ? 'Click to save as a new project view'
+                          : 'Click to save as a project view'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                {hasUnsavedChanges && <UnsavedChangesIndicator />}
+              </div>
+
+              <div className="mr-2">
+                <TaskFilterMenu
+                  showProjectSelect={false}
+                  showDateRange={true}
+                  showSearch={true}
+                  tasks={tasks}
+                  onFilter={setFilteredTasks}
+                  selectedProject={projectId}
+                  dateRange={dateRange}
+                  searchTerm={searchTerm}
+                  selectedLabelSetId={selectedLabelSetId}
+                  onDateRangeChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      dateRange: value,
+                    });
+                  }}
+                  onSearchTermChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      searchTerm: value,
+                    });
+                  }}
+                  onSelectedLabelSetChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      filterLabelSetId: value,
+                    });
+                  }}
+                />
+              </div>
+
+              <Tabs
+                value={currentDisplayViewConfig.viewMode}
+                onValueChange={(value) => setCurrentDisplayViewConfigViewMode(value as TaskViewMode)}
+              >
                 <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
                   <TabsTrigger
                     value={TaskViewMode.BOARD}
@@ -187,8 +474,8 @@ export default function ProjectDetailPage() {
       )}
       {activeTab === 'tasks' && projectSlug && (
         <ProjectTasksTab
-          view={taskView}
-          onViewChange={setTaskView}
+          view={currentDisplayViewConfig.viewMode}
+          onViewChange={setCurrentDisplayViewConfigViewMode}
           selectionScopeKey={projectId ?? projectSlug ?? null}
           scopeProjectId={projectId ?? null}
           onAddTask={() => {
@@ -207,6 +494,14 @@ export default function ProjectDetailPage() {
       {activeTab === 'team' && <ProjectTeamTab project={project} />}
       {activeTab === 'settings' && <ProjectSettingsTab />}
     </div>
+    {isBookmarkDialogOpen && projectSlug && (
+      <SaveTaskViewDialog
+        open={isBookmarkDialogOpen}
+        onOpenChange={setIsBookmarkDialogOpen}
+        scopePath={`${PROJECTS_PATH}/${projectSlug}`}
+        scopeProjectId={projectId}
+      />
+    )}
     </motion.div>
   );
 }

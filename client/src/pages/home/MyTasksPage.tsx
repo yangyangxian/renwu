@@ -17,9 +17,10 @@ import { SaveTaskViewDialog } from "@/components/taskspage/SaveTaskViewDialog";
 import { SaveTaskViewPopover } from '@/components/taskspage/SaveTaskViewPopover';
 import { toast } from 'sonner';
 import logger from "@/utils/logger";
-import { useTaskViewStore } from "@/stores/useTaskViewStore";
+import { sanitizeTaskViewConfigForPersistence, useTaskViewStore } from "@/stores/useTaskViewStore";
 import isEqual from "lodash/isEqual";
 import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
+import { MYTASKS_PATH } from "@/routes/routeConfig";
 
 export default function MyTasksPage() {
   const { tasks, fetchMyTasks, } = useTaskStore();
@@ -40,7 +41,7 @@ export default function MyTasksPage() {
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
   const [isBookmarkDialogOpen, setIsBookmarkDialogOpen] = useState(false);
-  const isSavedView = !!currentSelectedTaskView;
+  const isSavedView = !!currentSelectedTaskView && !currentSelectedTaskView.projectId;
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
 
   // Controlled filter values (lifted from TaskFilterMenu)
@@ -48,6 +49,7 @@ export default function MyTasksPage() {
   const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
   const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
+  const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -61,8 +63,13 @@ export default function MyTasksPage() {
   // Unsaved changes detection
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   useEffect(() => {
-    if (currentSelectedTaskView && currentDisplayViewConfig) {
-      setHasUnsavedChanges(!isEqual(currentSelectedTaskView.viewConfig, currentDisplayViewConfig));
+    if (currentSelectedTaskView && !currentSelectedTaskView.projectId && currentDisplayViewConfig) {
+      setHasUnsavedChanges(
+        !isEqual(
+          sanitizeTaskViewConfigForPersistence(currentSelectedTaskView.viewConfig),
+          sanitizeTaskViewConfigForPersistence(currentDisplayViewConfig)
+        )
+      );
     } else {
       setHasUnsavedChanges(false);
     }
@@ -79,7 +86,7 @@ export default function MyTasksPage() {
   const handleOverride = useCallback(async () => {
     if (!currentSelectedTaskView) return;
     try {
-      await updateTaskView(currentSelectedTaskView.id, currentSelectedTaskView.name, currentDisplayViewConfig);
+      await updateTaskView(currentSelectedTaskView.id, currentSelectedTaskView.name, currentDisplayViewConfig, null);
       setHasUnsavedChanges(false);
       toast.success('Task view updated successfully!');
     } catch {
@@ -103,38 +110,6 @@ export default function MyTasksPage() {
     >
       <div id="menuBar" className="w-full px-2">
         <div className="flex flex-row w-full gap-2 items-start sm:items-center flex-wrap">
-          {/* TaskFilterMenu now owns filter state and logic */}
-          <div className="flex items-center">
-            <TaskFilterMenu
-              showDateRange={true}
-              showProjectSelect={true}
-              showSearch={true}
-              tasks={tasks}
-              onFilter={setFilteredTasks}
-              selectedProject={selectedProject}
-              dateRange={dateRange}
-              searchTerm={searchTerm}
-              onSelectedProjectChange={(v) => {
-                setCurrentDisplayViewConfig({
-                  ...currentDisplayViewConfig,
-                  projectId: v,
-                });
-              }}
-              onDateRangeChange={(v) => {
-                setCurrentDisplayViewConfig({
-                  ...currentDisplayViewConfig,
-                  dateRange: v,
-                });
-              }}
-              onSearchTermChange={(v) => {
-                setCurrentDisplayViewConfig({
-                  ...currentDisplayViewConfig,
-                  searchTerm: v,
-                });
-              }}
-            />
-          </div>
-            {/* Bookmark icon next to search input */}
           <div className="flex items-center">
             <TooltipProvider>
               <Tooltip>
@@ -178,6 +153,44 @@ export default function MyTasksPage() {
               </Tooltip>
             </TooltipProvider>
             {hasUnsavedChanges && <UnsavedChangesIndicator />}
+          </div>
+
+          <div className="flex items-center">
+            <TaskFilterMenu
+              showDateRange={true}
+              showProjectSelect={true}
+              showSearch={true}
+              tasks={tasks}
+              onFilter={setFilteredTasks}
+              selectedProject={selectedProject}
+              dateRange={dateRange}
+              searchTerm={searchTerm}
+              selectedLabelSetId={selectedLabelSetId}
+              onSelectedProjectChange={(v) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  projectId: v,
+                });
+              }}
+              onDateRangeChange={(v) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  dateRange: v,
+                });
+              }}
+              onSearchTermChange={(v) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  searchTerm: v,
+                });
+              }}
+              onSelectedLabelSetChange={(value) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  filterLabelSetId: value,
+                });
+              }}
+            />
           </div>
 
           {/* View mode tabs and add task button */}
@@ -264,6 +277,8 @@ export default function MyTasksPage() {
     {isBookmarkDialogOpen && <SaveTaskViewDialog
       open={isBookmarkDialogOpen}
       onOpenChange={setIsBookmarkDialogOpen}
+      scopePath={MYTASKS_PATH}
+      scopeProjectId={null}
     />
     }
     </motion.div>

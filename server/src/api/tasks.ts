@@ -136,7 +136,7 @@ router.get(
     try {
       const userId = req.user!.userId;
       const views = await taskService.getTaskViewsByUser(userId);
-      const data: TaskViewResDto[] = views.map(v => new TaskViewResDto(v.id, v.userId, v.name, v.viewConfig));
+      const data: TaskViewResDto[] = views.map(v => new TaskViewResDto(v.id, v.userId, v.name, v.viewConfig, v.projectId ?? null));
       res.json(createApiResponse<TaskViewResDto[]>(data));
     } catch (err) {
       next(err);
@@ -156,10 +156,10 @@ router.post('/views', async (
 ) => {
   try {
     const userId = req.user!.userId;
-    const { name, viewConfig } = req.body;
-    const created = await taskService.createTaskView(userId, name, viewConfig);
+    const { name, viewConfig, projectId } = req.body;
+    const created = await taskService.createTaskView(userId, name, viewConfig, projectId ?? null);
     logger.debug('Created task view:', created);
-    const dto: TaskViewResDto = new TaskViewResDto(created.id, created.userId, created.name, created.viewConfig as ViewConfig);
+    const dto: TaskViewResDto = new TaskViewResDto(created.id, created.userId, created.name, created.viewConfig as ViewConfig, created.projectId ?? null);
     logger.debug('Created task view DTO:', dto);
     res.json(createApiResponse<TaskViewResDto>(dto));
   } catch (err) {
@@ -180,10 +180,10 @@ router.put('/views/:viewId', async (
   try {
     const userId = req.user!.userId;
     const { viewId } = req.params;
-    const { name, viewConfig } = req.body;
-    const updated = await taskService.updateTaskView(userId, viewId, { name, viewConfig });
+    const { name, viewConfig, projectId } = req.body;
+    const updated = await taskService.updateTaskView(userId, viewId, { name, viewConfig, projectId });
     res.json(createApiResponse<TaskViewResDto>(
-      new TaskViewResDto(updated.id, updated.userId, updated.name, updated.viewConfig as ViewConfig)));
+      new TaskViewResDto(updated.id, updated.userId, updated.name, updated.viewConfig as ViewConfig, updated.projectId ?? null)));
   } catch (err) {
     next(err);
   }

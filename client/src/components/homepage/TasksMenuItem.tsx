@@ -12,6 +12,8 @@ import { useState, useEffect, useCallback } from "react";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
 import { logger } from "@/utils/logger";
 import { Skeleton } from "../ui-kit/Skeleton";
+import { TaskViewResDto } from "@fullstack/common";
+import { Location, NavigateFunction } from "react-router-dom";
 
 export function TasksMenuItem({ 
   showText,
@@ -21,9 +23,9 @@ export function TasksMenuItem({
   loading
 }: { 
   showText: boolean; 
-  taskViews: any[];
-  navigate: any;
-  location: any;
+  taskViews: TaskViewResDto[];
+  navigate: NavigateFunction;
+  location: Location;
   loading: boolean;
 }) {
   const { setCurrentSelectedTaskView, currentSelectedTaskView, defaultDisplayViewConfig,
@@ -42,6 +44,10 @@ export function TasksMenuItem({
 
   // Automatically set currentSelectedTaskView based on active view in URL
   useEffect(() => {
+    if (!location.pathname.startsWith(MYTASKS_PATH)) {
+      return;
+    }
+
     // Find the active view by matching the URL
     const activeView = taskViews.find(view => isTaskViewActive(view.name));
     
@@ -55,7 +61,16 @@ export function TasksMenuItem({
       setCurrentDisplayViewConfig(defaultDisplayViewConfig);
       logger.debug("set setCurrentDisplayViewConfig:", defaultDisplayViewConfig);
     }
-  }, [location, taskViews, isTaskViewActive, setCurrentSelectedTaskView]);
+  }, [
+    currentSelectedTaskView,
+    defaultDisplayViewConfig,
+    isTaskViewActive,
+    location.pathname,
+    location.search,
+    setCurrentDisplayViewConfig,
+    setCurrentSelectedTaskView,
+    taskViews,
+  ]);
 
   return (
     <SidebarMenuItem>
@@ -69,12 +84,12 @@ export function TasksMenuItem({
           setCurrentDisplayViewConfig(defaultDisplayViewConfig);
         }}
       >
-        <ListChecks className="w-5 h-5 mr-1 flex-shrink-0" />
+        <ListChecks className="w-5 h-5 mr-1 shrink-0" />
         {showText && <span>My Tasks</span>}
       </SidebarMenuButton>
       {/* Task views - always visible when showText is true */}
         {showText && (
-        <SidebarMenuSub className="gap-[6px]">
+        <SidebarMenuSub className="gap-1.5">
           { loading && 
           <>
             <Skeleton className="h-6 w-full mb-2" />

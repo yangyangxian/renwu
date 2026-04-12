@@ -34,7 +34,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSe
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" className="text-left h-8 flex items-center justify-between px-2.5">
             <Avatar className="size-6">
-              <AvatarFallback className="text-base">
+              <AvatarFallback className="text-sm">
                 {currentValue && currentValue.name ? String(currentValue.name).charAt(0).toUpperCase() : '-'}
               </AvatarFallback>
             </Avatar>
@@ -53,7 +53,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSe
               className="w-full px-1.5 hover:bg-muted cursor-pointer flex justify-start"
             >
               <Avatar className="size-6">
-                <AvatarFallback className="text-base text-primary">{opt.avatarText ?? String(opt.label).charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="text-sm text-primary">{opt.avatarText ?? String(opt.label).charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <Label className="text-sm text-secondary-foreground cursor-pointer">{opt.label}</Label>
             </Button>

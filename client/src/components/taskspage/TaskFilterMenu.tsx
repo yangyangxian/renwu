@@ -1,8 +1,9 @@
 import { Input } from "@/components/ui-kit/Input";
 import { Search } from "lucide-react";
 import { TaskResDto, TaskDateRange } from "@fullstack/common";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { TaskFilterDropdown } from "@/components/taskspage/TaskFilterDropdown";
+import { useLabelStore } from "@/stores/useLabelStore";
 
 interface TaskFilterMenuProps {
   showProjectSelect?: boolean;
@@ -14,10 +15,12 @@ interface TaskFilterMenuProps {
   selectedProject: string;
   dateRange: TaskDateRange;
   searchTerm: string;
+  selectedLabelSetId?: string | null;
   // change handlers from parent
   onSelectedProjectChange?: (projectId: string) => void;
   onDateRangeChange?: (range: TaskDateRange) => void;
   onSearchTermChange?: (term: string) => void;
+  onSelectedLabelSetChange?: (labelSetId: string | null) => void;
 }
 
 export function TaskFilterMenu({
@@ -29,10 +32,45 @@ export function TaskFilterMenu({
   selectedProject,
   dateRange,
   searchTerm,
+  selectedLabelSetId,
   onSelectedProjectChange,
   onDateRangeChange,
   onSearchTermChange,
+  onSelectedLabelSetChange,
 }: TaskFilterMenuProps) {
+  const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
+  const normalizedLabelSetScopeProjectId = selectedProject === 'all'
+    ? undefined
+    : selectedProject === 'personal'
+      ? null
+      : selectedProject;
+  const scopedLabelSets = useMemo(
+    () => getLabelSetsForProjectId(normalizedLabelSetScopeProjectId),
+    [getLabelSetsForProjectId, normalizedLabelSetScopeProjectId]
+  );
+
+  useEffect(() => {
+    if (normalizedLabelSetScopeProjectId === undefined) {
+      if (selectedLabelSetId) {
+        onSelectedLabelSetChange?.(null);
+      }
+      return;
+    }
+
+    fetchLabelSets(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
+  }, [fetchLabelSets, normalizedLabelSetScopeProjectId, onSelectedLabelSetChange, selectedLabelSetId]);
+
+  useEffect(() => {
+    if (!selectedLabelSetId) {
+      return;
+    }
+
+    const labelSetExists = scopedLabelSets.some((labelSet) => labelSet.id === selectedLabelSetId);
+    if (!labelSetExists && scopedLabelSets.length > 0) {
+      onSelectedLabelSetChange?.(null);
+    }
+  }, [onSelectedLabelSetChange, scopedLabelSets, selectedLabelSetId]);
+
   // Filtering depends on controlled values from parent
   useEffect(() => {
     const filtered = tasks.filter(t => {
@@ -75,10 +113,30 @@ export function TaskFilterMenu({
         }
       }
 
-      return dateOk && projectOk && searchOk;
+      let labelSetOk = true;
+      if (selectedLabelSetId) {
+        const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === selectedLabelSetId);
+        if (selectedLabelSet) {
+          const selectedLabelIds = new Set(selectedLabelSet.labels.map((label) => label.id));
+          labelSetOk = (t.labels || []).some((label) => selectedLabelIds.has(label.id));
+        }
+      }
+
+      return dateOk && projectOk && searchOk && labelSetOk;
     });
     onFilter(filtered);
-  }, [tasks, dateRange, selectedProject, searchTerm, onFilter, showProjectSelect, showDateRange, showSearch]);
+  }, [
+    tasks,
+    dateRange,
+    selectedProject,
+    searchTerm,
+    selectedLabelSetId,
+    scopedLabelSets,
+    onFilter,
+    showProjectSelect,
+    showDateRange,
+    showSearch,
+  ]);
 
   return (
     <div className="flex gap-3 items-center grow">
@@ -87,20 +145,23 @@ export function TaskFilterMenu({
           showProjectSelect={showProjectSelect}
           selectedProject={selectedProject}
           onSelectedProjectChange={onSelectedProjectChange}
+          showLabelSetFilter={true}
+          selectedLabelSetId={selectedLabelSetId}
+          onSelectedLabelSetChange={onSelectedLabelSetChange}
           value={dateRange}
           onChange={(v) => onDateRangeChange?.(v)}
         />
       )}
 
       {showSearch && (
-        <div className="min-w-[9rem] relative flex items-center">
+        <div className="min-w-36 relative flex items-center">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             value={searchTerm}
             onChange={e => onSearchTermChange?.(e.target.value)}
             placeholder="Search"
-            className="bg-white-black text-sm pl-9 max-w-[10rem]"
+            className="bg-white-black text-sm pl-9 max-w-40"
           />
         </div>
       )}

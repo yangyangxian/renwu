@@ -12,14 +12,17 @@ import { useTaskViewStore } from "@/stores/useTaskViewStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useLabelStore } from "@/stores/useLabelStore";
 import { useNavigate } from "react-router-dom";
-import { MYTASKS_PATH } from "@/routes/routeConfig";
 interface SaveTaskViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  scopePath: string;
+  scopeProjectId?: string | null;
 }
 export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
   open,
   onOpenChange,
+  scopePath,
+  scopeProjectId = null,
 }) => {
   const { currentDisplayViewConfig, createTaskView, setCurrentSelectedTaskView } = useTaskViewStore();
   const { projects } = useProjectStore();
@@ -34,35 +37,39 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
       : currentDisplayViewConfig.projectId;
   const scopedLabelSets = getLabelSetsForProjectId(normalizedProjectId) as LabelSetResDto[];
 
-  const selectedLabelSet = currentDisplayViewConfig.groupByLabelSetId
+  const selectedFilterLabelSet = currentDisplayViewConfig.filterLabelSetId
+    ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.filterLabelSetId)
+    : null;
+
+  const selectedGroupingLabelSet = currentDisplayViewConfig.groupByLabelSetId
     ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.groupByLabelSetId)
     : null;
 
   const handleSave = async () => {
     if (!viewName.trim()) return;
     try {
-      const newView = await createTaskView(viewName.trim(), currentDisplayViewConfig);
+      const newView = await createTaskView(viewName.trim(), currentDisplayViewConfig, scopeProjectId);
       setCurrentSelectedTaskView(newView);
-      toast.success("Task view saved successfully!");
+      toast.success(`${scopeProjectId ? 'Project' : 'Task'} view saved successfully!`);
       onOpenChange(false);
       setViewName("");
       // Auto-navigate to the new view
-      navigate(`${MYTASKS_PATH}?view=${newView.name.replace(/\s+/g, '-')}`);
+      navigate(`${scopePath}?view=${newView.name.replace(/\s+/g, '-')}`);
     } catch {
-      toast.error("Failed to save task view.");
+      toast.error(`Failed to save ${scopeProjectId ? 'project' : 'task'} view.`);
     }
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <Label asChild className="text-md font-medium block">
-          <div>Save the following filters as a new task view:</div>
+          <div>Save the following filters as a new {scopeProjectId ? 'project view' : 'task view'}:</div>
         </Label>
 
         <div className="space-y-3 text-sm rounded-lg px-3 py-2">
           <div className="flex items-center gap-3">
             <Folder className="w-4 h-4 text-primary" />
-            <Label className="font-medium min-w-[90px]">Project:</Label>
+            <Label className="font-medium min-w-22.5">Project:</Label>
             <span>
               {(() => {
                 if (currentDisplayViewConfig.projectId === "all") return "All Tasks";
@@ -74,7 +81,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
           </div>
           <div className="flex items-center gap-3">
             <CalendarRange className="w-4 h-4 text-primary" />
-            <Label className="font-medium min-w-[90px]">Date Range:</Label>
+            <Label className="font-medium min-w-22.5">Date Range:</Label>
             <span>
               {currentDisplayViewConfig.dateRange === TaskDateRange.LAST_3_MONTHS && "Last 3 months"}
               {currentDisplayViewConfig.dateRange === TaskDateRange.LAST_1_YEAR && "Last 1 year"}
@@ -83,7 +90,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
           </div>
           <div className="flex items-center gap-3">
             <Search className="w-4 h-4 text-primary" />
-            <Label className="font-medium min-w-[90px]">Search Term:</Label>
+            <Label className="font-medium min-w-22.5">Search Term:</Label>
             <span>
               {currentDisplayViewConfig.searchTerm ? (
                 <span className="text-primary">{currentDisplayViewConfig.searchTerm}</span>
@@ -92,11 +99,22 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
               )}
             </span>
           </div>
-          {currentDisplayViewConfig.viewMode !== TaskViewMode.BOARD && (
+          <div className="flex items-center gap-3">
+            <Rows3 className="w-4 h-4 text-primary" />
+            <Label className="font-medium min-w-22.5">Label Set:</Label>
+            <span>
+              {selectedFilterLabelSet ? (
+                <span className="text-primary">{selectedFilterLabelSet.name}</span>
+              ) : (
+                <span className="text-muted-foreground">All label sets</span>
+              )}
+            </span>
+          </div>
+          {currentDisplayViewConfig.viewMode === TaskViewMode.LIST && (
             <>
               <div className="flex items-center gap-3">
                 <Filter className="w-4 h-4 text-primary" />
-                <Label className="font-medium min-w-[90px]">Status:</Label>
+                <Label className="font-medium min-w-22.5">Status:</Label>
                 <span className="flex flex-wrap gap-2 items-center">
                   {currentDisplayViewConfig.status && currentDisplayViewConfig.status.length > 0
                     ? currentDisplayViewConfig.status.map((s: string) => (
@@ -110,7 +128,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
               </div>
               <div className="flex items-center gap-3">
                 <ArrowUpDown className="w-4 h-4 text-primary" />
-                <Label className="font-medium min-w-[90px]">Sort By:</Label>
+                <Label className="font-medium min-w-22.5">Sort By:</Label>
                 <span>
                   {currentDisplayViewConfig.sortField === TaskSortField.DUE_DATE && "Due Date"}
                   {currentDisplayViewConfig.sortField === TaskSortField.UPDATE_DATE && "Update Date"}
@@ -123,7 +141,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
                 ) : (
                   <SortDesc className="w-4 h-4 text-primary" />
                 )}
-                <Label className="font-medium min-w-[90px]">Order:</Label>
+                <Label className="font-medium min-w-22.5">Order:</Label>
                 <span>
                   {currentDisplayViewConfig.sortOrder === TaskSortOrder.ASC ? "Ascending" : "Descending"}
                 </span>
@@ -133,15 +151,15 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
           {currentDisplayViewConfig.viewMode === TaskViewMode.TABLE && (
             <div className="flex items-center gap-3">
               <Rows3 className="w-4 h-4 text-primary" />
-              <Label className="font-medium min-w-[90px]">Grouping:</Label>
+              <Label className="font-medium min-w-22.5">Grouping:</Label>
               <span>
-                {selectedLabelSet?.name || 'No grouping'}
+                {selectedGroupingLabelSet?.name || 'No grouping'}
               </span>
             </div>
           )}
           <div className="flex items-center gap-3">
             {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? <Kanban className="w-4 h-4 text-primary" /> : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? <Table2 className="w-4 h-4 text-primary" /> : <List className="w-4 h-4 text-primary" />}
-            <Label className="font-medium min-w-[90px]">View Mode:</Label>
+            <Label className="font-medium min-w-22.5">View Mode:</Label>
             <span>
               {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? "Board" : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? "Table" : "List"}
             </span>

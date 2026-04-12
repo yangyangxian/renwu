@@ -285,7 +285,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100"
+                    className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
                     aria-label={`Move ${task.title} to another group`}
                     disabled={isMovingTaskGroup}
                   >
@@ -339,7 +339,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-destructive/10 hover:text-destructive hover:opacity-100 focus-visible:opacity-100"
+              className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-destructive/10 hover:text-destructive hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
               onClick={() => setDeleteDialogOpen(true)}
               aria-label={`Delete ${task.title}`}
             >
