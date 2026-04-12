@@ -299,7 +299,8 @@ function InlineTaskCreateRow({ columnWidths, titleAutoWidth, scopeProjectId, ini
             if (isSubmitting) return;
             setAssignedTo(userId);
           }}
-          triggerLabelClassName="font-normal"
+          triggerClassName="h-7 px-2 [&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar-fallback]]:text-xs [&_[data-slot=avatar-fallback]]:leading-none"
+          triggerLabelClassName="font-normal leading-none"
         />
       </div>
 

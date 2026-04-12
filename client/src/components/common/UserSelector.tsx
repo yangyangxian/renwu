@@ -15,10 +15,11 @@ interface UserSelectorProps {
   options: Option[];
   currentValue?: { id?: string | number; name?: string } | null;
   onSelect: (userId: string) => Promise<void> | void;
+  triggerClassName?: string;
   triggerLabelClassName?: string;
 }
 
-const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSelect, triggerLabelClassName }) => {
+const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSelect, triggerClassName, triggerLabelClassName }) => {
   const [open, setOpen] = useState(false);
 
   const handleSelect = useCallback(async (value: string) => {
@@ -32,7 +33,11 @@ const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSe
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="text-left h-8 flex items-center justify-between px-2.5">
+        <Button
+          type="button"
+          variant="outline"
+          className={cn('text-left h-8 flex items-center justify-between px-2.5', triggerClassName)}
+        >
             <Avatar className="size-6">
               <AvatarFallback className="text-sm">
                 {currentValue && currentValue.name ? String(currentValue.name).charAt(0).toUpperCase() : '-'}
