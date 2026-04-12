@@ -67,7 +67,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
         const created = await apiClient.post(createLabelSet(), { labelSetName: name.trim(), projectId });
         if (onCreated && created && (created as any).id) onCreated((created as any).id);
 
-        await fetchLabelSets(projectId);
+        await fetchLabelSets(projectId, { force: true });
         setOpen(false);
       }, { success: 'Label set created', error: 'Failed to create label set' });
     } catch (e: any) {
@@ -87,7 +87,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
   // Server clones set + labels atomically (avoids duplicate/split sets from client loops).
   await apiClient.post(importPersonalLabelSetToProject(selectedPersonalSetId, projectId), {} as any);
 
-        await fetchLabelSets(projectId);
+        await fetchLabelSets(projectId, { force: true });
         setOpen(false);
       }, { success: 'Imported label set', error: 'Failed to import label set' });
     } catch (e: any) {
@@ -104,7 +104,7 @@ export const AddLabelSetDialog: React.FC<AddLabelSetDialogProps> = ({ onCreated,
           variant="outline"
           size="icon"
           aria-label="Add label set"
-          className={`!p-1 w-5 h-5 flex items-center justify-center rounded-sm bg-primary-purple/60 dark:bg-muted/70 hover:bg-primary-purple hover:text-white text-white ${triggerClassName || ''}`}
+          className={`p-1! w-5 h-5 flex items-center justify-center rounded-sm bg-primary-purple/60 dark:bg-muted/70 hover:bg-primary-purple hover:text-white text-white ${triggerClassName || ''}`}
         >
           <Plus className="w-3 h-3" />
         </Button>
