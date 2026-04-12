@@ -1,5 +1,6 @@
 {
-  "name": "react-fullstack",
+  "name": "ren-wu",
+  "version": "0.2.0",
   "private": true,
   "workspaces": [
     "client",
