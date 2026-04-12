@@ -16,11 +16,6 @@ import { useTaskStore } from '@/stores/useTaskStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
 import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
 
-import {
-  getEditableTaskTableRowClassName,
-  getTaskTableDetailButtonClassName,
-} from './taskTableRowStyles';
-
 interface EditableTaskTableRowProps {
   task: TaskResDto;
   columnWidths: TaskTableColumnWidths;
@@ -29,8 +24,6 @@ interface EditableTaskTableRowProps {
 }
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
-const editableTaskTableRowClassName = getEditableTaskTableRowClassName();
-const taskTableDetailButtonClassName = getTaskTableDetailButtonClassName();
 
 export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail }: EditableTaskTableRowProps) {
   const { updateTaskById } = useTaskStore();
@@ -141,7 +134,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
 
   return (
     <div
-      className={editableTaskTableRowClassName}
+      className="group relative grid min-h-14 items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
       style={{
         gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
         minWidth: getTaskTableMinWidth(columnWidths),
@@ -224,7 +217,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
           type="button"
           variant="ghost"
           size="icon"
-          className={taskTableDetailButtonClassName}
+          className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[color,opacity] hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
           onClick={() => onOpenDetail(task.id)}
           aria-label={`Open details for ${task.title}`}
           title="Open details"

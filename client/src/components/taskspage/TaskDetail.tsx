@@ -21,11 +21,6 @@ import { toast } from 'sonner';
 import { motion } from "framer-motion";
 import { resolveRenderableTaskDetail } from '@/utils/taskDetailState';
 
-import {
-  getTaskDetailIconButtonClassName,
-  getTaskDetailIconClassName,
-} from './taskDetailStyles';
-
 interface TaskDetailProps {
   taskId: string;
   previewTask?: TaskResDto | null;
@@ -38,8 +33,6 @@ const descriptionEditSurfaceClass = `${descriptionSurfaceClass} border-primary/3
 const descriptionScrollClass = "overflow-auto min-h-[200px] max-h-[600px] relative";
 const descriptionPaddingClass = "px-3 py-2";
 const descriptionContentClass = "task-detail-description-content w-full";
-const taskDetailIconClass = getTaskDetailIconClassName();
-const taskDetailIconButtonClass = getTaskDetailIconButtonClassName();
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) => {
   const { currentTask, updateTaskById, fetchCurrentTask, loading: loadingCurrentTask } = useTaskStore();
@@ -347,7 +340,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
                     handleEditClick();
                   }}
                   title="Edit title"
-                  className={taskDetailIconButtonClass}
+                  className="opacity-90 text-muted-foreground transition-opacity hover:opacity-100"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -363,7 +356,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           <div className={fieldLabelContainerClass}>
             <div className="flex flex-col w-full">
               <Label className={fieldLabelClass}>
-                <Tag className={taskDetailIconClass} />
+                <Tag className="size-4 text-muted-foreground dark:text-slate-200" />
                 Labels:
               </Label>
               <div className="mt-4">
@@ -375,7 +368,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           <div className="flex flex-col gap-3 min-h-[48px]">
             <div className="flex items-center justify-between">
               <Label className={fieldLabelClass}>
-                <FileText className={taskDetailIconClass} />
+                <FileText className="size-4 text-muted-foreground dark:text-slate-200" />
                 Description:
               </Label>
               <div className="ml-3 flex min-h-9 items-center gap-2">
@@ -393,7 +386,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
                   <Button
                     size="icon"
                     variant="ghost"
-                    className={taskDetailIconButtonClass}
+                    className="opacity-90 text-muted-foreground transition-opacity hover:opacity-100"
                     onClick={handleDescClick}
                     title="Edit description"
                   >
@@ -454,7 +447,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           {/* Assigned User */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
-              <User className={taskDetailIconClass} />
+              <User className="size-4 text-muted-foreground dark:text-slate-200" />
               Assigned to:
             </Label>
             <div className="flex items-center">
@@ -468,7 +461,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           {/* Due Date */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
-              <Clock className={taskDetailIconClass} />
+              <Clock className="size-4 text-muted-foreground dark:text-slate-200" />
               Due date:
             </Label>
             <div className="flex items-center">
@@ -488,7 +481,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           {/* Status (Badge Dropdown Trigger) */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
-              <CheckCircle className={taskDetailIconClass} />
+              <CheckCircle className="size-4 text-muted-foreground dark:text-slate-200" />
               Status:
             </Label>
             <div className="flex items-center">
@@ -530,7 +523,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           {/* Created By */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
-              <User className={taskDetailIconClass} />
+              <User className="size-4 text-muted-foreground dark:text-slate-200" />
               Created by:
             </Label>
             {task.createdBy && typeof task.createdBy === 'object' ? (
@@ -549,7 +542,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           {/* Created At */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
-              <FolderOpen className={taskDetailIconClass} />
+              <FolderOpen className="size-4 text-muted-foreground dark:text-slate-200" />
               Created:
             </Label>
             <div className="flex items-center">
@@ -563,7 +556,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
           {/* Updated At */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
-              <RefreshCw className={taskDetailIconClass} />
+              <RefreshCw className="size-4 text-muted-foreground dark:text-slate-200" />
               Updated:
             </Label>
             <div className="flex items-center">
