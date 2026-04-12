@@ -15,7 +15,7 @@ const COLUMN_LABELS: Record<TaskTableColumnId, string> = {
   assignee: 'Assignee',
   status: 'Status',
   updatedAt: 'Updated',
-  detail: 'Detail',
+  actions: 'Actions',
 };
 
 export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumnResize }: TaskTableHeaderProps) {
@@ -44,7 +44,7 @@ export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumn
       }}
     >
       {TASK_TABLE_COLUMN_ORDER.map((columnId) => (
-        <div key={columnId} className={`relative flex min-h-10 items-center px-3 ${columnId === 'detail' ? 'justify-center' : ''}`}>
+        <div key={columnId} className={`relative flex min-h-10 items-center px-3 ${columnId === 'actions' ? 'justify-center' : ''}`}>
           <span>{COLUMN_LABELS[columnId]}</span>
           {RESIZABLE_COLUMNS.includes(columnId) && (
             <button

@@ -17,7 +17,7 @@ test('getDefaultTaskTableColumnWidths returns the four editable table columns', 
     assignee: 170,
     status: 170,
     updatedAt: 190,
-    detail: 64,
+    actions: 104,
   });
 });
 
@@ -39,9 +39,9 @@ test('resizeTaskTableColumn clamps widths within each column bounds', () => {
     status: 130,
   });
 
-  assert.deepEqual(resizeTaskTableColumn(base, 'detail', 40), {
+  assert.deepEqual(resizeTaskTableColumn(base, 'actions', 40), {
     ...base,
-    detail: 56,
+    actions: 96,
   });
 });
 
@@ -59,7 +59,7 @@ test('sanitizeTaskTableColumnWidths keeps known numeric widths and falls back to
       assignee: 170,
       status: 220,
       updatedAt: 160,
-      detail: 64,
+      actions: 104,
     }
   );
 });
@@ -71,14 +71,14 @@ test('sanitizeTaskTableColumnWidths preserves manually expanded title widths', (
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      detail: 64,
+      actions: 104,
     }),
     {
       title: 1200,
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      detail: 64,
+      actions: 104,
     }
   );
 });
@@ -90,9 +90,9 @@ test('getTaskTableGridTemplateColumns keeps default title sizing elastic up to t
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      detail: 64,
+      actions: 104,
     }, { titleAutoWidth: true }),
-    'minmax(560px, 700px) 170px 170px 190px 64px'
+    '170px minmax(560px, 700px) 170px 190px 104px'
   );
 });
 
@@ -103,23 +103,23 @@ test('getTaskTableGridTemplateColumns fixes manually resized title widths withou
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      detail: 64,
+      actions: 104,
     }, { titleAutoWidth: false }),
-    '1200px 170px 170px 190px 64px'
+    '170px 1200px 170px 190px 104px'
   );
 });
 
 test('getTaskTableGridTemplateColumns makes title absorb remaining space while other columns stay fixed', () => {
   assert.equal(
     getTaskTableGridTemplateColumns(getDefaultTaskTableColumnWidths(), { titleAutoWidth: true }),
-    'minmax(560px, 700px) 170px 170px 190px 64px'
+    '170px minmax(560px, 700px) 170px 190px 104px'
   );
 });
 
 test('getTaskTableMinWidth returns the minimum scroll width for the table content', () => {
   assert.equal(
     getTaskTableMinWidth(getDefaultTaskTableColumnWidths()),
-    1154
+    1194
   );
 });
 

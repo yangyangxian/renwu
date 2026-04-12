@@ -2,18 +2,21 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TaskResDto, TaskStatus } from '@fullstack/common';
 import { format } from 'date-fns';
-import { Check, PanelRightOpen } from 'lucide-react';
+import { Check, PanelRightOpen, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import UserSelector from '@/components/common/UserSelector';
 import { Badge } from '@/components/ui-kit/Badge';
 import { Button } from '@/components/ui-kit/Button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui-kit/Dropdown-menu';
 import { Input } from '@/components/ui-kit/Input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui-kit/Tooltip';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useTaskStore } from '@/stores/useTaskStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
+import { withToast } from '@/utils/toastUtils';
 import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from '@/utils/taskTableColumnSizing';
 
 interface EditableTaskTableRowProps {
@@ -26,13 +29,14 @@ interface EditableTaskTableRowProps {
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
 
 export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail }: EditableTaskTableRowProps) {
-  const { updateTaskById } = useTaskStore();
+  const { updateTaskById, deleteTaskById } = useTaskStore();
   const { currentProject, projects } = useProjectStore();
   const { user } = useAuth();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [assigneeDraft, setAssigneeDraft] = useState(task.assignedTo ?? null);
   const [statusDraft, setStatusDraft] = useState(task.status);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!editingTitle) {
@@ -127,6 +131,18 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
     }
   }, [statusDraft, task.id, updateTaskById]);
 
+  const handleDeleteTask = useCallback(async () => {
+    await withToast(
+      async () => {
+        await deleteTaskById(task.id);
+      },
+      {
+        success: 'Task deleted successfully!',
+        error: 'Failed to delete task.',
+      }
+    );
+  }, [deleteTaskById, task.id]);
+
   return (
     <div
       className="group relative grid min-h-14 items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
@@ -208,19 +224,52 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
         </span>
       </div>
 
-      <div className="flex items-center justify-center px-2 py-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[color,opacity] hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
-          onClick={() => onOpenDetail(task.id)}
-          aria-label={`Open details for ${task.title}`}
-          title="Open details"
-        >
-          <PanelRightOpen className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center justify-center gap-1 px-2 py-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[color,opacity] hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
+              onClick={() => onOpenDetail(task.id)}
+              aria-label={`Open details for ${task.title}`}
+            >
+              <PanelRightOpen className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">Details</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-destructive/10 hover:text-destructive hover:opacity-100 focus-visible:opacity-100"
+              onClick={() => setDeleteDialogOpen(true)}
+              aria-label={`Delete ${task.title}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">Delete</TooltipContent>
+        </Tooltip>
       </div>
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Task?"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        onConfirm={() => {
+          setDeleteDialogOpen(false);
+          handleDeleteTask();
+        }}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
