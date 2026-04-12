@@ -17,7 +17,7 @@ test('getDefaultTaskTableColumnWidths returns the four editable table columns', 
     assignee: 170,
     status: 170,
     updatedAt: 190,
-    actions: 104,
+    actions: 116,
   });
 });
 
@@ -59,7 +59,7 @@ test('sanitizeTaskTableColumnWidths keeps known numeric widths and falls back to
       assignee: 170,
       status: 220,
       updatedAt: 160,
-      actions: 104,
+        actions: 116,
     }
   );
 });
@@ -71,14 +71,14 @@ test('sanitizeTaskTableColumnWidths preserves manually expanded title widths', (
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      actions: 104,
+      actions: 116,
     }),
     {
       title: 1200,
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      actions: 104,
+      actions: 116,
     }
   );
 });
@@ -90,9 +90,9 @@ test('getTaskTableGridTemplateColumns keeps default title sizing elastic up to t
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      actions: 104,
+      actions: 116,
     }, { titleAutoWidth: true }),
-    '170px minmax(560px, 700px) 170px 190px 104px'
+    '170px minmax(560px, 700px) 170px 190px 116px'
   );
 });
 
@@ -103,23 +103,23 @@ test('getTaskTableGridTemplateColumns fixes manually resized title widths withou
       assignee: 170,
       status: 170,
       updatedAt: 190,
-      actions: 104,
+      actions: 116,
     }, { titleAutoWidth: false }),
-    '170px 1200px 170px 190px 104px'
+    '170px 1200px 170px 190px 116px'
   );
 });
 
 test('getTaskTableGridTemplateColumns makes title absorb remaining space while other columns stay fixed', () => {
   assert.equal(
     getTaskTableGridTemplateColumns(getDefaultTaskTableColumnWidths(), { titleAutoWidth: true }),
-    '170px minmax(560px, 700px) 170px 190px 104px'
+    '170px minmax(560px, 700px) 170px 190px 116px'
   );
 });
 
 test('getTaskTableMinWidth returns the minimum scroll width for the table content', () => {
   assert.equal(
     getTaskTableMinWidth(getDefaultTaskTableColumnWidths()),
-    1194
+    1206
   );
 });
 

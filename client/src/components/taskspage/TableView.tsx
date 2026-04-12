@@ -9,8 +9,6 @@ import { Badge } from '@/components/ui-kit/Badge';
 import { Button } from '@/components/ui-kit/Button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui-kit/Dropdown-menu';
 import { Input } from '@/components/ui-kit/Input';
-import { Label } from '@/components/ui-kit/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui-kit/Select';
 import { useWebStorage } from '@/hooks/useWebStorage';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLabelStore } from '@/stores/useLabelStore';
@@ -68,6 +66,13 @@ export interface TaskTableSection {
   title: string | null;
   taskIds: string[];
   isUngrouped: boolean;
+}
+
+type OptimisticTaskLabelState = Record<string, string[]>;
+
+interface CreateRowState {
+  contextKey: string;
+  sectionKey: string | null;
 }
 
 interface CreateTaskTableSectionsOptions {
@@ -132,10 +137,57 @@ interface InlineTaskCreateRowProps {
   onCreated: () => void;
 }
 
+interface InlineTaskProjectMemberOption {
+  id: string;
+  name?: string;
+}
+
 function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | null | undefined {
   if (scopeProjectId === 'all') return undefined;
   if (scopeProjectId === 'personal') return null;
   return scopeProjectId;
+}
+
+function getTaskLabelIds(task: TaskTableLikeTask): string[] {
+  return (task.labels ?? []).map((label) => label.id);
+}
+
+function areLabelIdsEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  const leftSet = new Set(left);
+  return right.every((labelId) => leftSet.has(labelId));
+}
+
+function buildNextGroupedLabelIds(task: TaskResDto, labelSet: LabelSetResDto, targetLabelId: string | null): string[] {
+  const currentLabelIds = getTaskLabelIds(task);
+  const groupingLabelIds = new Set((labelSet.labels ?? []).map((label) => label.id));
+  const retainedLabelIds = currentLabelIds.filter((labelId) => !groupingLabelIds.has(labelId));
+
+  if (!targetLabelId) {
+    return retainedLabelIds;
+  }
+
+  return [...retainedLabelIds, targetLabelId];
+}
+
+function buildDisplayedTaskLabels(task: TaskResDto, labelSet: LabelSetResDto | null, nextLabelIds: string[]) {
+  const originalLabels = new Map((task.labels ?? []).map((label) => [label.id, label]));
+  const groupingLabels = new Map((labelSet?.labels ?? []).map((label) => [label.id, label]));
+
+  return nextLabelIds.map((labelId) => {
+    const originalLabel = originalLabels.get(labelId);
+    if (originalLabel) return originalLabel;
+
+    const groupingLabel = groupingLabels.get(labelId);
+    if (groupingLabel) {
+      return {
+        ...groupingLabel,
+        labelName: groupingLabel.name,
+      };
+    }
+
+    return { id: labelId, labelName: labelId, name: labelId };
+  });
 }
 
 function InlineTaskCreateRow({ columnWidths, titleAutoWidth, scopeProjectId, initialStatus, labelIds = [], onCancel, onCreated }: InlineTaskCreateRowProps) {
@@ -161,7 +213,7 @@ function InlineTaskCreateRow({ columnWidths, titleAutoWidth, scopeProjectId, ini
       ? currentProject
       : projects.find((candidate) => String(candidate.id) === String(normalizedProjectId));
     const members = Array.isArray(project?.members) ? project.members : [];
-    const options = members.map((member: any) => ({
+    const options = members.map((member: InlineTaskProjectMemberOption) => ({
       value: String(member.id),
       label: String(member.name || member.id),
     }));
@@ -334,8 +386,9 @@ function InlineTaskCreateRow({ columnWidths, titleAutoWidth, scopeProjectId, ini
 export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOpenTask }: TableViewProps) {
   const { currentDisplayViewConfig } = useTaskViewStore();
   const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
+  const { updateTaskById } = useTaskStore();
   const defaultColumnWidths = useMemo(() => getDefaultTaskTableColumnWidths(), []);
-  const [createRowSectionKey, setCreateRowSectionKey] = useState<string | null>(null);
+  const [optimisticTaskLabels, setOptimisticTaskLabels] = useState<OptimisticTaskLabelState>({});
 
   const storageKey = getTaskTableColumnWidthStorageKey(storageScopeKey);
   const titleAutoStorageKey = getTaskTableTitleAutoWidthStorageKey(storageScopeKey);
@@ -365,6 +418,11 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   const selectedLabelSet = currentDisplayViewConfig.groupByLabelSetId
     ? scopedLabelSets.find((labelSet) => labelSet.id === currentDisplayViewConfig.groupByLabelSetId) ?? null
     : null;
+  const createRowContextKey = `${scopeProjectId ?? 'null'}:${currentDisplayViewConfig.groupByLabelSetId ?? 'ungrouped'}`;
+  const [createRowState, setCreateRowState] = useState<CreateRowState>(() => ({
+    contextKey: createRowContextKey,
+    sectionKey: null,
+  }));
 
   const filteredTasks = useMemo(() => {
     const statusFilter = currentDisplayViewConfig.status ?? [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
@@ -397,9 +455,45 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
     return next;
   }, [currentDisplayViewConfig.sortField, currentDisplayViewConfig.sortOrder, filteredTasks]);
 
+  const visibleOptimisticTaskLabels = useMemo(() => {
+    if (!selectedLabelSet) {
+      return {} as OptimisticTaskLabelState;
+    }
+
+    const taskMap = new Map(tasks.map((task) => [String(task.id), task]));
+    const nextLabels: OptimisticTaskLabelState = {};
+
+    for (const [taskId, optimisticLabelIds] of Object.entries(optimisticTaskLabels)) {
+      const sourceTask = taskMap.get(taskId);
+      if (!sourceTask) {
+        continue;
+      }
+
+      if (!areLabelIdsEqual(getTaskLabelIds(sourceTask), optimisticLabelIds)) {
+        nextLabels[taskId] = optimisticLabelIds;
+      }
+    }
+
+    return nextLabels;
+  }, [optimisticTaskLabels, selectedLabelSet, tasks]);
+
+  const displayedSortedTasks = useMemo(() => {
+    if (!selectedLabelSet) return sortedTasks;
+
+    return sortedTasks.map((task) => {
+      const optimisticLabelIds = visibleOptimisticTaskLabels[String(task.id)];
+      if (!optimisticLabelIds) return task;
+
+      return {
+        ...task,
+        labels: buildDisplayedTaskLabels(task, selectedLabelSet, optimisticLabelIds),
+      };
+    });
+  }, [selectedLabelSet, sortedTasks, visibleOptimisticTaskLabels]);
+
   const sections = useMemo(
-    () => createTaskTableSections({ tasks: sortedTasks, labelSet: selectedLabelSet }),
-    [selectedLabelSet, sortedTasks]
+    () => createTaskTableSections({ tasks: displayedSortedTasks, labelSet: selectedLabelSet }),
+    [displayedSortedTasks, selectedLabelSet]
   );
 
   const groupedLabelBySectionKey = useMemo(
@@ -408,8 +502,8 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   );
 
   const taskById = useMemo(
-    () => new Map(sortedTasks.map((task) => [task.id, task])),
-    [sortedTasks]
+    () => new Map(displayedSortedTasks.map((task) => [task.id, task])),
+    [displayedSortedTasks]
   );
 
   const inlineCreateInitialStatus = useMemo(() => {
@@ -423,16 +517,60 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
 
   const inlineCreateDisabled = scopeProjectId === 'all';
 
-  useEffect(() => {
-    setCreateRowSectionKey(null);
-  }, [currentDisplayViewConfig.groupByLabelSetId, scopeProjectId]);
-
   const handleColumnResize = (columnId: TaskTableColumnId, width: number) => {
     if (columnId === 'title') {
       setTitleAutoWidth(false);
     }
     setStoredWidths((current) => resizeTaskTableColumn(sanitizeTaskTableColumnWidths(current), columnId, width));
   };
+
+  const handleMoveTaskToGroup = useCallback(async (task: TaskResDto, targetLabelId: string | null) => {
+    if (!selectedLabelSet) return;
+
+    const sourceTask = tasks.find((candidate) => String(candidate.id) === String(task.id)) ?? task;
+    const previousVisibleLabelIds = getTaskLabelIds(task);
+    const nextLabelIds = buildNextGroupedLabelIds(sourceTask, selectedLabelSet, targetLabelId);
+
+    if (areLabelIdsEqual(previousVisibleLabelIds, nextLabelIds)) {
+      return;
+    }
+
+    setOptimisticTaskLabels((currentLabels) => ({
+      ...currentLabels,
+      [String(task.id)]: nextLabelIds,
+    }));
+
+    const targetLabelName = targetLabelId
+      ? selectedLabelSet.labels.find((label) => label.id === targetLabelId)?.name ?? 'selected group'
+      : 'Unassigned';
+
+    const updatedTask = await withToast(
+      async () => updateTaskById(task.id, { labels: nextLabelIds }),
+      {
+        success: `Task moved to ${targetLabelName}.`,
+        error: 'Failed to move task.',
+      }
+    );
+
+    if (updatedTask) {
+      return;
+    }
+
+    setOptimisticTaskLabels((currentLabels) => {
+      if (!areLabelIdsEqual(currentLabels[String(task.id)] ?? [], nextLabelIds)) {
+        return currentLabels;
+      }
+
+      const nextOptimisticLabels = { ...currentLabels };
+      if (areLabelIdsEqual(previousVisibleLabelIds, getTaskLabelIds(sourceTask))) {
+        delete nextOptimisticLabels[String(task.id)];
+      } else {
+        nextOptimisticLabels[String(task.id)] = previousVisibleLabelIds;
+      }
+
+      return nextOptimisticLabels;
+    });
+  }, [selectedLabelSet, tasks, updateTaskById]);
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -452,7 +590,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
           const sectionTasks = section.taskIds.map((taskId) => taskById.get(taskId)).filter(Boolean) as TaskResDto[];
           const showSectionTitle = !section.isUngrouped || currentDisplayViewConfig.groupByLabelSetId;
           const sectionLabel = groupedLabelBySectionKey.get(section.key);
-          const isCreateRowOpen = createRowSectionKey === section.key;
+          const isCreateRowOpen = createRowState.contextKey === createRowContextKey && createRowState.sectionKey === section.key;
           const createRowLabelIds = sectionLabel?.id ? [sectionLabel.id] : [];
           return (
             <section key={section.key} className="flex flex-col gap-2">
@@ -478,7 +616,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground"
-                        onClick={() => setCreateRowSectionKey(section.key)}
+                        onClick={() => setCreateRowState({ contextKey: createRowContextKey, sectionKey: section.key })}
                         disabled={inlineCreateDisabled || isCreateRowOpen}
                         aria-label={`Add task to ${section.title ?? 'table'}`}
                         title="Add task"
@@ -506,8 +644,16 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                               scopeProjectId={scopeProjectId}
                               initialStatus={inlineCreateInitialStatus}
                               labelIds={createRowLabelIds}
-                              onCancel={() => setCreateRowSectionKey((current) => (current === section.key ? null : current))}
-                              onCreated={() => setCreateRowSectionKey((current) => (current === section.key ? null : current))}
+                              onCancel={() => setCreateRowState((current) => (
+                                current.contextKey === createRowContextKey && current.sectionKey === section.key
+                                  ? { contextKey: createRowContextKey, sectionKey: null }
+                                  : current
+                              ))}
+                              onCreated={() => setCreateRowState((current) => (
+                                current.contextKey === createRowContextKey && current.sectionKey === section.key
+                                  ? { contextKey: createRowContextKey, sectionKey: null }
+                                  : current
+                              ))}
                             />
                           )}
                           {sectionTasks.map((task) => (
@@ -517,6 +663,8 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                               columnWidths={columnWidths}
                               titleAutoWidth={titleAutoWidth}
                               onOpenDetail={onOpenTask}
+                              groupingLabelSet={selectedLabelSet}
+                              onMoveTaskToGroup={selectedLabelSet ? handleMoveTaskToGroup : undefined}
                             />
                           ))}
                         </div>

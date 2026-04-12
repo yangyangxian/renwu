@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { TaskResDto, TaskStatus } from '@fullstack/common';
+import { LabelSetResDto, TaskResDto, TaskStatus } from '@fullstack/common';
 import { format } from 'date-fns';
-import { Check, PanelRightOpen, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Check, PanelRightOpen, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import LabelBadge from '@/components/common/LabelBadge';
 import UserSelector from '@/components/common/UserSelector';
 import { Badge } from '@/components/ui-kit/Badge';
 import { Button } from '@/components/ui-kit/Button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui-kit/Dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui-kit/Dropdown-menu';
 import { Input } from '@/components/ui-kit/Input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui-kit/Tooltip';
 import { useAuth } from '@/providers/AuthProvider';
@@ -24,19 +25,32 @@ interface EditableTaskTableRowProps {
   columnWidths: TaskTableColumnWidths;
   titleAutoWidth: boolean;
   onOpenDetail: (taskId: string) => void;
+  groupingLabelSet?: LabelSetResDto | null;
+  onMoveTaskToGroup?: (task: TaskResDto, targetLabelId: string | null) => Promise<void>;
+}
+
+interface TaskAssigneeOption {
+  id: string;
+  name?: string;
+}
+
+interface TaskProjectMemberOption {
+  id: string;
+  name?: string;
 }
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
 
-export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail }: EditableTaskTableRowProps) {
+export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail, groupingLabelSet = null, onMoveTaskToGroup }: EditableTaskTableRowProps) {
   const { updateTaskById, deleteTaskById } = useTaskStore();
   const { currentProject, projects } = useProjectStore();
   const { user } = useAuth();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
-  const [assigneeDraft, setAssigneeDraft] = useState(task.assignedTo ?? null);
+  const [assigneeDraft, setAssigneeDraft] = useState<TaskAssigneeOption | null>(task.assignedTo?.id ? task.assignedTo : null);
   const [statusDraft, setStatusDraft] = useState(task.status);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isMovingTaskGroup, setIsMovingTaskGroup] = useState(false);
 
   useEffect(() => {
     if (!editingTitle) {
@@ -45,7 +59,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
   }, [editingTitle, task.title]);
 
   useEffect(() => {
-    setAssigneeDraft(task.assignedTo ?? null);
+    setAssigneeDraft(task.assignedTo?.id ? task.assignedTo : null);
   }, [task.assignedTo]);
 
   useEffect(() => {
@@ -70,7 +84,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
       : projects.find((candidate) => String(candidate.id) === String(task.projectId));
 
     const members = Array.isArray(project?.members) ? project.members : [];
-    const options = members.map((member: any) => ({
+    const options = members.map((member: TaskProjectMemberOption) => ({
       value: String(member.id),
       label: String(member.name || member.id),
       avatarText: String(member.name || member.id).charAt(0).toUpperCase(),
@@ -86,6 +100,30 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
 
     return options;
   }, [currentProject, projects, task.assignedTo, task.projectId, user]);
+
+  const groupingLabelIds = useMemo(
+    () => new Set((groupingLabelSet?.labels ?? []).map((label) => label.id)),
+    [groupingLabelSet]
+  );
+
+  const currentGroupingLabelId = useMemo(
+    () => (task.labels ?? []).find((label) => groupingLabelIds.has(label.id))?.id ?? null,
+    [groupingLabelIds, task.labels]
+  );
+
+  const moveTargets = useMemo(() => {
+    if (!groupingLabelSet) return [] as Array<{ value: string | null; label: string; color?: string }>;
+
+    const labelTargets: Array<{ value: string | null; label: string; color?: string }> = (groupingLabelSet.labels ?? [])
+      .filter((label) => label.id !== currentGroupingLabelId)
+      .map((label) => ({ value: label.id, label: label.name, color: label.color }));
+
+    if (currentGroupingLabelId) {
+      labelTargets.push({ value: null, label: 'Unassigned' });
+    }
+
+    return labelTargets;
+  }, [currentGroupingLabelId, groupingLabelSet]);
 
   const commitTitle = useCallback(async () => {
     const nextTitle = titleDraft.trim();
@@ -110,8 +148,10 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
 
   const handleAssigneeSelect = useCallback(async (userId: string) => {
     const previousAssignee = assigneeDraft;
-    const nextAssignee = userId ? { id: userId, name: memberOptions.find((option) => option.value === userId)?.label || '' } : null;
-    setAssigneeDraft(nextAssignee as any);
+    const nextAssignee: TaskAssigneeOption | null = userId
+      ? { id: userId, name: memberOptions.find((option) => option.value === userId)?.label || '' }
+      : null;
+    setAssigneeDraft(nextAssignee);
     try {
       await updateTaskById(task.id, { assignedTo: userId || null });
     } catch {
@@ -143,6 +183,17 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
     );
   }, [deleteTaskById, task.id]);
 
+  const handleMoveTaskGroup = useCallback(async (targetLabelId: string | null) => {
+    if (!onMoveTaskToGroup) return;
+
+    setIsMovingTaskGroup(true);
+    try {
+      await onMoveTaskToGroup(task, targetLabelId);
+    } finally {
+      setIsMovingTaskGroup(false);
+    }
+  }, [onMoveTaskToGroup, task]);
+
   return (
     <div
       className="group relative grid min-h-14 items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
@@ -154,7 +205,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
       <div className="px-3 py-2">
         <UserSelector
           options={memberOptions}
-          currentValue={assigneeDraft && (assigneeDraft as any).id ? assigneeDraft : null}
+          currentValue={assigneeDraft?.id ? assigneeDraft : null}
           onSelect={handleAssigneeSelect}
           triggerLabelClassName="font-normal"
         />
@@ -225,6 +276,47 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
       </div>
 
       <div className="flex items-center justify-center gap-1 px-2 py-2">
+        {groupingLabelSet && moveTargets.length > 0 && onMoveTaskToGroup && (
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100"
+                    aria-label={`Move ${task.title} to another group`}
+                    disabled={isMovingTaskGroup}
+                  >
+                    <ArrowRightLeft className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">Move to</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end">
+              {moveTargets.map((target) => (
+                <DropdownMenuItem
+                  key={target.value ?? 'unassigned'}
+                  onSelect={() => {
+                    void handleMoveTaskGroup(target.value);
+                  }}
+                  className="cursor-pointer"
+                >
+                  {target.value ? (
+                    <LabelBadge text={target.label} color={target.color} className="pointer-events-none px-2.5! py-1!" />
+                  ) : (
+                    <Badge variant="outline" className="pointer-events-none px-2.5 py-1 text-xs font-normal text-muted-foreground shadow-none">
+                      {target.label}
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

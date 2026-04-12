@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveTaskTableGroupBySelection } from './TaskTableGroupByControl';
+import { resolveTaskTableGroupBySelection, TASK_TABLE_UNGROUPED_VALUE } from './TaskTableGroupByControl';
 
 const labelSets = [
   { id: 'label-set-1' },
@@ -59,6 +59,17 @@ test('resolveTaskTableGroupBySelection clears grouping in disabled scopes', () =
       rememberedGroupByValue: 'label-set-2',
       labelSets,
       isDisabled: true,
+    }),
+    null
+  );
+});
+
+test('resolveTaskTableGroupBySelection preserves an explicit remembered ungrouped choice', () => {
+  assert.equal(
+    resolveTaskTableGroupBySelection({
+      currentGroupByLabelSetId: null,
+      rememberedGroupByValue: TASK_TABLE_UNGROUPED_VALUE,
+      labelSets,
     }),
     null
   );

@@ -12,6 +12,7 @@ import { useTaskViewStore } from '@/stores/useTaskViewStore';
 const MIN_GROUP_BY_TRIGGER_CH = 16;
 const MAX_GROUP_BY_TRIGGER_CH = 28;
 const GROUP_BY_TRIGGER_PADDING_CH = 5;
+export const TASK_TABLE_UNGROUPED_VALUE = '__ungrouped__';
 
 interface TaskTableGroupByControlProps {
   scopeProjectId: string | 'all' | null;
@@ -45,6 +46,10 @@ export function resolveTaskTableGroupBySelection({
 
   if (currentGroupByLabelSetId && availableLabelSetIds.has(currentGroupByLabelSetId)) {
     return currentGroupByLabelSetId;
+  }
+
+  if (rememberedGroupByValue === TASK_TABLE_UNGROUPED_VALUE) {
+    return null;
   }
 
   if (rememberedGroupByValue && availableLabelSetIds.has(rememberedGroupByValue)) {
@@ -147,13 +152,15 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
   ]);
 
   const hasLabelSets = labelSets.length > 0;
-  const selectValue = labelSets.some((labelSet) => labelSet.id === resolvedGroupByLabelSetId)
-    ? resolvedGroupByLabelSetId ?? undefined
+  const selectValue = hasLabelSets
+    ? (resolvedGroupByLabelSetId && labelSets.some((labelSet) => labelSet.id === resolvedGroupByLabelSetId)
+      ? resolvedGroupByLabelSetId
+      : TASK_TABLE_UNGROUPED_VALUE)
     : undefined;
   const triggerWidth = useMemo(
     () => {
-      const longestOptionLength = labelSets.reduce((maxLength, labelSet) => {
-        return Math.max(maxLength, labelSet.name.trim().length);
+      const longestOptionLength = ['Ungrouped', ...labelSets.map((labelSet) => labelSet.name)].reduce((maxLength, optionLabel) => {
+        return Math.max(maxLength, optionLabel.trim().length);
       }, 0);
 
       const width = Math.min(
@@ -175,10 +182,11 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
           disabled={isDisabled || !hasLabelSets}
           value={selectValue}
           onValueChange={(value) => {
+            const nextGroupByLabelSetId = value === TASK_TABLE_UNGROUPED_VALUE ? null : value;
             setRememberedGroupByValue(value);
             setCurrentDisplayViewConfig({
               ...currentDisplayViewConfig,
-              groupByLabelSetId: value,
+              groupByLabelSetId: nextGroupByLabelSetId,
             });
           }}
         >
@@ -191,6 +199,7 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
                 {labelSet.name}
               </SelectItem>
             ))}
+            <SelectItem value={TASK_TABLE_UNGROUPED_VALUE}>Ungrouped</SelectItem>
           </SelectContent>
         </Select>
       </div>

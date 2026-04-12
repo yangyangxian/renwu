@@ -32,9 +32,9 @@ const COLUMN_CONSTRAINTS: Record<TaskTableColumnId, ColumnConstraint> = {
     maxWidth: 260,
   },
   actions: {
-    defaultWidth: 104,
-    minWidth: 96,
-    maxWidth: 128,
+    defaultWidth: 116,
+    minWidth: 108,
+    maxWidth: 140,
   },
 };
 
