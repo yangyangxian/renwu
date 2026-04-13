@@ -196,13 +196,13 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
 
   return (
     <div
-      className="group relative grid min-h-14 items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
+      className="group relative py-0.5 grid items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
       style={{
         gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
         minWidth: getTaskTableMinWidth(columnWidths),
       }}
     >
-      <div className="px-3 py-2">
+      <div className="px-3">
         <UserSelector
           options={memberOptions}
           currentValue={assigneeDraft?.id ? assigneeDraft : null}
