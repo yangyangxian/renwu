@@ -5,7 +5,7 @@ import { ProjectOverviewTab } from "@/components/projectspage/OverviewTab";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
-import { LayoutDashboard, List, Users, Settings, Tag, Table2, Bookmark } from "lucide-react";
+import { LayoutDashboard, List, Users, Settings, Tag, Table2, Bookmark, ChevronRight } from "lucide-react";
 import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -232,6 +232,21 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const handleNavigateToProjectHome = () => {
+    if (!projectId || !projectSlug) {
+      return;
+    }
+
+    const currentHash = location.hash;
+    navigate(`${PROJECTS_PATH}/${project.slug ?? projectSlug}${currentHash}`);
+    setCurrentSelectedTaskView(null);
+    setCurrentDisplayViewConfig(
+      createProjectTaskViewConfig(projectId, {
+        viewMode: currentDisplayViewConfig.viewMode,
+      })
+    );
+  };
+
   if (!projectId || loadingCurrentProject) {
     return <HomePageSkeleton />;
   }
@@ -248,7 +263,17 @@ export default function ProjectDetailPage() {
       <div className="flex items-center px-2 my-1">
         <div className="flex-1">
           {activeProjectView ? (
-            <div className="px-1">
+            <div className="px-1 flex items-center gap-1 min-w-0">
+              <button
+                type="button"
+                className="max-w-[18rem] rounded-md px-2 py-1 text-sm font-medium text-muted-foreground cursor-pointer hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground focus:outline-none"
+                onClick={handleNavigateToProjectHome}
+              >
+                <span className="truncate block">{project.name}</span>
+              </button>
+
+              <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+
               {isEditingViewName ? (
                 <Input
                   value={viewNameDraft}
@@ -266,14 +291,14 @@ export default function ProjectDetailPage() {
                       setIsEditingViewName(false);
                     }
                   }}
-                  className="h-8 min-w-[16rem] max-w-[24rem] text-lg font-semibold text-foreground dark:text-slate-100"
+                  className="h-7 w-full max-w-[24rem] border-transparent px-2 py-1 text-sm font-medium leading-none text-foreground shadow-none dark:text-slate-100"
                   autoFocus
                   disabled={isRenamingView}
                 />
               ) : (
                 <button
                   type="button"
-                  className="max-w-[24rem] rounded-md px-2 py-1 -ml-2 text-left text-foreground dark:text-slate-100 hover:bg-accent focus:bg-accent focus:outline-none"
+                  className="max-w-[24rem] rounded-md px-2 py-1 text-left text-sm font-medium text-foreground dark:text-slate-100 cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none"
                   onClick={() => {
                     if (canRenameActiveView) {
                       setViewNameDraft(activeProjectView.name);
@@ -282,7 +307,7 @@ export default function ProjectDetailPage() {
                   }}
                   disabled={!canRenameActiveView}
                 >
-                  <h1 className="text-lg font-semibold leading-none truncate text-foreground dark:text-slate-100">
+                  <h1 className="text-sm font-medium leading-none truncate text-foreground dark:text-slate-100">
                     {activeProjectView.name}
                   </h1>
                 </button>
