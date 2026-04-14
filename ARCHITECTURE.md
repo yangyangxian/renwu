@@ -93,6 +93,7 @@ Primary domain entities include:
 
 - users
 - projects
+- project documents
 - tasks
 - task views
 - labels and label sets

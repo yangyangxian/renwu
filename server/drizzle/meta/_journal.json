@@ -57,6 +57,13 @@
       "when": 1767109509050,
       "tag": "0007_add_projectid_to_taskview",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776161079415,
+      "tag": "0008_add_project_documents",
+      "breakpoints": true
     }
   ]
 }

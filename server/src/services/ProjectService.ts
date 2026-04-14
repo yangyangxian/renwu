@@ -2,14 +2,16 @@ import { ProjectRole, ErrorCodes, InvitationStatus } from '@fullstack/common';
 import { CustomError } from '../classes/CustomError';
 import { eq, inArray, and } from 'drizzle-orm';
 import { db } from '../database/databaseAccess';
-import { projects, projectMembers, users, tasks, roles } from '../database/schema';
+import { projects, projectMembers, users, tasks, roles, projectDocuments } from '../database/schema';
 import logger from '../utils/logger';
+import { ProjectDocumentEntity, projectDocumentService } from './ProjectDocumentService';
 
 export class ProjectEntity {
   id: string = '';
   name: string = '';
   slug: string = '';
   description: string | null = null;
+  documents: ProjectDocumentEntity[] = [];
   createdAt: Date | null = null;
   updatedAt: Date | null = null;
   createdBy: string = '';
@@ -93,6 +95,7 @@ export class ProjectService {
       name: rows[0].projectName,
       slug: rows[0].projectSlug,
       description: rows[0].projectDescription,
+      documents: await projectDocumentService.getDocumentsByProjectId(projectId),
       createdAt: rows[0].projectCreatedAt,
       updatedAt: rows[0].projectUpdatedAt,
       createdBy: rows[0].createdBy ?? '',
@@ -194,6 +197,14 @@ export class ProjectService {
         projectId: projectRow.id,
         userId: ownerId,
         roleId: ownerRole.id,
+      });
+
+      await tx.insert(projectDocuments).values({
+        projectId: projectRow.id,
+        title: 'Overview',
+        content: description || '',
+        position: 0,
+        createdBy: ownerId,
       });
 
       // Return the new project ID

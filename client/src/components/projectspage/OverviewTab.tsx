@@ -3,7 +3,7 @@ import { UpcomingDeadlinesCard } from './overviewTab/UpcomingDeadlinesCard';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useTaskStore } from '@/stores/useTaskStore';
 import { RadioChartCard } from '@/components/projectspage/overviewTab/RadioChartCard';
-import { ProjectDescriptionCard } from '@/components/projectspage/overviewTab/ProjectDescriptionCard';
+import { ProjectDocumentsCard } from '@/components/projectspage/overviewTab/ProjectDocumentsCard';
 import { TaskStatus, ProjectResDto } from '@fullstack/common';
 import { TASK_STATUS_CONFIG } from './overviewTab/taskStatusConfig';
 import logger from '@/utils/logger';
@@ -17,7 +17,7 @@ const MemoRadioChartCard = React.memo(RadioChartCard);
 
 export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
   logger.debug('ProjectOverviewTab is rendering:');
-  const { updateProject } = useProjectStore();
+  const { createProjectDocument, updateProjectDocument, deleteProjectDocument } = useProjectStore();
   const { projectTasks: tasks } = useTaskStore();
   const chartData = useMemo(() => {
     // Only use the main TaskStatus keys for chart
@@ -50,9 +50,11 @@ export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
         <MemoRadioChartCard data={chartData} className={CARD_CLASS} />
         <UpcomingDeadlinesCard tasks={tasks} className={CARD_CLASS} />
       </div>
-      <ProjectDescriptionCard project={project} 
-        updateProject={updateProject} 
-        className={`${CARD_CLASS} py-2 px-6 pr-3`} />
+      <ProjectDocumentsCard project={project}
+        createProjectDocument={createProjectDocument}
+        updateProjectDocument={updateProjectDocument}
+        deleteProjectDocument={deleteProjectDocument}
+        className={`${CARD_CLASS} py-2`} />
     </div>
   );
 }

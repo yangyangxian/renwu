@@ -4,13 +4,14 @@ import { userService } from '../services/UserService';
 import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
-import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto, hasPermission, PermissionAction, PermissionResourceType, UserPermissionResDto } from '@fullstack/common';
+import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto, hasPermission, PermissionAction, PermissionResourceType, UserPermissionResDto, ProjectDocumentCreateReqDto, ProjectDocumentCreateReqSchema, ProjectDocumentResDto, ProjectDocumentUpdateReqDto } from '@fullstack/common';
 import { emailService } from '../services/EmailService';
 import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
 import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/common';
 import logger from '../utils/logger';
 import { invitationService } from '../services/InvitationService';
 import { requirePermission } from '../middlewares/permissionMiddleware';
+import { projectDocumentService } from '../services/ProjectDocumentService';
 
 // Project API Router
 // Each endpoint below is documented with its purpose, parameters, and response structure.
@@ -39,6 +40,10 @@ router.get('/id/:id', async (req: Request<{ id: string }>, res: Response<ApiResp
       .slice()
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
       .map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
+    dto.documents = project.documents
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((document) => mapObject(document, new ProjectDocumentResDto()));
     res.json(createApiResponse<ProjectResDto>(dto));
   }
 );
@@ -73,6 +78,7 @@ router.post(
     });
     const dto = mapObject(project, new ProjectResDto());
     dto.members = project.members.map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
+    dto.documents = project.documents.map((document) => mapObject(document, new ProjectDocumentResDto()));
     res.json(createApiResponse<ProjectResDto>(dto));
   }
 );
@@ -143,7 +149,104 @@ router.put(
 
     const dto = mapObject(updatedProject, new ProjectResDto());
     dto.members = updatedProject.members.map((member: ProjectMemberEntity) => mapObject(member, new ProjectMemberResDto()));
+    dto.documents = updatedProject.documents.map((document) => mapObject(document, new ProjectDocumentResDto()));
     res.json(createApiResponse<ProjectResDto>(dto));
+  }
+);
+
+router.post(
+  '/:projectId/documents',
+  (req, res, next) => requirePermission(
+    PermissionAction.UPDATE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.projectId
+  )(req, res, next),
+  async (
+    req: Request<{ projectId: string }, {}, ProjectDocumentCreateReqDto>,
+    res: Response<ApiResponse<ProjectDocumentResDto>>,
+  ) => {
+    const { projectId } = req.params;
+
+    if (!projectId) {
+      throw new CustomError('Project ID is required', ErrorCodes.NO_DATA);
+    }
+
+    const parseResult = ProjectDocumentCreateReqSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const errorMsg = parseResult.error.issues.map((issue) => issue.message).join(', ');
+      throw new CustomError(errorMsg, ErrorCodes.INVALID_INPUT);
+    }
+
+    const createdDocument = await projectDocumentService.createDocument(projectId, req.user!.userId, {
+      title: parseResult.data.title,
+      content: parseResult.data.content,
+    });
+
+    const dto = mapObject(createdDocument, new ProjectDocumentResDto());
+    res.json(createApiResponse<ProjectDocumentResDto>(dto));
+  }
+);
+
+router.put(
+  '/:projectId/documents/:documentId',
+  (req, res, next) => requirePermission(
+    PermissionAction.UPDATE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.projectId
+  )(req, res, next),
+  async (
+    req: Request<{ projectId: string; documentId: string }, {}, ProjectDocumentUpdateReqDto>,
+    res: Response<ApiResponse<ProjectDocumentResDto>>,
+  ) => {
+    const { projectId, documentId } = req.params;
+    const { title, content, position } = req.body;
+
+    if (!projectId || !documentId) {
+      throw new CustomError('Project ID and document ID are required', ErrorCodes.NO_DATA);
+    }
+
+    if (title !== undefined && !title.trim()) {
+      throw new CustomError('Document title must be a non-empty string', ErrorCodes.NO_DATA);
+    }
+
+    const updatedDocument = await projectDocumentService.updateDocument(projectId, documentId, {
+      title,
+      content,
+      position,
+    });
+
+    if (!updatedDocument) {
+      throw new CustomError('Project document not found or update failed', ErrorCodes.NOT_FOUND);
+    }
+
+    const dto = mapObject(updatedDocument, new ProjectDocumentResDto());
+    res.json(createApiResponse<ProjectDocumentResDto>(dto));
+  }
+);
+
+router.delete(
+  '/:projectId/documents/:documentId',
+  (req, res, next) => requirePermission(
+    PermissionAction.UPDATE_PROJECT,
+    PermissionResourceType.PROJECT,
+    req.params.projectId
+  )(req, res, next),
+  async (
+    req: Request<{ projectId: string; documentId: string }>,
+    res: Response<ApiResponse<{ success: boolean }>>,
+  ) => {
+    const { projectId, documentId } = req.params;
+
+    if (!projectId || !documentId) {
+      throw new CustomError('Project ID and document ID are required', ErrorCodes.NO_DATA);
+    }
+
+    const deleted = await projectDocumentService.deleteDocument(projectId, documentId);
+    if (!deleted) {
+      throw new CustomError('Project document not found or delete failed', ErrorCodes.NOT_FOUND);
+    }
+
+    res.json(createApiResponse<{ success: boolean }>({ success: true }));
   }
 );
 

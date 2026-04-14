@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ProjectDocumentResDto } from './projectDocument.dto.js';
 export const ProjectAddMemberReqSchema = z.object({
   email: z.email('Invalid email address'),
   role: z.string().min(1, 'Role is required'),
@@ -35,6 +36,7 @@ export class ProjectResDto {
   name: string = '';
   slug: string = '';
   description?: string = '';
+  documents?: ProjectDocumentResDto[] = [];
   createdBy?: string = '';
   createdAt?: string = '';
   updatedAt?: string = '';

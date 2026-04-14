@@ -1,12 +1,15 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { create } from 'zustand';
-import { ProjectResDto, ProjectCreateReqDto, ProjectRoleDto, ProjectAddMemberReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
+import { ProjectResDto, ProjectCreateReqDto, ProjectRoleDto, ProjectAddMemberReqDto, ProjectMemberRoleUpdateReqDto, ProjectDocumentCreateReqDto, ProjectDocumentResDto, ProjectDocumentUpdateReqDto } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { 
   getMyProjects, 
   getProjects, 
   getProjectById,
   updateProjectById as updateProjectByIdEndpoint,
+  createProjectDocument as createProjectDocumentEndpoint,
+  updateProjectDocumentById as updateProjectDocumentByIdEndpoint,
+  deleteProjectDocumentById as deleteProjectDocumentByIdEndpoint,
   deleteProjectById as deleteProjectByIdEndpoint,
   addProjectMember,
   updateProjectMemberRole,
@@ -180,6 +183,78 @@ export function useProjectStore() {
     }
   }, [currentProject, fetchCurrentProject]);
 
+  const createProjectDocument = useCallback(async (projectId: string, documentData?: ProjectDocumentCreateReqDto): Promise<ProjectDocumentResDto> => {
+    try {
+      const createdDocument = await apiClient.post<ProjectDocumentCreateReqDto | undefined, ProjectDocumentResDto>(
+        createProjectDocumentEndpoint(projectId),
+        documentData
+      );
+
+      if (currentProject?.id === projectId) {
+        const currentDocuments = currentProject.documents ?? [];
+        setCurrentProject({
+          ...currentProject,
+          documents: [...currentDocuments, createdDocument].sort((a, b) => a.position - b.position),
+        });
+      }
+
+      return createdDocument;
+    } catch (error) {
+      console.error('Failed to create project document:', error);
+      throw error;
+    }
+  }, [currentProject, setCurrentProject]);
+
+  const updateProjectDocument = useCallback(async (
+    projectId: string,
+    documentId: string,
+    updateData: ProjectDocumentUpdateReqDto
+  ): Promise<ProjectDocumentResDto> => {
+    try {
+      const updatedDocument = await apiClient.put<ProjectDocumentUpdateReqDto, ProjectDocumentResDto>(
+        updateProjectDocumentByIdEndpoint(projectId, documentId),
+        updateData
+      );
+
+      if (currentProject?.id === projectId) {
+        const currentDocuments = currentProject.documents ?? [];
+        setCurrentProject({
+          ...currentProject,
+          documents: currentDocuments
+            .map((document) => document.id === documentId ? updatedDocument : document)
+            .sort((a, b) => a.position - b.position),
+        });
+      }
+
+      return updatedDocument;
+    } catch (error) {
+      console.error('Failed to update project document:', error);
+      throw error;
+    }
+  }, [currentProject, setCurrentProject]);
+
+  const deleteProjectDocument = useCallback(async (
+    projectId: string,
+    documentId: string
+  ): Promise<void> => {
+    try {
+      await apiClient.delete<{ success: boolean }>(
+        deleteProjectDocumentByIdEndpoint(projectId, documentId)
+      );
+
+      if (currentProject?.id === projectId) {
+        const currentDocuments = currentProject.documents ?? [];
+        setCurrentProject({
+          ...currentProject,
+          documents: currentDocuments.filter((document) => document.id !== documentId),
+        });
+      }
+    } catch (error) {
+      console.error('Failed to delete project document:', error);
+      throw error;
+    }
+  }, [currentProject, setCurrentProject]);
+
   return {
     projects,
     currentProject,
@@ -195,6 +270,9 @@ export function useProjectStore() {
     removeProject,
     createProject,
     updateProject,
+    createProjectDocument,
+    updateProjectDocument,
+    deleteProjectDocument,
     addMemberToProject,
     deleteProject,
     updateMemberRoleToProject,
