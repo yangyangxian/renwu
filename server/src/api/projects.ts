@@ -173,7 +173,7 @@ router.post(
 
     const parseResult = ProjectDocumentCreateReqSchema.safeParse(req.body);
     if (!parseResult.success) {
-      const errorMsg = parseResult.error.issues.map((issue) => issue.message).join(', ');
+      const errorMsg = parseResult.error.issues.map((issue: { message: string }) => issue.message).join(', ');
       throw new CustomError(errorMsg, ErrorCodes.INVALID_INPUT);
     }
 
