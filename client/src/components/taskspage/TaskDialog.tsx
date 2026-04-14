@@ -193,7 +193,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         </VisuallyHidden>
         {/* Navigation bar */}
         <nav className="flex items-center justify-between h-15 border-b bg-white-black rounded-t-md">
-          <span className="flex-1 text-center font-bold text-2xl text-secondary-foreground">
+          <span className="flex-1 text-center font-bold text-xl text-secondary-foreground">
             {title}
           </span>
           <span className="w-8" /> {/* Spacer for symmetry */}
@@ -313,8 +313,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     dispatch({ type: 'SET_FIELD', field: 'labels', value: next });
                   }}
                   projectId={taskState.projectId ? taskState.projectId : null}
+                  deferCommit={false}
                   className="min-h-8 items-center gap-2"
-                  triggerClassName="h-7 w-7 !px-2"
+                  triggerClassName="h-7 w-7 !px-0 !gap-0"
+                  emptyText=""
                 />
               </div>
               <div className={fieldRowClass}>

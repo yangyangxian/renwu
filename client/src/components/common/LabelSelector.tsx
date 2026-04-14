@@ -100,7 +100,8 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   }));
   const matchesSets = normalizedSearch ? filteredSetsRaw.filter(s => (s.labels || []).length > 0) : filteredSetsRaw;
 
-  const currentSelection = deferCommit ? draft : value;
+  const currentSelection = open ? draft : value;
+  const displayedValue = deferCommit ? value : currentSelection;
 
   // Map labelId -> labelSetId for all labels in the scoped label sets (not just
   // the currently visible/matched subset). This ensures the "one-per-set"
@@ -162,7 +163,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   return (
     <div className={cn('flex items-center gap-2 flex-wrap', className)}>
-      {showBadges && value.map(id => {
+      {showBadges && displayedValue.map(id => {
         const lbl = (scopedLabels || []).find(l => l.id === id) || (scopedLabelSets || []).flatMap(s => s.labels || []).find((l: any) => l.id === id);
         if (!lbl) return null;
         return (
@@ -175,7 +176,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
         );
       })}
       <DropdownMenu open={open} onOpenChange={(o: boolean) => {
-        if (!o) {
+        if (!o && deferCommit) {
           try { onChange(draft); } catch (e) { /* swallow */ }
         }
         setOpen(o);
