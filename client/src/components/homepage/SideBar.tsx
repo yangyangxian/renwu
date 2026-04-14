@@ -57,7 +57,7 @@ export function HomeSideBar() {
   }, [fetchTaskViews]);
 
   // Handle project creation
-  const handleProjectSubmit = async (project: { name: string; slug: string; description: string }) => {
+  const handleProjectSubmit = async (project: { name: string; slug: string }) => {
     await withToast(
       async () => {
         const newProject = await createProject(project);

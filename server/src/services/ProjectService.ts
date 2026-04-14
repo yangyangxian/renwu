@@ -201,7 +201,7 @@ export class ProjectService {
 
       await tx.insert(projectDocuments).values({
         projectId: projectRow.id,
-        title: 'Overview',
+        title: 'Readme',
         content: description || '',
         position: 0,
         createdBy: ownerId,

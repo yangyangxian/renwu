@@ -56,7 +56,7 @@ describe('Projects API', () => {
         'Content-Type': 'application/json',
         'Cookie': ownerCookie
       },
-      body: JSON.stringify({ name: 'Test Project', description: 'Test Desc', slug: 'te' })
+      body: JSON.stringify({ name: 'Test Project', slug: 'te' })
     });
     const data = await res.json();
     expect(res.status).toBe(200);
@@ -73,7 +73,7 @@ describe('Projects API', () => {
     expect(data.data.id).toBe(projectId);
     expect(Array.isArray(data.data.documents)).toBe(true);
     expect(data.data.documents.length).toBeGreaterThan(0);
-    expect(data.data.documents[0].title).toBe('Overview');
+    expect(data.data.documents[0].title).toBe('Readme');
     documentId = data.data.documents[0].id;
   });
 
@@ -133,18 +133,18 @@ describe('Projects API', () => {
     expect(data.data.title).toBe('Document 1');
   });
 
-  it('should update the overview document', async () => {
+  it('should update the Readme document', async () => {
     const res = await fetch(`${baseURL}/api/projects/${projectId}/documents/${documentId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Cookie': adminCookie
       },
-      body: JSON.stringify({ content: 'Updated overview content' })
+      body: JSON.stringify({ content: 'Updated Readme content' })
     });
     const data = await res.json();
     expect(res.status).toBe(200);
-    expect(data.data.content).toBe('Updated overview content');
+    expect(data.data.content).toBe('Updated Readme content');
   });
 
   it('should not have the permission to update the project', async () => {

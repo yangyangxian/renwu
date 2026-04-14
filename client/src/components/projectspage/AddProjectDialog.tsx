@@ -1,25 +1,21 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Input } from "@/components/ui-kit/Input";
-import { Textarea } from "@/components/ui-kit/Textarea";
 import { Button } from "@/components/ui-kit/Button";
 import { Label } from "@/components/ui-kit/Label";
-import { FolderOpen, FileText, Tag } from "lucide-react";
+import { FolderOpen, Tag } from "lucide-react";
 import { ProjectCreateReqSchema } from "@fullstack/common";
 
 interface ProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (project: { name: string; slug: string; description: string }) => void;
+  onSubmit: (project: { name: string; slug: string }) => void;
   initialValues?: {
     name?: string;
     slug?: string;
-    description?: string;
   };
   title?: string;
 }
-
-const defaultDescriptionTemplate = `### Summary\n\n### Links\n\n### Stories`;
   
 export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   open,
@@ -31,21 +27,19 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
   const [name, setName] = useState(initialValues.name || "");
   const [slug, setSlug] = useState(initialValues.slug || "");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; slug?: string; description?: string }>({});
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [errors, setErrors] = useState<{ name?: string; slug?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const description = textareaRef.current?.value || "";
     // Validate using Zod schema
-    const result = ProjectCreateReqSchema.safeParse({ name, slug, description });
+    const result = ProjectCreateReqSchema.safeParse({ name, slug });
     if (!result.success) {
       // Map Zod errors to field errors
-      const fieldErrors: { name?: string; slug?: string; description?: string } = {};
+      const fieldErrors: { name?: string; slug?: string } = {};
       result.error.issues.forEach((err) => {
         const key = err.path[0];
-        if (typeof key === "string" && (key === "name" || key === "slug" || key === "description")) {
+        if (typeof key === "string" && (key === "name" || key === "slug")) {
           fieldErrors[key] = err.message;
         }
       });
@@ -54,7 +48,7 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
       return;
     }
     setErrors({});
-    await onSubmit({ name, slug, description });
+    await onSubmit({ name, slug });
     setLoading(false);
     onOpenChange(false);
   };
@@ -103,30 +97,6 @@ export const ProjectDialog: React.FC<ProjectDialogProps> = ({
               <span className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 {errors.slug}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="project-description" className="text-base flex items-center gap-3">
-              <FileText className="size-4" />
-              Description
-            </Label>
-            <Textarea
-              ref={textareaRef}
-              id="project-description"
-              initialValue={
-                typeof initialValues.description === 'string' && initialValues.description.trim() !== ''
-                  ? initialValues.description
-                  : defaultDescriptionTemplate
-              }
-              placeholder="Enter project description"
-              rows={6}
-              showButtons={false}
-            />
-            {errors.description && (
-              <span className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                {errors.description}
               </span>
             )}
           </div>
