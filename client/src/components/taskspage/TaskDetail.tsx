@@ -51,7 +51,7 @@ interface TaskDetailProps {
 
 const fieldLabelContainerClass = "flex items-center gap-3 min-h-[44px]";
 const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
-const descriptionSurfaceClass = "markdown-body w-full rounded border border-transparent !bg-muted/40 dark:!bg-muted/65 transition-colors";
+const descriptionSurfaceClass = "markdown-body w-full rounded-xl border border-transparent !bg-muted/40 dark:!bg-muted/65 transition-colors";
 const descriptionEditSurfaceClass = `${descriptionSurfaceClass} border-primary/30 ring-1 ring-primary/10 dark:border-primary/40 dark:ring-primary/15 !bg-background dark:!bg-muted/75`;
 const descriptionScrollClass = "overflow-auto min-h-[200px] max-h-[600px] relative";
 const descriptionPaddingClass = "px-3 py-2";

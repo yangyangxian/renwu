@@ -9,17 +9,20 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { Calendar as CalendarIcon, Tag, FolderOpen, User, Clock, FileText, PencilLine, History } from "lucide-react";
-import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
+import { Tag, FolderOpen, User, Clock, FileText, PencilLine, History } from "lucide-react";
+import { allStatuses, statusColors, statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { MarkdownnEditor, MarkdownEditorHandle } from "@/components/common/editor/MarkdownEditor";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui-kit/Popover";
-import { Calendar } from "@/components/ui-kit/Calendar";
 import { DropDownList } from "@/components/common/DropDownList";
 import { logger } from "@/utils/logger";
 import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
 import LabelSelector from '@/components/common/LabelSelector';
+import UserSelector from '@/components/common/UserSelector';
+import DateSelector from '@/components/common/DateSelector';
+import { Badge } from '@/components/ui-kit/Badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui-kit/Dropdown-menu';
+import { Check } from 'lucide-react';
 
 type LabelLike = { id?: string | null } | string | null | undefined;
 
@@ -68,13 +71,6 @@ interface TaskDialogProps {
   title?: string;
 }
 
-const statusOptions = [
-  { value: TaskStatus.TODO, label: statusLabels["todo"], icon: statusIcons["todo"] },
-  { value: TaskStatus.IN_PROGRESS, label: statusLabels["in-progress"], icon: statusIcons["in-progress"] },
-  { value: TaskStatus.DONE, label: statusLabels["done"], icon: statusIcons["done"] },
-  { value: TaskStatus.CLOSE, label: statusLabels["close"], icon: statusIcons["close"] },
-];
-
 export const TaskDialog: React.FC<TaskDialogProps> = ({
   open, onOpenChange, initialValues = {}, title = "Add New Task",
 }) => {
@@ -98,6 +94,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   const [taskState, dispatch] = useReducer(taskFormReducer, seedState);
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
+  const selectedAssignee = useMemo(() => {
+    const selectedOption = assignedToSelectOptions.find((option) => option.value === taskState.assignedTo);
+    return selectedOption
+      ? { id: taskState.assignedTo, name: selectedOption.label }
+      : null;
+  }, [assignedToSelectOptions, taskState.assignedTo]);
   
   const handleAssignedToChange = (value: string) => {
     dispatch({ type: 'SET_FIELD', field: 'assignedTo', value });
@@ -177,10 +179,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
       dispatch({ type: 'SET_FIELD', field: 'projectId', value: value === "personal" ? "" : value });
   };
 
+  const fieldRowClass = "flex items-center gap-2 min-h-[40px]";
+  const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="p-0 max-w-350! w-[75vw] gap-0"
+        className="p-0 max-w-300! w-[68vw] gap-0"
         onInteractOutside={e => e.preventDefault()}
       >
         <VisuallyHidden>
@@ -193,7 +198,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           </span>
           <span className="w-8" /> {/* Spacer for symmetry */}
         </nav>
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] w-full min-h-75 overflow-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] w-full min-h-75 overflow-auto">
           {/* Main form */}
           <form
             onSubmit={e => {
@@ -211,9 +216,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 handleSubmit(taskData);
               }
             }}
-            className="flex flex-col gap-6 px-10 py-6"
+            className="flex flex-col gap-6 px-8 py-6"
           >
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 max-w-[48rem]">
               {/* Title row */}
               <div className="flex flex-col gap-2">
                 <Label className="mb-1 flex items-center gap-3 font-medium">
@@ -229,89 +234,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 />
               </div>
 
-              {/* Project and Assigned to */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-                <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3 font-medium">
-                    <FolderOpen className="size-4" />
-                    Project
-                  </Label>
-                  <DropDownList
-                    value={taskState.projectId || "personal"}
-                    id="project-select"
-                    className="min-w-[12rem] w-full"
-                    onValueChange={handleProjectChange}
-                    options={[
-                      { value: "personal", label: "Non-project (Personal)" },
-                      ...projects.map(project => ({ value: project.id, label: project.name }))
-                    ]}
-                  />
-                </div>
-                <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3 font-medium">
-                    <User className="size-4" />
-                    Assigned to
-                  </Label>
-                  <DropDownList
-                    value={taskState.assignedTo}
-                    id="assigned-to"
-                    className="min-w-[12rem] w-full"
-                    onValueChange={handleAssignedToChange}
-                    disabled={!taskState.projectId}
-                    options={assignedToSelectOptions}
-                    placeholder="Select user"
-                  />
-                </div>
-              </div>
-              {/*  Due date and Status */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-                <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3 font-medium" htmlFor="due-date">
-                    <Clock className="size-4" />
-                    Due date
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full min-w-[12rem] text-left justify-between text-secondary-foreground"
-                        aria-label="Select due date"
-                      >
-                        <Label className="ml-1 font-normal">{taskState.dueDate ? new Date(taskState.dueDate).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : "Pick a date"}</Label>
-                        <CalendarIcon className="size-4 ml-2" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={taskState.dueDate ? new Date(taskState.dueDate) : undefined}
-                        onSelect={d => {
-                          if (d) {
-                            dispatch({ type: 'SET_FIELD', field: 'dueDate', value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` });
-                          } else {
-                            dispatch({ type: 'SET_FIELD', field: 'dueDate', value: null });
-                          }
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="flex flex-col gap-2 flex-1">
-                  <Label className="flex items-center gap-3 font-medium">
-                    <CheckCircle className="size-4" />
-                    Status
-                  </Label>
-                  <DropDownList
-                    value={taskState.status}
-                    onValueChange={v => dispatch({ type: 'SET_FIELD', field: 'status', value: v as TaskStatus })}
-                    options={statusOptions}
-                    id="status"
-                    className="min-w-[12rem] w-full pl-4"
-                  />
-                </div>
-              </div>
-
               {/* Description row */}
               <div className="flex flex-col gap-2">
                 <Label className="mb-1 flex items-center gap-3 font-medium">
@@ -319,7 +241,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   Description
                 </Label>
                 <div
-                  className="markdown-body min-h-75 max-h-[40vh] px-3 py-2 overflow-auto bg-muted/40! dark:bg-muted/65!"
+                  className="markdown-body min-h-[260px] max-h-[320px] rounded-xl border border-border/60 px-3 py-2 overflow-auto bg-muted/40! dark:bg-muted/65!"
                 >
                   <MarkdownnEditor
                     ref={mdEditorRef}
@@ -345,6 +267,14 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   />
                 </div>
               </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="flex gap-3 font-medium">
+                  <History className="size-4" />
+                  Activity
+                </Label>
+                <Label className="text-muted-foreground">(Coming soon: see task history, comments, etc.)</Label>
+              </div>
             </div>
             <div className="flex items-center justify-between border-t pt-6">
               <div />
@@ -369,14 +299,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             </div>
           </form>
           {/* Right panel */}
-          <div className="hidden lg:flex flex-col w-full border-l px-6 py-6">
-            {/* Labels selection moved here */}
-            <div className="flex flex-col gap-2 mb-6 mt-1">
-              <Label className="flex gap-3 font-medium">
-                <Tag className="size-4" />
-                Labels
-              </Label>
-              <div className="mt-2">
+          <div className="flex flex-col w-full border-t lg:border-t-0 lg:border-l px-6 py-6">
+            <div className="flex flex-col gap-3 mb-6 mt-1">
+              <div className={fieldRowClass}>
+                <Label className={fieldLabelClass}>
+                  <Tag className="size-4" />
+                  Labels
+                </Label>
                 <LabelSelector
                   value={taskState.labels}
                   onChange={(next) => {
@@ -384,14 +313,101 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     dispatch({ type: 'SET_FIELD', field: 'labels', value: next });
                   }}
                   projectId={taskState.projectId ? taskState.projectId : null}
+                  className="min-h-8 items-center gap-2"
+                  triggerClassName="h-7 w-7 !px-2"
                 />
               </div>
+              <div className={fieldRowClass}>
+                <Label className={fieldLabelClass}>
+                  <FolderOpen className="size-4" />
+                  Project
+                </Label>
+                <div className="flex items-center">
+                  <DropDownList
+                    value={taskState.projectId || "personal"}
+                    id="project-select"
+                    className="min-w-[12rem] h-8.5!"
+                    onValueChange={handleProjectChange}
+                    options={[
+                      { value: "personal", label: "Non-project (Personal)" },
+                      ...projects.map(project => ({ value: project.id, label: project.name }))
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className={fieldRowClass}>
+                <Label className={fieldLabelClass}>
+                  <User className="size-4" />
+                  Assignee
+                </Label>
+                <div className="flex items-center">
+                  <UserSelector
+                    options={assignedToSelectOptions.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
+                    currentValue={selectedAssignee}
+                    onSelect={handleAssignedToChange}
+                    triggerLabelClassName="font-normal leading-none"
+                  />
+                </div>
+              </div>
+
+              <div className={fieldRowClass}>
+                <Label className={fieldLabelClass}>
+                  <Clock className="size-4" />
+                  Due date
+                </Label>
+                <div className="flex items-center">
+                  <DateSelector
+                    value={taskState.dueDate || undefined}
+                    onChange={(newDate) => dispatch({ type: 'SET_FIELD', field: 'dueDate', value: newDate ?? '' })}
+                    label={undefined}
+                  />
+                </div>
+              </div>
+
+              <div className={fieldRowClass}>
+                <Label className={fieldLabelClass}>
+                  <CheckCircle className="size-4" />
+                  Status
+                </Label>
+                <div className="flex items-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={`border flex items-center px-[10px] py-1 text-sm font-medium cursor-pointer ${statusColors[taskState.status]}`}
+                      >
+                        {statusIcons[taskState.status]}
+                        {statusLabels[taskState.status]}
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {allStatuses.map((status) => (
+                        <DropdownMenuRadioItem
+                          key={status}
+                          value={status}
+                          onSelect={() => {
+                            dispatch({ type: 'SET_FIELD', field: 'status', value: status });
+                          }}
+                          className="flex items-center cursor-pointer pl-8 relative"
+                        >
+                          {taskState.status === status && (
+                            <Check className="w-4 h-4 text-primary absolute left-2" />
+                          )}
+                          <div className="flex items-center gap-2">
+                            {statusIcons[status]}
+                            {statusLabels[status]}
+                          </div>
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             </div>
-            <Label className="font-medium flex gap-3">
-              <History className="size-4" />
-              Activity
-            </Label>
-            <Label className="mt-4">(Coming soon: see task history, comments, etc.)</Label>
           </div>
         </div>
       </DialogContent>

@@ -174,7 +174,7 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
   );
 
   return (
-    <div className="flex items-center gap-2 w-fit rounded-md border border-none bg-background py-1.5 pl-5 pr-5 dark:bg-muted/65">
+    <div className="flex items-center gap-2 w-fit rounded-md border border-none bg-background py-2 pl-5 pr-5 dark:bg-muted/65">
       <Rows3 className="h-4 w-4 text-muted-foreground" />
       <Label className="mb-0 mr-2 text-sm">Group by</Label>
       <div className="w-fit min-w-[16ch]" style={{ width: triggerWidth }}>
@@ -190,16 +190,16 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
             });
           }}
         >
-          <SelectTrigger className="w-full h-7! text-xs bg-background text-foreground dark:text-white" size="sm">
+          <SelectTrigger className="w-full h-7.5! border-border bg-background text-foreground shadow-none dark:text-white">
             <SelectValue placeholder={hasLabelSets ? 'Select label set' : 'No label set'} />
           </SelectTrigger>
           <SelectContent>
             {labelSets.map((labelSet) => (
-              <SelectItem key={labelSet.id} value={labelSet.id}>
+              <SelectItem key={labelSet.id} value={labelSet.id} className="text-sm">
                 {labelSet.name}
               </SelectItem>
             ))}
-            <SelectItem value={TASK_TABLE_UNGROUPED_VALUE}>Ungrouped</SelectItem>
+            <SelectItem value={TASK_TABLE_UNGROUPED_VALUE} className="text-sm">Ungrouped</SelectItem>
           </SelectContent>
         </Select>
       </div>
