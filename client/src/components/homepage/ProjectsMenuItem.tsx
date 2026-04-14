@@ -114,8 +114,7 @@ export function ProjectsMenuItem({
                     className="pl-4 cursor-pointer"
                     isActive={isProjectActive(project.id)}
                     onClick={() => {
-                      const currentHash = location.hash;
-                      navigate(`${PROJECTS_PATH}/${project.slug}${currentHash}`);
+                      navigate(`${PROJECTS_PATH}/${project.slug}`);
                       setCurrentSelectedTaskView(null);
                       setCurrentDisplayViewConfig(
                         createProjectTaskViewConfig(project.id, {
@@ -141,7 +140,7 @@ export function ProjectsMenuItem({
                             isActive={isProjectViewActive(project.slug, view.name)}
                             onClick={() => {
                               const encodedName = encodeURIComponent(view.name.replace(/\s+/g, '-'));
-                              navigate(`${PROJECTS_PATH}/${project.slug}?view=${encodedName}`);
+                              navigate(`${PROJECTS_PATH}/${project.slug}?view=${encodedName}#tasks`);
                               setCurrentSelectedTaskView(view);
                               setCurrentDisplayViewConfig(createProjectTaskViewConfig(project.id, view.viewConfig));
                             }}

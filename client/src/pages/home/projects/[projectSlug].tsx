@@ -48,10 +48,6 @@ export default function ProjectDetailPage() {
     setCurrentSelectedTaskView,
     updateTaskView,
   } = useTaskViewStore();
-  const [activeTab, handleTabChange] = useTabHash(
-    ['overview', 'tasks', 'labels', 'team', 'settings'],
-    'tasks'
-  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResDto | null>(null);
   const [loadingCurrentProject, setLoadingCurrentProject] = useState(true);
@@ -72,6 +68,10 @@ export default function ProjectDetailPage() {
   ) ?? (activeViewSlug && currentSelectedTaskView && currentSelectedTaskView.projectId === projectId
     ? projectTaskViews.find((view) => view.id === currentSelectedTaskView.id) ?? null
     : null);
+  const [activeTab, handleTabChange] = useTabHash(
+    ['overview', 'tasks', 'labels', 'team', 'settings'],
+    activeProjectView ? 'tasks' : 'overview'
+  );
   const dateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
@@ -222,7 +222,7 @@ export default function ProjectDetailPage() {
         createProjectTaskViewConfig(projectId, currentDisplayViewConfig),
         projectId
       );
-      navigate(`${PROJECTS_PATH}/${projectSlug}?view=${buildViewSlug(updatedView.name)}`, { replace: true });
+      navigate(`${PROJECTS_PATH}/${projectSlug}?view=${buildViewSlug(updatedView.name)}#tasks`, { replace: true });
       setIsEditingViewName(false);
       toast.success('Project view renamed successfully!');
     } catch {
@@ -237,8 +237,7 @@ export default function ProjectDetailPage() {
       return;
     }
 
-    const currentHash = location.hash;
-    navigate(`${PROJECTS_PATH}/${project.slug ?? projectSlug}${currentHash}`);
+    navigate(`${PROJECTS_PATH}/${project.slug ?? projectSlug}`);
     setCurrentSelectedTaskView(null);
     setCurrentDisplayViewConfig(
       createProjectTaskViewConfig(projectId, {
@@ -319,13 +318,13 @@ export default function ProjectDetailPage() {
               onValueChange={val => handleTabChange(val as typeof activeTab)}
             >
               <TabsList className="bg-white dark:bg-muted">
-                <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Tasks
-                </TabsTrigger>
                 <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
                   <List className="w-4 h-4" />
                   Overview
+                </TabsTrigger>
+                <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Tasks
                 </TabsTrigger>
                 <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
                   <Users className="w-4 h-4" />
