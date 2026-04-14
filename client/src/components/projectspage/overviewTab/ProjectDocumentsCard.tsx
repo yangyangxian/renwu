@@ -72,7 +72,9 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
     if (!activeDocument.content?.trim()) {
       setIsEditorReady(false);
       setEditingDocumentId(activeDocument.id);
-      setRenamingDocumentId(null);
+      setRenamingDocumentId((currentDocumentId) => (
+        currentDocumentId === activeDocument.id ? currentDocumentId : null
+      ));
     }
 
     if (editingDocumentId !== activeDocument.id) {
@@ -93,7 +95,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
   }, [renamingDocumentId]);
 
   useEffect(() => {
-    if (editingDocumentId !== activeDocument?.id || !isEditorReady) {
+    if (editingDocumentId !== activeDocument?.id || !isEditorReady || renamingDocumentId === activeDocument?.id) {
       return;
     }
 
@@ -116,7 +118,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
       selection.removeAllRanges();
       selection.addRange(range);
     }, 0);
-  }, [activeDocument?.id, editingDocumentId, isEditorReady]);
+  }, [activeDocument?.id, editingDocumentId, isEditorReady, renamingDocumentId]);
 
   const renderedHtml: string = useMemo(() => {
     const out = marked.parse(docInput) as unknown;
@@ -157,7 +159,6 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
     setIsSavingTitle(true);
     try {
       await updateProjectDocument(project.id, activeDocument.id, { title: trimmedTitle });
-      toast.success('Document renamed');
       setRenamingDocumentId(null);
     } catch {
       toast.error('Failed to rename document');
@@ -177,7 +178,8 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
       const createdDocument = await createProjectDocument(project.id);
       setActiveDocumentId(createdDocument.id);
       setEditingDocumentId(createdDocument.id);
-      setRenamingDocumentId(null);
+      setRenamingDocumentId(createdDocument.id);
+      setTitleDraft(createdDocument.title);
       setDocInput(createdDocument.content || '');
       setIsEditorReady(false);
     } catch {
@@ -252,7 +254,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
                   renamingDocumentId === document.id ? (
                     <div
                       key={document.id}
-                      className="flex h-10 max-w-[12rem] flex-none items-center border-b-2 border-foreground px-2"
+                      className="inline-flex h-10 flex-none items-center border-b-2 border-foreground px-2"
                     >
                       <input
                         ref={titleInputRef}
@@ -271,7 +273,8 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
                             setRenamingDocumentId(null);
                           }
                         }}
-                        className="h-7 w-full rounded-md border border-transparent bg-transparent px-0 py-1 text-sm font-medium leading-tight text-foreground shadow-none outline-none"
+                          style={{ width: `${Math.max(titleDraft.length + 4, 8)}ch` }}
+                          className="h-7 rounded-md border border-transparent bg-transparent px-1 py-1 text-sm font-medium leading-tight text-foreground shadow-none outline-none"
                         disabled={isSavingTitle}
                       />
                     </div>
@@ -279,7 +282,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
                     <div
                       key={document.id}
                       className={cn(
-                        "flex h-10 max-w-[14rem] flex-none items-center gap-1 border-b-2 border-foreground px-2 text-sm font-medium leading-tight text-foreground"
+                        "flex h-10 max-w-56 flex-none items-center gap-1 border-b-2 border-foreground px-2 text-sm font-medium leading-tight text-foreground"
                       )}
                     >
                       <button
@@ -327,7 +330,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
                     <TabsTrigger
                       key={document.id}
                       value={document.id}
-                      className="max-w-[12rem] flex-none justify-start px-2 text-sm font-medium leading-tight"
+                      className="max-w-40 flex-none justify-start px-2 text-sm font-medium leading-tight"
                       onDoubleClick={() => {
                         if (activeDocument?.id === document.id) {
                           handleStartRename(document);
