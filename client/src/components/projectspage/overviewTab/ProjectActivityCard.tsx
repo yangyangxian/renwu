@@ -138,11 +138,11 @@ function buildActivityMessage(activity: ActivityResDto): React.ReactNode {
       return (
         <>
           updated task "{taskTitle}" status from{' '}
-          <span className={`inline-flex items-center rounded-full px-1.5 py-[3px] text-[10px] leading-none font-semibold text-white align-middle ${getStatusBadgeClass(statusChange.before)}`}>
+          <span className={`relative -top-px inline-flex items-center rounded-full px-1.5 py-[3px] text-[10px] leading-none font-semibold text-white align-middle ${getStatusBadgeClass(statusChange.before)}`}>
             {formatStatusValue(statusChange.before)}
           </span>{' '}
           to{' '}
-          <span className={`inline-flex items-center rounded-full px-1.5 py-[3px] text-[10px] leading-none font-semibold text-white align-middle ${getStatusBadgeClass(statusChange.after)}`}>
+          <span className={`relative -top-px inline-flex items-center rounded-full px-1.5 py-[3px] text-[10px] leading-none font-semibold text-white align-middle ${getStatusBadgeClass(statusChange.after)}`}>
             {formatStatusValue(statusChange.after)}
           </span>
           .
@@ -180,8 +180,8 @@ export const ProjectActivityCard: React.FC<ProjectActivityCardProps> = ({
 }) => {
   return (
     <Card className={`flex min-h-0 flex-1 flex-col overflow-hidden ${className ? ` ${className}` : ''}`}>
-      <div className="px-1 font-bold text-md">Project Activity</div>
-      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+      <div className="px-1 font-bold text-md">Activity</div>
+      <div className="mt-3 -mr-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-3">
         {loading ? (
           <div className="py-4 text-center text-sm text-muted-foreground">Loading activity…</div>
         ) : error ? (
@@ -192,7 +192,7 @@ export const ProjectActivityCard: React.FC<ProjectActivityCardProps> = ({
           activities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-start gap-3 rounded-xl border border-border/60 bg-white-black px-3 py-3"
+              className="card-border flex items-start gap-3 bg-white-black px-3 py-3"
             >
               <Avatar className="size-8 shrink-0">
                 <AvatarFallback className="text-sm font-semibold text-primary">

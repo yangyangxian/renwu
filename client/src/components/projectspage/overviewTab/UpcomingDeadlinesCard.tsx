@@ -46,7 +46,7 @@ export const UpcomingDeadlinesCard: React.FC<UpcomingDeadlinesCardProps> = ({ ta
             const statusIcon = TASK_STATUS_CONFIG[statusKey] || TASK_STATUS_CONFIG[TaskStatus.TODO];
             const isOverdue = new Date(task.dueDate!) < now;
             return (
-              <div key={task.id} className="flex items-center gap-2 card-border px-3 py-2 bg-white-black">
+              <div key={task.id} className="card-border flex items-start gap-3 bg-white-black px-3 py-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center mb-1">
                     <span className="text-sm text-primary truncate">{task.title}</span>
@@ -58,7 +58,7 @@ export const UpcomingDeadlinesCard: React.FC<UpcomingDeadlinesCardProps> = ({ ta
                     Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''}
                   </div>
                 </div>
-                <div className="flex flex-col items-end min-w-[60px] gap-1">
+                <div className="flex min-w-[72px] flex-col items-end gap-1 pt-0.5">
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize text-white ${statusIcon.dotClass}`}>{statusIcon.label}</span>                
                   <span className="text-xs mt-1 text-muted-foreground">
                     {daysLeft === 0
