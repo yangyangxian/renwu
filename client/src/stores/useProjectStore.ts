@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
-import { ProjectResDto, ProjectCreateReqDto, ProjectRoleDto, ProjectAddMemberReqDto, ProjectMemberRoleUpdateReqDto, ProjectDocumentCreateReqDto, ProjectDocumentResDto, ProjectDocumentUpdateReqDto } from '@fullstack/common';
+import { ActivityResDto, ProjectResDto, ProjectCreateReqDto, ProjectRoleDto, ProjectAddMemberReqDto, ProjectMemberRoleUpdateReqDto, ProjectDocumentCreateReqDto, ProjectDocumentResDto, ProjectDocumentUpdateReqDto } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { 
   getMyProjects, 
   getProjects, 
   getProjectById,
+  getProjectActivitiesById,
   updateProjectById as updateProjectByIdEndpoint,
   createProjectDocument as createProjectDocumentEndpoint,
   updateProjectDocumentById as updateProjectDocumentByIdEndpoint,
@@ -20,34 +21,46 @@ import {
 interface ProjectStoreState {
   projects: ProjectResDto[];
   currentProject: ProjectResDto | null;
+  projectActivities: ActivityResDto[];
   loading: boolean;
   projectLoading: boolean;
+  projectActivitiesLoading: boolean;
   error: string | null;
   projectError: string | null;
+  projectActivitiesError: string | null;
   setProjects: (projects: ProjectResDto[]) => void;
   setCurrentProject: (project: ProjectResDto | null) => void;
+  setProjectActivities: (activities: ActivityResDto[]) => void;
   setLoading: (loading: boolean) => void;
   setProjectLoading: (loading: boolean) => void;
+  setProjectActivitiesLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProjectError: (error: string | null) => void;
+  setProjectActivitiesError: (error: string | null) => void;
   projectRoles: ProjectRoleDto[];
   setProjectRoles: (roles: ProjectRoleDto[]) => void;
 }
 
-const useZustandProjectStore = create<ProjectStoreState>((set, get) => ({
+const useZustandProjectStore = create<ProjectStoreState>((set) => ({
   projects: [],
   currentProject: null,
+  projectActivities: [],
   loading: false,
   projectLoading: false,
+  projectActivitiesLoading: false,
   error: null,
   projectError: null,
+  projectActivitiesError: null,
   projectRoles: [],
   setProjects: (projects) => set({ projects }),
   setCurrentProject: (project) => set({ currentProject: project }),
+  setProjectActivities: (projectActivities) => set({ projectActivities }),
   setLoading: (loading) => set({ loading }),
   setProjectLoading: (loading) => set({ projectLoading: loading }),
+  setProjectActivitiesLoading: (projectActivitiesLoading) => set({ projectActivitiesLoading }),
   setError: (error) => set({ error }),
   setProjectError: (error) => set({ projectError: error }),
+  setProjectActivitiesError: (projectActivitiesError) => set({ projectActivitiesError }),
   setProjectRoles: (roles) => set({ projectRoles: roles }),
 }));
 
@@ -55,18 +68,24 @@ export function useProjectStore() {
   const {
     projects,
     currentProject,
+    projectActivities,
     loading,
     projectLoading,
+    projectActivitiesLoading,
     error,
     projectError,
+    projectActivitiesError,
     projectRoles,
     setProjectRoles,
     setProjects,
     setCurrentProject,
+    setProjectActivities,
     setLoading,
     setProjectLoading,
+    setProjectActivitiesLoading,
     setError,
     setProjectError,
+    setProjectActivitiesError,
   } = useZustandProjectStore();
 
   const fetchProjectRoles = useCallback(async () => {
@@ -104,6 +123,26 @@ export function useProjectStore() {
       setProjectLoading(false);
     }
   }, [setProjectLoading, setProjectError, setCurrentProject]);
+
+  const fetchProjectActivities = useCallback(async (projectId?: string): Promise<ActivityResDto[]> => {
+    setProjectActivitiesLoading(true);
+    setProjectActivitiesError(null);
+    try {
+      const idToFetch = projectId || currentProject?.id;
+      if (!idToFetch) {
+        setProjectActivities([]);
+        return [];
+      }
+      const data = await apiClient.get<ActivityResDto[]>(getProjectActivitiesById(idToFetch));
+      setProjectActivities(data);
+      return data;
+    } catch (err: any) {
+      setProjectActivitiesError(err?.message || 'Failed to fetch project activities');
+      return [];
+    } finally {
+      setProjectActivitiesLoading(false);
+    }
+  }, [currentProject?.id, setProjectActivities, setProjectActivitiesError, setProjectActivitiesLoading]);
 
   // Simple state operations - pure state management
   const addProject = useCallback((project: ProjectResDto) => {
@@ -258,14 +297,18 @@ export function useProjectStore() {
   return {
     projects,
     currentProject,
+    projectActivities,
     loading,
     projectLoading,
+    projectActivitiesLoading,
     error,
     projectError,
+    projectActivitiesError,
     projectRoles,
     fetchProjectRoles,
     fetchProjects,
     fetchCurrentProject,
+    fetchProjectActivities,
     addProject,
     removeProject,
     createProject,

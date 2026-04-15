@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { UpcomingDeadlinesCard } from './overviewTab/UpcomingDeadlinesCard';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useTaskStore } from '@/stores/useTaskStore';
-import { RadioChartCard } from '@/components/projectspage/overviewTab/RadioChartCard';
+import { ProjectActivityCard } from '@/components/projectspage/overviewTab/ProjectActivityCard';
 import { ProjectDocumentsCard } from '@/components/projectspage/overviewTab/ProjectDocumentsCard';
-import { TaskStatus, ProjectResDto } from '@fullstack/common';
-import { TASK_STATUS_CONFIG } from './overviewTab/taskStatusConfig';
+import { ProjectResDto } from '@fullstack/common';
 import logger from '@/utils/logger';
 
 interface ProjectOverviewTabProps {
@@ -13,48 +12,44 @@ interface ProjectOverviewTabProps {
 }
 
 const CARD_CLASS = "shadow-sm p-4";
-const MemoRadioChartCard = React.memo(RadioChartCard);
 
 export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
   logger.debug('ProjectOverviewTab is rendering:');
-  const { createProjectDocument, updateProjectDocument, deleteProjectDocument } = useProjectStore();
+  const {
+    createProjectDocument,
+    updateProjectDocument,
+    deleteProjectDocument,
+    projectActivities,
+    projectActivitiesLoading,
+    projectActivitiesError,
+    fetchProjectActivities,
+  } = useProjectStore();
   const { projectTasks: tasks } = useTaskStore();
-  const chartData = useMemo(() => {
-    // Only use the main TaskStatus keys for chart
-    logger.debug('ProjectOverviewTab chartData is re-computing');
-    const chartKeys: TaskStatus[] = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE, TaskStatus.CLOSE];
-    const statusCounts: Record<TaskStatus, number> = {
-      [TaskStatus.TODO]: 0,
-      [TaskStatus.IN_PROGRESS]: 0,
-      [TaskStatus.DONE]: 0,
-      [TaskStatus.CLOSE]: 0,
-    };
-    if (Array.isArray(tasks)) {
-      tasks.forEach(task => {
-        const key = chartKeys.includes(task.status) ? task.status : TaskStatus.TODO;
-        statusCounts[key]++;
-      });
+
+  useEffect(() => {
+    if (!project.id) {
+      return;
     }
-    return chartKeys.map(key => ({
-      key,
-      value: statusCounts[key],
-      label: TASK_STATUS_CONFIG[key].label,
-      color: TASK_STATUS_CONFIG[key].color,
-      dotClass: TASK_STATUS_CONFIG[key].dotClass,
-    }));
-  }, [tasks]);
+
+    void fetchProjectActivities(project.id);
+  }, [project.id, project.documents, tasks, fetchProjectActivities]);
 
   return (
     <div className="flex gap-3 p-2 items-start flex-1 overflow-y-auto">
-      <div className="flex flex-col w-38/100 xl:w-29/100 gap-3 h-full">
-        <MemoRadioChartCard data={chartData} className={CARD_CLASS} />
+      <div className="flex h-full w-[41%] flex-col gap-3 xl:w-[32%]">
+        <ProjectActivityCard
+          activities={projectActivities}
+          loading={projectActivitiesLoading}
+          error={projectActivitiesError}
+          className={CARD_CLASS}
+        />
         <UpcomingDeadlinesCard tasks={tasks} className={CARD_CLASS} />
       </div>
       <ProjectDocumentsCard project={project}
         createProjectDocument={createProjectDocument}
         updateProjectDocument={updateProjectDocument}
         deleteProjectDocument={deleteProjectDocument}
-        className={`${CARD_CLASS} py-2`} />
+        className={`${CARD_CLASS} h-full w-[59%] py-2 xl:w-[68%]`} />
     </div>
   );
 }

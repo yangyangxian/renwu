@@ -25,6 +25,7 @@ export const deleteTaskViewById = (viewId: string) => `/api/tasks/views/${viewId
 export const getProjects = () => '/api/projects';
 export const getMyProjects = () => '/api/projects/me';
 export const getProjectById = (projectId: string) => `/api/projects/id/${projectId}`;
+export const getProjectActivitiesById = (projectId: string) => `/api/projects/id/${projectId}/activities`;
 export const updateProjectById = (projectId: string) => `/api/projects/${projectId}`;
 export const deleteProjectById = (projectId: string) => `/api/projects/${projectId}`;
 export const checkSlugAvailability = (slug: string) => `/api/projects/check-slug/${slug}`;
