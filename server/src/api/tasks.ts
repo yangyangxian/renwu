@@ -1,14 +1,23 @@
 import express from 'express';
 import { taskService } from '../services/TaskService';
-import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType, ViewConfig } from '@fullstack/common';
+import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType, ViewConfig, ActivityResDto, ErrorCodes } from '@fullstack/common';
 import { TaskViewCreateReqDto, TaskViewUpdateReqDto, TaskViewResDto } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
 import logger from '../utils/logger';
 import { requirePermission } from '../middlewares/permissionMiddleware';
+import { activityService, ActivityEventEntity } from '../services/ActivityService';
+import { CustomError } from '../classes/CustomError';
 
 const router = express.Router();
 const publicRouter = express.Router();
+
+function toActivityDto(activity: ActivityEventEntity): ActivityResDto {
+  const dto = mapObject(activity, new ActivityResDto());
+  dto.payload = activity.payload as ActivityResDto['payload'];
+  dto.createdAt = activity.createdAt?.toISOString() || '';
+  return dto;
+}
 
 // Create a new task
 router.post('/',
@@ -28,6 +37,7 @@ router.post('/',
       }
       // refresh createdTask to include labels
       const refreshed = await taskService.getTaskById(createdTask.id);
+      await activityService.recordTaskCreated(refreshed!, userId);
       const dto = mapObject(refreshed!, new TaskResDto());
       dto.labels = (refreshed!.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
       res.json(createApiResponse<TaskResDto>(dto));
@@ -45,13 +55,19 @@ router.put('/:taskId',
   ) => {
       const { taskId } = req.params;
       try {
+        const userId = req.user!.userId;
+        const beforeTask = await taskService.getTaskById(taskId);
+        if (!beforeTask) {
+          throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
+        }
+
         // If labels array present, update task labels first
         if (Array.isArray((req.body as any).labels)) {
-          const userId = req.user!.userId;
           await taskService.updateTaskLabels(taskId, (req.body as any).labels, userId);
         }
 
         const updatedTask = await taskService.updateTask(taskId, req.body as any);
+        await activityService.recordTaskUpdated(beforeTask, updatedTask, userId);
         const dto = mapObject(updatedTask, new TaskResDto());
         dto.labels = (updatedTask.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));
         res.json(createApiResponse<TaskResDto>(dto));
@@ -75,8 +91,30 @@ router.delete('/:taskId',
   ) => {
     try {
       const { taskId } = req.params;
+      const userId = req.user!.userId;
+      const existingTask = await taskService.getTaskById(taskId);
+      if (!existingTask) {
+        throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
+      }
+
       await taskService.deleteTask(taskId);
+      await activityService.recordTaskDeleted(existingTask, userId);
       res.json(createApiResponse<null>(null));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.get('/id/:taskId/activities',
+  async (
+    req: express.Request<{ taskId: string }>,
+    res: express.Response<ApiResponse<ActivityResDto[]>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      const activities = await activityService.getTaskActivities(req.params.taskId, req.user!.userId);
+      res.json(createApiResponse<ActivityResDto[]>(activities.map(toActivityDto)));
     } catch (err) {
       next(err);
     }

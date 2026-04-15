@@ -20,6 +20,29 @@ export class ProjectDocumentEntity {
 }
 
 export class ProjectDocumentService {
+  async getDocumentById(projectId: string, documentId: string): Promise<ProjectDocumentEntity | null> {
+    const [row] = await db
+      .select()
+      .from(projectDocuments)
+      .where(and(eq(projectDocuments.id, documentId), eq(projectDocuments.projectId, projectId)))
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return new ProjectDocumentEntity({
+      id: row.id,
+      projectId: row.projectId,
+      title: row.title,
+      content: row.content,
+      position: row.position,
+      createdBy: row.createdBy,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    });
+  }
+
   async getDocumentsByProjectId(projectId: string): Promise<ProjectDocumentEntity[]> {
     const rows = await db
       .select()

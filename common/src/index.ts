@@ -1,5 +1,7 @@
 export * from './dtos/dtoTypes.js'; 
 export * from './types/responseTypes.js';
+export * from './enums/activityActionType.js';
+export * from './enums/activityEntityType.js';
 export * from './enums/errorCodes.js';
 export * from './enums/httpStatus.js';
 export * from './enums/taskStatus.js';

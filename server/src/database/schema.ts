@@ -5,12 +5,14 @@
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb, integer } from 'drizzle-orm/pg-core';
-import { TaskStatus, PermissionAction, InvitationStatus } from '@fullstack/common';
+import { TaskStatus, PermissionAction, InvitationStatus, ActivityActionType, ActivityEntityType } from '@fullstack/common';
 
 // ---------- ENUMS ----------
 export const taskStatusEnum = pgEnum('task_status', Object.values(TaskStatus) as [string, ...string[]]);
 export const invitationStatusEnum = pgEnum('invitation_status', Object.values(InvitationStatus) as [string, ...string[]]);
 export const permissionActionEnum = pgEnum('permission_action', Object.values(PermissionAction) as [string, ...string[]]);
+export const activityActionTypeEnum = pgEnum('activity_action_type', Object.values(ActivityActionType) as [string, ...string[]]);
+export const activityEntityTypeEnum = pgEnum('activity_entity_type', Object.values(ActivityEntityType) as [string, ...string[]]);
 
 // ---------- TABLE: Users ----------
 export const users = pgTable('users', {
@@ -45,6 +47,21 @@ export const projectDocuments = pgTable('project_documents', {
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ---------- TABLE: Activity Events ----------
+export const activityEvents = pgTable('activity_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
+  actorNameSnapshot: varchar('actor_name_snapshot', { length: 100 }).notNull(),
+  entityType: activityEntityTypeEnum('entity_type').notNull(),
+  entityId: uuid('entity_id').notNull(),
+  entityTitleSnapshot: varchar('entity_title_snapshot', { length: 255 }),
+  actionType: activityActionTypeEnum('action_type').notNull(),
+  summary: text('summary').notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // ---------- TABLE: Tasks ----------

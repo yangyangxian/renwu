@@ -4,7 +4,7 @@ import { userService } from '../services/UserService';
 import { CustomError } from '../classes/CustomError';
 import { createApiResponse } from '../utils/apiUtils';
 import { mapObject } from '../utils/mappers';
-import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto, hasPermission, PermissionAction, PermissionResourceType, UserPermissionResDto, ProjectDocumentCreateReqDto, ProjectDocumentCreateReqSchema, ProjectDocumentResDto, ProjectDocumentUpdateReqDto } from '@fullstack/common';
+import { ProjectCreateReqDto, ProjectResDto, ApiResponse, ErrorCodes, ProjectRole, ProjectMemberResDto, hasPermission, PermissionAction, PermissionResourceType, UserPermissionResDto, ProjectDocumentCreateReqDto, ProjectDocumentCreateReqSchema, ProjectDocumentResDto, ProjectDocumentUpdateReqDto, ActivityResDto } from '@fullstack/common';
 import { emailService } from '../services/EmailService';
 import { ProjectCreateReqSchema, ProjectUpdateReqDto, ProjectMemberRoleUpdateReqDto } from '@fullstack/common';
 import { ProjectAddMemberReqDto, ProjectAddMemberResDto } from '@fullstack/common';
@@ -12,10 +12,18 @@ import logger from '../utils/logger';
 import { invitationService } from '../services/InvitationService';
 import { requirePermission } from '../middlewares/permissionMiddleware';
 import { projectDocumentService } from '../services/ProjectDocumentService';
+import { activityService, ActivityEventEntity } from '../services/ActivityService';
 
 // Project API Router
 // Each endpoint below is documented with its purpose, parameters, and response structure.
 const router = express.Router();
+
+function toActivityDto(activity: ActivityEventEntity): ActivityResDto {
+  const dto = mapObject(activity, new ActivityResDto());
+  dto.payload = activity.payload as ActivityResDto['payload'];
+  dto.createdAt = activity.createdAt?.toISOString() || '';
+  return dto;
+}
 
 /**
  * GET /api/projects/id/:id
@@ -181,6 +189,7 @@ router.post(
       title: parseResult.data.title,
       content: parseResult.data.content,
     });
+    await activityService.recordProjectDocumentCreated(createdDocument, req.user!.userId);
 
     const dto = mapObject(createdDocument, new ProjectDocumentResDto());
     res.json(createApiResponse<ProjectDocumentResDto>(dto));
@@ -209,6 +218,11 @@ router.put(
       throw new CustomError('Document title must be a non-empty string', ErrorCodes.NO_DATA);
     }
 
+    const existingDocument = await projectDocumentService.getDocumentById(projectId, documentId);
+    if (!existingDocument) {
+      throw new CustomError('Project document not found or update failed', ErrorCodes.NOT_FOUND);
+    }
+
     const updatedDocument = await projectDocumentService.updateDocument(projectId, documentId, {
       title,
       content,
@@ -218,6 +232,7 @@ router.put(
     if (!updatedDocument) {
       throw new CustomError('Project document not found or update failed', ErrorCodes.NOT_FOUND);
     }
+    await activityService.recordProjectDocumentUpdated(existingDocument, updatedDocument, req.user!.userId);
 
     const dto = mapObject(updatedDocument, new ProjectDocumentResDto());
     res.json(createApiResponse<ProjectDocumentResDto>(dto));
@@ -241,12 +256,34 @@ router.delete(
       throw new CustomError('Project ID and document ID are required', ErrorCodes.NO_DATA);
     }
 
+    const existingDocument = await projectDocumentService.getDocumentById(projectId, documentId);
+    if (!existingDocument) {
+      throw new CustomError('Project document not found or delete failed', ErrorCodes.NOT_FOUND);
+    }
+
     const deleted = await projectDocumentService.deleteDocument(projectId, documentId);
     if (!deleted) {
       throw new CustomError('Project document not found or delete failed', ErrorCodes.NOT_FOUND);
     }
+    await activityService.recordProjectDocumentDeleted(existingDocument, req.user!.userId);
 
     res.json(createApiResponse<{ success: boolean }>({ success: true }));
+  }
+);
+
+router.get(
+  '/id/:projectId/activities',
+  async (
+    req: Request<{ projectId: string }>,
+    res: Response<ApiResponse<ActivityResDto[]>>,
+    next: NextFunction
+  ) => {
+    try {
+      const activities = await activityService.getProjectActivities(req.params.projectId, req.user!.userId);
+      res.json(createApiResponse<ActivityResDto[]>(activities.map(toActivityDto)));
+    } catch (err) {
+      next(err);
+    }
   }
 );
 

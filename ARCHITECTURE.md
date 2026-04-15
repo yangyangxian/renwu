@@ -58,6 +58,7 @@ The backend is an Express application with modular route loading and service-bas
 - `src/api/`: route modules. Each file exports a default authenticated router and can optionally export `publicRouter`.
 - `src/routes/`: router composition, including SPA static routing.
 - `src/services/`: domain logic for tasks, projects, labels, invitations, permissions, and users.
+- `src/services/ActivityService.ts`: shared activity event recording and query logic used by multiple feature services and routes.
 - `src/middlewares/`: cross-cutting HTTP concerns such as auth, CORS, request logging, and error handling.
 - `src/database/`: Drizzle connection and relational schema.
 - `src/jobs/`: background job scheduling and workers. Current code schedules a user sync job at startup and depends on Redis for queue infrastructure.
@@ -69,6 +70,7 @@ Important backend patterns:
 - Business logic is intentionally pushed down into services rather than embedded in route handlers.
 - Authentication is enforced globally for `/api` after public routers are mounted.
 - The server also serves the built frontend, so production can run as one Node process behind a single port.
+- Cross-entity activity logging is centralized in `ActivityService`, with shared enums and DTOs defined in `common/` so tasks, project documents, and future entities emit a consistent event shape.
 
 ### Common Package
 
@@ -94,6 +96,7 @@ Primary domain entities include:
 - users
 - projects
 - project documents
+- activity events
 - tasks
 - task views
 - labels and label sets
