@@ -8,18 +8,22 @@ import { useCallback, useEffect } from 'react';
 interface PermissionStoreState {
   permissions: UserPermissionResDto[];
   loading: boolean;
+  hasFetched: boolean;
   error: string | null;
   setPermissions: (permissions: UserPermissionResDto[]) => void;
   setLoading: (loading: boolean) => void;
+  setHasFetched: (hasFetched: boolean) => void;
   setError: (error: string | null) => void;
 }
 
 const useZustandPermissionStore = create<PermissionStoreState>((set) => ({
   permissions: [],
   loading: false,
+  hasFetched: false,
   error: null,
   setPermissions: (permissions) => set({ permissions }),
   setLoading: (loading) => set({ loading }),
+  setHasFetched: (hasFetched) => set({ hasFetched }),
   setError: (error) => set({ error }),
 }));
 
@@ -28,21 +32,28 @@ export function usePermissionStore() {
   const {
     permissions,
     loading,
+    hasFetched,
     error,
     setPermissions,
     setLoading,
+    setHasFetched,
     setError,
   } = useZustandPermissionStore();
 
   // Fetch permissions logic is now in the hook, not the store
   const fetchPermissions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const permissions = await apiClient.get<UserPermissionResDto[]>(getMyPermissionsEndpoint());
       setPermissions(permissions);
     } catch (e: any) {
       setError(e.message || 'Failed to fetch permissions');
+    } finally {
+      setLoading(false);
+      setHasFetched(true);
     }
-  }, [setPermissions, setError]);
+  }, [setPermissions, setError, setLoading, setHasFetched]);
 
   useEffect(() => {
     fetchPermissions();
@@ -56,5 +67,8 @@ export function usePermissionStore() {
   return {
     fetchPermissions,
     hasPermission: checkPermission,
+    loading,
+    hasFetched,
+    error,
   };
 }

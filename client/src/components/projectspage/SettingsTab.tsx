@@ -6,7 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { usePermissionStore } from '@/stores/usePermissionStore';
-import { PermissionAction, PermissionResourceType } from '@fullstack/common';
+import { PermissionAction, PermissionResourceType, ProjectRole } from '@fullstack/common';
 import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PROJECTS_PATH } from '@/routes/routeConfig';
@@ -14,12 +14,14 @@ import { ProjectCreateReqSchema } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { checkSlugAvailability } from '@/apiRequests/apiEndpoints';
 import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
+import { useAuth } from '@/providers/AuthProvider';
 
 export function ProjectSettingsTab() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const { currentProject: project, projects, updateProject, deleteProject } = useProjectStore();
-  const { hasPermission } = usePermissionStore();
+  const { hasPermission, loading: permissionsLoading, hasFetched: permissionsResolved, error: permissionsError } = usePermissionStore();
   const [projectName, setProjectName] = useState(project?.name || '');
   const [projectSlug, setProjectSlug] = useState(project?.slug || '');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -36,6 +38,32 @@ export function ProjectSettingsTab() {
     PermissionAction.DELETE_PROJECT,
     { resourceType: PermissionResourceType.PROJECT, projectId: project.id }
   );
+
+  const currentMember = project?.members?.find(member => member.id === user?.id);
+  const settingsReadOnlyReason = (() => {
+    if (!project) {
+      return null;
+    }
+    if (canEditProject) {
+      return null;
+    }
+    if (!permissionsResolved) {
+      return null;
+    }
+    if (permissionsLoading) {
+      return 'Checking your project permissions. Some settings on this page will stay read-only until that finishes.';
+    }
+    if (permissionsError) {
+      return 'We could not load your project permissions right now, so some settings on this page are temporarily read-only.';
+    }
+    if (!currentMember) {
+      return 'You are not an active member of this project, so settings on this page are read-only.';
+    }
+    if (currentMember.roleName === ProjectRole.MEMBER) {
+      return 'You currently have member access in this project, so some settings on this page are read-only.';
+    }
+    return `Your ${currentMember.roleName || 'current'} role in this project does not include every settings permission, so some sections on this page are read-only.`;
+  })();
   
   // Track if there are unsaved changes (both name and slug are updateable)
   const hasUnsavedChanges = projectName !== (project?.name || '') || projectSlug !== (project?.slug || '');
@@ -194,6 +222,14 @@ export function ProjectSettingsTab() {
   return (
     <Card className="shadow-none m-2 py-3 px-1 w-1/2">
       <div className="flex flex-col w-full py-1 px-4 shadow-none">
+        {settingsReadOnlyReason && (
+          <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:border-amber-900/80 dark:bg-amber-950/30 dark:text-amber-200">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{settingsReadOnlyReason}</span>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2 mb-1">
           <Label className="text-xl font-medium">General Settings</Label>
           {hasUnsavedChanges && <UnsavedChangesIndicator />}
