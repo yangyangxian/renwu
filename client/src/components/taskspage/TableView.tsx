@@ -431,7 +431,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   }));
 
   const filteredTasks = useMemo(() => {
-    const statusFilter = currentDisplayViewConfig.status ?? [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
+    const statusFilter = currentDisplayViewConfig.status ?? [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE];
     if (!statusFilter.length) return tasks;
     return tasks.filter((task) => statusFilter.includes(task.status));
   }, [currentDisplayViewConfig.status, tasks]);
@@ -517,7 +517,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   );
 
   const inlineCreateInitialStatus = useMemo(() => {
-    const statusFilter = currentDisplayViewConfig.status ?? [TaskStatus.TODO, TaskStatus.IN_PROGRESS];
+    const statusFilter = currentDisplayViewConfig.status ?? [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE];
     if (statusFilter.includes(TaskStatus.TODO)) {
       return TaskStatus.TODO;
     }

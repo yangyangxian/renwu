@@ -10,7 +10,7 @@ export const defaultTaskViewConfig: ViewConfig = {
   projectId: 'all',
   dateRange: TaskDateRange.ALL_TIME,
   searchTerm: '',
-  status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
+  status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.DONE],
   sortField: TaskSortField.DUE_DATE,
   sortOrder: TaskSortOrder.ASC,
   viewMode: TaskViewMode.BOARD,
@@ -19,12 +19,23 @@ export const defaultTaskViewConfig: ViewConfig = {
 };
 
 export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
-  return {
+  const normalized = {
     ...defaultTaskViewConfig,
     ...view,
     status: view.status ?? defaultTaskViewConfig.status,
     filterLabelSetId: view.filterLabelSetId ?? defaultTaskViewConfig.filterLabelSetId,
   };
+
+  if (normalized.viewMode === TaskViewMode.TABLE) {
+    return {
+      ...normalized,
+      status: defaultTaskViewConfig.status,
+      sortField: defaultTaskViewConfig.sortField,
+      sortOrder: defaultTaskViewConfig.sortOrder,
+    };
+  }
+
+  return normalized;
 }
 
 export function createProjectTaskViewConfig(projectId: string, overrides: Partial<ViewConfig> = {}): ViewConfig {
@@ -36,18 +47,7 @@ export function createProjectTaskViewConfig(projectId: string, overrides: Partia
 }
 
 export function sanitizeTaskViewConfigForPersistence(view: Partial<ViewConfig>): ViewConfig {
-  const normalized = normalizeTaskViewConfig(view);
-
-  if (normalized.viewMode !== TaskViewMode.TABLE) {
-    return normalized;
-  }
-
-  return {
-    ...normalized,
-    status: defaultTaskViewConfig.status,
-    sortField: defaultTaskViewConfig.sortField,
-    sortOrder: defaultTaskViewConfig.sortOrder,
-  };
+  return normalizeTaskViewConfig(view);
 }
 
 interface TaskViewStoreState {

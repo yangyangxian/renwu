@@ -20,19 +20,19 @@ test('normalizeTaskViewConfig fills missing values from defaults', () => {
 });
 
 test('normalizeTaskViewConfig preserves groupByLabelSetId even when projectId is all', () => {
-  assert.equal(
-    normalizeTaskViewConfig({
-      projectId: 'all',
-      dateRange: TaskDateRange.ALL_TIME,
-      searchTerm: '',
-      status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
-      sortField: TaskSortField.DUE_DATE,
-      sortOrder: TaskSortOrder.ASC,
-      viewMode: TaskViewMode.TABLE,
-      groupByLabelSetId: 'label-set-1',
-    }).groupByLabelSetId,
-    'label-set-1'
-  );
+  const normalized = normalizeTaskViewConfig({
+    projectId: 'all',
+    dateRange: TaskDateRange.ALL_TIME,
+    searchTerm: '',
+    status: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
+    sortField: TaskSortField.DUE_DATE,
+    sortOrder: TaskSortOrder.ASC,
+    viewMode: TaskViewMode.TABLE,
+    groupByLabelSetId: 'label-set-1',
+  });
+
+  assert.equal(normalized.groupByLabelSetId, 'label-set-1');
+  assert.deepEqual(normalized.status, defaultTaskViewConfig.status);
 });
 
 test('normalizeTaskViewConfig preserves filterLabelSetId', () => {
