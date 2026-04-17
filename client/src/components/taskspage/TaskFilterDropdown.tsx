@@ -17,6 +17,7 @@ import { useLabelStore } from '@/stores/useLabelStore';
 export interface TaskFilterDropdownProps {
   value: TaskDateRange;
   onChange: (value: TaskDateRange) => void;
+  hasActiveFilters?: boolean;
 
   /** Optional project filter (same options as TaskFilterMenu's Select). */
   showProjectSelect?: boolean;
@@ -40,6 +41,7 @@ const RANGE_OPTIONS: Array<{ value: TaskDateRange; label: string }> = [
 export function TaskFilterDropdown({
   value,
   onChange,
+  hasActiveFilters = false,
   showProjectSelect,
   selectedProject,
   onSelectedProjectChange,
@@ -92,7 +94,14 @@ export function TaskFilterDropdown({
               triggerClassName
             )}
           >
-            <FilterIcon className="text-muted-foreground w-4 h-4" />
+            <FilterIcon
+              className={cn(
+                'w-4 h-4',
+                hasActiveFilters
+                  ? 'text-purple-500 fill-purple-500'
+                  : 'text-muted-foreground'
+              )}
+            />
           </Button>
         </DropdownMenuTrigger>
 

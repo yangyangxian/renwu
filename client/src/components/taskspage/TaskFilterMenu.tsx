@@ -39,6 +39,14 @@ export function TaskFilterMenu({
   onSelectedLabelSetChange,
 }: TaskFilterMenuProps) {
   const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
+  const hasActiveFilters = useMemo(() => {
+    const hasProjectFilter = !!showProjectSelect && selectedProject !== 'all';
+    const hasDateRangeFilter = !!showDateRange && dateRange !== TaskDateRange.ALL_TIME;
+    const hasSearchFilter = !!showSearch && searchTerm.trim().length > 0;
+    const hasLabelSetFilter = !!selectedLabelSetId;
+
+    return hasProjectFilter || hasDateRangeFilter || hasSearchFilter || hasLabelSetFilter;
+  }, [dateRange, searchTerm, selectedLabelSetId, selectedProject, showDateRange, showProjectSelect, showSearch]);
   const normalizedLabelSetScopeProjectId = selectedProject === 'all'
     ? undefined
     : selectedProject === 'personal'
@@ -142,6 +150,7 @@ export function TaskFilterMenu({
     <div className="flex gap-3 items-center grow">
       {(showProjectSelect || showDateRange) && (
         <TaskFilterDropdown
+          hasActiveFilters={hasActiveFilters}
           showProjectSelect={showProjectSelect}
           selectedProject={selectedProject}
           onSelectedProjectChange={onSelectedProjectChange}
