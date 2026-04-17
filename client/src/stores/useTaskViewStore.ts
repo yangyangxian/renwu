@@ -14,6 +14,7 @@ export const defaultTaskViewConfig: ViewConfig = {
   sortField: TaskSortField.DUE_DATE,
   sortOrder: TaskSortOrder.ASC,
   viewMode: TaskViewMode.BOARD,
+  filterLabelId: null,
   filterLabelSetId: null,
   groupByLabelSetId: null,
 };
@@ -23,6 +24,7 @@ export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
     ...defaultTaskViewConfig,
     ...view,
     status: view.status ?? defaultTaskViewConfig.status,
+    filterLabelId: view.filterLabelId ?? defaultTaskViewConfig.filterLabelId,
     filterLabelSetId: view.filterLabelSetId ?? defaultTaskViewConfig.filterLabelSetId,
   };
 

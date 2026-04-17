@@ -15,11 +15,13 @@ interface TaskFilterMenuProps {
   selectedProject: string;
   dateRange: TaskDateRange;
   searchTerm: string;
+  selectedLabelId?: string | null;
   selectedLabelSetId?: string | null;
   // change handlers from parent
   onSelectedProjectChange?: (projectId: string) => void;
   onDateRangeChange?: (range: TaskDateRange) => void;
   onSearchTermChange?: (term: string) => void;
+  onSelectedLabelChange?: (labelId: string | null) => void;
   onSelectedLabelSetChange?: (labelSetId: string | null) => void;
 }
 
@@ -32,26 +34,33 @@ export function TaskFilterMenu({
   selectedProject,
   dateRange,
   searchTerm,
+  selectedLabelId,
   selectedLabelSetId,
   onSelectedProjectChange,
   onDateRangeChange,
   onSearchTermChange,
+  onSelectedLabelChange,
   onSelectedLabelSetChange,
 }: TaskFilterMenuProps) {
-  const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
+  const { fetchLabels, fetchLabelSets, getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
   const hasActiveFilters = useMemo(() => {
     const hasProjectFilter = !!showProjectSelect && selectedProject !== 'all';
     const hasDateRangeFilter = !!showDateRange && dateRange !== TaskDateRange.ALL_TIME;
     const hasSearchFilter = !!showSearch && searchTerm.trim().length > 0;
+    const hasLabelFilter = !!selectedLabelId;
     const hasLabelSetFilter = !!selectedLabelSetId;
 
-    return hasProjectFilter || hasDateRangeFilter || hasSearchFilter || hasLabelSetFilter;
-  }, [dateRange, searchTerm, selectedLabelSetId, selectedProject, showDateRange, showProjectSelect, showSearch]);
+    return hasProjectFilter || hasDateRangeFilter || hasSearchFilter || hasLabelFilter || hasLabelSetFilter;
+  }, [dateRange, searchTerm, selectedLabelId, selectedLabelSetId, selectedProject, showDateRange, showProjectSelect, showSearch]);
   const normalizedLabelSetScopeProjectId = selectedProject === 'all'
     ? undefined
     : selectedProject === 'personal'
       ? null
       : selectedProject;
+  const scopedLabels = useMemo(
+    () => getLabelsForProjectId(normalizedLabelSetScopeProjectId),
+    [getLabelsForProjectId, normalizedLabelSetScopeProjectId]
+  );
   const scopedLabelSets = useMemo(
     () => getLabelSetsForProjectId(normalizedLabelSetScopeProjectId),
     [getLabelSetsForProjectId, normalizedLabelSetScopeProjectId]
@@ -59,14 +68,29 @@ export function TaskFilterMenu({
 
   useEffect(() => {
     if (normalizedLabelSetScopeProjectId === undefined) {
+      if (selectedLabelId) {
+        onSelectedLabelChange?.(null);
+      }
       if (selectedLabelSetId) {
         onSelectedLabelSetChange?.(null);
       }
       return;
     }
 
+    fetchLabels(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
     fetchLabelSets(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
-  }, [fetchLabelSets, normalizedLabelSetScopeProjectId, onSelectedLabelSetChange, selectedLabelSetId]);
+  }, [fetchLabels, fetchLabelSets, normalizedLabelSetScopeProjectId, onSelectedLabelChange, onSelectedLabelSetChange, selectedLabelId, selectedLabelSetId]);
+
+  useEffect(() => {
+    if (!selectedLabelId) {
+      return;
+    }
+
+    const labelExists = scopedLabels.some((label) => label.id === selectedLabelId);
+    if (!labelExists && scopedLabels.length > 0) {
+      onSelectedLabelChange?.(null);
+    }
+  }, [onSelectedLabelChange, scopedLabels, selectedLabelId]);
 
   useEffect(() => {
     if (!selectedLabelSetId) {
@@ -122,6 +146,11 @@ export function TaskFilterMenu({
       }
 
       let labelSetOk = true;
+      let labelOk = true;
+      if (selectedLabelId) {
+        labelOk = (t.labels || []).some((label) => label.id === selectedLabelId);
+      }
+
       if (selectedLabelSetId) {
         const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === selectedLabelSetId);
         if (selectedLabelSet) {
@@ -130,7 +159,7 @@ export function TaskFilterMenu({
         }
       }
 
-      return dateOk && projectOk && searchOk && labelSetOk;
+      return dateOk && projectOk && searchOk && labelOk && labelSetOk;
     });
     onFilter(filtered);
   }, [
@@ -138,7 +167,9 @@ export function TaskFilterMenu({
     dateRange,
     selectedProject,
     searchTerm,
+    selectedLabelId,
     selectedLabelSetId,
+    scopedLabels,
     scopedLabelSets,
     onFilter,
     showProjectSelect,
@@ -154,6 +185,9 @@ export function TaskFilterMenu({
           showProjectSelect={showProjectSelect}
           selectedProject={selectedProject}
           onSelectedProjectChange={onSelectedProjectChange}
+          showLabelFilter={true}
+          selectedLabelId={selectedLabelId}
+          onSelectedLabelChange={onSelectedLabelChange}
           showLabelSetFilter={true}
           selectedLabelSetId={selectedLabelSetId}
           onSelectedLabelSetChange={onSelectedLabelSetChange}

@@ -26,7 +26,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
 }) => {
   const { currentDisplayViewConfig, createTaskView, setCurrentSelectedTaskView } = useTaskViewStore();
   const { projects } = useProjectStore();
-  const { getLabelSetsForProjectId } = useLabelStore();
+  const { getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
   const [viewName, setViewName] = useState("");
   const navigate = useNavigate();
 
@@ -36,6 +36,11 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
       ? undefined
       : currentDisplayViewConfig.projectId;
   const scopedLabelSets = getLabelSetsForProjectId(normalizedProjectId) as LabelSetResDto[];
+  const scopedLabels = getLabelsForProjectId(normalizedProjectId);
+
+  const selectedFilterLabel = currentDisplayViewConfig.filterLabelId
+    ? scopedLabels.find((label) => label.id === currentDisplayViewConfig.filterLabelId)
+    : null;
 
   const selectedFilterLabelSet = currentDisplayViewConfig.filterLabelSetId
     ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.filterLabelSetId)
@@ -96,6 +101,17 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
                 <span className="text-primary">{currentDisplayViewConfig.searchTerm}</span>
               ) : (
                 <span className="text-muted-foreground">(none)</span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Filter className="w-4 h-4 text-primary" />
+            <Label className="font-medium min-w-22.5">Label:</Label>
+            <span>
+              {selectedFilterLabel ? (
+                <span className="text-primary">{selectedFilterLabel.name}</span>
+              ) : (
+                <span className="text-muted-foreground">All labels</span>
               )}
             </span>
           </div>

@@ -49,6 +49,7 @@ export default function MyTasksPage() {
   const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
   const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
+  const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
 
   useEffect(() => {
@@ -165,6 +166,7 @@ export default function MyTasksPage() {
               selectedProject={selectedProject}
               dateRange={dateRange}
               searchTerm={searchTerm}
+              selectedLabelId={selectedLabelId}
               selectedLabelSetId={selectedLabelSetId}
               onSelectedProjectChange={(v) => {
                 setCurrentDisplayViewConfig({
@@ -182,6 +184,12 @@ export default function MyTasksPage() {
                 setCurrentDisplayViewConfig({
                   ...currentDisplayViewConfig,
                   searchTerm: v,
+                });
+              }}
+              onSelectedLabelChange={(value) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  filterLabelId: value,
                 });
               }}
               onSelectedLabelSetChange={(value) => {

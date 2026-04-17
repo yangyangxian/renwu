@@ -74,6 +74,7 @@ export default function ProjectDetailPage() {
   );
   const dateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
+  const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
   const isSavedView = !!currentSelectedTaskView && currentSelectedTaskView.projectId === projectId;
   const canRenameActiveView = !!activeProjectView && user?.id === activeProjectView.userId;
@@ -406,6 +407,7 @@ export default function ProjectDetailPage() {
                   selectedProject={projectId}
                   dateRange={dateRange}
                   searchTerm={searchTerm}
+                  selectedLabelId={selectedLabelId}
                   selectedLabelSetId={selectedLabelSetId}
                   onDateRangeChange={(value) => {
                     setCurrentDisplayViewConfig({
@@ -419,6 +421,13 @@ export default function ProjectDetailPage() {
                       ...currentDisplayViewConfig,
                       projectId,
                       searchTerm: value,
+                    });
+                  }}
+                  onSelectedLabelChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      filterLabelId: value,
                     });
                   }}
                   onSelectedLabelSetChange={(value) => {
