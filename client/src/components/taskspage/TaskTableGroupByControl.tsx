@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 
-import { LabelSetResDto } from '@fullstack/common';
+import { LabelSetResDto, TaskViewMode } from '@fullstack/common';
 import { Rows3 } from 'lucide-react';
 
 import { useWebStorage } from '@/hooks/useWebStorage';
@@ -32,11 +32,13 @@ export function resolveTaskTableGroupBySelection({
   rememberedGroupByValue = null,
   labelSets,
   isDisabled = false,
+  respectExplicitUngrouped = false,
 }: {
   currentGroupByLabelSetId?: string | null;
   rememberedGroupByValue?: string | null;
   labelSets: TaskTableGroupByOption[];
   isDisabled?: boolean;
+  respectExplicitUngrouped?: boolean;
 }): string | null {
   if (isDisabled || labelSets.length === 0) {
     return null;
@@ -46,6 +48,10 @@ export function resolveTaskTableGroupBySelection({
 
   if (currentGroupByLabelSetId && availableLabelSetIds.has(currentGroupByLabelSetId)) {
     return currentGroupByLabelSetId;
+  }
+
+  if (respectExplicitUngrouped && currentGroupByLabelSetId == null) {
+    return null;
   }
 
   if (rememberedGroupByValue === TASK_TABLE_UNGROUPED_VALUE) {
@@ -68,6 +74,7 @@ function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | 
 export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKey }: TaskTableGroupByControlProps) {
   const {
     currentDisplayViewConfig,
+    currentSelectedTaskView,
     setCurrentDisplayViewConfig,
   } = useTaskViewStore();
   const { fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
@@ -80,18 +87,27 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
     null
   );
 
+  const shouldRespectSavedUngroupedSelection = currentDisplayViewConfig.viewMode === TaskViewMode.TABLE
+    && currentSelectedTaskView?.viewConfig?.viewMode === TaskViewMode.TABLE
+    && currentSelectedTaskView?.viewConfig?.groupByLabelSetId == null;
+
   const resolvedGroupByLabelSetId = useMemo(() => {
     return resolveTaskTableGroupBySelection({
       currentGroupByLabelSetId: currentDisplayViewConfig.groupByLabelSetId,
       rememberedGroupByValue,
       labelSets,
       isDisabled,
+      respectExplicitUngrouped: shouldRespectSavedUngroupedSelection,
     });
   }, [
     currentDisplayViewConfig.groupByLabelSetId,
+    currentDisplayViewConfig.viewMode,
+    currentSelectedTaskView?.viewConfig?.groupByLabelSetId,
+    currentSelectedTaskView?.viewConfig?.viewMode,
     isDisabled,
     labelSets,
     rememberedGroupByValue,
+    shouldRespectSavedUngroupedSelection,
   ]);
 
   useEffect(() => {
