@@ -291,7 +291,7 @@ export default function ProjectDetailPage() {
                       setIsEditingViewName(false);
                     }
                   }}
-                  className="h-7 w-full max-w-[24rem] border-transparent px-2 py-1 text-sm font-medium leading-none text-foreground shadow-none dark:text-slate-100"
+                  className="h-7 w-full max-w-[24rem] border-transparent px-2 py-1 text-sm font-medium leading-5 text-foreground shadow-none dark:text-slate-100"
                   autoFocus
                   disabled={isRenamingView}
                 />
@@ -307,7 +307,7 @@ export default function ProjectDetailPage() {
                   }}
                   disabled={!canRenameActiveView}
                 >
-                  <h1 className="text-sm font-medium leading-none truncate text-foreground dark:text-slate-100">
+                  <h1 className="text-sm font-medium leading-5 truncate text-foreground dark:text-slate-100">
                     {activeProjectView.name}
                   </h1>
                 </button>

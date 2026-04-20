@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 
+import {
+  closestCorners,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { LabelSetResDto, TaskResDto, TaskSortField, TaskSortOrder, TaskStatus } from '@fullstack/common';
 import { Check, Plus, X } from 'lucide-react';
 
@@ -16,6 +28,7 @@ import { useProjectStore } from '@/stores/useProjectStore';
 import { useTaskStore } from '@/stores/useTaskStore';
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
+import { cn } from '@/lib/utils';
 import { withToast } from '@/utils/toastUtils';
 
 import EditableTaskTableRow from './EditableTaskTableRow';
@@ -79,6 +92,14 @@ interface CreateTaskTableSectionsOptions {
   tasks: TaskTableLikeTask[];
   labelSet: TaskTableLikeLabelSet;
   hideEmptyUnassignedSection?: boolean;
+}
+
+interface TaskTableSectionDropZoneProps {
+  id: string;
+  targetLabelId: string | null;
+  disabled?: boolean;
+  children: React.ReactNode;
+  className?: string;
 }
 
 export function createTaskTableSections({ tasks, labelSet, hideEmptyUnassignedSection = false }: CreateTaskTableSectionsOptions): TaskTableSection[] {
@@ -193,6 +214,30 @@ function buildDisplayedTaskLabels(task: TaskResDto, labelSet: LabelSetResDto | n
 
     return { id: labelId, labelName: labelId, name: labelId };
   });
+}
+
+function TaskTableSectionDropZone({ id, targetLabelId, disabled = false, children, className }: TaskTableSectionDropZoneProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id,
+    disabled,
+    data: {
+      type: 'task-table-section',
+      targetLabelId,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'mx-2 rounded-lg transition-[box-shadow,background-color] duration-150',
+        !disabled && isOver && 'ring-2 ring-purple-400/70 ring-offset-2 ring-offset-background bg-purple-500/5',
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 function InlineTaskCreateRow({ columnWidths, titleAutoWidth, scopeProjectId, initialStatus, labelIds = [], onCancel, onCreated }: InlineTaskCreateRowProps) {
@@ -395,6 +440,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   const { updateTaskById } = useTaskStore();
   const defaultColumnWidths = useMemo(() => getDefaultTaskTableColumnWidths(), []);
   const [optimisticTaskLabels, setOptimisticTaskLabels] = useState<OptimisticTaskLabelState>({});
+  const [activeDragTaskId, setActiveDragTaskId] = useState<string | null>(null);
 
   const storageKey = getTaskTableColumnWidthStorageKey(storageScopeKey);
   const titleAutoStorageKey = getTaskTableTitleAutoWidthStorageKey(storageScopeKey);
@@ -526,6 +572,14 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   }, [currentDisplayViewConfig.status]);
 
   const inlineCreateDisabled = scopeProjectId === 'all';
+  const isGroupDragEnabled = !!selectedLabelSet;
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    })
+  );
 
   const handleColumnResize = (columnId: TaskTableColumnId, width: number) => {
     if (columnId === 'title') {
@@ -582,115 +636,189 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
     });
   }, [selectedLabelSet, tasks, updateTaskById]);
 
+  const activeDragTask = useMemo(
+    () => (activeDragTaskId ? displayedSortedTasks.find((task) => String(task.id) === activeDragTaskId) ?? null : null),
+    [activeDragTaskId, displayedSortedTasks]
+  );
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    if (!isGroupDragEnabled) return;
+
+    const taskId = event.active.data.current?.taskId;
+    if (typeof taskId === 'string') {
+      setActiveDragTaskId(taskId);
+    }
+  }, [isGroupDragEnabled]);
+
+  const handleDragCancel = useCallback((_event?: DragCancelEvent) => {
+    setActiveDragTaskId(null);
+  }, []);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDragTaskId(null);
+
+    if (!isGroupDragEnabled || !selectedLabelSet) {
+      return;
+    }
+
+    const taskId = event.active.data.current?.taskId;
+    if (typeof taskId !== 'string') {
+      return;
+    }
+
+    if (!event.over || event.over.data.current?.type !== 'task-table-section') {
+      return;
+    }
+
+    const draggedTask = displayedSortedTasks.find((task) => String(task.id) === taskId);
+    if (!draggedTask) {
+      return;
+    }
+
+    const targetLabelId = typeof event.over.data.current?.targetLabelId === 'string'
+      ? event.over.data.current.targetLabelId
+      : null;
+
+    void handleMoveTaskToGroup(draggedTask, targetLabelId);
+  }, [displayedSortedTasks, handleMoveTaskToGroup, isGroupDragEnabled, selectedLabelSet]);
+
   return (
-    <div className="flex h-full flex-col gap-3">
-      <TaskTableGroupByControl scopeProjectId={scopeProjectId} storageScopeKey={storageScopeKey} />
-      {inlineCreateDisabled && (
-        <div className="px-1 text-xs text-muted-foreground">
-          Select a concrete project or personal scope to create inline.
-        </div>
-      )}
-
-      <div className="flex flex-col gap-4 overflow-y-auto pr-1">
-        {sections.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-            No tasks found.
+    <DndContext
+      collisionDetection={closestCorners}
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
+      <div className="flex h-full flex-col gap-3">
+        <TaskTableGroupByControl scopeProjectId={scopeProjectId} storageScopeKey={storageScopeKey} />
+        {inlineCreateDisabled && (
+          <div className="px-1 text-xs text-muted-foreground">
+            Select a concrete project or personal scope to create inline.
           </div>
-        ) : sections.map((section) => {
-          const sectionTasks = section.taskIds.map((taskId) => taskById.get(taskId)).filter(Boolean) as TaskResDto[];
-          const showSectionTitle = !section.isUngrouped || currentDisplayViewConfig.groupByLabelSetId;
-          const sectionLabel = groupedLabelBySectionKey.get(section.key);
-          const isCreateRowOpen = createRowState.contextKey === createRowContextKey && createRowState.sectionKey === section.key;
-          const createRowLabelIds = sectionLabel?.id ? [sectionLabel.id] : [];
-          return (
-            <section key={section.key} className="flex flex-col gap-2">
-              {showSectionTitle && section.title && (
-                <div className="flex items-center gap-2 px-1">
-                  {sectionLabel ? (
-                    <LabelBadge text={sectionLabel.name} color={sectionLabel.color} className="px-2.5! py-1! text-xs" />
-                  ) : (
-                    <Badge variant="outline" className="px-2.5 py-1 text-xs font-normal text-muted-foreground shadow-none">
-                      {section.title}
-                    </Badge>
-                  )}
-                  <span className="text-xs text-muted-foreground">{section.taskIds.length}</span>
-                </div>
-              )}
+        )}
 
-              <div className="overflow-hidden rounded-lg border border-none bg-background dark:bg-muted/65">
-                <div className="border-b border-border bg-muted/40">
-                  <div className="flex items-center px-4">
-                    <div className={`${sectionActionGutterClassName} flex items-center justify-center`}>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground"
-                        onClick={() => setCreateRowState({ contextKey: createRowContextKey, sectionKey: section.key })}
-                        disabled={inlineCreateDisabled || isCreateRowOpen}
-                        aria-label={`Add task to ${section.title ?? 'table'}`}
-                        title="Add task"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+        <div className="flex flex-col gap-4 overflow-y-auto pr-1">
+          {sections.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+              No tasks found.
+            </div>
+          ) : sections.map((section) => {
+            const sectionTasks = section.taskIds.map((taskId) => taskById.get(taskId)).filter(Boolean) as TaskResDto[];
+            const showSectionTitle = !section.isUngrouped || currentDisplayViewConfig.groupByLabelSetId;
+            const sectionLabel = groupedLabelBySectionKey.get(section.key);
+            const isCreateRowOpen = createRowState.contextKey === createRowContextKey && createRowState.sectionKey === section.key;
+            const createRowLabelIds = sectionLabel?.id ? [sectionLabel.id] : [];
+            const targetLabelId = sectionLabel?.id ?? null;
+            return (
+              <section key={section.key} className="flex flex-col gap-2">
+                {showSectionTitle && section.title && (
+                  <div className="flex items-center gap-2 px-1">
+                    {sectionLabel ? (
+                      <LabelBadge text={sectionLabel.name} color={sectionLabel.color} className="px-2.5! py-1! text-xs" />
+                    ) : (
+                      <Badge variant="outline" className="px-2.5 py-1 text-xs font-normal text-muted-foreground shadow-none">
+                        {section.title}
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground">{section.taskIds.length}</span>
+                  </div>
+                )}
+
+                <TaskTableSectionDropZone
+                  id={`task-table-section:${section.key}`}
+                  targetLabelId={targetLabelId}
+                  disabled={!isGroupDragEnabled}
+                >
+                  <div className="overflow-hidden rounded-lg border border-none bg-background dark:bg-muted/65">
+                    <div className="border-b border-border bg-muted/40">
+                      <div className="flex items-center px-4">
+                        <div className={`${sectionActionGutterClassName} flex items-center justify-center`}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground"
+                            onClick={() => setCreateRowState({ contextKey: createRowContextKey, sectionKey: section.key })}
+                            disabled={inlineCreateDisabled || isCreateRowOpen}
+                            aria-label={`Add task to ${section.title ?? 'table'}`}
+                            title="Add task"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <div className="min-w-fit">
+                            <TaskTableHeader columnWidths={columnWidths} titleAutoWidth={titleAutoWidth} onColumnResize={handleColumnResize} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <div className="min-w-fit">
-                        <TaskTableHeader columnWidths={columnWidths} titleAutoWidth={titleAutoWidth} onColumnResize={handleColumnResize} />
+                    <div className="flex px-4">
+                      <div className={sectionActionGutterClassName} />
+                      <div className="overflow-x-auto">
+                        <div className="min-w-fit">
+                          {sectionTasks.length > 0 || isCreateRowOpen ? (
+                            <div className="divide-y divide-border">
+                              {isCreateRowOpen && (
+                                <InlineTaskCreateRow
+                                  columnWidths={columnWidths}
+                                  titleAutoWidth={titleAutoWidth}
+                                  scopeProjectId={scopeProjectId}
+                                  initialStatus={inlineCreateInitialStatus}
+                                  labelIds={createRowLabelIds}
+                                  onCancel={() => setCreateRowState((current) => (
+                                    current.contextKey === createRowContextKey && current.sectionKey === section.key
+                                      ? { contextKey: createRowContextKey, sectionKey: null }
+                                      : current
+                                  ))}
+                                  onCreated={() => setCreateRowState((current) => (
+                                    current.contextKey === createRowContextKey && current.sectionKey === section.key
+                                      ? { contextKey: createRowContextKey, sectionKey: null }
+                                      : current
+                                  ))}
+                                />
+                              )}
+                              {sectionTasks.map((task) => (
+                                <EditableTaskTableRow
+                                  key={task.id}
+                                  task={task}
+                                  columnWidths={columnWidths}
+                                  titleAutoWidth={titleAutoWidth}
+                                  onOpenDetail={onOpenTask}
+                                  groupingLabelSet={selectedLabelSet}
+                                  onMoveTaskToGroup={selectedLabelSet ? handleMoveTaskToGroup : undefined}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="px-4 py-3 text-sm text-muted-foreground">
+                              {section.title === UNASSIGNED_SECTION_TITLE ? 'No unassigned tasks.' : 'No tasks in this group yet.'}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex px-4">
-                  <div className={sectionActionGutterClassName} />
-                  <div className="overflow-x-auto">
-                    <div className="min-w-fit">
-                      {sectionTasks.length > 0 || isCreateRowOpen ? (
-                        <div className="divide-y divide-border">
-                          {isCreateRowOpen && (
-                            <InlineTaskCreateRow
-                              columnWidths={columnWidths}
-                              titleAutoWidth={titleAutoWidth}
-                              scopeProjectId={scopeProjectId}
-                              initialStatus={inlineCreateInitialStatus}
-                              labelIds={createRowLabelIds}
-                              onCancel={() => setCreateRowState((current) => (
-                                current.contextKey === createRowContextKey && current.sectionKey === section.key
-                                  ? { contextKey: createRowContextKey, sectionKey: null }
-                                  : current
-                              ))}
-                              onCreated={() => setCreateRowState((current) => (
-                                current.contextKey === createRowContextKey && current.sectionKey === section.key
-                                  ? { contextKey: createRowContextKey, sectionKey: null }
-                                  : current
-                              ))}
-                            />
-                          )}
-                          {sectionTasks.map((task) => (
-                            <EditableTaskTableRow
-                              key={task.id}
-                              task={task}
-                              columnWidths={columnWidths}
-                              titleAutoWidth={titleAutoWidth}
-                              onOpenDetail={onOpenTask}
-                              groupingLabelSet={selectedLabelSet}
-                              onMoveTaskToGroup={selectedLabelSet ? handleMoveTaskToGroup : undefined}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="px-4 py-3 text-sm text-muted-foreground">
-                          {section.title === UNASSIGNED_SECTION_TITLE ? 'No unassigned tasks.' : 'No tasks in this group yet.'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          );
-        })}
+                </TaskTableSectionDropZone>
+              </section>
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      <DragOverlay dropAnimation={null}>
+        {activeDragTask ? (
+          <div className="min-w-72 rounded-lg border border-border bg-background px-4 py-3 shadow-lg dark:bg-muted/95">
+            <div className="truncate text-sm font-medium text-foreground">
+              {activeDragTask.title}
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Drag to move between label groups</span>
+            </div>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

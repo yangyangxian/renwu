@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useDraggable } from '@dnd-kit/core';
 import { LabelSetResDto, TaskResDto, TaskStatus } from '@fullstack/common';
 import { format } from 'date-fns';
-import { ArrowRightLeft, Check, PanelRightOpen, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Check, GripVertical, PanelRightOpen, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
@@ -51,6 +52,15 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
   const [statusDraft, setStatusDraft] = useState(task.status);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isMovingTaskGroup, setIsMovingTaskGroup] = useState(false);
+  const isGroupDragEnabled = !!groupingLabelSet && !!onMoveTaskToGroup;
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `task-row:${task.id}`,
+    disabled: !isGroupDragEnabled || isMovingTaskGroup || deleteDialogOpen || editingTitle,
+    data: {
+      type: 'task-table-row',
+      taskId: String(task.id),
+    },
+  });
 
   useEffect(() => {
     if (!editingTitle) {
@@ -196,10 +206,12 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
 
   return (
     <div
+      ref={setNodeRef}
       className="group relative py-0.5 grid items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
       style={{
         gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
         minWidth: getTaskTableMinWidth(columnWidths),
+        opacity: isDragging ? 0.45 : 1,
       }}
     >
       <div className="px-3">
@@ -277,6 +289,27 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
       </div>
 
       <div className="flex items-center justify-center gap-1 px-2 py-2">
+        {isGroupDragEnabled && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200 cursor-grab active:cursor-grabbing"
+                aria-label={`Drag ${task.title} to another group`}
+                title="Drag to another group"
+                disabled={isMovingTaskGroup}
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Drag to move</TooltipContent>
+          </Tooltip>
+        )}
+
         {groupingLabelSet && moveTargets.length > 0 && onMoveTaskToGroup && (
           <DropdownMenu>
             <Tooltip>
