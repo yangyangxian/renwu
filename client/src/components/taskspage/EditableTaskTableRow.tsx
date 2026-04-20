@@ -205,101 +205,21 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
   }, [onMoveTaskToGroup, task]);
 
   return (
-    <div
-      ref={setNodeRef}
-      className="group relative py-0.5 grid items-center bg-transparent text-sm transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
-      style={{
-        gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
-        minWidth: getTaskTableMinWidth(columnWidths),
-        opacity: isDragging ? 0.45 : 1,
-      }}
-    >
-      <div className="px-3">
-        <UserSelector
-          options={memberOptions}
-          currentValue={assigneeDraft?.id ? assigneeDraft : null}
-          onSelect={handleAssigneeSelect}
-          triggerClassName="h-7 px-2 [&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar-fallback]]:text-xs [&_[data-slot=avatar-fallback]]:leading-none"
-          triggerLabelClassName="font-normal leading-none"
-        />
-      </div>
-
-      <div className="min-w-0 pr-3">
-        {editingTitle ? (
-          <Input
-            value={titleDraft}
-            onChange={(event) => setTitleDraft(event.target.value)}
-            onBlur={commitTitle}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                (event.currentTarget as HTMLInputElement).blur();
-              }
-              if (event.key === 'Escape') {
-                setEditingTitle(false);
-                setTitleDraft(task.title);
-              }
-            }}
-            className={`${titleFieldClassName} cursor-text focus-visible:border-input focus-visible:ring-0`}
-            autoFocus
-          />
-        ) : (
-          <button
-            type="button"
-            className={`${titleFieldClassName} block max-w-full truncate hover:bg-muted/40 focus-visible:bg-muted/40`}
-            onClick={() => setEditingTitle(true)}
-          >
-            {task.title}
-          </button>
-        )}
-      </div>
-
-      <div className="px-3 py-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Badge variant="outline" className={`cursor-pointer border ${statusColors[statusDraft]}`}>
-              {statusIcons[statusDraft]}
-              {statusLabels[statusDraft]}
-            </Badge>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {allStatuses.map((status) => (
-              <DropdownMenuRadioItem
-                key={status}
-                value={status}
-                onSelect={async () => {
-                  await handleStatusSelect(status);
-                }}
-                className="relative flex cursor-pointer items-center pl-8"
-              >
-                {statusDraft === status && <Check className="absolute left-2 h-4 w-4 text-primary" />}
-                <div className="flex items-center gap-2">
-                  {statusIcons[status]}
-                  {statusLabels[status]}
-                </div>
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div className="px-3 py-2 text-muted-foreground">
-        <span className="min-w-0 truncate">
-          {task.updatedAt ? format(new Date(task.updatedAt), 'yyyy-MM-dd HH:mm') : '--'}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-center gap-1 px-2 py-2">
+    <div className="group relative flex items-center py-0.5 text-sm">
+      <div className="flex w-5 shrink-0 items-center justify-center">
         {isGroupDragEnabled && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                ref={setNodeRef}
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200 cursor-grab active:cursor-grabbing"
+                className="h-7 w-5 shrink-0 rounded-none text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-transparent hover:text-foreground hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200 cursor-grab active:cursor-grabbing"
                 aria-label={`Drag ${task.title} to another group`}
                 title="Drag to another group"
                 disabled={isMovingTaskGroup}
+                style={{ opacity: isDragging ? 0.45 : 1 }}
                 {...attributes}
                 {...listeners}
               >
@@ -309,79 +229,164 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
             <TooltipContent side="top">Drag to move</TooltipContent>
           </Tooltip>
         )}
+      </div>
 
-        {groupingLabelSet && moveTargets.length > 0 && onMoveTaskToGroup && (
+      <div
+        className="grid flex-1 items-center bg-transparent transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
+        style={{
+          gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
+          minWidth: getTaskTableMinWidth(columnWidths),
+          opacity: isDragging ? 0.45 : 1,
+        }}
+      >
+        <div className="px-3">
+          <UserSelector
+            options={memberOptions}
+            currentValue={assigneeDraft?.id ? assigneeDraft : null}
+            onSelect={handleAssigneeSelect}
+            triggerClassName="h-7 px-2 [&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar-fallback]]:text-xs [&_[data-slot=avatar-fallback]]:leading-none"
+            triggerLabelClassName="font-normal leading-none"
+          />
+        </div>
+
+        <div className="min-w-0 pr-3">
+          {editingTitle ? (
+            <Input
+              value={titleDraft}
+              onChange={(event) => setTitleDraft(event.target.value)}
+              onBlur={commitTitle}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  (event.currentTarget as HTMLInputElement).blur();
+                }
+                if (event.key === 'Escape') {
+                  setEditingTitle(false);
+                  setTitleDraft(task.title);
+                }
+              }}
+              className={`${titleFieldClassName} cursor-text focus-visible:border-input focus-visible:ring-0`}
+              autoFocus
+            />
+          ) : (
+            <button
+              type="button"
+              className={`${titleFieldClassName} block max-w-full truncate hover:bg-muted/40 focus-visible:bg-muted/40`}
+              onClick={() => setEditingTitle(true)}
+            >
+              {task.title}
+            </button>
+          )}
+        </div>
+
+        <div className="px-3 py-2">
           <DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
-                    aria-label={`Move ${task.title} to another group`}
-                    disabled={isMovingTaskGroup}
-                  >
-                    <ArrowRightLeft className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top">Move to</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent align="end">
-              {moveTargets.map((target) => (
-                <DropdownMenuItem
-                  key={target.value ?? 'unassigned'}
-                  onSelect={() => {
-                    void handleMoveTaskGroup(target.value);
+            <DropdownMenuTrigger asChild>
+              <Badge variant="outline" className={`cursor-pointer border ${statusColors[statusDraft]}`}>
+                {statusIcons[statusDraft]}
+                {statusLabels[statusDraft]}
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {allStatuses.map((status) => (
+                <DropdownMenuRadioItem
+                  key={status}
+                  value={status}
+                  onSelect={async () => {
+                    await handleStatusSelect(status);
                   }}
-                  className="cursor-pointer"
+                  className="relative flex cursor-pointer items-center pl-8"
                 >
-                  {target.value ? (
-                    <LabelBadge text={target.label} color={target.color} className="pointer-events-none px-2.5! py-1!" />
-                  ) : (
-                    <Badge variant="outline" className="pointer-events-none px-2.5 py-1 text-xs font-normal text-muted-foreground shadow-none">
-                      {target.label}
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
+                  {statusDraft === status && <Check className="absolute left-2 h-4 w-4 text-primary" />}
+                  <div className="flex items-center gap-2">
+                    {statusIcons[status]}
+                    {statusLabels[status]}
+                  </div>
+                </DropdownMenuRadioItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[color,opacity] hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
-              onClick={() => onOpenDetail(task.id)}
-              aria-label={`Open details for ${task.title}`}
-            >
-              <PanelRightOpen className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">Details</TooltipContent>
-        </Tooltip>
+        <div className="px-3 py-2 text-muted-foreground">
+          <span className="min-w-0 truncate">
+            {task.updatedAt ? format(new Date(task.updatedAt), 'yyyy-MM-dd HH:mm') : '--'}
+          </span>
+        </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-destructive/10 hover:text-destructive hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
-              onClick={() => setDeleteDialogOpen(true)}
-              aria-label={`Delete ${task.title}`}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">Delete</TooltipContent>
-        </Tooltip>
+        <div className="flex items-center justify-center gap-1 px-2 py-2">
+          {groupingLabelSet && moveTargets.length > 0 && onMoveTaskToGroup && (
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
+                      aria-label={`Move ${task.title} to another group`}
+                      disabled={isMovingTaskGroup}
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top">Move to</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end">
+                {moveTargets.map((target) => (
+                  <DropdownMenuItem
+                    key={target.value ?? 'unassigned'}
+                    onSelect={() => {
+                      void handleMoveTaskGroup(target.value);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {target.value ? (
+                      <LabelBadge text={target.label} color={target.color} className="pointer-events-none px-2.5! py-1!" />
+                    ) : (
+                      <Badge variant="outline" className="pointer-events-none px-2.5 py-1 text-xs font-normal text-muted-foreground shadow-none">
+                        {target.label}
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[color,opacity] hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
+                onClick={() => onOpenDetail(task.id)}
+                aria-label={`Open details for ${task.title}`}
+              >
+                <PanelRightOpen className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Details</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-90 transition-[background-color,color,opacity] hover:bg-destructive/10 hover:text-destructive hover:opacity-100 focus-visible:opacity-100 dark:text-slate-200"
+                onClick={() => setDeleteDialogOpen(true)}
+                aria-label={`Delete ${task.title}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Delete</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <ConfirmDeleteDialog

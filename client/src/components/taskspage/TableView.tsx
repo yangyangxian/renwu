@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 
 import {
-  closestCorners,
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   useDroppable,
   useSensor,
   useSensors,
@@ -684,7 +685,14 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
 
   return (
     <DndContext
-      collisionDetection={closestCorners}
+      collisionDetection={(args) => {
+        const pointerMatches = pointerWithin(args);
+        if (pointerMatches.length > 0) {
+          return pointerMatches;
+        }
+
+        return rectIntersection(args);
+      }}
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -754,30 +762,32 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                         </div>
                       </div>
                     </div>
-                    <div className="flex px-4">
-                      <div className={sectionActionGutterClassName} />
+                    <div className="px-4">
                       <div className="overflow-x-auto">
                         <div className="min-w-fit">
                           {sectionTasks.length > 0 || isCreateRowOpen ? (
                             <div className="divide-y divide-border">
                               {isCreateRowOpen && (
-                                <InlineTaskCreateRow
-                                  columnWidths={columnWidths}
-                                  titleAutoWidth={titleAutoWidth}
-                                  scopeProjectId={scopeProjectId}
-                                  initialStatus={inlineCreateInitialStatus}
-                                  labelIds={createRowLabelIds}
-                                  onCancel={() => setCreateRowState((current) => (
-                                    current.contextKey === createRowContextKey && current.sectionKey === section.key
-                                      ? { contextKey: createRowContextKey, sectionKey: null }
-                                      : current
-                                  ))}
-                                  onCreated={() => setCreateRowState((current) => (
-                                    current.contextKey === createRowContextKey && current.sectionKey === section.key
-                                      ? { contextKey: createRowContextKey, sectionKey: null }
-                                      : current
-                                  ))}
-                                />
+                                <div className="flex items-center">
+                                  <div className={sectionActionGutterClassName} />
+                                  <InlineTaskCreateRow
+                                    columnWidths={columnWidths}
+                                    titleAutoWidth={titleAutoWidth}
+                                    scopeProjectId={scopeProjectId}
+                                    initialStatus={inlineCreateInitialStatus}
+                                    labelIds={createRowLabelIds}
+                                    onCancel={() => setCreateRowState((current) => (
+                                      current.contextKey === createRowContextKey && current.sectionKey === section.key
+                                        ? { contextKey: createRowContextKey, sectionKey: null }
+                                        : current
+                                    ))}
+                                    onCreated={() => setCreateRowState((current) => (
+                                      current.contextKey === createRowContextKey && current.sectionKey === section.key
+                                        ? { contextKey: createRowContextKey, sectionKey: null }
+                                        : current
+                                    ))}
+                                  />
+                                </div>
                               )}
                               {sectionTasks.map((task) => (
                                 <EditableTaskTableRow
