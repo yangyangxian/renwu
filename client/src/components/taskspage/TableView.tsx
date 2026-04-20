@@ -730,6 +730,18 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                       </Badge>
                     )}
                     <span className="text-xs text-muted-foreground">{section.taskIds.length}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 shrink-0 rounded-none p-0 text-muted-foreground/75 hover:bg-transparent hover:text-foreground"
+                      onClick={() => setCreateRowState({ contextKey: createRowContextKey, sectionKey: section.key })}
+                      disabled={inlineCreateDisabled || isCreateRowOpen}
+                      aria-label={`Add task to ${section.title ?? 'table'}`}
+                      title="Add task"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 )}
 
@@ -742,18 +754,20 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
                     <div className="border-b border-border bg-muted/40">
                       <div className="flex items-center px-4">
                         <div className={`${sectionActionGutterClassName} flex items-center justify-center`}>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground"
-                            onClick={() => setCreateRowState({ contextKey: createRowContextKey, sectionKey: section.key })}
-                            disabled={inlineCreateDisabled || isCreateRowOpen}
-                            aria-label={`Add task to ${section.title ?? 'table'}`}
-                            title="Add task"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                          {!showSectionTitle && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-4 w-4 shrink-0 rounded-none p-0 text-muted-foreground/75 hover:bg-transparent hover:text-foreground"
+                              onClick={() => setCreateRowState({ contextKey: createRowContextKey, sectionKey: section.key })}
+                              disabled={inlineCreateDisabled || isCreateRowOpen}
+                              aria-label={`Add task to ${section.title ?? 'table'}`}
+                              title="Add task"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                         <div className="overflow-x-auto">
                           <div className="min-w-fit">
