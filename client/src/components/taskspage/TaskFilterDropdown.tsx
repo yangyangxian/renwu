@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui-kit/Dropdown-menu';
+import LabelBadge from '@/components/common/LabelBadge';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useLabelStore } from '@/stores/useLabelStore';
@@ -100,6 +101,30 @@ export function TaskFilterDropdown({
     fetchLabelSets(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
   }, [canFilterByLabelSet, fetchLabelSets, normalizedLabelSetScopeProjectId, open]);
 
+  const handleProjectSelect = (nextProjectId: string) => {
+    const resolvedProjectId = selectedProject === nextProjectId ? 'all' : nextProjectId;
+    onSelectedProjectChange?.(resolvedProjectId);
+    setOpen(false);
+  };
+
+  const handleLabelSelect = (nextLabelId: string | null) => {
+    const resolvedLabelId = selectedLabelId === nextLabelId ? null : nextLabelId;
+    onSelectedLabelChange?.(resolvedLabelId);
+    setOpen(false);
+  };
+
+  const handleLabelSetSelect = (nextLabelSetId: string | null) => {
+    const resolvedLabelSetId = selectedLabelSetId === nextLabelSetId ? null : nextLabelSetId;
+    onSelectedLabelSetChange?.(resolvedLabelSetId);
+    setOpen(false);
+  };
+
+  const handleDateRangeSelect = (nextRange: TaskDateRange) => {
+    const resolvedRange = value === nextRange ? TaskDateRange.ALL_TIME : nextRange;
+    onChange(resolvedRange);
+    setOpen(false);
+  };
+
   return (
     <div className={cn('flex items-center', className)}>
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -153,8 +178,7 @@ export function TaskFilterDropdown({
                   <DropdownMenuItem
                     onSelect={(e) => {
                       e.preventDefault();
-                      onSelectedProjectChange?.('all');
-                      setOpen(false);
+                      handleProjectSelect('all');
                     }}
                     className="flex items-center justify-between ml-2"
                   >
@@ -164,8 +188,7 @@ export function TaskFilterDropdown({
                   <DropdownMenuItem
                     onSelect={(e) => {
                       e.preventDefault();
-                      onSelectedProjectChange?.('personal');
-                      setOpen(false);
+                      handleProjectSelect('personal');
                     }}
                     className="flex items-center justify-between ml-2"
                   >
@@ -178,8 +201,7 @@ export function TaskFilterDropdown({
                       key={p.id}
                       onSelect={(e) => {
                         e.preventDefault();
-                        onSelectedProjectChange?.(p.id);
-                        setOpen(false);
+                        handleProjectSelect(p.id);
                       }}
                       className="flex items-center justify-between ml-2"
                     >
@@ -228,28 +250,16 @@ export function TaskFilterDropdown({
                     </DropdownMenuLabel>
                   ) : (
                     <>
-                      <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          onSelectedLabelChange?.(null);
-                          setOpen(false);
-                        }}
-                        className="flex items-center justify-between ml-2"
-                      >
-                        <span>All labels</span>
-                        {selectedLabelId == null && <Check className="w-4 h-4 text-green-600" />}
-                      </DropdownMenuItem>
                       {scopedLabels.map((label) => (
                         <DropdownMenuItem
                           key={label.id}
                           onSelect={(e) => {
                             e.preventDefault();
-                            onSelectedLabelChange?.(label.id);
-                            setOpen(false);
+                            handleLabelSelect(label.id);
                           }}
                           className="flex items-center justify-between ml-2"
                         >
-                          <span className="truncate">{label.name}</span>
+                          <LabelBadge text={label.name} color={label.color} className="pointer-events-none !px-2 !py-0.5" />
                           {selectedLabelId === label.id && <Check className="w-4 h-4 text-green-600" />}
                         </DropdownMenuItem>
                       ))}
@@ -296,24 +306,12 @@ export function TaskFilterDropdown({
                     </DropdownMenuLabel>
                   ) : (
                     <>
-                      <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          onSelectedLabelSetChange?.(null);
-                          setOpen(false);
-                        }}
-                        className="flex items-center justify-between ml-2"
-                      >
-                        <span>All label sets</span>
-                        {selectedLabelSetId == null && <Check className="w-4 h-4 text-green-600" />}
-                      </DropdownMenuItem>
                       {scopedLabelSets.map((labelSet) => (
                         <DropdownMenuItem
                           key={labelSet.id}
                           onSelect={(e) => {
                             e.preventDefault();
-                            onSelectedLabelSetChange?.(labelSet.id);
-                            setOpen(false);
+                            handleLabelSetSelect(labelSet.id);
                           }}
                           className="flex items-center justify-between ml-2"
                         >
@@ -361,8 +359,7 @@ export function TaskFilterDropdown({
                       // Radix DropdownMenuItem triggers `onSelect` with a custom event.
                       // Prevent default so it doesn't interfere with our controlled state update.
                       e.preventDefault();
-                      onChange(opt.value);
-                      setOpen(false);
+                      handleDateRangeSelect(opt.value);
                     }}
                     className="flex items-center justify-between ml-2"
                   >
