@@ -11,7 +11,7 @@ import { PROJECTS_PATH } from "@/routes/routeConfig";
 import React, { useCallback, useState } from "react";
 import { ProjectResDto, TaskViewResDto } from "@fullstack/common";
 import { Skeleton } from "../ui-kit/Skeleton";
-import { useTaskViewStore, createProjectTaskViewConfig } from "@/stores/useTaskViewStore";
+import { resolveProjectPageDisplayViewConfig, useTaskViewStore } from "@/stores/useTaskViewStore";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { useAuth } from "@/providers/AuthProvider";
@@ -34,9 +34,9 @@ export function ProjectsMenuItem({
   const navigate = useNavigate();
   const { user } = useAuth();
   const {
-    currentDisplayViewConfig,
     currentSelectedTaskView,
     deleteTaskView,
+    getProjectHomeViewConfig,
     setCurrentDisplayViewConfig,
     setCurrentSelectedTaskView,
   } = useTaskViewStore();
@@ -117,8 +117,8 @@ export function ProjectsMenuItem({
                       navigate(`${PROJECTS_PATH}/${project.slug}`);
                       setCurrentSelectedTaskView(null);
                       setCurrentDisplayViewConfig(
-                        createProjectTaskViewConfig(project.id, {
-                          viewMode: currentDisplayViewConfig.viewMode,
+                        resolveProjectPageDisplayViewConfig(project.id, {
+                          projectHomeViewConfig: getProjectHomeViewConfig(project.id),
                         })
                       );
                     }}
@@ -142,7 +142,11 @@ export function ProjectsMenuItem({
                               const encodedName = encodeURIComponent(view.name.replace(/\s+/g, '-'));
                               navigate(`${PROJECTS_PATH}/${project.slug}?view=${encodedName}#tasks`);
                               setCurrentSelectedTaskView(view);
-                              setCurrentDisplayViewConfig(createProjectTaskViewConfig(project.id, view.viewConfig));
+                              setCurrentDisplayViewConfig(
+                                resolveProjectPageDisplayViewConfig(project.id, {
+                                  activeProjectViewConfig: view.viewConfig,
+                                })
+                              );
                             }}
                           >
                             <span className="truncate text-sm">{view.name}</span>
@@ -184,8 +188,8 @@ export function ProjectsMenuItem({
                                     if (wasSelected) {
                                       setCurrentSelectedTaskView(null);
                                       setCurrentDisplayViewConfig(
-                                        createProjectTaskViewConfig(project.id, {
-                                          viewMode: currentDisplayViewConfig.viewMode,
+                                        resolveProjectPageDisplayViewConfig(project.id, {
+                                          projectHomeViewConfig: getProjectHomeViewConfig(project.id),
                                         })
                                       );
                                       navigate(`${PROJECTS_PATH}/${project.slug}`);

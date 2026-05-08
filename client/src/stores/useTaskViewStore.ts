@@ -48,6 +48,24 @@ export function createProjectTaskViewConfig(projectId: string, overrides: Partia
   });
 }
 
+export function resolveProjectPageDisplayViewConfig(
+  projectId: string,
+  options: {
+    activeProjectViewConfig?: Partial<ViewConfig> | null;
+    projectHomeViewConfig?: Partial<ViewConfig> | null;
+  } = {}
+): ViewConfig {
+  if (options.activeProjectViewConfig) {
+    return createProjectTaskViewConfig(projectId, options.activeProjectViewConfig);
+  }
+
+  if (options.projectHomeViewConfig) {
+    return createProjectTaskViewConfig(projectId, options.projectHomeViewConfig);
+  }
+
+  return createProjectTaskViewConfig(projectId);
+}
+
 export function sanitizeTaskViewConfigForPersistence(view: Partial<ViewConfig>): ViewConfig {
   return normalizeTaskViewConfig(view);
 }
@@ -61,6 +79,9 @@ interface TaskViewStoreState {
   setTaskViews: (views: TaskViewResDto[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  projectHomeViewConfigs: Record<string, ViewConfig>;
+  getProjectHomeViewConfig: (projectId: string) => ViewConfig | null;
+  setProjectHomeViewConfig: (projectId: string, view: ViewConfig) => void;
   currentDisplayViewConfig: ViewConfig;
   setCurrentDisplayViewConfig: (view: ViewConfig) => void;
   setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => void;
@@ -68,13 +89,21 @@ interface TaskViewStoreState {
 
 const defaultDisplayViewConfig: ViewConfig = defaultTaskViewConfig;
 
-const useZustandTaskViewStore = create<TaskViewStoreState>((set) => ({
+const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
   taskViews: [],
   loading: false,
   error: null,
   setTaskViews: (views) => set({ taskViews: views }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
+  projectHomeViewConfigs: {},
+  getProjectHomeViewConfig: (projectId) => get().projectHomeViewConfigs[projectId] ?? null,
+  setProjectHomeViewConfig: (projectId, view) => set((state) => ({
+    projectHomeViewConfigs: {
+      ...state.projectHomeViewConfigs,
+      [projectId]: createProjectTaskViewConfig(projectId, view),
+    },
+  })),
   currentSelectedTaskView: null,
   setCurrentSelectedTaskView: (view) => set({ currentSelectedTaskView: view }),
   currentDisplayViewConfig: defaultDisplayViewConfig,
@@ -88,7 +117,8 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set) => ({
 }));
 
 export function useTaskViewStore() {
-  const { taskViews, loading, error, setTaskViews, setLoading, setError, 
+  const { taskViews, loading, error, setTaskViews, setLoading, setError,
+    projectHomeViewConfigs, getProjectHomeViewConfig, setProjectHomeViewConfig,
     currentSelectedTaskView, setCurrentSelectedTaskView, currentDisplayViewConfig, 
     setCurrentDisplayViewConfig, setCurrentDisplayViewConfigViewMode } = useZustandTaskViewStore();
     
@@ -180,6 +210,9 @@ export function useTaskViewStore() {
     getProjectTaskViews: (projectId: string) => taskViews.filter(view => view.projectId === projectId),
     loading,
     error,
+    projectHomeViewConfigs,
+    getProjectHomeViewConfig,
+    setProjectHomeViewConfig,
     fetchTaskViews,
     createTaskView,
     updateTaskView,

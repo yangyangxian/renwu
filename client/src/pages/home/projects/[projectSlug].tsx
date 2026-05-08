@@ -22,7 +22,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { SaveTaskViewPopover } from "@/components/taskspage/SaveTaskViewPopover";
 import { SaveTaskViewDialog } from "@/components/taskspage/SaveTaskViewDialog";
 import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
-import { createProjectTaskViewConfig, sanitizeTaskViewConfigForPersistence, useTaskViewStore } from "@/stores/useTaskViewStore";
+import {
+  createProjectTaskViewConfig,
+  resolveProjectPageDisplayViewConfig,
+  sanitizeTaskViewConfigForPersistence,
+  useTaskViewStore,
+} from "@/stores/useTaskViewStore";
 import { PROJECTS_PATH } from "@/routes/routeConfig";
 import { toast } from "sonner";
 import isEqual from "lodash/isEqual";
@@ -43,8 +48,10 @@ export default function ProjectDetailPage() {
     taskViews,
     currentSelectedTaskView,
     currentDisplayViewConfig,
+    getProjectHomeViewConfig,
     setCurrentDisplayViewConfig,
     setCurrentDisplayViewConfigViewMode,
+    setProjectHomeViewConfig,
     setCurrentSelectedTaskView,
     updateTaskView,
   } = useTaskViewStore();
@@ -62,6 +69,9 @@ export default function ProjectDetailPage() {
   const projectTaskViews = projectId
     ? taskViews.filter((view) => view.projectId === projectId)
     : [];
+  const projectHomeViewConfig = projectId
+    ? getProjectHomeViewConfig(projectId)
+    : null;
   const activeViewSlug = new URLSearchParams(location.search).get('view');
   const activeProjectView = projectTaskViews.find(
     (view) => view.name.replace(/\s+/g, '-') === activeViewSlug
@@ -101,21 +111,18 @@ export default function ProjectDetailPage() {
   }, [projectId, fetchCurrentProject, fetchProjectTasks]);
 
   useEffect(() => {
-    if (!projectId || activeProjectView || currentDisplayViewConfig.projectId === projectId) {
+    if (!projectId || activeProjectView) {
       return;
     }
 
-    setCurrentDisplayViewConfig(
-      createProjectTaskViewConfig(projectId, {
-        viewMode: currentDisplayViewConfig.viewMode,
-      })
-    );
+    if (currentDisplayViewConfig.projectId === projectId) {
+      setProjectHomeViewConfig(projectId, currentDisplayViewConfig);
+    }
   }, [
     projectId,
     activeProjectView,
-    currentDisplayViewConfig.projectId,
-    currentDisplayViewConfig.viewMode,
-    setCurrentDisplayViewConfig,
+    currentDisplayViewConfig,
+    setProjectHomeViewConfig,
   ]);
 
   useEffect(() => {
@@ -126,16 +133,21 @@ export default function ProjectDetailPage() {
     if (activeProjectView) {
       if (currentSelectedTaskView?.id !== activeProjectView.id) {
         setCurrentSelectedTaskView(activeProjectView);
-        setCurrentDisplayViewConfig(createProjectTaskViewConfig(projectId, activeProjectView.viewConfig));
       }
+
+      setCurrentDisplayViewConfig(
+        resolveProjectPageDisplayViewConfig(projectId, {
+          activeProjectViewConfig: activeProjectView.viewConfig,
+        })
+      );
       return;
     }
 
-    if (currentSelectedTaskView) {
+    if (currentSelectedTaskView || currentDisplayViewConfig.projectId !== projectId) {
       setCurrentSelectedTaskView(null);
       setCurrentDisplayViewConfig(
-        createProjectTaskViewConfig(projectId, {
-          viewMode: currentDisplayViewConfig.viewMode,
+        resolveProjectPageDisplayViewConfig(projectId, {
+          projectHomeViewConfig,
         })
       );
     }
@@ -143,7 +155,8 @@ export default function ProjectDetailPage() {
     projectId,
     activeProjectView,
     currentSelectedTaskView,
-    currentDisplayViewConfig.viewMode,
+    currentDisplayViewConfig.projectId,
+    projectHomeViewConfig,
     setCurrentDisplayViewConfig,
     setCurrentSelectedTaskView,
   ]);
@@ -234,20 +247,20 @@ export default function ProjectDetailPage() {
   };
 
   const handleNavigateToProjectHome = () => {
-    if (!projectId || !projectSlug) {
+    if (!projectId || !projectSlug || !project) {
       return;
     }
 
     navigate(`${PROJECTS_PATH}/${project.slug ?? projectSlug}`);
     setCurrentSelectedTaskView(null);
     setCurrentDisplayViewConfig(
-      createProjectTaskViewConfig(projectId, {
-        viewMode: currentDisplayViewConfig.viewMode,
+      resolveProjectPageDisplayViewConfig(projectId, {
+        projectHomeViewConfig,
       })
     );
   };
 
-  if (!projectId || loadingCurrentProject) {
+  if (!projectId || !project || loadingCurrentProject) {
     return <HomePageSkeleton />;
   }
 
