@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
 import {
   DndContext,
@@ -65,6 +65,7 @@ type TaskTableLikeLabel = {
 
 type TaskTableLikeTask = {
   id: string;
+  status?: TaskStatus;
   labels?: TaskTableLikeLabel[];
 };
 
@@ -91,6 +92,7 @@ interface CreateRowState {
 
 interface CreateTaskTableSectionsOptions {
   tasks: TaskTableLikeTask[];
+  visibilityTasks?: TaskTableLikeTask[];
   labelSet: TaskTableLikeLabelSet;
   hideEmptyUnassignedSection?: boolean;
 }
@@ -99,11 +101,16 @@ interface TaskTableSectionDropZoneProps {
   id: string;
   targetLabelId: string | null;
   disabled?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 
-export function createTaskTableSections({ tasks, labelSet, hideEmptyUnassignedSection = false }: CreateTaskTableSectionsOptions): TaskTableSection[] {
+export function createTaskTableSections({
+  tasks,
+  visibilityTasks = tasks,
+  labelSet,
+  hideEmptyUnassignedSection = false,
+}: CreateTaskTableSectionsOptions): TaskTableSection[] {
   if (!labelSet) {
     return [
       {
@@ -117,6 +124,9 @@ export function createTaskTableSections({ tasks, labelSet, hideEmptyUnassignedSe
 
   const labels = Array.isArray(labelSet.labels) ? labelSet.labels : [];
   const labelIds = new Set(labels.map((label) => label.id));
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+  const visibilityTaskById = new Map(visibilityTasks.map((task) => [task.id, task]));
+  const visibilityTaskIdsByLabelId = new Map<string, string[]>();
   const sections = labels.map<TaskTableSection>((label) => ({
     key: `label:${label.id}`,
     title: label.name ?? label.labelName ?? '',
@@ -131,6 +141,21 @@ export function createTaskTableSections({ tasks, labelSet, hideEmptyUnassignedSe
     taskIds: [],
     isUngrouped: false,
   };
+
+  for (const task of visibilityTasks) {
+    const matchingLabel = (task.labels ?? []).find((label) => labelIds.has(label.id));
+    if (!matchingLabel) {
+      continue;
+    }
+
+    const matchingTaskIds = visibilityTaskIdsByLabelId.get(matchingLabel.id);
+    if (matchingTaskIds) {
+      matchingTaskIds.push(task.id);
+      continue;
+    }
+
+    visibilityTaskIdsByLabelId.set(matchingLabel.id, [task.id]);
+  }
 
   for (const task of tasks) {
     const matchingLabel = (task.labels ?? []).find((label) => labelIds.has(label.id));
@@ -147,11 +172,24 @@ export function createTaskTableSections({ tasks, labelSet, hideEmptyUnassignedSe
     }
   }
 
+  const visibleSections = sections.filter((section) => {
+    if (section.taskIds.length === 0) {
+      const visibilityTaskIds = visibilityTaskIdsByLabelId.get(section.key.replace('label:', '')) ?? [];
+      if (visibilityTaskIds.length === 0) {
+        return true;
+      }
+
+      return !visibilityTaskIds.every((taskId) => visibilityTaskById.get(taskId)?.status === TaskStatus.CLOSE);
+    }
+
+    return !section.taskIds.every((taskId) => taskById.get(taskId)?.status === TaskStatus.CLOSE);
+  });
+
   if (hideEmptyUnassignedSection && unassignedSection.taskIds.length === 0) {
-    return sections;
+    return visibleSections;
   }
 
-  return [...sections, unassignedSection];
+  return [...visibleSections, unassignedSection];
 }
 
 interface InlineTaskCreateRowProps {
@@ -547,10 +585,11 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   const sections = useMemo(
     () => createTaskTableSections({
       tasks: displayedSortedTasks,
+      visibilityTasks: tasks,
       labelSet: selectedLabelSet,
       hideEmptyUnassignedSection: !!currentDisplayViewConfig.filterLabelSetId,
     }),
-    [currentDisplayViewConfig.filterLabelSetId, displayedSortedTasks, selectedLabelSet]
+    [currentDisplayViewConfig.filterLabelSetId, displayedSortedTasks, selectedLabelSet, tasks]
   );
 
   const groupedLabelBySectionKey = useMemo(
