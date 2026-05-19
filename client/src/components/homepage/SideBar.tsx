@@ -15,6 +15,7 @@ import { withToast } from "@/utils/toastUtils";
 import { TasksMenuItem } from "./TasksMenuItem";
 import { ProjectsMenuItem } from "./ProjectsMenuItem";
 import { LabelsMenuItem } from "./LabelsMenuItem";
+import { HOME_SIDEBAR_WIDTH } from './homeSidebarWidth';
 
 export interface HomeSideBarProps {}
 
@@ -119,8 +120,8 @@ export function HomeSideBar() {
       open={expanded}
       onOpenChange={setExpanded}
       style={{
-        // local override to make the sidebar narrower without editing the ui-kit
-        "--sidebar-width": "15rem"
+        // Let the desktop sidebar grow within a bounded range for longer project/view names.
+        "--sidebar-width": HOME_SIDEBAR_WIDTH
       } as React.CSSProperties}
     >
       <Sidebar

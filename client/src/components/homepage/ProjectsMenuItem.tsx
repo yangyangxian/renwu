@@ -1,6 +1,7 @@
 import {
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuAction,
   SidebarMenuSub,
   SidebarMenuSubItem,
 } from "@/components/ui-kit/Sidebar";
@@ -16,6 +17,7 @@ import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { useAuth } from "@/providers/AuthProvider";
 import { getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
+import { getProjectRowButtonClassName } from "./projectRowButtonClassName";
 
 export function ProjectsMenuItem({ 
   showText,
@@ -43,6 +45,7 @@ export function ProjectsMenuItem({
   } = useTaskViewStore();
   const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
   const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
+  const [expandedProjectIds, setExpandedProjectIds] = useState<Record<string, boolean>>({});
   const pathname = location.pathname;
 
   const isProjectActive = useCallback((projectId: string) => {
@@ -64,6 +67,17 @@ export function ProjectsMenuItem({
     e.stopPropagation();
     onAddProject && onAddProject();
   };
+
+  const isProjectViewsExpanded = useCallback((projectId: string) => {
+    return expandedProjectIds[projectId] ?? true;
+  }, [expandedProjectIds]);
+
+  const toggleProjectViews = useCallback((projectId: string) => {
+    setExpandedProjectIds((current) => ({
+      ...current,
+      [projectId]: !(current[projectId] ?? true),
+    }));
+  }, []);
 
   return (
     <SidebarMenuItem>
@@ -107,27 +121,43 @@ export function ProjectsMenuItem({
             </>}
             {showText && !loading && projects.map((project) => {
               const projectViews = taskViews.filter((view) => view.projectId === project.id);
+              const projectViewsExpanded = isProjectViewsExpanded(project.id);
 
               return (
               <SidebarMenuSubItem key={project.id}>
                 <div className="space-y-1">
-                  <SidebarMenuButton
-                    className="pl-4 cursor-pointer"
-                    isActive={isProjectActive(project.id)}
-                    onClick={() => {
-                      navigate(`${PROJECTS_PATH}/${project.slug}`);
-                      setCurrentSelectedTaskView(null);
-                      setCurrentDisplayViewConfig(
-                        resolveProjectPageDisplayViewConfig(project.id, {
-                          projectHomeViewConfig: getProjectHomeViewConfig(project.id),
-                        })
-                      );
-                    }}
-                  >
-                    {project.name}
-                  </SidebarMenuButton>
+                  <div className="relative">
+                    <SidebarMenuButton
+                      className={getProjectRowButtonClassName(projectViews.length > 0)}
+                      isActive={isProjectActive(project.id)}
+                      onClick={() => {
+                        navigate(`${PROJECTS_PATH}/${project.slug}`);
+                        setCurrentSelectedTaskView(null);
+                        setCurrentDisplayViewConfig(
+                          resolveProjectPageDisplayViewConfig(project.id, {
+                            projectHomeViewConfig: getProjectHomeViewConfig(project.id),
+                          })
+                        );
+                      }}
+                    >
+                      {project.name}
+                    </SidebarMenuButton>
 
-                  {projectViews.length > 0 && (
+                    {projectViews.length > 0 && (
+                      <SidebarMenuAction
+                        aria-label={projectViewsExpanded ? `Collapse ${project.name} task views` : `Expand ${project.name} task views`}
+                        aria-expanded={projectViewsExpanded}
+                        onClick={() => toggleProjectViews(project.id)}
+                      >
+                        <ChevronDown
+                          className={`w-4 h-4 shrink-0 transition-transform duration-200 ${projectViewsExpanded ? 'rotate-0' : '-rotate-90'}`}
+                          aria-hidden="true"
+                        />
+                      </SidebarMenuAction>
+                    )}
+                  </div>
+
+                  {projectViews.length > 0 && projectViewsExpanded && (
                     <div className="ml-3 space-y-1">
                       {projectViews.map((view) => (
                         (() => {

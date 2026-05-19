@@ -1,0 +1,1 @@
+export const HOME_SIDEBAR_WIDTH = 'clamp(16rem, 22vw, 18rem)';
