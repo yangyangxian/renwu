@@ -15,6 +15,7 @@ import { resolveProjectPageDisplayViewConfig, useTaskViewStore } from "@/stores/
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { useAuth } from "@/providers/AuthProvider";
+import { getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
 
 export function ProjectsMenuItem({ 
   showText,
@@ -129,6 +130,10 @@ export function ProjectsMenuItem({
                   {projectViews.length > 0 && (
                     <div className="ml-3 space-y-1">
                       {projectViews.map((view) => (
+                        (() => {
+                          const { icon: ViewModeIcon } = getTaskViewModeMeta(view.viewConfig.viewMode);
+
+                          return (
                         <div
                           key={view.id}
                           className="relative group flex items-center"
@@ -149,7 +154,10 @@ export function ProjectsMenuItem({
                               );
                             }}
                           >
-                            <span className="truncate text-sm">{view.name}</span>
+                            <span className="flex items-center gap-2 min-w-0">
+                              <ViewModeIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                              <span className="truncate text-sm">{view.name}</span>
+                            </span>
                           </SidebarMenuButton>
 
                           {hoveredViewId === view.id && user?.id === view.userId && (
@@ -204,6 +212,8 @@ export function ProjectsMenuItem({
                             </>
                           )}
                         </div>
+                          );
+                        })()
                       ))}
                     </div>
                   )}

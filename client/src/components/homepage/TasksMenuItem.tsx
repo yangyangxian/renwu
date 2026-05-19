@@ -14,6 +14,7 @@ import { logger } from "@/utils/logger";
 import { Skeleton } from "../ui-kit/Skeleton";
 import { TaskViewResDto } from "@fullstack/common";
 import { Location, NavigateFunction } from "react-router-dom";
+import { getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
 
 export function TasksMenuItem({ 
   showText,
@@ -97,6 +98,10 @@ export function TasksMenuItem({
           </>}
           {taskViews.map((view) => (
             <SidebarMenuSubItem key={view.id}>
+              {(() => {
+                const { icon: ViewModeIcon } = getTaskViewModeMeta(view.viewConfig.viewMode);
+
+                return (
               <div
                 className="relative group flex items-center"
                 onMouseEnter={() => setHoveredViewId(view.id)}
@@ -113,7 +118,10 @@ export function TasksMenuItem({
                     setCurrentDisplayViewConfig(view.viewConfig);
                   }}
                 >
-                  <span className="truncate">{view.name}</span>
+                  <span className="flex items-center gap-2 min-w-0">
+                    <ViewModeIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{view.name}</span>
+                  </span>
                 </SidebarMenuButton>
 
                 {/* Delete button: only show for hovered item */}
@@ -172,6 +180,8 @@ export function TasksMenuItem({
                   </>
                 )}
               </div>
+                );
+              })()}
             </SidebarMenuSubItem>
           ))}
         </SidebarMenuSub>
