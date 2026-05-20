@@ -35,6 +35,7 @@ import { withToast } from '@/utils/toastUtils';
 import EditableTaskTableRow from './EditableTaskTableRow';
 import TaskTableGroupByControl from './TaskTableGroupByControl';
 import TaskTableHeader from './TaskTableHeader';
+import { TASK_TABLE_SECTION_TITLE_ROW_CLASS_NAME } from './taskViewLayoutClasses';
 import {
   getDefaultTaskTableColumnWidths,
   getTaskTableColumnWidthStorageKey,
@@ -760,7 +761,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
             return (
               <section key={section.key} className="flex flex-col gap-2">
                 {showSectionTitle && section.title && (
-                  <div className="flex items-center gap-2 px-1">
+                  <div className={TASK_TABLE_SECTION_TITLE_ROW_CLASS_NAME}>
                     {sectionLabel ? (
                       <LabelBadge text={sectionLabel.name} color={sectionLabel.color} className="px-2.5! py-1! text-xs" />
                     ) : (

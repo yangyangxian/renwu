@@ -9,6 +9,7 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import LabelBadge from "@/components/common/LabelBadge";
+import { DEFAULT_TASK_CARD_TITLE_CLASS_NAME } from './taskViewLayoutClasses';
 
 interface TaskCardProps {
   taskId: string; // Add taskId prop for deletion
@@ -22,7 +23,8 @@ interface TaskCardProps {
   status?: TaskStatus;
   onClick?: () => void;
   className?: string;
-  showDeleteButton?: boolean; 
+  showDeleteButton?: boolean;
+  titleClassName?: string;
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -33,7 +35,8 @@ const statusToColor: Record<TaskStatus, string> = {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
-  showProjectName = true, status, onClick, description, className, showDeleteButton, labels }) => {
+  showProjectName = true, status, onClick, description, className, showDeleteButton, labels,
+  titleClassName = DEFAULT_TASK_CARD_TITLE_CLASS_NAME }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
   const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
@@ -128,7 +131,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
       
       <div className="flex items-center justify-between">
           <div className="flex items-center mr-2 max-w-full">
-            <h3 className="text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden">{title}</h3>
+            <h3 className={titleClassName}>{title}</h3>
           </div>
         <div className="flex flex-col items-end gap-1">
           {description && description.trim() !== "" && (
