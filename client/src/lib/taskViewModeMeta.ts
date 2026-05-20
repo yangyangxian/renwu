@@ -19,11 +19,11 @@ const TASK_VIEW_MODE_META: Record<TaskViewMode, TaskViewModeMeta> = {
   },
   [TaskViewMode.LIST]: {
     label: 'List',
-    icon: List,
+    icon: Table2,
   },
   [TaskViewMode.TABLE]: {
     label: 'Table',
-    icon: Table2,
+    icon: List,
   },
 };
 

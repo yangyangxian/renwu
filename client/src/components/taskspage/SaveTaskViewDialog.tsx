@@ -174,7 +174,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
             </div>
           )}
           <div className="flex items-center gap-3">
-            {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? <Kanban className="w-4 h-4 text-primary" /> : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? <Table2 className="w-4 h-4 text-primary" /> : <List className="w-4 h-4 text-primary" />}
+            {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? <Kanban className="w-4 h-4 text-primary" /> : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? <List className="w-4 h-4 text-primary" /> : <Table2 className="w-4 h-4 text-primary" />}
             <Label className="font-medium min-w-22.5">View Mode:</Label>
             <span>
               {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? "Board" : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? "Table" : "List"}

@@ -469,14 +469,14 @@ export default function ProjectDetailPage() {
                     value={TaskViewMode.LIST}
                     className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
                   >
-                    <List className="w-4 h-4" />
+                    <Table2 className="w-4 h-4" />
                     List
                   </TabsTrigger>
                   <TabsTrigger
                     value={TaskViewMode.TABLE}
                     className="px-4 flex items-center gap-1.5 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
                   >
-                    <Table2 className="w-4 h-4" />
+                    <List className="w-4 h-4" />
                     Table
                   </TabsTrigger>
                 </TabsList>

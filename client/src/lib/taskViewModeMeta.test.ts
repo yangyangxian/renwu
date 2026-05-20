@@ -21,10 +21,10 @@ test('task view mode metadata exposes the tab labels and icons', () => {
   });
   assert.deepEqual(getTaskViewModeMeta(TaskViewMode.LIST), {
     label: 'List',
-    icon: List,
+    icon: Table2,
   });
   assert.deepEqual(getTaskViewModeMeta(TaskViewMode.TABLE), {
     label: 'Table',
-    icon: Table2,
+    icon: List,
   });
 });

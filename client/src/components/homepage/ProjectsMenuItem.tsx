@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAuth } from "@/providers/AuthProvider";
 import { getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
 import { getProjectRowButtonClassName } from "./projectRowButtonClassName";
+import { getProjectRowToggleClassName } from "./projectRowToggleClassName";
 
 export function ProjectsMenuItem({ 
   showText,
@@ -145,6 +146,7 @@ export function ProjectsMenuItem({
 
                     {projectViews.length > 0 && (
                       <SidebarMenuAction
+                        className={getProjectRowToggleClassName()}
                         aria-label={projectViewsExpanded ? `Collapse ${project.name} task views` : `Expand ${project.name} task views`}
                         aria-expanded={projectViewsExpanded}
                         onClick={() => toggleProjectViews(project.id)}
