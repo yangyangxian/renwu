@@ -26,6 +26,7 @@ export function ProjectWikiTab({ project }: ProjectWikiTabProps) {
           updateProjectDocument={updateProjectDocument}
           deleteProjectDocument={deleteProjectDocument}
           className={WIKI_CARD_CLASS}
+          showTitle={false}
         />
       </div>
     </div>

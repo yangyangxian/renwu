@@ -18,6 +18,7 @@ interface ProjectDocumentsCardProps {
   updateProjectDocument: (projectId: string, documentId: string, data: ProjectDocumentUpdateReqDto) => Promise<ProjectDocumentResDto>;
   deleteProjectDocument: (projectId: string, documentId: string) => Promise<void>;
   className?: string;
+  showTitle?: boolean;
 }
 
 export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
@@ -26,6 +27,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
   updateProjectDocument,
   deleteProjectDocument,
   className,
+  showTitle = true,
 }) => {
   const documents = project.documents ?? [];
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
@@ -237,8 +239,8 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
   return (
     <Card className={`flex h-full min-w-0 flex-1 overflow-hidden break-all ${className ? ` ${className}` : ''}`}>
       <div className="pt-2">
-        <div className="font-bold text-md">Wiki</div>
-        <div className="mt-3 flex items-center gap-1.5">
+        {showTitle && <div className="font-bold text-md">Wiki</div>}
+        <div className={cn('flex items-center gap-1.5', showTitle && 'mt-3')}>
           <Tabs
             value={activeDocument?.id ?? ''}
             onValueChange={(value) => {
