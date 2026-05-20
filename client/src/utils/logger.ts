@@ -4,7 +4,7 @@
  * Just a thin wrapper around console with environment-aware logging.
  */
 
-const isDev = import.meta.env.DEV;
+const isDev = Boolean(import.meta.env?.DEV);
 
 export const logger = {
   debug: (message: string, ...args: any[]) => {

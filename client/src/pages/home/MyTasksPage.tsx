@@ -8,13 +8,14 @@ import TableView from "@/components/taskspage/TableView";
 import { TaskResDto, TaskViewMode, TaskDateRange } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
-import { Plus, Bookmark } from "lucide-react";
+import { Plus } from "lucide-react";
 import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
 import { TaskFilterMenu } from "@/components/taskspage/TaskFilterMenu";
 import { TaskDialog } from "@/components/taskspage/TaskDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui-kit/Tabs";
 import { SaveTaskViewDialog } from "@/components/taskspage/SaveTaskViewDialog";
 import { SaveTaskViewPopover } from '@/components/taskspage/SaveTaskViewPopover';
+import { getTaskViewToolbarActionIcon } from '@/components/taskspage/taskViewToolbarActionIcon';
 import { toast } from 'sonner';
 import logger from "@/utils/logger";
 import { sanitizeTaskViewConfigForPersistence, useTaskViewStore } from "@/stores/useTaskViewStore";
@@ -64,6 +65,7 @@ export default function MyTasksPage() {
 
   // Unsaved changes detection
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const TaskViewToolbarActionIcon = getTaskViewToolbarActionIcon(Boolean(currentSelectedTaskView));
   useEffect(() => {
     if (currentSelectedTaskView && !currentSelectedTaskView.projectId && currentDisplayViewConfig) {
       setHasUnsavedChanges(
@@ -132,7 +134,7 @@ export default function MyTasksPage() {
                         onOpenDialog={() => setIsBookmarkDialogOpen(true)}
                         disabled={!hasUnsavedChanges || !isSavedView}
                       >
-                        <Bookmark className={
+                        <TaskViewToolbarActionIcon className={
                           hasUnsavedChanges
                             ? "w-4 h-4 hover:scale-110 transition-transform duration-200 text-purple-500 stroke-2 fill-none"
                             : isSavedView
@@ -141,7 +143,7 @@ export default function MyTasksPage() {
                         } style={hasUnsavedChanges ? { stroke: '#a855f7' } : {}} />
                       </SaveTaskViewPopover>
                     ) : (
-                      <Bookmark className="w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground" />
+                      <TaskViewToolbarActionIcon className="w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground" />
                     )}
                   </span>
                 </TooltipTrigger>

@@ -8,10 +8,10 @@
 
 import logger from "./utils/logger";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-export const IS_DEVELOPMENT = import.meta.env.DEV;
-export const IS_PRODUCTION = import.meta.env.PROD;
-export const ENVIRONMENT = import.meta.env.MODE;
+export const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '';
+export const IS_DEVELOPMENT = Boolean(import.meta.env?.DEV);
+export const IS_PRODUCTION = Boolean(import.meta.env?.PROD);
+export const ENVIRONMENT = import.meta.env?.MODE || 'test';
 
 if (IS_DEVELOPMENT) {
   logger.info('App Configuration:', {

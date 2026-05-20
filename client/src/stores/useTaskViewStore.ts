@@ -5,6 +5,7 @@ import { TaskSortField, TaskSortOrder, TaskViewCreateReqDto, TaskViewMode, TaskV
   TaskStatus} from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { updateTaskViewById, createTaskView as createTaskViewEndpoint, deleteTaskViewById } from '@/apiRequests/apiEndpoints';
+import { readProjectTaskTabMemory, writeProjectTaskTabMemory } from '@/components/projectspage/projectTaskTabMemory';
 
 export const defaultTaskViewConfig: ViewConfig = {
   projectId: 'all',
@@ -97,13 +98,26 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   projectHomeViewConfigs: {},
-  getProjectHomeViewConfig: (projectId) => get().projectHomeViewConfigs[projectId] ?? null,
-  setProjectHomeViewConfig: (projectId, view) => set((state) => ({
-    projectHomeViewConfigs: {
-      ...state.projectHomeViewConfigs,
-      [projectId]: createProjectTaskViewConfig(projectId, view),
-    },
-  })),
+  getProjectHomeViewConfig: (projectId) => {
+    const inMemoryConfig = get().projectHomeViewConfigs[projectId];
+    if (inMemoryConfig) {
+      return inMemoryConfig;
+    }
+
+    const storedMemory = readProjectTaskTabMemory(projectId);
+    return storedMemory ? createProjectTaskViewConfig(projectId, storedMemory) : null;
+  },
+  setProjectHomeViewConfig: (projectId, view) => set((state) => {
+    const nextConfig = createProjectTaskViewConfig(projectId, view);
+    writeProjectTaskTabMemory(projectId, nextConfig);
+
+    return {
+      projectHomeViewConfigs: {
+        ...state.projectHomeViewConfigs,
+        [projectId]: nextConfig,
+      },
+    };
+  }),
   currentSelectedTaskView: null,
   setCurrentSelectedTaskView: (view) => set({ currentSelectedTaskView: view }),
   currentDisplayViewConfig: defaultDisplayViewConfig,

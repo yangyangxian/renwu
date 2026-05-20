@@ -1,11 +1,10 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTabHash } from "@/hooks/useTabHash";
 import { useEffect, useState } from "react";
-import { ProjectOverviewTab } from "@/components/projectspage/OverviewTab";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
-import { LayoutDashboard, List, Users, Settings, Tag, Table2, Bookmark, ChevronRight } from "lucide-react";
+import { LayoutDashboard, List, Table2, ChevronRight } from "lucide-react";
 import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -21,6 +20,7 @@ import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { SaveTaskViewPopover } from "@/components/taskspage/SaveTaskViewPopover";
 import { SaveTaskViewDialog } from "@/components/taskspage/SaveTaskViewDialog";
+import { getTaskViewToolbarActionIcon } from '@/components/taskspage/taskViewToolbarActionIcon';
 import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
 import {
   createProjectTaskViewConfig,
@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import isEqual from "lodash/isEqual";
 import { Input } from "@/components/ui-kit/Input";
 import { useAuth } from "@/providers/AuthProvider";
+import { ProjectWikiTab } from "@/components/projectspage/WikiTab";
+import { PROJECT_DEFAULT_TAB, PROJECT_DETAIL_TABS, PROJECT_DETAIL_TAB_HASH_VALUES, normalizeProjectDetailTab, type ProjectDetailTab, type ProjectDetailTabHash } from "@/components/projectspage/projectDetailTabs";
 
 export default function ProjectDetailPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>();
@@ -61,6 +63,7 @@ export default function ProjectDetailPage() {
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
   const [isBookmarkDialogOpen, setIsBookmarkDialogOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const TaskViewToolbarActionIcon = getTaskViewToolbarActionIcon(Boolean(currentSelectedTaskView));
 
   // Get projectId from global projects object using slug
   const projectId = projectSlug && projects
@@ -79,9 +82,10 @@ export default function ProjectDetailPage() {
     ? projectTaskViews.find((view) => view.id === currentSelectedTaskView.id) ?? null
     : null);
   const [activeTab, handleTabChange] = useTabHash(
-    ['overview', 'tasks', 'labels', 'team', 'settings'],
-    activeProjectView ? 'tasks' : 'overview'
+    PROJECT_DETAIL_TAB_HASH_VALUES,
+    PROJECT_DEFAULT_TAB
   );
+  const resolvedActiveTab = normalizeProjectDetailTab(activeTab as ProjectDetailTabHash);
   const dateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
@@ -180,6 +184,12 @@ export default function ProjectDetailPage() {
       handleTabChange('tasks');
     }
   }, [activeProjectView, activeTab, handleTabChange]);
+
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      handleTabChange('wiki');
+    }
+  }, [activeTab, handleTabChange]);
 
   useEffect(() => {
     setViewNameDraft(activeProjectView?.name ?? '');
@@ -328,36 +338,26 @@ export default function ProjectDetailPage() {
             </div>
           ) : (
             <Tabs
-              value={activeTab}
-              onValueChange={val => handleTabChange(val as typeof activeTab)}
+              value={resolvedActiveTab}
+              onValueChange={val => handleTabChange(val as ProjectDetailTab)}
             >
               <TabsList className="bg-white dark:bg-muted">
-                <TabsTrigger value="overview" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                  <List className="w-4 h-4" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="tasks" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Tasks
-                </TabsTrigger>
-                <TabsTrigger value="team" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                  <Users className="w-4 h-4" />
-                  Team
-                </TabsTrigger>
-                <TabsTrigger value="labels" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                  <Tag className="w-4 h-4" />
-                  Labels
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black">
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </TabsTrigger>
+                {PROJECT_DETAIL_TABS.map(({ value, label, icon: TabIcon }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-black"
+                  >
+                    <TabIcon className="w-4 h-4" />
+                    {label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
           )}
         </div>
 
-        {activeTab === 'tasks' && (
+        {resolvedActiveTab === 'tasks' && (
           <div className="flex items-center gap-1">
             <div className='flex items-center gap-2'>
               <div className="flex items-center">
@@ -382,7 +382,7 @@ export default function ProjectDetailPage() {
                             onOpenDialog={() => setIsBookmarkDialogOpen(true)}
                             disabled={!hasUnsavedChanges || !isSavedView}
                           >
-                            <Bookmark
+                            <TaskViewToolbarActionIcon
                               className={
                                 hasUnsavedChanges
                                   ? 'w-4 h-4 hover:scale-110 transition-transform duration-200 text-purple-500 stroke-2 fill-none'
@@ -394,7 +394,7 @@ export default function ProjectDetailPage() {
                             />
                           </SaveTaskViewPopover>
                         ) : (
-                          <Bookmark className="w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground" />
+                          <TaskViewToolbarActionIcon className="w-4 h-4 hover:scale-110 transition-transform duration-200 text-muted-foreground" />
                         )}
                       </span>
                     </TooltipTrigger>
@@ -513,12 +513,7 @@ export default function ProjectDetailPage() {
       )}
 
       {/* Tab Content */}
-      {activeTab === 'overview' && (
-        <ProjectOverviewTab
-          project={project!}
-        />
-      )}
-      {activeTab === 'tasks' && projectSlug && (
+      {resolvedActiveTab === 'tasks' && projectSlug && (
         <ProjectTasksTab
           view={currentDisplayViewConfig.viewMode}
           onViewChange={setCurrentDisplayViewConfigViewMode}
@@ -536,9 +531,10 @@ export default function ProjectDetailPage() {
           tasks={filteredTasks}
         />
       )}
-      {activeTab === 'labels' && <ProjectLabelsTab />}
-      {activeTab === 'team' && <ProjectTeamTab project={project} />}
-      {activeTab === 'settings' && <ProjectSettingsTab />}
+      {resolvedActiveTab === 'wiki' && <ProjectWikiTab project={project} />}
+      {resolvedActiveTab === 'labels' && <ProjectLabelsTab />}
+      {resolvedActiveTab === 'team' && <ProjectTeamTab project={project} />}
+      {resolvedActiveTab === 'settings' && <ProjectSettingsTab />}
     </div>
     {isBookmarkDialogOpen && projectSlug && (
       <SaveTaskViewDialog
