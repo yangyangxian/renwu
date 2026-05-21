@@ -21,6 +21,9 @@ interface ProjectDocumentsCardProps {
   showTitle?: boolean;
 }
 
+const editDocumentSurfaceClass = 'wiki-document-surface mx-2 flex min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card dark:bg-transparent shadow-xs';
+const viewDocumentSurfaceClass = 'wiki-document-surface mx-2 flex h-full min-h-0 flex-1 overflow-y-auto rounded-xl border border-transparent bg-card dark:bg-transparent';
+
 export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
   project,
   createProjectDocument,
@@ -238,6 +241,15 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
 
   return (
     <Card className={`flex h-full min-w-0 flex-1 overflow-hidden break-all ${className ? ` ${className}` : ''}`}>
+      <style>{`
+        .dark .wiki-document-surface,
+        .dark .wiki-document-surface .markdown-body,
+        .dark .wiki-document-surface .editor,
+        .dark .wiki-document-surface .editor .ProseMirror,
+        .dark .wiki-document-surface .editor [contenteditable='true'] {
+          background-color: transparent;
+        }
+      `}</style>
       <div className="pt-2">
         {showTitle && <div className="font-bold text-md">Wiki</div>}
         <div className={cn('flex items-center gap-1.5', showTitle && 'mt-3')}>
@@ -372,7 +384,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
           <div className="relative flex h-full w-full flex-col">
             <div
               ref={editorShellRef}
-              className="mx-2 flex min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-background shadow-xs"
+              className={editDocumentSurfaceClass}
             >
               <div className="w-full px-3 py-3">
                 <MarkdownnEditor
@@ -408,7 +420,7 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
           </div>
         ) : (
           <div className="relative flex h-full min-h-0 group">
-            <div className="mx-2 flex h-full min-h-0 flex-1 overflow-y-auto rounded-xl border border-transparent bg-background">
+            <div className={viewDocumentSurfaceClass}>
               <div className="markdown-body min-h-full w-full px-3 py-3">
                 <div
                   className="w-full"
