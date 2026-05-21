@@ -9,7 +9,6 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import LabelBadge from "@/components/common/LabelBadge";
-import { DEFAULT_TASK_CARD_TITLE_CLASS_NAME } from './taskViewLayoutClasses';
 
 interface TaskCardProps {
   taskId: string; // Add taskId prop for deletion
@@ -36,7 +35,7 @@ const statusToColor: Record<TaskStatus, string> = {
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
   showProjectName = true, status, onClick, description, className, showDeleteButton, labels,
-  titleClassName = DEFAULT_TASK_CARD_TITLE_CLASS_NAME }) => {
+  titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden" }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
   const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';

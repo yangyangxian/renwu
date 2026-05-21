@@ -372,11 +372,9 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
           <div className="relative flex h-full w-full flex-col">
             <div
               ref={editorShellRef}
-              className="mx-2 flex min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-background px-3 py-3 pr-1 shadow-xs"
+              className="mx-2 flex min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-background shadow-xs"
             >
-              <div
-                className="w-full"
-              >
+              <div className="w-full px-3 py-3">
                 <MarkdownnEditor
                   ref={editorRef}
                   value={docInput}
@@ -410,23 +408,23 @@ export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
           </div>
         ) : (
           <div className="relative flex h-full min-h-0 group">
-            <div className="relative mx-2 flex h-full w-[calc(100%-1rem)] overflow-y-auto pr-1">
-              <div className="markdown-body w-full rounded-xl border border-transparent bg-background px-3 py-3">
+            <div className="mx-2 flex h-full min-h-0 flex-1 overflow-y-auto rounded-xl border border-transparent bg-background">
+              <div className="markdown-body min-h-full w-full px-3 py-3">
                 <div
                   className="w-full"
                   dangerouslySetInnerHTML={{ __html: renderedHtml }}
                 />
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute top-3 right-2 opacity-70 transition-opacity group-hover:opacity-100"
-                onClick={handleDocumentClick}
-                title="Edit document"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
             </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute top-3 right-3 z-10 opacity-70 transition-opacity group-hover:opacity-100"
+              onClick={handleDocumentClick}
+              title="Edit document"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>

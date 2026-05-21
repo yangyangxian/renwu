@@ -14,7 +14,6 @@ import {
   pruneResolvedOptimisticTaskStatuses,
   type OptimisticTaskStatuses,
 } from "./boardViewOptimisticState";
-import { BOARD_TASK_CARD_TITLE_CLASS_NAME } from './taskViewLayoutClasses';
 
 interface BoardViewProps {
   tasks: TaskResDto[];
@@ -210,7 +209,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                           <TaskCard
                             taskId={task.id}
                             title={task.title}
-                            titleClassName={BOARD_TASK_CARD_TITLE_CLASS_NAME}
+                            titleClassName="text-sm line-clamp-3 break-all overflow-hidden mt-1 leading-[1.5]"
                             description={task.description}
                             dueDate={task.dueDate}
                             projectName={showProjectName ? task.projectName : undefined}
@@ -235,7 +234,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
           <TaskCard
             taskId={activeTask.id}
             title={activeTask.title}
-            titleClassName={BOARD_TASK_CARD_TITLE_CLASS_NAME}
+            titleClassName="text-sm line-clamp-3 break-all overflow-hidden mt-1 leading-[1.5]"
             description={activeTask.description}
             dueDate={activeTask.dueDate}
             projectName={showProjectName ? activeTask.projectName : undefined}
