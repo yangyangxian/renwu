@@ -125,10 +125,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo, sele
   return (
     <div className="flex h-full w-full rounded-lg">
       {/* Left: Task List */}
-      <div className="w-1/3 min-w-[260px] max-w-[290px] rounded-l-lg border border-input 
+      <div className="w-1/4 min-w-[250px] max-w-[330px] rounded-l-lg border border-input
         dark:border-[1.5px] bg-white-black h-full flex flex-col overflow-hidden">
         {/* Status Filter and Sort Icon */}
-        <div className="bg-white-black py-1 border-b border-border flex items-center 
+        <div className="bg-white-black py-1.5 border-b border-border flex items-center 
           justify-between rounded-t-md">
           {/* Status Filter DropdownMenu */}
           <div className="max-w-[220px]">
@@ -216,12 +216,13 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo, sele
                     <TaskCard
                       taskId={task.id}
                       title={task.title}
+                      titleClassName="text-sm line-clamp-3 break-all overflow-hidden leading-[1.45]"
                       description={task.description}
                       dueDate={task.dueDate}
                       projectName={task.projectName}
                       status={task.status}
                       assignedTo={showAssignedTo ? task.assignedTo : undefined}
-                      className={`hover:scale-100 cursor-pointer rounded-none! bg-white-black py-3 pl-4 min-h-22 border-none! shadow-none! ${resolvedSelectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
+                      className={`hover:scale-100 cursor-pointer rounded-none! bg-white-black py-3.5 pl-5 min-h-22 border-none! shadow-none! ${resolvedSelectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}
                       showDeleteButton={showDeleteButton}
                     />
                   </div>
