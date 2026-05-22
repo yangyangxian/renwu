@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useReducer, useRef, useMemo } from "react";
+import { format } from "date-fns";
 import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReducer";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { Tag, FolderOpen, User, Clock, FileText, PencilLine, History } from "lucide-react";
+import { Tag, FolderOpen, User, Clock, FileText, PencilLine, History, RefreshCw } from "lucide-react";
 import { allStatuses, statusColors, statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -61,6 +62,8 @@ interface TaskDialogProps {
     id?: string;
     title?: string;
     dueDate?: string;
+    createdAt?: string;
+    updatedAt?: string;
     assignedTo?: UserResDto;
     status?: TaskStatus;
     description?: string;
@@ -181,6 +184,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   const fieldRowClass = "flex items-center gap-2 min-h-[40px]";
   const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
+  const isEditMode = Boolean(initialValues.id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -409,6 +413,38 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   </DropdownMenu>
                 </div>
               </div>
+
+              {isEditMode && (
+                <>
+                  <div className={fieldRowClass}>
+                    <Label className={fieldLabelClass}>
+                      <Clock className="size-4" />
+                      Created
+                    </Label>
+                    <div className="flex items-center">
+                      <Label className="!mb-0">
+                        {initialValues.createdAt
+                          ? format(new Date(initialValues.createdAt), "yyyy-MM-dd HH:mm")
+                          : "--"}
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className={fieldRowClass}>
+                    <Label className={fieldLabelClass}>
+                      <RefreshCw className="size-4" />
+                      Updated
+                    </Label>
+                    <div className="flex items-center">
+                      <Label className="!mb-0">
+                        {initialValues.updatedAt
+                          ? format(new Date(initialValues.updatedAt), "yyyy-MM-dd HH:mm")
+                          : "--"}
+                      </Label>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
