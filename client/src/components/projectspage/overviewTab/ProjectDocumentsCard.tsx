@@ -21,8 +21,8 @@ interface ProjectDocumentsCardProps {
   showTitle?: boolean;
 }
 
-const editDocumentSurfaceClass = 'wiki-document-surface mx-2 flex min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card dark:bg-transparent shadow-xs';
-const viewDocumentSurfaceClass = 'wiki-document-surface mx-2 flex h-full min-h-0 flex-1 overflow-y-auto rounded-xl border border-transparent bg-card dark:bg-transparent';
+const editDocumentSurfaceClass = 'wiki-document-surface gradient-scroll-area-scrollbar mx-2 flex min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card dark:bg-transparent shadow-xs';
+const viewDocumentSurfaceClass = 'wiki-document-surface gradient-scroll-area-scrollbar mx-2 flex h-full min-h-0 flex-1 overflow-y-auto rounded-xl border border-transparent bg-card dark:bg-transparent';
 
 export const ProjectDocumentsCard: React.FC<ProjectDocumentsCardProps> = ({
   project,
