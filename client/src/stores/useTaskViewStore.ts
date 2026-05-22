@@ -44,8 +44,8 @@ export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
 export function createProjectTaskViewConfig(projectId: string, overrides: Partial<ViewConfig> = {}): ViewConfig {
   return normalizeTaskViewConfig({
     ...defaultTaskViewConfig,
-    projectId,
     ...overrides,
+    projectId,
   });
 }
 

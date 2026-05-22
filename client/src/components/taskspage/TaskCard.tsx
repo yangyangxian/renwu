@@ -33,7 +33,7 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo, 
+const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo,
   showProjectName = true, status, onClick, description, className, showDeleteButton, labels,
   titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden" }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -113,20 +113,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
         confirmText="Delete"
         cancelText="Cancel"
       />
-      <div className="flex items-center w-3/4 mb-2">
+      {(showProjectName || assignedTo) && (
+        <div className="mb-2 flex w-3/4 min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
           {showProjectName && (
-          <div className={`text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
+          <div className={`min-w-0 truncate text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
             {!projectName || projectName === "" ? "Personal" : projectName}
           </div>
           )}
           {/* Assigned to user info - moved next to project name */}
           {assignedTo && (
-            <div className={`flex items-center gap-1 ${showProjectName ? 'ml-3' : ''}`}>
+            <div className="flex min-w-0 items-center gap-1">
               <User className="w-3 h-3 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{assignedTo.name}</span>
+              <span className="truncate text-xs text-muted-foreground">{assignedTo.name}</span>
             </div>
           )}
-      </div>
+        </div>
+      )}
       
       <div className="flex items-center justify-between">
           <div className="flex items-center mr-2 max-w-full">

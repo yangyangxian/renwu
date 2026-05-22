@@ -1,6 +1,6 @@
 import { db } from '../database/databaseAccess';
 import { tasks, projects, users, taskView, taskLabels, labels, projectMembers } from '../database/schema';
-import { eq, and, inArray, or, isNull } from 'drizzle-orm';
+import { eq, and, inArray, or, isNull, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
@@ -11,6 +11,8 @@ import { UserEntity } from './UserService';
 
 export class TaskEntity {
   id: string = '';
+  taskNumber: number | null = null;
+  taskCode: string = '';
   assignedTo?: UserEntity;
   createdBy?: UserEntity;
   title: string = '';
@@ -34,7 +36,50 @@ export class TaskViewEntity {
 
 type DbTask = typeof tasks.$inferInsert;
 
+type NumberedProject = {
+  slug: string;
+  taskNumber: number;
+};
+
 class TaskService {
+  private buildTaskCode(projectSlug: string | null | undefined, taskNumber: number | null | undefined): string {
+    if (!projectSlug || taskNumber == null) {
+      return '';
+    }
+
+    return `${projectSlug}-${taskNumber}`;
+  }
+
+  private mapTaskEntity(source: Record<string, unknown>): TaskEntity {
+    const entity = mapDbToEntity(source, new TaskEntity(), {
+      taskNumber: { default: null },
+      taskCode: { default: '' },
+    });
+
+    entity.taskCode = this.buildTaskCode((source as { projectSlug?: string | null }).projectSlug, entity.taskNumber);
+    return entity;
+  }
+
+  private async allocateProjectTaskNumber(projectId: string, transactionDb: any): Promise<NumberedProject> {
+    const [project] = await transactionDb
+      .update(projects)
+      .set({
+        lastTaskNumber: sql`${projects.lastTaskNumber} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(projects.id, projectId))
+      .returning({
+        slug: projects.slug,
+        taskNumber: projects.lastTaskNumber,
+      });
+
+    if (!project) {
+      throw new CustomError('Project not found', ErrorCodes.NOT_FOUND);
+    }
+
+    return project;
+  }
+
   private async assertProjectMember(projectId: string, userId: string): Promise<void> {
     const membership = await db
       .select({ projectId: projectMembers.projectId })
@@ -211,15 +256,31 @@ class TaskService {
     const insertValues = this.toTaskEntityForCreate(data);
     logger.debug('insertValues insert:', insertValues);
 
-    const [created] = await db
-      .insert(tasks)
-      .values(insertValues)
-      .returning();
+    if (insertValues.projectId && data.createdBy) {
+      await this.assertProjectMember(insertValues.projectId, data.createdBy);
+    }
+
+    const created = await db.transaction(async (tx) => {
+      const nextInsertValues = { ...insertValues };
+
+      if (nextInsertValues.projectId) {
+        const numberedProject = await this.allocateProjectTaskNumber(nextInsertValues.projectId, tx);
+        nextInsertValues.taskNumber = numberedProject.taskNumber;
+      }
+
+      const [insertedTask] = await tx
+        .insert(tasks)
+        .values(nextInsertValues)
+        .returning();
+
+      return insertedTask;
+    });
+
     if (!created) {
       throw new CustomError('Failed to create task', ErrorCodes.INTERNAL_ERROR);
     }
 
-    return mapDbToEntity(created, new TaskEntity());
+    return this.mapTaskEntity(created);
   }
 
   async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
@@ -229,6 +290,7 @@ class TaskService {
     const result = await db
       .select({
         id: tasks.id,
+        taskNumber: tasks.taskNumber,
         assignedToId: tasks.assignedTo,
         assignedToName: assignedUser.name,
         assignedToEmail: assignedUser.email,
@@ -245,6 +307,7 @@ class TaskService {
         createdAt: tasks.createdAt,
         updatedAt: tasks.updatedAt,
         projectName: projects.name,
+        projectSlug: projects.slug,
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
@@ -260,7 +323,7 @@ class TaskService {
 
     const entities: TaskEntity[] = [];
     for (const task of result) {
-      const entity = mapDbToEntity(task, new TaskEntity());
+      const entity = this.mapTaskEntity(task);
       if (task.assignedToId) {
         entity.assignedTo = new UserEntity({
           id: task.assignedToId,
@@ -290,6 +353,7 @@ class TaskService {
     const result = await db
       .select({
         id: tasks.id,
+        taskNumber: tasks.taskNumber,
         assignedToId: tasks.assignedTo,
         assignedToName: assignedUser.name,
         assignedToEmail: assignedUser.email,
@@ -306,6 +370,7 @@ class TaskService {
         createdAt: tasks.createdAt,
         updatedAt: tasks.updatedAt,
         projectName: projects.name,
+        projectSlug: projects.slug,
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
@@ -321,7 +386,7 @@ class TaskService {
     
     const entities: TaskEntity[] = [];
     for (const task of result) {
-      const entity = mapDbToEntity(task, new TaskEntity());
+      const entity = this.mapTaskEntity(task);
       if (task.assignedToId) {
         entity.assignedTo = new UserEntity({
           id: task.assignedToId,
@@ -349,10 +414,51 @@ class TaskService {
    * @param taskId string
    * @param updateData TaskUpdateReqDto
    */
-  async updateTask(taskId: string, updateData: TaskUpdateReqDto): Promise<TaskEntity> {
+  async updateTask(taskId: string, updateData: TaskUpdateReqDto, actorUserId: string): Promise<TaskEntity> {
+    const existingTask = await this.getTaskById(taskId);
+    if (!existingTask) {
+      throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
+    }
+
     // Reuse toTaskEntityForDb for normalization, do not include createdBy
     const updateValues = this.toTaskEntityForUpdate(updateData);
     logger.debug("updateValues update:", updateValues);
+    const currentProjectId = existingTask.projectId || null;
+    const nextProjectId = updateData.projectId === undefined
+      ? currentProjectId
+      : (updateData.projectId || null);
+    const projectChanged = nextProjectId !== currentProjectId;
+
+    if (projectChanged) {
+      if (nextProjectId) {
+        await this.assertProjectMember(nextProjectId, actorUserId);
+      }
+
+      await db.transaction(async (tx) => {
+        let nextTaskNumber: number | null = null;
+
+        if (nextProjectId) {
+          const numberedProject = await this.allocateProjectTaskNumber(nextProjectId, tx);
+          nextTaskNumber = numberedProject.taskNumber;
+        }
+
+        await tx.update(tasks)
+          .set({
+            ...updateValues,
+            projectId: nextProjectId,
+            taskNumber: nextTaskNumber,
+            updatedAt: new Date(),
+          })
+          .where(eq(tasks.id, taskId));
+      });
+
+      const updatedTask = await this.getTaskById(taskId);
+      if (!updatedTask) {
+        throw new CustomError('Task not found after update', ErrorCodes.NOT_FOUND);
+      }
+      return updatedTask;
+    }
+
     // If there are no values to set (e.g. caller only sent labels which are
     // handled separately), skip the DB update to avoid errors from the ORM
     // when .set({}) is called with an empty object.
@@ -387,6 +493,7 @@ class TaskService {
     const [taskWithDetails] = await db
       .select({
         id: tasks.id,
+        taskNumber: tasks.taskNumber,
         assignedToId: tasks.assignedTo,
         assignedToName: assignedUser.name,
         assignedToEmail: assignedUser.email,
@@ -403,6 +510,7 @@ class TaskService {
         createdAt: tasks.createdAt,
         updatedAt: tasks.updatedAt,
         projectName: projects.name,
+        projectSlug: projects.slug,
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
@@ -414,7 +522,7 @@ class TaskService {
       return null;
     }
 
-    const entity = mapDbToEntity(taskWithDetails, new TaskEntity());
+    const entity = this.mapTaskEntity(taskWithDetails);
     // Set assignedTo and createdBy manually to avoid recursion
     if (taskWithDetails.assignedToId) {
       entity.assignedTo = new UserEntity({

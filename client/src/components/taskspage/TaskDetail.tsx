@@ -19,6 +19,7 @@ import { statusLabels, statusColors, statusIcons, allStatuses } from "@/consts/t
 import { marked } from 'marked';
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
+import { TASK_PATH } from '@/routes/routeConfig';
 
 interface TaskLike {
   id: string;
@@ -333,8 +334,19 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
       {/* Title block above columns */}
       <div className="mb-5 ml-2">
         {/* restore larger title font and ensure the leading icon is visible in dark mode */}
-        <div className="text-2xl font-bold flex items-center gap-3">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2">
+          {task.taskCode && (
+            <a
+              href={TASK_PATH.replace('[taskId]', encodeURIComponent(taskId))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex cursor-pointer items-center text-md text-foreground underline underline-offset-3 dark:text-white"
+              aria-label={`Open ${task.taskCode.toUpperCase()} task page`}
+            >
+              {task.taskCode.toUpperCase()}
+            </a>
+          )}
+          <div className="flex min-w-0 gap-2 text-md font-semibold">
             {editingTitle ? (
               <Input
                 id={`task-title-input-${taskId}`}
@@ -342,12 +354,12 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
                 onChange={(e) => setTitleInput(e.target.value)}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-2xl! font-bold w-[min(60vw,900px)] min-w-[280px] px-2 py-1 leading-tight"
+                className="w-[min(60vw,900px)] min-w-[280px] leading-tight"
                 autoFocus
               />
             ) : (
               <>
-                <Label className="max-w-[900px] min-w-0 truncate mb-0 text-2xl dark:text-white">
+                <Label className="max-w-[900px] min-w-0 truncate mb-0 text-md dark:text-white">
                   {task.title}
                 </Label>
                 <Button

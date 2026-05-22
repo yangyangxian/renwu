@@ -4,7 +4,7 @@
 // To push migration to database the app is connecting: npx drizzle-kit push --config src/drizzle.config.ts
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
-import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb, integer, uniqueIndex } from 'drizzle-orm/pg-core';
 import { TaskStatus, PermissionAction, InvitationStatus, ActivityActionType, ActivityEntityType } from '@fullstack/common';
 
 // ---------- ENUMS ----------
@@ -29,6 +29,7 @@ export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
+  lastTaskNumber: integer('last_task_number').notNull().default(0),
   description: text('description'), // nullable by default
   createdBy: uuid('created_by').references(() => users.id, {
     onDelete: 'set null',
@@ -65,26 +66,33 @@ export const activityEvents = pgTable('activity_events', {
 });
 
 // ---------- TABLE: Tasks ----------
-export const tasks = pgTable('tasks', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: varchar('title', { length: 255 }).notNull(),
-  description: text('description'), 
-  status: taskStatusEnum('status').notNull().default('todo'),
-  dueDate: date('due_date'), 
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 255 }).notNull(),
+    description: text('description'),
+    status: taskStatusEnum('status').notNull().default('todo'),
+    dueDate: date('due_date'),
+    taskNumber: integer('task_number'),
 
-  createdBy: uuid('created_by')
-    .notNull()
-    .references(() => users.id),
-  assignedTo: uuid('assigned_to')
-    .notNull()
-    .references(() => users.id),
-  projectId: uuid('project_id').references(() => projects.id, {
-    onDelete: 'set null',
-  }), 
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    assignedTo: uuid('assigned_to')
+      .notNull()
+      .references(() => users.id),
+    projectId: uuid('project_id').references(() => projects.id, {
+      onDelete: 'set null',
+    }),
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('tasks_project_task_number_unique').on(table.projectId, table.taskNumber),
+  ]
+);
 
 // ---------- TABLE: Task Views ----------
 export const taskView = pgTable('task_view', {

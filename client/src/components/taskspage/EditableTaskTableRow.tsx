@@ -41,6 +41,7 @@ interface TaskProjectMemberOption {
 }
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
+const titleButtonClassName = 'flex min-h-8 w-full items-center rounded-md border border-transparent bg-transparent px-3 py-0 text-left shadow-none';
 
 export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail, groupingLabelSet = null, onMoveTaskToGroup }: EditableTaskTableRowProps) {
   const { updateTaskById, deleteTaskById } = useTaskStore();
@@ -270,10 +271,14 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
           ) : (
             <button
               type="button"
-              className={`${titleFieldClassName} block max-w-full truncate hover:bg-muted/40 focus-visible:bg-muted/40`}
+              className={`${titleButtonClassName} hover:bg-muted/40 focus-visible:bg-muted/40`}
               onClick={() => setEditingTitle(true)}
             >
-              {task.title}
+              <div className="flex min-w-0 items-center gap-2 py-1">
+                <div className="min-w-0 truncate text-sm font-normal leading-5 text-foreground">
+                  {task.title}
+                </div>
+              </div>
             </button>
           )}
         </div>

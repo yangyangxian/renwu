@@ -178,12 +178,6 @@ export function ProjectsMenuItem({
                             onClick={() => {
                               const encodedName = encodeURIComponent(view.name.replace(/\s+/g, '-'));
                               navigate(`${PROJECTS_PATH}/${project.slug}?view=${encodedName}#tasks`);
-                              setCurrentSelectedTaskView(view);
-                              setCurrentDisplayViewConfig(
-                                resolveProjectPageDisplayViewConfig(project.id, {
-                                  activeProjectViewConfig: view.viewConfig,
-                                })
-                              );
                             }}
                           >
                             <span className="flex items-center gap-2 min-w-0">

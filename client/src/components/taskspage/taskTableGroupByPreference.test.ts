@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveTaskTableGroupBySelection, TASK_TABLE_UNGROUPED_VALUE } from './TaskTableGroupByControl';
+import {
+  resolveTaskTableGroupBySelection,
+  resolveTaskTableGroupBySelectValue,
+  TASK_TABLE_UNGROUPED_VALUE,
+} from './TaskTableGroupByControl';
 
 const labelSets = [
   { id: 'label-set-1' },
@@ -72,5 +76,15 @@ test('resolveTaskTableGroupBySelection preserves an explicit remembered ungroupe
       labelSets,
     }),
     null
+  );
+});
+
+test('resolveTaskTableGroupBySelectValue keeps the select controlled when no label sets are available', () => {
+  assert.equal(
+    resolveTaskTableGroupBySelectValue({
+      resolvedGroupByLabelSetId: null,
+      labelSets: [],
+    }),
+    TASK_TABLE_UNGROUPED_VALUE
   );
 });

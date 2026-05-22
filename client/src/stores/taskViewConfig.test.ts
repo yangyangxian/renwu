@@ -105,3 +105,15 @@ test('resolveProjectPageDisplayViewConfig falls back to the default project boar
   assert.equal(resolved.viewMode, TaskViewMode.BOARD);
   assert.deepEqual(resolved.status, defaultTaskViewConfig.status);
 });
+
+test('createProjectTaskViewConfig keeps the current project scope even when overrides contain a stale projectId', () => {
+  const resolved = createProjectTaskViewConfig('project-1', {
+    projectId: 'stale-project',
+    viewMode: TaskViewMode.TABLE,
+    filterLabelSetId: 'label-set-1',
+  });
+
+  assert.equal(resolved.projectId, 'project-1');
+  assert.equal(resolved.viewMode, TaskViewMode.TABLE);
+  assert.equal(resolved.filterLabelSetId, 'label-set-1');
+});

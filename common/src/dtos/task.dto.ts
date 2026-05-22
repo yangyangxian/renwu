@@ -6,6 +6,8 @@ import { UserResDto } from './user.dto.js';
 
 export class TaskResDto {
   id: string = '';
+  taskNumber: number | null = null;
+  taskCode: string = '';
   createdBy: UserResDto = new UserResDto();
   title: string = '';
   description: string = '';

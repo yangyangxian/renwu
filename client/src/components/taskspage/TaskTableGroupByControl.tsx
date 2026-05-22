@@ -65,6 +65,18 @@ export function resolveTaskTableGroupBySelection({
   return labelSets[0]?.id ?? null;
 }
 
+export function resolveTaskTableGroupBySelectValue({
+  resolvedGroupByLabelSetId,
+  labelSets,
+}: {
+  resolvedGroupByLabelSetId: string | null;
+  labelSets: TaskTableGroupByOption[];
+}): string {
+  return resolvedGroupByLabelSetId && labelSets.some((labelSet) => labelSet.id === resolvedGroupByLabelSetId)
+    ? resolvedGroupByLabelSetId
+    : TASK_TABLE_UNGROUPED_VALUE;
+}
+
 function normalizeProjectScope(scopeProjectId: string | 'all' | null): string | null | undefined {
   if (scopeProjectId === 'all') return undefined;
   if (scopeProjectId === 'personal') return null;
@@ -168,11 +180,10 @@ export default function TaskTableGroupByControl({ scopeProjectId, storageScopeKe
   ]);
 
   const hasLabelSets = labelSets.length > 0;
-  const selectValue = hasLabelSets
-    ? (resolvedGroupByLabelSetId && labelSets.some((labelSet) => labelSet.id === resolvedGroupByLabelSetId)
-      ? resolvedGroupByLabelSetId
-      : TASK_TABLE_UNGROUPED_VALUE)
-    : undefined;
+  const selectValue = resolveTaskTableGroupBySelectValue({
+    resolvedGroupByLabelSetId,
+    labelSets,
+  });
   const triggerWidth = useMemo(
     () => {
       const longestOptionLength = ['Ungrouped', ...labelSets.map((labelSet) => labelSet.name)].reduce((maxLength, optionLabel) => {

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTabHash } from "@/hooks/useTabHash";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
@@ -51,6 +51,7 @@ export default function ProjectDetailPage() {
     currentSelectedTaskView,
     currentDisplayViewConfig,
     getProjectHomeViewConfig,
+    projectHomeViewConfigs,
     setCurrentDisplayViewConfig,
     setCurrentDisplayViewConfigViewMode,
     setProjectHomeViewConfig,
@@ -72,9 +73,10 @@ export default function ProjectDetailPage() {
   const projectTaskViews = projectId
     ? taskViews.filter((view) => view.projectId === projectId)
     : [];
-  const projectHomeViewConfig = projectId
-    ? getProjectHomeViewConfig(projectId)
-    : null;
+  const projectHomeViewConfig = useMemo(
+    () => (projectId ? getProjectHomeViewConfig(projectId) : null),
+    [getProjectHomeViewConfig, projectHomeViewConfigs, projectId]
+  );
   const activeViewSlug = new URLSearchParams(location.search).get('view');
   const activeProjectView = projectTaskViews.find(
     (view) => view.name.replace(/\s+/g, '-') === activeViewSlug

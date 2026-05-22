@@ -66,7 +66,7 @@ router.put('/:taskId',
           await taskService.updateTaskLabels(taskId, (req.body as any).labels, userId);
         }
 
-        const updatedTask = await taskService.updateTask(taskId, req.body as any);
+        const updatedTask = await taskService.updateTask(taskId, req.body as any, userId);
         await activityService.recordTaskUpdated(beforeTask, updatedTask, userId);
         const dto = mapObject(updatedTask, new TaskResDto());
         dto.labels = (updatedTask.labels || []).map(l => ({ id: l.id, labelName: l.labelName, color: (l as any).labelColor }));

@@ -71,6 +71,13 @@
       "when": 1776233455897,
       "tag": "0009_add_activity_events",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1779432510070,
+      "tag": "0010_add_task_numbering",
+      "breakpoints": true
     }
   ]
 }
