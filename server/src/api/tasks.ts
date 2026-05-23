@@ -1,6 +1,6 @@
 import express from 'express';
 import { taskService } from '../services/TaskService';
-import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType, ViewConfig, ActivityResDto, ErrorCodes } from '@fullstack/common';
+import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType, ViewConfig, ActivityResDto, ErrorCodes, TaskCommentResDto, TaskCommentCreateReqDto, TaskCommentUpdateReqDto } from '@fullstack/common';
 import { TaskViewCreateReqDto, TaskViewUpdateReqDto, TaskViewResDto } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
@@ -16,6 +16,12 @@ function toActivityDto(activity: ActivityEventEntity): ActivityResDto {
   const dto = mapObject(activity, new ActivityResDto());
   dto.payload = activity.payload as ActivityResDto['payload'];
   dto.createdAt = activity.createdAt?.toISOString() || '';
+  return dto;
+}
+
+function toTaskCommentDto(comment: Awaited<ReturnType<typeof taskService.getCommentsByTaskId>>[number]): TaskCommentResDto {
+  const dto = mapObject(comment, new TaskCommentResDto());
+  dto.createdBy = mapObject(comment.createdBy || {}, dto.createdBy);
   return dto;
 }
 
@@ -115,6 +121,66 @@ router.get('/id/:taskId/activities',
     try {
       const activities = await activityService.getTaskActivities(req.params.taskId, req.user!.userId);
       res.json(createApiResponse<ActivityResDto[]>(activities.map(toActivityDto)));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.get('/id/:taskId/comments',
+  async (
+    req: express.Request<{ taskId: string }>,
+    res: express.Response<ApiResponse<TaskCommentResDto[]>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      const comments = await taskService.getCommentsByTaskId(req.params.taskId);
+      res.json(createApiResponse<TaskCommentResDto[]>(comments.map(toTaskCommentDto)));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post('/id/:taskId/comments',
+  async (
+    req: express.Request<{ taskId: string }, {}, TaskCommentCreateReqDto>,
+    res: express.Response<ApiResponse<TaskCommentResDto>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      const comment = await taskService.createComment(req.params.taskId, req.body.content, req.user!.userId);
+      res.json(createApiResponse<TaskCommentResDto>(toTaskCommentDto(comment)));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.put('/comments/:commentId',
+  async (
+    req: express.Request<{ commentId: string }, {}, TaskCommentUpdateReqDto>,
+    res: express.Response<ApiResponse<TaskCommentResDto>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      const comment = await taskService.updateComment(req.params.commentId, req.body.content, req.user!.userId);
+      res.json(createApiResponse<TaskCommentResDto>(toTaskCommentDto(comment)));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.delete('/comments/:commentId',
+  async (
+    req: express.Request<{ commentId: string }>,
+    res: express.Response<ApiResponse<null>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      await taskService.deleteComment(req.params.commentId, req.user!.userId);
+      res.json(createApiResponse<null>(null));
     } catch (err) {
       next(err);
     }

@@ -57,7 +57,7 @@ The backend is an Express application with modular route loading and service-bas
 - `src/index.ts`: app composition, middleware order, server startup, graceful shutdown, and startup jobs.
 - `src/api/`: route modules. Each file exports a default authenticated router and can optionally export `publicRouter`.
 - `src/routes/`: router composition, including SPA static routing.
-- `src/services/`: domain logic for tasks, projects, labels, invitations, permissions, and users.
+- `src/services/`: domain logic for tasks, task comments, projects, labels, invitations, permissions, and users.
 - `src/services/ActivityService.ts`: shared activity event recording and query logic used by multiple feature services and routes.
 - `src/middlewares/`: cross-cutting HTTP concerns such as auth, CORS, request logging, and error handling.
 - `src/database/`: Drizzle connection and relational schema.
@@ -98,6 +98,7 @@ Primary domain entities include:
 - project documents
 - activity events
 - tasks
+- task comments
 - task views
 - labels and label sets
 - roles, permissions, and membership tables

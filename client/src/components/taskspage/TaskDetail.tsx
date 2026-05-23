@@ -20,6 +20,7 @@ import { marked } from 'marked';
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
 import { TASK_PATH } from '@/routes/routeConfig';
+import TaskCommentsSection from './TaskCommentsSection';
 
 interface TaskLike {
   id: string;
@@ -476,6 +477,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
               </>
             )}
           </div>
+          <TaskCommentsSection taskId={taskId} />
         </div>
         {/* Right column: Fields */}
         <div className="flex flex-col gap-2">

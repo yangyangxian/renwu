@@ -21,6 +21,23 @@ export class TaskResDto {
   projectName: string = '';
 }
 
+export class TaskCommentResDto {
+  id: string = '';
+  taskId: string = '';
+  content: string = '';
+  createdBy: UserResDto = new UserResDto();
+  createdAt: string = '';
+  updatedAt: string = '';
+}
+
+export class TaskCommentCreateReqDto {
+  content!: string;
+}
+
+export class TaskCommentUpdateReqDto {
+  content!: string;
+}
+
 export class TaskUpdateReqDto {
   title?: string;
   description?: string;

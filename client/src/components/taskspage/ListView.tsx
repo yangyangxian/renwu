@@ -131,7 +131,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({
   return (
     <div className="flex h-full w-full rounded-lg">
       {/* Left: Task List */}
-      <div className="w-1/4 min-w-[250px] max-w-[330px] rounded-l-lg border border-input
+      <div className="w-1/5 min-w-[260px] max-w-[330px] rounded-l-lg border border-input
         dark:border-[1.5px] bg-white-black h-full flex flex-col overflow-hidden">
         {/* Status Filter and Sort Icon */}
         <div className="bg-white-black py-1.5 border-b border-border flex items-center 

@@ -10,12 +10,13 @@ import { Input } from "@/components/ui-kit/Input";
 import { Button } from "@/components/ui-kit/Button";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { Label } from "@/components/ui-kit/Label";
-import { Tag, FolderOpen, User, Clock, FileText, PencilLine, History, RefreshCw } from "lucide-react";
+import { Tag, FolderOpen, User, Clock, FileText, PencilLine, RefreshCw } from "lucide-react";
 import { allStatuses, statusColors, statusLabels, statusIcons } from "@/consts/taskStatusConfig";
 import { CheckCircle } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { MarkdownnEditor, MarkdownEditorHandle } from "@/components/common/editor/MarkdownEditor";
 import { DropDownList } from "@/components/common/DropDownList";
+import TaskCommentsSection from '@/components/taskspage/TaskCommentsSection';
 import { logger } from "@/utils/logger";
 import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndicator';
 import LabelSelector from '@/components/common/LabelSelector';
@@ -189,7 +190,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="p-0 max-w-300! w-[68vw] gap-0"
+        className="h-[min(88vh,56rem)] max-w-300! w-[68vw] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0"
         onInteractOutside={e => e.preventDefault()}
       >
         <VisuallyHidden>
@@ -202,7 +203,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           </span>
           <span className="w-8" /> {/* Spacer for symmetry */}
         </nav>
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] w-full min-h-75 overflow-auto">
+        <div className="grid h-full min-h-0 w-full grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
           {/* Main form */}
           <form
             onSubmit={e => {
@@ -272,34 +273,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Label className="flex gap-3 font-medium">
-                  <History className="size-4" />
-                  Activity
-                </Label>
-                <Label className="text-muted-foreground">(Coming soon: see task history, comments, etc.)</Label>
-              </div>
-            </div>
-            <div className="flex items-center justify-between border-t pt-6">
-              <div />
-              <div className="flex items-center gap-3">
-                {isDirty && (
-                  <div className='mr-1'>
-                    <UnsavedChangesIndicator />
-                  </div>
-                )}
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" onClick={() => mdEditorRef.current?.cancel()} disabled={saving}>Cancel</Button>
-                </DialogClose>
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => mdEditorRef.current?.save()}
-                  disabled={saving || !taskState.title.trim() || !taskState.assignedTo || !user?.id}
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </Button>
-              </div>
+              {taskState.id ? <TaskCommentsSection taskId={String(taskState.id)} /> : null}
             </div>
           </form>
           {/* Right panel */}
@@ -446,6 +420,30 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </>
               )}
             </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between border-t bg-background px-8 py-4">
+          <div>
+            {isDirty && (
+              <div className="mr-1">
+                <UnsavedChangesIndicator />
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" onClick={() => mdEditorRef.current?.cancel()} disabled={saving}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => mdEditorRef.current?.save()}
+              disabled={saving || !taskState.title.trim() || !taskState.assignedTo || !user?.id}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
           </div>
         </div>
       </DialogContent>

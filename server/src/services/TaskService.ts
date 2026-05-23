@@ -1,6 +1,6 @@
 import { db } from '../database/databaseAccess';
-import { tasks, projects, users, taskView, taskLabels, labels, projectMembers } from '../database/schema';
-import { eq, and, inArray, or, isNull, sql } from 'drizzle-orm';
+import { tasks, projects, users, taskView, taskLabels, labels, projectMembers, taskComments } from '../database/schema';
+import { eq, and, inArray, or, isNull, sql, asc } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
 import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
@@ -32,6 +32,15 @@ export class TaskViewEntity {
   name: string = '';
   projectId: string | null = null;
   viewConfig: any = null;
+}
+
+export class TaskCommentEntity {
+  id: string = '';
+  taskId: string = '';
+  content: string = '';
+  createdBy?: UserEntity;
+  createdAt: string = '';
+  updatedAt: string = '';
 }
 
 type DbTask = typeof tasks.$inferInsert;
@@ -121,6 +130,12 @@ class TaskService {
     }
 
     return labelsByTaskId;
+  }
+
+  private mapTaskCommentEntity(source: Record<string, unknown>): TaskCommentEntity {
+    return mapDbToEntity(source, new TaskCommentEntity(), {
+      content: { default: '' },
+    });
   }
   
   /**
@@ -602,6 +617,125 @@ class TaskService {
         await tx.update(tasks).set({ updatedAt: new Date() }).where(eq(tasks.id, taskId));
       }
     });
+  }
+
+  async getCommentsByTaskId(taskId: string): Promise<TaskCommentEntity[]> {
+    const creatorUser = alias(users, 'comment_creator_user');
+
+    const rows = await db
+      .select({
+        id: taskComments.id,
+        taskId: taskComments.taskId,
+        content: taskComments.content,
+        createdAt: taskComments.createdAt,
+        updatedAt: taskComments.updatedAt,
+        createdById: taskComments.createdBy,
+        createdByName: creatorUser.name,
+        createdByEmail: creatorUser.email,
+      })
+      .from(taskComments)
+      .innerJoin(creatorUser, eq(taskComments.createdBy, creatorUser.id))
+      .where(eq(taskComments.taskId, taskId))
+      .orderBy(asc(taskComments.createdAt));
+
+    return rows.map((row) => {
+      const entity = this.mapTaskCommentEntity(row);
+      entity.createdBy = new UserEntity({
+        id: row.createdById,
+        name: row.createdByName || '',
+        email: row.createdByEmail || '',
+      });
+      return entity;
+    });
+  }
+
+  async createComment(taskId: string, content: string, actorUserId: string): Promise<TaskCommentEntity> {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
+      throw new CustomError('Comment content is required', ErrorCodes.INVALID_INPUT);
+    }
+
+    const task = await this.getTaskById(taskId);
+    if (!task) {
+      throw new CustomError('Task not found', ErrorCodes.NOT_FOUND);
+    }
+
+    const [createdComment] = await db
+      .insert(taskComments)
+      .values({
+        taskId,
+        content: trimmedContent,
+        createdBy: actorUserId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning({ id: taskComments.id });
+
+    if (!createdComment) {
+      throw new CustomError('Failed to create comment', ErrorCodes.INTERNAL_ERROR);
+    }
+
+    const comments = await this.getCommentsByTaskId(taskId);
+    const created = comments.find((comment) => comment.id === createdComment.id);
+
+    if (!created) {
+      throw new CustomError('Failed to fetch created comment', ErrorCodes.INTERNAL_ERROR);
+    }
+
+    return created;
+  }
+
+  async updateComment(commentId: string, content: string, actorUserId: string): Promise<TaskCommentEntity> {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
+      throw new CustomError('Comment content is required', ErrorCodes.INVALID_INPUT);
+    }
+
+    const [existingComment] = await db
+      .select({ id: taskComments.id, taskId: taskComments.taskId, createdBy: taskComments.createdBy })
+      .from(taskComments)
+      .where(eq(taskComments.id, commentId));
+
+    if (!existingComment) {
+      throw new CustomError('Comment not found', ErrorCodes.NOT_FOUND);
+    }
+
+    if (existingComment.createdBy !== actorUserId) {
+      throw new CustomError('You can only edit your own comments', ErrorCodes.UNAUTHORIZED);
+    }
+
+    await db
+      .update(taskComments)
+      .set({ content: trimmedContent, updatedAt: new Date() })
+      .where(eq(taskComments.id, commentId));
+
+    const comments = await this.getCommentsByTaskId(existingComment.taskId);
+    const updated = comments.find((comment) => comment.id === commentId);
+
+    if (!updated) {
+      throw new CustomError('Failed to fetch updated comment', ErrorCodes.INTERNAL_ERROR);
+    }
+
+    return updated;
+  }
+
+  async deleteComment(commentId: string, actorUserId: string): Promise<void> {
+    const [existingComment] = await db
+      .select({ id: taskComments.id, createdBy: taskComments.createdBy })
+      .from(taskComments)
+      .where(eq(taskComments.id, commentId));
+
+    if (!existingComment) {
+      throw new CustomError('Comment not found', ErrorCodes.NOT_FOUND);
+    }
+
+    if (existingComment.createdBy !== actorUserId) {
+      throw new CustomError('You can only delete your own comments', ErrorCodes.UNAUTHORIZED);
+    }
+
+    await db.delete(taskComments).where(eq(taskComments.id, commentId));
   }
 }
 

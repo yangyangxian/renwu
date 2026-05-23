@@ -94,6 +94,16 @@ export const tasks = pgTable(
   ]
 );
 
+// ---------- TABLE: Task Comments ----------
+export const taskComments = pgTable('task_comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  taskId: uuid('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // ---------- TABLE: Task Views ----------
 export const taskView = pgTable('task_view', {
   id: uuid('id').primaryKey().defaultRandom(),

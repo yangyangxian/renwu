@@ -78,6 +78,13 @@
       "when": 1779432510070,
       "tag": "0010_add_task_numbering",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1779514250197,
+      "tag": "0011_add_task_comments",
+      "breakpoints": true
     }
   ]
 }
