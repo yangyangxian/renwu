@@ -9,9 +9,21 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import LabelBadge from "@/components/common/LabelBadge";
+import { TASK_PATH } from '@/routes/routeConfig';
+
+export function getTaskCardTaskLink(taskId: string, taskCode: string) {
+  const text = taskCode.toUpperCase();
+
+  return {
+    href: TASK_PATH.replace('[taskId]', encodeURIComponent(taskId)),
+    text,
+    ariaLabel: `Open ${text} task page`,
+  };
+}
 
 interface TaskCardProps {
   taskId: string; // Add taskId prop for deletion
+  taskCode?: string;
   title: string;
   description: string;
   dueDate?: string;
@@ -33,12 +45,13 @@ const statusToColor: Record<TaskStatus, string> = {
   [TaskStatus.CLOSE]: "text-gray-500",
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName, assignedTo,
+const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, projectName, assignedTo,
   showProjectName = true, status, onClick, description, className, showDeleteButton, labels,
   titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden" }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
   const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
+  const taskLink = taskCode ? getTaskCardTaskLink(taskId, taskCode) : null;
 
   const handleDeleteTask = async () => {
     await withToast(
@@ -113,12 +126,24 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, title, dueDate, projectName
         confirmText="Delete"
         cancelText="Cancel"
       />
-      {(showProjectName || assignedTo) && (
+      {(showProjectName || taskLink || assignedTo) && (
         <div className="mb-2 flex w-3/4 min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
           {showProjectName && (
           <div className={`min-w-0 truncate text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
             {!projectName || projectName === "" ? "Personal" : projectName}
           </div>
+          )}
+          {taskLink && (
+            <a
+              href={taskLink.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={taskLink.ariaLabel}
+              className="w-fit text-xs lg:text-[13px] font-medium text-foreground/80 underline underline-offset-3 transition-colors hover:text-foreground"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {taskLink.text}
+            </a>
           )}
           {/* Assigned to user info - moved next to project name */}
           {assignedTo && (

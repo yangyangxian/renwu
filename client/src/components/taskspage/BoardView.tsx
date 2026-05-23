@@ -208,6 +208,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                         <DraggableTaskCard key={task.id || idx} id={String(task.id)}>
                           <TaskCard
                             taskId={task.id}
+                            taskCode={task.taskCode}
                             title={task.title}
                             titleClassName="text-sm line-clamp-3 break-all overflow-hidden mt-1 leading-[1.5]"
                             description={task.description}
@@ -233,6 +234,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
         {activeTask ? (
           <TaskCard
             taskId={activeTask.id}
+            taskCode={activeTask.taskCode}
             title={activeTask.title}
             titleClassName="text-sm line-clamp-3 break-all overflow-hidden mt-1 leading-[1.5]"
             description={activeTask.description}
