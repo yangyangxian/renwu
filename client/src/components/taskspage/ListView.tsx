@@ -41,10 +41,16 @@ interface TaskListViewProps {
   tasks: TaskResDto[];
 
   showAssignedTo?: boolean;
+  showProjectName?: boolean;
   selectionScopeKey?: string | null;
 }
 
-const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo, selectionScopeKey = null }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({
+  tasks,
+  showAssignedTo,
+  showProjectName = true,
+  selectionScopeKey = null,
+}) => {
   const { hasPermission } = usePermissionStore();
   const { user } = useAuth();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -215,11 +221,13 @@ const TaskListView: React.FC<TaskListViewProps> = ({ tasks, showAssignedTo, sele
                   <div onClick={() => setSelectedTaskId(task.id)}>
                     <TaskCard
                       taskId={task.id}
+                      taskCode={task.taskCode}
                       title={task.title}
                       titleClassName="text-sm line-clamp-3 break-all overflow-hidden leading-[1.45]"
                       description={task.description}
                       dueDate={task.dueDate}
-                      projectName={task.projectName}
+                      projectName={showProjectName ? task.projectName : undefined}
+                      showProjectName={showProjectName}
                       status={task.status}
                       assignedTo={showAssignedTo ? task.assignedTo : undefined}
                       className={`hover:scale-100 cursor-pointer rounded-none! bg-white-black py-3.5 pl-5 min-h-22 border-none! shadow-none! ${resolvedSelectedTaskId === task.id ? 'border-l-primary bg-primary/5 dark:bg-muted' : ''}`}

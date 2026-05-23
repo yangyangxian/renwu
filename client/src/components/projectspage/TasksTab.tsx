@@ -37,6 +37,7 @@ export function ProjectTasksTab({
         <TaskListView
           tasks={filteredTasks}
           showAssignedTo={true}
+          showProjectName={false}
           selectionScopeKey={selectionScopeKey}
         />
       ) : (
