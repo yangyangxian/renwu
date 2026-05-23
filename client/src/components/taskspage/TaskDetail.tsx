@@ -309,7 +309,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full h-full"
+      className="min-h-full w-full"
       >
       <style>{`
         .task-detail-description-content :where(ul, ol) {

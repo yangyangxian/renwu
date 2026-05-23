@@ -25,6 +25,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Show sidebar on authenticated routes except explicit public marketing/auth pages
   const hideSidebarRoutes = ['/login', '/signup', '/landing'];
   const showSidebar = isAuthenticated && !hideSidebarRoutes.includes(location.pathname);
+  const isStandaloneTaskRoute = location.pathname.startsWith('/task/');
+  const useDocumentScrollForStandaloneTask = isStandaloneTaskRoute && !showSidebar;
 
   return (
     <div className="bg-gray-100 dark:bg-black pt-14">
@@ -95,13 +97,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
       </nav>
       {/* Main Content */}
-      <main className="flex h-[calc(100vh-56px)]">
+      <main className={useDocumentScrollForStandaloneTask ? 'flex w-full min-h-[calc(100vh-56px)]' : 'flex h-[calc(100vh-56px)]'}>
         {showSidebar && (
           <aside className="h-full rounded-xl shadow-sm flex overflow-y-auto overflow-x-hidden bg-sidebar">
             <HomeSideBar />
           </aside>
         )}
-        <div className="flex-1 h-full overflow-hidden">
+        <div
+          className={useDocumentScrollForStandaloneTask
+            ? 'min-h-[calc(100vh-56px)] w-full flex-1 overflow-visible'
+            : `flex-1 h-full ${isStandaloneTaskRoute ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'}`}
+        >
           {children}
         </div>
       </main>
