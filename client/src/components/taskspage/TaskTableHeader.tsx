@@ -8,13 +8,13 @@ interface TaskTableHeaderProps {
   onColumnResize: (columnId: TaskTableColumnId, width: number) => void;
 }
 
-const RESIZABLE_COLUMNS: TaskTableColumnId[] = ['title', 'assignee', 'status', 'updatedAt'];
+const RESIZABLE_COLUMNS: TaskTableColumnId[] = ['taskCode', 'title', 'status', 'assignee'];
 
-const COLUMN_LABELS: Record<TaskTableColumnId, string> = {
+export const TASK_TABLE_COLUMN_LABELS: Record<TaskTableColumnId, string> = {
+  taskCode: 'No.',
   title: 'Title',
-  assignee: 'Assignee',
   status: 'Status',
-  updatedAt: 'Updated',
+  assignee: 'Assignee',
   actions: 'Actions',
 };
 
@@ -45,11 +45,11 @@ export default function TaskTableHeader({ columnWidths, titleAutoWidth, onColumn
     >
       {TASK_TABLE_COLUMN_ORDER.map((columnId) => (
         <div key={columnId} className={`relative flex min-h-10 items-center px-3 ${columnId === 'actions' ? 'justify-center' : ''}`}>
-          <span>{COLUMN_LABELS[columnId]}</span>
+          <span>{TASK_TABLE_COLUMN_LABELS[columnId]}</span>
           {RESIZABLE_COLUMNS.includes(columnId) && (
             <button
               type="button"
-              aria-label={`Resize ${COLUMN_LABELS[columnId]} column`}
+              aria-label={`Resize ${TASK_TABLE_COLUMN_LABELS[columnId]} column`}
               className="absolute top-0 right-0 h-full w-2 cursor-col-resize touch-none"
               onPointerDown={(event) => {
                 event.preventDefault();

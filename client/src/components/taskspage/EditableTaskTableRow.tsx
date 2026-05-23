@@ -19,6 +19,7 @@ import { useProjectStore } from '@/stores/useProjectStore';
 import { useTaskStore } from '@/stores/useTaskStore';
 import { statusColors, statusIcons, statusLabels, allStatuses } from '@/consts/taskStatusConfig';
 import { withToast } from '@/utils/toastUtils';
+import { getTaskCardTaskLink } from './TaskCard';
 import { getTaskTableGridTemplateColumns, getTaskTableMinWidth, type TaskTableColumnWidths } from './taskTableColumnSizing';
 
 interface EditableTaskTableRowProps {
@@ -41,7 +42,7 @@ interface TaskProjectMemberOption {
 }
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
-const titleButtonClassName = 'flex min-h-8 w-full items-center rounded-md border border-transparent bg-transparent px-3 py-0 text-left shadow-none';
+const titleButtonClassName = 'flex min-h-8 w-full cursor-pointer items-center rounded-md border border-transparent bg-transparent px-3 py-0 text-left shadow-none';
 
 export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail, groupingLabelSet = null, onMoveTaskToGroup }: EditableTaskTableRowProps) {
   const { updateTaskById, deleteTaskById } = useTaskStore();
@@ -205,6 +206,23 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
     }
   }, [onMoveTaskToGroup, task]);
 
+  const handleRowClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+
+    if (!target) {
+      onOpenDetail(task.id);
+      return;
+    }
+
+    if (target.closest('a, button, input, textarea, select, [role="button"], [data-row-click-ignore="true"]')) {
+      return;
+    }
+
+    onOpenDetail(task.id);
+  }, [onOpenDetail, task.id]);
+
+  const taskLink = task.taskCode ? getTaskCardTaskLink(task.id, task.taskCode) : null;
+
   return (
     <div className="group relative flex items-center py-0.5 text-sm">
       <div className="flex w-5 shrink-0 items-center justify-center">
@@ -234,6 +252,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
 
       <div
         className="grid flex-1 items-center bg-transparent transition-colors hover:bg-muted/30 dark:hover:bg-muted/40"
+        onClick={handleRowClick}
         style={{
           gridTemplateColumns: getTaskTableGridTemplateColumns(columnWidths, { titleAutoWidth }),
           minWidth: getTaskTableMinWidth(columnWidths),
@@ -241,13 +260,20 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
         }}
       >
         <div className="px-3">
-          <UserSelector
-            options={memberOptions}
-            currentValue={assigneeDraft?.id ? assigneeDraft : null}
-            onSelect={handleAssigneeSelect}
-            triggerClassName="h-7 px-2 [&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar-fallback]]:text-xs [&_[data-slot=avatar-fallback]]:leading-none"
-            triggerLabelClassName="font-normal leading-none"
-          />
+          {taskLink ? (
+            <a
+              href={taskLink.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={taskLink.ariaLabel}
+              className="inline-flex min-w-0 max-w-full truncate text-sm font-medium text-foreground/80 underline underline-offset-3 transition-colors hover:text-foreground"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {taskLink.text}
+            </a>
+          ) : (
+            <span className="text-sm text-muted-foreground">--</span>
+          )}
         </div>
 
         <div className="min-w-0 pr-3">
@@ -272,6 +298,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
             <button
               type="button"
               className={`${titleButtonClassName} hover:bg-muted/40 focus-visible:bg-muted/40`}
+              data-row-click-ignore="true"
               onClick={() => setEditingTitle(true)}
             >
               <div className="flex min-w-0 items-center gap-2 py-1">
@@ -312,10 +339,14 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
           </DropdownMenu>
         </div>
 
-        <div className="px-3 py-2 text-muted-foreground">
-          <span className="min-w-0 truncate">
-            {task.updatedAt ? format(new Date(task.updatedAt), 'yyyy-MM-dd HH:mm') : '--'}
-          </span>
+        <div className="px-3">
+          <UserSelector
+            options={memberOptions}
+            currentValue={assigneeDraft?.id ? assigneeDraft : null}
+            onSelect={handleAssigneeSelect}
+            triggerClassName="h-7 px-2 [&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar-fallback]]:text-xs [&_[data-slot=avatar-fallback]]:leading-none"
+            triggerLabelClassName="font-normal leading-none"
+          />
         </div>
 
         <div className="flex items-center justify-center gap-1 px-2 py-2">

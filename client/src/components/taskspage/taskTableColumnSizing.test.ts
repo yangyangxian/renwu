@@ -13,10 +13,10 @@ import {
 
 test('getDefaultTaskTableColumnWidths returns the four editable table columns', () => {
   assert.deepEqual(getDefaultTaskTableColumnWidths(), {
+    taskCode: 120,
     title: 560,
-    assignee: 170,
     status: 170,
-    updatedAt: 190,
+    assignee: 170,
     actions: 116,
   });
 });
@@ -48,18 +48,18 @@ test('resizeTaskTableColumn clamps widths within each column bounds', () => {
 test('sanitizeTaskTableColumnWidths keeps known numeric widths and falls back to defaults for invalid entries', () => {
   assert.deepEqual(
     sanitizeTaskTableColumnWidths({
+      taskCode: 80,
       title: 480,
       assignee: 'bad',
       status: 999,
-      updatedAt: 150,
       ignored: 100,
     }),
     {
+      taskCode: 96,
       title: 480,
-      assignee: 170,
       status: 220,
-      updatedAt: 160,
-        actions: 116,
+      assignee: 170,
+      actions: 116,
     }
   );
 });
@@ -67,17 +67,17 @@ test('sanitizeTaskTableColumnWidths keeps known numeric widths and falls back to
 test('sanitizeTaskTableColumnWidths preserves manually expanded title widths', () => {
   assert.deepEqual(
     sanitizeTaskTableColumnWidths({
+      taskCode: 120,
       title: 1200,
-      assignee: 170,
       status: 170,
-      updatedAt: 190,
+      assignee: 170,
       actions: 116,
     }),
     {
+      taskCode: 120,
       title: 1200,
-      assignee: 170,
       status: 170,
-      updatedAt: 190,
+      assignee: 170,
       actions: 116,
     }
   );
@@ -86,40 +86,40 @@ test('sanitizeTaskTableColumnWidths preserves manually expanded title widths', (
 test('getTaskTableGridTemplateColumns keeps default title sizing elastic up to the maximum width', () => {
   assert.equal(
     getTaskTableGridTemplateColumns({
+      taskCode: 120,
       title: 560,
-      assignee: 170,
       status: 170,
-      updatedAt: 190,
+      assignee: 170,
       actions: 116,
     }, { titleAutoWidth: true }),
-    '170px minmax(560px, 700px) 170px 190px 116px'
+    '120px minmax(560px, 700px) 170px 170px 116px'
   );
 });
 
 test('getTaskTableGridTemplateColumns fixes manually resized title widths without applying the auto cap', () => {
   assert.equal(
     getTaskTableGridTemplateColumns({
+      taskCode: 120,
       title: 1200,
-      assignee: 170,
       status: 170,
-      updatedAt: 190,
+      assignee: 170,
       actions: 116,
     }, { titleAutoWidth: false }),
-    '170px 1200px 170px 190px 116px'
+    '120px 1200px 170px 170px 116px'
   );
 });
 
 test('getTaskTableGridTemplateColumns makes title absorb remaining space while other columns stay fixed', () => {
   assert.equal(
     getTaskTableGridTemplateColumns(getDefaultTaskTableColumnWidths(), { titleAutoWidth: true }),
-    '170px minmax(560px, 700px) 170px 190px 116px'
+    '120px minmax(560px, 700px) 170px 170px 116px'
   );
 });
 
 test('getTaskTableMinWidth returns the minimum scroll width for the table content', () => {
   assert.equal(
     getTaskTableMinWidth(getDefaultTaskTableColumnWidths()),
-    1206
+    1136
   );
 });
 

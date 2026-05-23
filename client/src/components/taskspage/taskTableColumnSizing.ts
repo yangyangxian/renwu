@@ -1,8 +1,8 @@
-export type TaskTableColumnId = 'title' | 'assignee' | 'status' | 'updatedAt' | 'actions';
+export type TaskTableColumnId = 'taskCode' | 'title' | 'status' | 'assignee' | 'actions';
 
 export type TaskTableColumnWidths = Record<TaskTableColumnId, number>;
 
-export const TASK_TABLE_COLUMN_ORDER: TaskTableColumnId[] = ['assignee', 'title', 'status', 'updatedAt', 'actions'];
+export const TASK_TABLE_COLUMN_ORDER: TaskTableColumnId[] = ['taskCode', 'title', 'status', 'assignee', 'actions'];
 
 type ColumnConstraint = {
   defaultWidth: number;
@@ -11,24 +11,24 @@ type ColumnConstraint = {
 };
 
 const COLUMN_CONSTRAINTS: Record<TaskTableColumnId, ColumnConstraint> = {
+  taskCode: {
+    defaultWidth: 120,
+    minWidth: 96,
+    maxWidth: 180,
+  },
   title: {
     defaultWidth: 560,
     minWidth: 320,
     maxWidth: 700,
-  },
-  assignee: {
-    defaultWidth: 170,
-    minWidth: 140,
-    maxWidth: 260,
   },
   status: {
     defaultWidth: 170,
     minWidth: 130,
     maxWidth: 220,
   },
-  updatedAt: {
-    defaultWidth: 190,
-    minWidth: 160,
+  assignee: {
+    defaultWidth: 170,
+    minWidth: 140,
     maxWidth: 260,
   },
   actions: {
@@ -91,10 +91,10 @@ export function getTaskTableGridTemplateColumns(
     ? `minmax(${columnWidths.title}px, ${COLUMN_CONSTRAINTS.title.maxWidth}px)`
     : `${columnWidths.title}px`;
   const trackByColumnId: Record<TaskTableColumnId, string> = {
-    assignee: `${columnWidths.assignee}px`,
+    taskCode: `${columnWidths.taskCode}px`,
     title: titleTrack,
     status: `${columnWidths.status}px`,
-    updatedAt: `${columnWidths.updatedAt}px`,
+    assignee: `${columnWidths.assignee}px`,
     actions: `${columnWidths.actions}px`,
   };
 
@@ -102,7 +102,7 @@ export function getTaskTableGridTemplateColumns(
 }
 
 export function getTaskTableMinWidth(columnWidths: TaskTableColumnWidths): number {
-  return columnWidths.title + columnWidths.assignee + columnWidths.status + columnWidths.updatedAt + columnWidths.actions;
+  return columnWidths.taskCode + columnWidths.title + columnWidths.status + columnWidths.assignee + columnWidths.actions;
 }
 
 export { COLUMN_CONSTRAINTS, COLUMN_IDS };
