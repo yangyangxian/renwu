@@ -15,7 +15,7 @@ import { withToast } from "@/utils/toastUtils";
 import { TasksMenuItem } from "./TasksMenuItem";
 import { ProjectsMenuItem } from "./ProjectsMenuItem";
 import { LabelsMenuItem } from "./LabelsMenuItem";
-import { HOME_SIDEBAR_WIDTH } from './homeSidebarWidth';
+import { HOME_SIDEBAR_MAX_WIDTH, HOME_SIDEBAR_MIN_WIDTH, HOME_SIDEBAR_WIDTH } from './homeSidebarWidth';
 
 export interface HomeSideBarProps {}
 
@@ -121,12 +121,14 @@ export function HomeSideBar() {
       onOpenChange={setExpanded}
       style={{
         // Let the desktop sidebar grow within a bounded range for longer project/view names.
-        "--sidebar-width": HOME_SIDEBAR_WIDTH
+        "--sidebar-width": HOME_SIDEBAR_WIDTH,
+        "--sidebar-min-width": HOME_SIDEBAR_MIN_WIDTH,
+        "--sidebar-max-width": HOME_SIDEBAR_MAX_WIDTH,
       } as React.CSSProperties}
     >
       <Sidebar
         collapsible="icon"
-        className="h-full pt-3 px-2 relative border-r-0!"
+        className="h-full pt-3 pl-2 relative border-r-0!"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >

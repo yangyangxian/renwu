@@ -141,7 +141,7 @@ export function ProjectsMenuItem({
                         );
                       }}
                     >
-                      {project.name}
+                      <span className="block truncate" title={project.name}>{project.name}</span>
                     </SidebarMenuButton>
 
                     {projectViews.length > 0 && (
