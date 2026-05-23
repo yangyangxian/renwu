@@ -279,9 +279,6 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
 
           <div className="flex items-center justify-end gap-2">
             {composerDirty && <UnsavedChangesIndicator />}
-            <Button type="button" size="sm" variant="ghost" className="text-muted-foreground" onClick={() => composerEditorRef.current?.cancel()}>
-              Clear
-            </Button>
             <Button type="button" size="sm" variant="default" disabled={!composerDirty} onClick={() => composerEditorRef.current?.save()}>
               Comment
             </Button>
