@@ -44,7 +44,7 @@ describe('TaskService.getTasksByProjectId', () => {
         createdByEmail: 'bob@example.com',
         createdByCreatedAt: new Date('2026-03-09T00:00:00.000Z'),
         title: 'Task One',
-        description: 'First task',
+        description: 'First task ![cover](https://img.example.com/task-1.png)',
         status: 'todo',
         projectId: 'project-1',
         dueDate: null,
@@ -63,7 +63,7 @@ describe('TaskService.getTasksByProjectId', () => {
         createdByEmail: 'bob@example.com',
         createdByCreatedAt: new Date('2026-03-09T00:00:00.000Z'),
         title: 'Task Two',
-        description: 'Second task',
+        description: 'Second task ![cover](https://img.example.com/task-2.png)',
         status: 'in_progress',
         projectId: 'project-1',
         dueDate: null,
@@ -98,7 +98,9 @@ describe('TaskService.getTasksByProjectId', () => {
     expect(result).toHaveLength(2);
     expect(result[0].labels).toHaveLength(2);
     expect(result[0].labels?.map(label => label.labelName)).toEqual(['backend', 'urgent']);
+    expect(result[0].previewImageUrl).toBe('https://img.example.com/task-1.png');
     expect(result[1].labels).toEqual([]);
+    expect(result[1].previewImageUrl).toBe('https://img.example.com/task-2.png');
   });
 
   it('returns early when the project has no tasks', async () => {
@@ -129,7 +131,7 @@ describe('TaskService.getTasksByUserId', () => {
         createdByEmail: 'bob@example.com',
         createdByCreatedAt: new Date('2026-03-09T00:00:00.000Z'),
         title: 'Assigned Task One',
-        description: 'First assigned task',
+        description: 'First assigned task ![cover](https://img.example.com/assigned-1.png)',
         status: 'todo',
         projectId: 'project-1',
         dueDate: null,
@@ -148,7 +150,7 @@ describe('TaskService.getTasksByUserId', () => {
         createdByEmail: 'bob@example.com',
         createdByCreatedAt: new Date('2026-03-09T00:00:00.000Z'),
         title: 'Assigned Task Two',
-        description: 'Second assigned task',
+        description: 'Second assigned task ![cover](https://img.example.com/assigned-2.png)',
         status: 'in_progress',
         projectId: 'project-1',
         dueDate: null,
@@ -183,6 +185,8 @@ describe('TaskService.getTasksByUserId', () => {
     expect(result).toHaveLength(2);
     expect(result[0].labels?.map(label => label.labelName)).toEqual(['backend']);
     expect(result[1].labels?.map(label => label.labelName)).toEqual(['personal']);
+    expect(result[0].previewImageUrl).toBe('https://img.example.com/assigned-1.png');
+    expect(result[1].previewImageUrl).toBe('https://img.example.com/assigned-2.png');
   });
 
   it('returns early when the user has no tasks', async () => {

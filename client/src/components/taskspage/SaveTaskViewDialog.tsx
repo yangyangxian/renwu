@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui-kit/Dialog";
 import { Button } from "@/components/ui-kit/Button";
 import { Input } from "@/components/ui-kit/Input";
 import { statusLabels, statusIcons } from "@/consts/taskStatusConfig";
-import { Folder, CalendarRange, Search, Filter, SortAsc, SortDesc, Kanban, List, Table2, ArrowUpDown, Rows3 } from "lucide-react";
+import { Folder, CalendarRange, Search, Filter, SortAsc, SortDesc, ArrowUpDown, Rows3 } from "lucide-react";
 import { TaskViewMode } from "@fullstack/common";
 import React, { useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { useTaskViewStore } from "@/stores/useTaskViewStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useLabelStore } from "@/stores/useLabelStore";
 import { useNavigate } from "react-router-dom";
+import { getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
 interface SaveTaskViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,6 +30,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
   const { getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
   const [viewName, setViewName] = useState("");
   const navigate = useNavigate();
+  const { icon: ViewModeIcon, label: viewModeLabel } = getTaskViewModeMeta(currentDisplayViewConfig.viewMode);
 
   const normalizedProjectId = currentDisplayViewConfig.projectId === 'personal'
     ? null
@@ -174,10 +176,10 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
             </div>
           )}
           <div className="flex items-center gap-3">
-            {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? <Kanban className="w-4 h-4 text-primary" /> : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? <List className="w-4 h-4 text-primary" /> : <Table2 className="w-4 h-4 text-primary" />}
+            <ViewModeIcon className="w-4 h-4 text-primary" />
             <Label className="font-medium min-w-22.5">View Mode:</Label>
             <span>
-              {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD ? "Board" : currentDisplayViewConfig.viewMode === TaskViewMode.TABLE ? "Table" : "List"}
+              {viewModeLabel}
             </span>
           </div>
         </div>

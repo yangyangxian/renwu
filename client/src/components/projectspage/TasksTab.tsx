@@ -1,6 +1,7 @@
 import BoardView from '@/components/taskspage/BoardView';
 import TaskListView from '@/components/taskspage/ListView';
 import TableView from '@/components/taskspage/TableView';
+import TimelineView from '@/components/taskspage/TimelineView';
 import { TaskResDto, TaskViewMode } from '@fullstack/common';
 
 interface ProjectTasksTabProps {
@@ -39,6 +40,13 @@ export function ProjectTasksTab({
           showAssignedTo={true}
           showProjectName={false}
           selectionScopeKey={selectionScopeKey}
+        />
+      ) : view === TaskViewMode.TIMELINE ? (
+        <TimelineView
+          tasks={filteredTasks}
+          onTaskClick={onTaskClick}
+          showAssignedTo={true}
+          showProjectName={false}
         />
       ) : (
         <TableView

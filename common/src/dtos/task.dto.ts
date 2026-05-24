@@ -19,6 +19,7 @@ export class TaskResDto {
   updatedAt: string = '';
   projectId: string = '';
   projectName: string = '';
+  previewImageUrl?: string = undefined;
 }
 
 export class TaskCommentResDto {

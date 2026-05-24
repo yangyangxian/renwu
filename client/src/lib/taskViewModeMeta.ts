@@ -1,5 +1,5 @@
 import { TaskViewMode } from '@fullstack/common';
-import { Kanban, List, Table2, type LucideIcon } from 'lucide-react';
+import { CalendarDays, Kanban, List, Table2, type LucideIcon } from 'lucide-react';
 
 export interface TaskViewModeMeta {
   label: string;
@@ -10,6 +10,7 @@ export const TASK_VIEW_MODE_ORDER: TaskViewMode[] = [
   TaskViewMode.BOARD,
   TaskViewMode.LIST,
   TaskViewMode.TABLE,
+  TaskViewMode.TIMELINE,
 ];
 
 const TASK_VIEW_MODE_META: Record<TaskViewMode, TaskViewModeMeta> = {
@@ -24,6 +25,10 @@ const TASK_VIEW_MODE_META: Record<TaskViewMode, TaskViewModeMeta> = {
   [TaskViewMode.TABLE]: {
     label: 'Table',
     icon: List,
+  },
+  [TaskViewMode.TIMELINE]: {
+    label: 'Timeline',
+    icon: CalendarDays,
   },
 };
 

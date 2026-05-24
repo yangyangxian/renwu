@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { TaskViewMode } from '@fullstack/common';
-import { Kanban, List, Table2 } from 'lucide-react';
+import { CalendarDays, Kanban, List, Table2 } from 'lucide-react';
 
 import { TASK_VIEW_MODE_ORDER, getTaskViewModeMeta } from './taskViewModeMeta';
 
@@ -11,6 +11,7 @@ test('task view mode metadata preserves the existing tab order', () => {
     TaskViewMode.BOARD,
     TaskViewMode.LIST,
     TaskViewMode.TABLE,
+    TaskViewMode.TIMELINE,
   ]);
 });
 
@@ -26,5 +27,9 @@ test('task view mode metadata exposes the tab labels and icons', () => {
   assert.deepEqual(getTaskViewModeMeta(TaskViewMode.TABLE), {
     label: 'Table',
     icon: List,
+  });
+  assert.deepEqual(getTaskViewModeMeta(TaskViewMode.TIMELINE), {
+    label: 'Timeline',
+    icon: CalendarDays,
   });
 });

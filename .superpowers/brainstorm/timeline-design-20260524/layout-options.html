@@ -1,0 +1,151 @@
+<h2>Timeline View Layout Direction</h2>
+<p class="subtitle">目标：左侧是按 createdAt 分天的记录流，右侧是可纵向滚动的月历流；点击某一天，左侧跳到当天任务。</p>
+
+<div class="cards" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">A. Balanced Split</div>
+        <div class="mockup-body" style="display:grid;grid-template-columns:1.7fr 0.95fr;gap:12px;min-height:360px;">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:14px;background:#f5f1e8;border:1px solid #d8ccb7;">
+              <div>
+                <div class="label">2026-05-24</div>
+                <div style="font-weight:700;">Sunday · 5 records</div>
+              </div>
+              <div style="font-size:12px;color:#6b5f4e;">Jump anchor</div>
+            </div>
+            <div style="display:grid;grid-template-columns:112px 1fr;gap:10px;padding:10px;border-radius:16px;background:#fff;border:1px solid #ddd;">
+              <div style="border-radius:12px;background:linear-gradient(135deg,#d4a373,#faedcd);min-height:92px;"></div>
+              <div>
+                <div style="font-size:12px;color:#786a59;">09:42</div>
+                <div style="font-weight:700;margin-top:4px;">Morning Journal</div>
+                <div style="font-size:13px;color:#5e5a54;margin-top:6px;">首图 + 两行摘要 + 标签，偏记录卡。</div>
+              </div>
+            </div>
+            <div style="padding:12px;border-radius:16px;background:#fff;border:1px solid #ddd;">
+              <div style="font-size:12px;color:#786a59;">13:15</div>
+              <div style="font-weight:700;margin-top:4px;">Workout Check-in</div>
+              <div style="font-size:13px;color:#5e5a54;margin-top:6px;">无图时退化成文字卡，保留状态和项目信息。</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+            <div style="padding:10px;border-radius:16px;background:#f8f8f8;border:1px solid #ddd;">
+              <div style="font-weight:700;margin-bottom:8px;">May 2026</div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:11px;">
+                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                <div></div><div></div><div></div><div></div><div>1</div><div>2</div><div>3</div>
+                <div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+                <div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div>
+                <div>18</div><div>19</div><div>20</div><div>21</div><div>22</div><div style="background:#d4a373;border-radius:8px;color:white;text-align:center;">23</div><div style="outline:2px solid #d4a373;border-radius:8px;text-align:center;">24</div>
+                <div>25</div><div>26</div><div>27</div><div>28</div><div>29</div><div>30</div><div>31</div>
+              </div>
+            </div>
+            <div style="padding:10px;border-radius:16px;background:#f8f8f8;border:1px solid #ddd;opacity:.65;">
+              <div style="font-weight:700;">June 2026</div>
+              <div style="font-size:12px;color:#6e6e6e;margin-top:6px;">继续向下滚动查看月份</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Balanced Split</h3>
+      <p>信息量和可扫读性最均衡，适合个人页和项目页共用。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">B. Journal First</div>
+        <div class="mockup-body" style="display:grid;grid-template-columns:2.15fr 0.7fr;gap:12px;min-height:360px;">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="padding:10px 12px;border-radius:14px;background:#eef4f2;border:1px solid #c8dbd5;">
+              <div class="label">2026-05-24</div>
+              <div style="font-weight:700;">A more immersive diary stream</div>
+            </div>
+            <div style="border-radius:18px;background:#fff;border:1px solid #ddd;overflow:hidden;">
+              <div style="height:148px;background:linear-gradient(135deg,#7db7a3,#d8f3dc);"></div>
+              <div style="padding:12px;">
+                <div style="font-size:12px;color:#6a7b75;">08:12</div>
+                <div style="font-weight:700;margin-top:4px;">Walk Notes</div>
+                <div style="font-size:13px;color:#55615d;margin-top:8px;line-height:1.45;">更像日记卡。图片更大，正文摘要更多，任务字段弱化到底部 meta。</div>
+              </div>
+            </div>
+            <div style="border-radius:18px;background:#fff;border:1px solid #ddd;padding:12px;">
+              <div style="font-size:12px;color:#6a7b75;">20:40</div>
+              <div style="font-weight:700;margin-top:4px;">Reading Log</div>
+              <div style="font-size:13px;color:#55615d;margin-top:8px;">更有“个人记录产品”的气质，但项目任务页会显得偏重。</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="padding:10px;border-radius:16px;background:#f8f8f8;border:1px solid #ddd;">
+              <div style="font-weight:700;">May</div>
+              <div style="font-size:12px;color:#6e6e6e;margin-top:8px;">窄月历列</div>
+            </div>
+            <div style="padding:10px;border-radius:16px;background:#f8f8f8;border:1px solid #ddd;opacity:.7;">
+              <div style="font-weight:700;">June</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Journal First</h3>
+      <p>最贴近日记产品，但会牺牲项目页的任务管理效率。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">C. Calendar First</div>
+        <div class="mockup-body" style="display:grid;grid-template-columns:1.2fr 1.1fr;gap:12px;min-height:360px;">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="padding:10px;border-radius:16px;background:#fff;border:1px solid #ddd;">
+              <div class="label">2026-05-24</div>
+              <div style="font-weight:700;margin-top:3px;">Compact cards</div>
+            </div>
+            <div style="padding:10px;border-radius:16px;background:#fff;border:1px solid #ddd;">09:10 Morning note</div>
+            <div style="padding:10px;border-radius:16px;background:#fff;border:1px solid #ddd;">11:45 Project recap</div>
+            <div style="padding:10px;border-radius:16px;background:#fff;border:1px solid #ddd;">20:10 Fitness check-in</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="padding:10px;border-radius:16px;background:#f8f8f8;border:1px solid #ddd;min-height:168px;">
+              <div style="font-weight:700;">May 2026</div>
+              <div style="font-size:12px;color:#6e6e6e;margin-top:8px;">右侧日历权重更高，适合先看时间分布再看内容。</div>
+            </div>
+            <div style="padding:10px;border-radius:16px;background:#f8f8f8;border:1px solid #ddd;min-height:168px;opacity:.72;">
+              <div style="font-weight:700;">June 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Calendar First</h3>
+      <p>时间导航最强，但左侧记录流会被压缩，卡片表达力最弱。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <div class="pros-cons" style="grid-template-columns:1fr 1fr;">
+    <div class="pros">
+      <h4>Recommended</h4>
+      <ul>
+        <li>推荐 A：它最容易和现有个人页、项目页共用同一套组件入口。</li>
+        <li>左边足够容纳首图 + 摘要卡，右边月历也不会挤到不可用。</li>
+        <li>后续如果要增强成更偏日记的风格，可以在 A 的卡片内部继续演化，不必重做布局。</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Please Decide</h4>
+      <ul>
+        <li>你更偏向哪种整体布局？</li>
+        <li>如果选 A，我下一步会继续细化卡片样式和交互联动。</li>
+      </ul>
+    </div>
+  </div>
+</div>

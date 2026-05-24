@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ProjectTasksTab } from "@/components/projectspage/TasksTab";
 import { ProjectTeamTab } from "@/components/projectspage/TeamTab";
 import { ProjectSettingsTab } from "@/components/projectspage/SettingsTab";
-import { LayoutDashboard, List, Table2, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { ProjectLabelsTab } from "@/components/projectspage/LabelsTab";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -35,6 +35,7 @@ import { Input } from "@/components/ui-kit/Input";
 import { useAuth } from "@/providers/AuthProvider";
 import { ProjectWikiTab } from "@/components/projectspage/WikiTab";
 import { PROJECT_DEFAULT_TAB, PROJECT_DETAIL_TABS, PROJECT_DETAIL_TAB_HASH_VALUES, normalizeProjectDetailTab, type ProjectDetailTab, type ProjectDetailTabHash } from "@/components/projectspage/projectDetailTabs";
+import { TASK_VIEW_MODE_ORDER, getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
 
 export default function ProjectDetailPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>();
@@ -460,27 +461,20 @@ export default function ProjectDetailPage() {
                 onValueChange={(value) => setCurrentDisplayViewConfigViewMode(value as TaskViewMode)}
               >
                 <TabsList className="bg-white dark:bg-muted flex flex-row gap-0">
-                  <TabsTrigger
-                    value={TaskViewMode.BOARD}
-                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    Board
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value={TaskViewMode.LIST}
-                    className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
-                  >
-                    <Table2 className="w-4 h-4" />
-                    List
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value={TaskViewMode.TABLE}
-                    className="px-4 flex items-center gap-1.5 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
-                  >
-                    <List className="w-4 h-4" />
-                    Table
-                  </TabsTrigger>
+                  {TASK_VIEW_MODE_ORDER.map((mode) => {
+                    const { icon: ViewModeIcon, label } = getTaskViewModeMeta(mode);
+
+                    return (
+                      <TabsTrigger
+                        key={mode}
+                        value={mode}
+                        className="px-4 flex items-center gap-2 focus:z-10 data-[state=active]:bg-muted dark:data-[state=active]:bg-black"
+                      >
+                        <ViewModeIcon className="w-4 h-4" />
+                        {label}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
               </Tabs>
 

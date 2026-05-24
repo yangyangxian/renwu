@@ -5,6 +5,7 @@ import { useTaskStore } from '@/stores/useTaskStore';
 import BoardView from "@/components/taskspage/BoardView";
 import TaskListView from "@/components/taskspage/ListView";
 import TableView from "@/components/taskspage/TableView";
+import TimelineView from "@/components/taskspage/TimelineView";
 import { TaskResDto, TaskViewMode, TaskDateRange } from '@fullstack/common';
 import { Button } from "@/components/ui-kit/Button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
@@ -284,6 +285,19 @@ export default function MyTasksPage() {
               setEditingTask(fullTask);
               setIsDialogOpen(true);
             }}
+          />
+        )}
+
+        {currentDisplayViewConfig.viewMode === TaskViewMode.TIMELINE && (
+          <TimelineView
+            tasks={filteredTasks}
+            onTaskClick={(taskId) => {
+              const fullTask = tasks.find((task) => task.id === taskId) || null;
+              setEditingTask(fullTask);
+              setIsDialogOpen(true);
+            }}
+            showAssignedTo={true}
+            showProjectName={selectedProject === 'all' || selectedProject === 'personal'}
           />
         )}
       </div>

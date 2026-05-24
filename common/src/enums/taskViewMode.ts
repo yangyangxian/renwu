@@ -2,5 +2,6 @@
 export enum TaskViewMode {
   BOARD = 'board',
   LIST = 'list',
-  TABLE = 'table'
+  TABLE = 'table',
+  TIMELINE = 'timeline'
 }

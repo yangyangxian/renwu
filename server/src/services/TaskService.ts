@@ -7,6 +7,7 @@ import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/commo
 import logger from '../utils/logger';
 import { mapDbToEntity } from '../utils/mappers';
 import { LabelEntity } from './LabelService';
+import { resolveTaskPreviewImageUrl } from './taskTimelinePreview';
 import { UserEntity } from './UserService';
 
 export class TaskEntity {
@@ -24,6 +25,7 @@ export class TaskEntity {
   dueDate?: string = '';
   createdAt: string = '';
   updatedAt: string = '';
+  previewImageUrl?: string = undefined;
 }
 
 export class TaskViewEntity {
@@ -63,10 +65,61 @@ class TaskService {
     const entity = mapDbToEntity(source, new TaskEntity(), {
       taskNumber: { default: null },
       taskCode: { default: '' },
+      previewImageUrl: { default: undefined },
     });
 
     entity.taskCode = this.buildTaskCode((source as { projectSlug?: string | null }).projectSlug, entity.taskNumber);
     return entity;
+  }
+
+  private async getPreviewImageUrlsByTaskIds(taskRows: Array<{ id: string; description?: string | null }>): Promise<Map<string, string>> {
+    const previewImageUrls = new Map<string, string>();
+    const commentFallbackTaskIds: string[] = [];
+
+    for (const taskRow of taskRows) {
+      const previewFromDescription = resolveTaskPreviewImageUrl({
+        description: taskRow.description,
+      });
+
+      if (previewFromDescription) {
+        previewImageUrls.set(taskRow.id, previewFromDescription);
+        continue;
+      }
+
+      commentFallbackTaskIds.push(taskRow.id);
+    }
+
+    if (commentFallbackTaskIds.length === 0) {
+      return previewImageUrls;
+    }
+
+    const commentRows = await db
+      .select({
+        taskId: taskComments.taskId,
+        content: taskComments.content,
+      })
+      .from(taskComments)
+      .where(inArray(taskComments.taskId, commentFallbackTaskIds))
+      .orderBy(taskComments.createdAt);
+
+    const commentsByTaskId = new Map<string, string[]>();
+    for (const row of commentRows) {
+      const comments = commentsByTaskId.get(row.taskId) ?? [];
+      comments.push(row.content || '');
+      commentsByTaskId.set(row.taskId, comments);
+    }
+
+    for (const taskId of commentFallbackTaskIds) {
+      const previewFromComments = resolveTaskPreviewImageUrl({
+        comments: commentsByTaskId.get(taskId) ?? [],
+      });
+
+      if (previewFromComments) {
+        previewImageUrls.set(taskId, previewFromComments);
+      }
+    }
+
+    return previewImageUrls;
   }
 
   private async allocateProjectTaskNumber(projectId: string, transactionDb: any): Promise<NumberedProject> {
@@ -334,7 +387,10 @@ class TaskService {
       return [];
     }
 
-    const labelsByTaskId = await this.getLabelsByTaskIds(result.map(task => task.id));
+    const [labelsByTaskId, previewImageUrlsByTaskId] = await Promise.all([
+      this.getLabelsByTaskIds(result.map(task => task.id)),
+      this.getPreviewImageUrlsByTaskIds(result.map(task => ({ id: task.id, description: task.description }))),
+    ]);
 
     const entities: TaskEntity[] = [];
     for (const task of result) {
@@ -356,6 +412,7 @@ class TaskService {
         };
       }
       entity.labels = labelsByTaskId.get(task.id) || [];
+      entity.previewImageUrl = previewImageUrlsByTaskId.get(task.id);
       entities.push(entity);
     }
     return entities;
@@ -397,7 +454,10 @@ class TaskService {
       return [];
     }
 
-    const labelsByTaskId = await this.getLabelsByTaskIds(result.map(task => task.id));
+    const [labelsByTaskId, previewImageUrlsByTaskId] = await Promise.all([
+      this.getLabelsByTaskIds(result.map(task => task.id)),
+      this.getPreviewImageUrlsByTaskIds(result.map(task => ({ id: task.id, description: task.description }))),
+    ]);
     
     const entities: TaskEntity[] = [];
     for (const task of result) {
@@ -419,6 +479,7 @@ class TaskService {
         };
       }
       entity.labels = labelsByTaskId.get(task.id) || [];
+      entity.previewImageUrl = previewImageUrlsByTaskId.get(task.id);
       entities.push(entity);
     }
     return entities;
@@ -563,6 +624,17 @@ class TaskService {
       .where(eq(taskLabels.taskId, taskId))
       .orderBy(taskLabels.createdAt);
     entity.labels = (lblRows || []).map((r: any) => new LabelEntity({ id: r.id, labelName: r.labelName, labelColor: r.labelColor }));
+
+    const commentRows = await db
+      .select({ content: taskComments.content })
+      .from(taskComments)
+      .where(eq(taskComments.taskId, taskId))
+      .orderBy(asc(taskComments.createdAt));
+
+    entity.previewImageUrl = resolveTaskPreviewImageUrl({
+      description: entity.description,
+      comments: commentRows.map((row) => row.content || ''),
+    }) ?? undefined;
     return entity;
   }
 
