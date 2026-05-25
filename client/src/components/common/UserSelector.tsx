@@ -47,15 +47,15 @@ const UserSelector: React.FC<UserSelectorProps> = ({ options, currentValue, onSe
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="p-1 w-auto">
-        <div className="max-h-70 overflow-auto flex-col">
+      <PopoverContent className="w-auto overflow-hidden p-0">
+        <div className="flex max-h-70 flex-col overflow-auto">
           {options.map(opt => (
             <Button
               key={opt.value}
               type="button"
               onClick={() => handleSelect(opt.value)}
               variant="ghost"
-              className="w-full px-1.5 hover:bg-muted cursor-pointer flex justify-start"
+              className="flex w-full justify-start rounded-none px-2 py-2 shadow-none hover:bg-muted cursor-pointer"
             >
               <Avatar className="size-6">
                 <AvatarFallback className="text-sm text-primary">{opt.avatarText ?? String(opt.label).charAt(0).toUpperCase()}</AvatarFallback>

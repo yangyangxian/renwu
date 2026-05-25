@@ -43,6 +43,11 @@ interface TaskProjectMemberOption {
 
 const titleFieldClassName = 'h-8 w-full rounded-md border border-transparent bg-transparent px-3 py-0 text-left text-sm font-normal leading-5 text-foreground shadow-none';
 const titleButtonClassName = 'flex min-h-8 w-full cursor-pointer items-center rounded-md border border-transparent bg-transparent px-3 py-0 text-left shadow-none';
+const rowClickIgnoreSelector = 'a, button, input, textarea, select, [role="button"], [data-row-click-ignore="true"], [data-slot^="dropdown-menu"]';
+
+export function shouldIgnoreTaskTableRowClick(target: Pick<HTMLElement, 'closest'> | null) {
+  return Boolean(target?.closest(rowClickIgnoreSelector));
+}
 
 export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidth, onOpenDetail, groupingLabelSet = null, onMoveTaskToGroup }: EditableTaskTableRowProps) {
   const { updateTaskById, deleteTaskById } = useTaskStore();
@@ -209,12 +214,7 @@ export default function EditableTaskTableRow({ task, columnWidths, titleAutoWidt
   const handleRowClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement | null;
 
-    if (!target) {
-      onOpenDetail(task.id);
-      return;
-    }
-
-    if (target.closest('a, button, input, textarea, select, [role="button"], [data-row-click-ignore="true"]')) {
+    if (shouldIgnoreTaskTableRowClick(target)) {
       return;
     }
 
