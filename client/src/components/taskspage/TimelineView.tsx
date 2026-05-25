@@ -10,6 +10,7 @@ import {
   toTimelineDateKey,
 } from '@/lib/timelineViewModel';
 import type { TaskResDto } from '@fullstack/common';
+import GradientScrollArea, { type GradientScrollAreaHandle } from '@/components/common/GradientScrollArea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui-kit/Tooltip';
 import TimelineTaskCard from './TimelineTaskCard';
 
@@ -52,8 +53,7 @@ export default function TimelineView({
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(() =>
     resolveTimelineSelectedDateKey(undefined, groups.map((group) => group.dateKey), toTimelineDateKey(new Date()))
   );
-  const leftRailRef = useRef<HTMLDivElement | null>(null);
-  const rightRailRef = useRef<HTMLDivElement | null>(null);
+  const leftRailRef = useRef<GradientScrollAreaHandle | null>(null);
   const emptyStateRef = useRef<HTMLElement | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -93,7 +93,7 @@ export default function TimelineView({
   const missingSelectedDate = selectedDateKey ? !entryDateSet.has(selectedDateKey) : false;
 
   useEffect(() => {
-    const container = leftRailRef.current;
+    const container = leftRailRef.current?.scrollElement;
     if (!container) {
       return;
     }
@@ -200,8 +200,7 @@ export default function TimelineView({
 
     const monthKey = selectedDateKey.slice(0, 7);
     const monthCard = monthRefs.current[monthKey];
-    const rightRail = rightRailRef.current;
-    if (!monthCard || !rightRail) {
+    if (!monthCard) {
       return;
     }
 
@@ -292,9 +291,12 @@ export default function TimelineView({
 
   return (
     <div className={showCalendar ? 'grid h-full min-h-0 gap-4 lg:grid-cols-[minmax(0,1.5fr)_28rem] xl:grid-cols-[minmax(0,1.45fr)_30rem]' : 'h-full min-h-0'}>
-      <div
+      <GradientScrollArea
         ref={leftRailRef}
-        className="gradient-scroll-area-scrollbar min-h-0 overflow-y-auto pr-2"
+        topOverlayHeight={50}
+        bottomOverlayHeight={60}
+        className="relative h-full min-h-0"
+        scrollAreaClassName="h-full min-h-0 overflow-y-auto pr-2"
       >
         {groups.length === 0 ? (
           <Card className="w-full max-w-xl rounded-lg border-dashed border-border/80 bg-background/80 p-6 text-center text-sm text-muted-foreground shadow-none">
@@ -348,24 +350,29 @@ export default function TimelineView({
 
               <div className="relative ml-2 border-l border-border/70 pl-6">
                 <div className="space-y-4">
-                {group.tasks.map((task) => (
-                  <TimelineTaskCard
-                    key={task.id}
-                    task={task}
-                    showAssignedTo={showAssignedTo}
-                    showProjectName={showProjectName}
-                    onClick={() => onTaskClick(task.id)}
-                  />
-                ))}
+                  {group.tasks.map((task) => (
+                    <TimelineTaskCard
+                      key={task.id}
+                      task={task}
+                      showAssignedTo={showAssignedTo}
+                      showProjectName={showProjectName}
+                      onClick={() => onTaskClick(task.id)}
+                    />
+                  ))}
                 </div>
               </div>
             </section>
           ))}
         </div>
-      </div>
+      </GradientScrollArea>
 
       {showCalendar ? (
-        <div ref={rightRailRef} className="gradient-scroll-area-scrollbar min-h-0 w-fit max-w-full justify-self-start overflow-y-auto pt-4 pr-2">
+        <GradientScrollArea
+          topOverlayHeight={50}
+          bottomOverlayHeight={60}
+          className="relative h-full min-h-0 w-fit max-w-full justify-self-start"
+          scrollAreaClassName="h-full min-h-0 w-fit max-w-full overflow-y-auto pt-4 pr-2"
+        >
           <div className="space-y-3">
             {months.map((month) => (
               <Card
@@ -417,7 +424,7 @@ export default function TimelineView({
               </Card>
             ))}
           </div>
-        </div>
+        </GradientScrollArea>
       ) : null}
     </div>
   );

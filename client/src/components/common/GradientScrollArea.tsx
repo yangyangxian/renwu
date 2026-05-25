@@ -104,10 +104,10 @@ const GradientScrollArea = forwardRef<GradientScrollAreaHandle, GradientScrollAr
       {!disableTop && (
         <div
           aria-hidden
-          className={cn('pointer-events-none absolute left-0 right-0 top-0 z-10 transition-opacity duration-300', atTop ? 'opacity-0' : 'opacity-100')}
+          className={cn('pointer-events-none overflow-hidden absolute left-0 right-0 top-0 z-10 rounded-t-lg transition-opacity duration-300', atTop ? 'opacity-0' : 'opacity-100')}
           style={{ height: topOverlayHeight }}
         >
-          <div className=" rounded-none absolute inset-0 bg-gradient-to-b from-background/98 via-background/70 to-transparent dark:from-neutral-900/98 dark:via-neutral-900/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/98 via-background/70 to-transparent dark:from-neutral-900/98 dark:via-neutral-900/60" />
           <div
             className="absolute inset-0"
             style={{ backdropFilter: `blur(${mildBlur}px)`, WebkitBackdropFilter: `blur(${mildBlur}px)`, WebkitMaskImage: mildMaskTop, maskImage: mildMaskTop }}
