@@ -76,3 +76,10 @@ test('resolveTimelineSelectedDateKey keeps the current date when it already exis
     '2026-05-23'
   );
 });
+
+test('resolveTimelineSelectedDateKey returns no selection when there are no available timeline dates', () => {
+  assert.equal(
+    resolveTimelineSelectedDateKey(undefined, [], '2026-05-21'),
+    null
+  );
+});

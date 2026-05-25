@@ -65,13 +65,13 @@ export function resolveTimelineSelectedDateKey(
   currentSelectedDateKey: string | null | undefined,
   availableDateKeys: string[],
   fallbackDateKey: string,
-): string {
+): string | null {
   if (currentSelectedDateKey && availableDateKeys.includes(currentSelectedDateKey)) {
     return currentSelectedDateKey;
   }
 
   if (availableDateKeys.length === 0) {
-    return fallbackDateKey;
+    return null;
   }
 
   const fallbackTime = parseTimelineDateKey(fallbackDateKey).getTime();
@@ -87,7 +87,7 @@ export function resolveTimelineSelectedDateKey(
     }
 
     return rightTime - leftTime;
-  })[0] ?? fallbackDateKey;
+  })[0] ?? null;
 }
 
 export function buildTimelineMonths(dateKeys: string[]): TimelineMonth[] {
