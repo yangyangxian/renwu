@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui-kit/Badge';
 import { Button } from '@/components/ui-kit/Button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui-kit/Dropdown-menu';
 import { Input } from '@/components/ui-kit/Input';
+import GradientScrollArea from '@/components/common/GradientScrollArea';
 import { useWebStorage } from '@/hooks/useWebStorage';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLabelStore } from '@/stores/useLabelStore';
@@ -269,7 +270,7 @@ function TaskTableSectionDropZone({ id, targetLabelId, disabled = false, childre
     <div
       ref={setNodeRef}
       className={cn(
-        'mx-2 rounded-lg transition-[box-shadow,background-color] duration-150',
+        'rounded-lg transition-[box-shadow,background-color] duration-150',
         !disabled && isOver && 'ring-2 ring-purple-400/70 ring-offset-2 ring-offset-background bg-purple-500/5',
         className
       )}
@@ -745,7 +746,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
           </div>
         )}
 
-        <div className="flex flex-col gap-4 overflow-y-auto pr-1">
+        <GradientScrollArea className="flex-1 min-h-0 py-1.5" scrollAreaClassName="flex flex-col gap-4 pr-1" topOverlayHeight={50} bottomOverlayHeight={60}>
           {sections.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
               No tasks found.
@@ -760,7 +761,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
             return (
               <section key={section.key} className="flex flex-col gap-2">
                 {showSectionTitle && section.title && (
-                  <div className="flex items-center gap-2 pl-9 pr-1">
+                  <div className="flex items-center gap-2 pl-4 pr-1">
                     {sectionLabel ? (
                       <LabelBadge text={sectionLabel.name} color={sectionLabel.color} className="px-2.5! py-1! text-xs" />
                     ) : (
@@ -867,7 +868,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
               </section>
             );
           })}
-        </div>
+        </GradientScrollArea>
       </div>
 
       <DragOverlay dropAnimation={null}>
