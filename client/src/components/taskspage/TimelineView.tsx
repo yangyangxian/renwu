@@ -295,8 +295,8 @@ export default function TimelineView({
         ref={leftRailRef}
         topOverlayHeight={50}
         bottomOverlayHeight={60}
-        className="relative h-full min-h-0"
-        scrollAreaClassName="h-full min-h-0 overflow-y-auto pr-2"
+        className="relative h-full min-h-0 py-1"
+        scrollAreaClassName="h-full min-h-0 overflow-y-auto"
       >
         {groups.length === 0 ? (
           <Card className="w-full max-w-xl rounded-lg border-dashed border-border/80 bg-background/80 p-6 text-center text-sm text-muted-foreground shadow-none">
