@@ -58,6 +58,18 @@ export default function TimelineView({
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const shouldAutoScrollToSelectedRef = useRef(true);
+  const programmaticScrollLockedRef = useRef(false);
+  const programmaticTargetDateKeyRef = useRef<string | null>(null);
+  const programmaticScrollUnlockTimerRef = useRef<number | null>(null);
+
+  const releaseProgrammaticScrollLock = () => {
+    programmaticScrollLockedRef.current = false;
+    programmaticTargetDateKeyRef.current = null;
+    if (programmaticScrollUnlockTimerRef.current !== null) {
+      window.clearTimeout(programmaticScrollUnlockTimerRef.current);
+      programmaticScrollUnlockTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     setSelectedDateKey((current) =>
@@ -89,6 +101,23 @@ export default function TimelineView({
     let frame = 0;
     const syncSelectedDate = () => {
       frame = 0;
+
+      if (programmaticScrollLockedRef.current) {
+        const targetDateKey = programmaticTargetDateKeyRef.current;
+        if (targetDateKey) {
+          const targetNode = sectionRefs.current[targetDateKey] ?? (emptyStateRef.current && missingSelectedDate ? emptyStateRef.current : null);
+          if (targetNode) {
+            const containerTop = container.getBoundingClientRect().top;
+            const targetTop = targetNode.getBoundingClientRect().top;
+            if (Math.abs(targetTop - containerTop) <= 8) {
+              releaseProgrammaticScrollLock();
+            }
+          }
+        }
+
+        return;
+      }
+
       const sections = [
         ...(missingSelectedDate && selectedDateKey && emptyStateRef.current
           ? [{ dateKey: selectedDateKey, node: emptyStateRef.current }]
@@ -137,6 +166,14 @@ export default function TimelineView({
   }, [groups, missingSelectedDate, selectedDateKey]);
 
   useEffect(() => {
+    return () => {
+      if (programmaticScrollUnlockTimerRef.current !== null) {
+        window.clearTimeout(programmaticScrollUnlockTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selectedDateKey) {
       return;
     }
@@ -174,14 +211,28 @@ export default function TimelineView({
   }, [selectedDateKey]);
 
   const scrollToDateKey = (dateKey: string) => {
+    const isMissingDate = !entryDateSet.has(dateKey);
+
     setSelectedDateKey(dateKey);
-    const target = sectionRefs.current[dateKey] ?? (dateKey === selectedDateKey ? emptyStateRef.current : null);
+
+    // Lock selection while smooth-scrolling so intermediate sections
+    // do not briefly override the date the user explicitly clicked.
+    programmaticScrollLockedRef.current = true;
+    programmaticTargetDateKeyRef.current = dateKey;
+    if (programmaticScrollUnlockTimerRef.current !== null) {
+      window.clearTimeout(programmaticScrollUnlockTimerRef.current);
+    }
+    programmaticScrollUnlockTimerRef.current = window.setTimeout(() => {
+      releaseProgrammaticScrollLock();
+    }, 900);
+
+    const target = sectionRefs.current[dateKey] ?? (isMissingDate ? emptyStateRef.current : null);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
 
-    if (dateKey !== selectedDateKey && !entryDateSet.has(dateKey)) {
+    if (isMissingDate) {
       requestAnimationFrame(() => {
         emptyStateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
@@ -202,6 +253,9 @@ export default function TimelineView({
       'pb-0.5',
       'text-[14px]',
       'leading-none',
+      showSelectedState
+        ? 'data-[selected-single=true]:hover:bg-primary! data-[selected-single=true]:hover:text-primary-foreground!'
+        : null,
       !showSelectedState && props.modifiers.selected
         ? 'data-[selected-single=true]:bg-transparent data-[selected-single=true]:text-muted-foreground data-[selected-single=true]:hover:bg-accent/50'
         : null,
@@ -227,7 +281,7 @@ export default function TimelineView({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="contents">{button}</span>
+          <span className="inline-flex">{button}</span>
         </TooltipTrigger>
         <TooltipContent side="top" align="center" sideOffset={6}>
           {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
@@ -311,7 +365,7 @@ export default function TimelineView({
       </div>
 
       {showCalendar ? (
-        <div ref={rightRailRef} className="gradient-scroll-area-scrollbar min-h-0 w-fit max-w-full justify-self-start overflow-y-auto pl-1 pr-2">
+        <div ref={rightRailRef} className="gradient-scroll-area-scrollbar min-h-0 w-fit max-w-full justify-self-start overflow-y-auto pt-4 pr-2">
           <div className="space-y-3">
             {months.map((month) => (
               <Card
