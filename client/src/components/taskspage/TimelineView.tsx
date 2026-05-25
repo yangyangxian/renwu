@@ -354,7 +354,7 @@ export default function TimelineView({
                     <TimelineTaskCard
                       key={task.id}
                       task={task}
-                      showAssignedTo={showAssignedTo}
+                      showAssignedTo={false}
                       showProjectName={showProjectName}
                       onClick={() => onTaskClick(task.id)}
                     />
