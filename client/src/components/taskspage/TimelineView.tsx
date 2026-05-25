@@ -27,6 +27,16 @@ function formatWeekday(date: Date) {
   });
 }
 
+export function shouldShowTimelineSelectedDay({
+  selected,
+  outside,
+}: {
+  selected: boolean;
+  outside: boolean;
+}) {
+  return selected && !outside;
+}
+
 export default function TimelineView({
   tasks,
   onTaskClick,
@@ -40,8 +50,8 @@ export default function TimelineView({
   );
   const leftRailRef = useRef<HTMLDivElement | null>(null);
   const rightRailRef = useRef<HTMLDivElement | null>(null);
-  const emptyStateRef = useRef<HTMLDivElement | null>(null);
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const emptyStateRef = useRef<HTMLElement | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const shouldAutoScrollToSelectedRef = useRef(true);
 
@@ -75,28 +85,33 @@ export default function TimelineView({
     let frame = 0;
     const syncSelectedDate = () => {
       frame = 0;
-      const offsets = [
-        ...(missingSelectedDate && emptyStateRef.current ? [{ dateKey: selectedDateKey, offsetTop: emptyStateRef.current.offsetTop }] : []),
-        ...groups.map((group) => ({
-          dateKey: group.dateKey,
-          offsetTop: sectionRefs.current[group.dateKey]?.offsetTop ?? Number.MAX_SAFE_INTEGER,
-        })),
-      ].filter((entry) => entry.offsetTop !== Number.MAX_SAFE_INTEGER);
+      const sections = [
+        ...(missingSelectedDate && emptyStateRef.current
+          ? [{ dateKey: selectedDateKey, node: emptyStateRef.current }]
+          : []),
+        ...groups
+          .map((group) => {
+            const node = sectionRefs.current[group.dateKey];
+            return node ? { dateKey: group.dateKey, node } : null;
+          })
+          .filter((entry): entry is { dateKey: string; node: HTMLDivElement } => entry !== null),
+      ]
+        .map((entry) => ({
+          dateKey: entry.dateKey,
+          offsetTop: entry.node.offsetTop,
+          offsetBottom: entry.node.offsetTop + entry.node.offsetHeight,
+        }))
+        .sort((a, b) => a.offsetTop - b.offsetTop);
 
-      if (offsets.length === 0) {
+      if (sections.length === 0) {
         return;
       }
 
-      const threshold = container.scrollTop + 40;
-      let currentDateKey = offsets[0].dateKey;
-      for (const entry of offsets) {
-        if (entry.offsetTop <= threshold) {
-          currentDateKey = entry.dateKey;
-          continue;
-        }
-
-        break;
-      }
+      // Use a near-top anchor and section bottoms to avoid stale highlights
+      // when a whole date section has already scrolled out of view.
+      const anchor = container.scrollTop + 200;
+      const currentSection = sections.find((entry) => entry.offsetBottom > anchor) ?? sections[sections.length - 1];
+      const currentDateKey = currentSection.dateKey;
 
       setSelectedDateKey((previous) => previous === currentDateKey ? previous : currentDateKey);
     };
@@ -164,7 +179,22 @@ export default function TimelineView({
   const renderTimelineDayButton = (props: React.ComponentProps<typeof CalendarDayButton>) => {
     const dateKey = toTimelineDateKey(props.day.date);
     const taskCount = dateCounts.get(dateKey) ?? 0;
-    const dayButtonClassName = ['relative', 'pt-0.5', 'pb-2', props.className].filter(Boolean).join(' ');
+    const showSelectedState = shouldShowTimelineSelectedDay({
+      selected: Boolean(props.modifiers.selected),
+      outside: Boolean(props.modifiers.outside),
+    });
+    const dayButtonClassName = [
+      'relative',
+      'gap-0',
+      'pt-0',
+      'pb-0.5',
+      'text-[14px]',
+      'leading-none',
+      !showSelectedState && props.modifiers.selected
+        ? 'data-[selected-single=true]:bg-transparent data-[selected-single=true]:text-muted-foreground data-[selected-single=true]:hover:bg-accent/50'
+        : null,
+      props.className,
+    ].filter(Boolean).join(' ');
     const button = (
       <CalendarDayButton
         {...props}
@@ -173,7 +203,7 @@ export default function TimelineView({
       >
         {props.children}
         {taskCount > 0 ? (
-          <span className="pointer-events-none absolute bottom-0.75 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary shadow-[0_0_0_1px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_1px_rgba(10,10,10,0.9)]" />
+          <span className="pointer-events-none absolute bottom-1.25 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-emerald-500 shadow-[0_0_0_1px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_1px_rgba(10,10,10,0.9)]" />
         ) : null}
       </CalendarDayButton>
     );
@@ -198,7 +228,7 @@ export default function TimelineView({
     <div className="grid h-full min-h-0 gap-4 lg:grid-cols-[minmax(0,1.5fr)_28rem] xl:grid-cols-[minmax(0,1.45fr)_30rem]">
       <div
         ref={leftRailRef}
-        className="gradient-scroll-area-scrollbar min-h-0 overflow-y-auto rounded-[1.75rem] border border-border/70 bg-muted/15 p-4 md:p-5"
+        className="gradient-scroll-area-scrollbar min-h-0 overflow-y-auto pr-2"
       >
         {groups.length === 0 ? (
           <Card className="rounded-3xl border-dashed border-border/80 bg-background/80 p-8 text-center text-sm text-muted-foreground shadow-none">
@@ -268,7 +298,7 @@ export default function TimelineView({
         </div>
       </div>
 
-      <div ref={rightRailRef} className="gradient-scroll-area-scrollbar min-h-0 overflow-y-auto rounded-[1.75rem] border border-border/70 bg-muted/15 p-4">
+      <div ref={rightRailRef} className="gradient-scroll-area-scrollbar min-h-0 w-fit max-w-full justify-self-start overflow-y-auto pl-1 pr-2">
         <div className="mb-3 flex items-center gap-2 px-0 py-1 text-sm font-medium text-foreground">
           <CalendarRange className="h-4 w-4 text-primary" />
           Timeline Calendar
@@ -281,7 +311,7 @@ export default function TimelineView({
               ref={(node) => {
                 monthRefs.current[month.key] = node;
               }}
-              className="rounded-3xl border border-border/70 bg-background/90 px-4 py-3 shadow-xs"
+              className="w-fit max-w-full rounded-3xl border border-border/70 bg-background/90 px-3.5 py-3 shadow-xs"
             >
               <Calendar
                 mode="single"
@@ -303,20 +333,20 @@ export default function TimelineView({
                 modifiersClassNames={{
                   hasEntries: 'font-semibold text-primary',
                 }}
-                className="w-full rounded-2xl bg-transparent p-0"
+                className="rounded-2xl bg-transparent p-0"
                 classNames={{
-                  root: 'w-full px-0',
-                  months: 'flex w-full flex-col',
-                  month: 'w-full gap-3 px-0',
-                  month_caption: 'justify-start px-0 text-left h-auto mb-2',
-                  caption_label: 'text-sm font-semibold',
-                  month_grid: 'w-full table-fixed border-collapse',
-                  weekdays: 'w-full',
-                  weeks: 'w-full',
-                  week: 'w-full',
-                  weekday: 'w-[14.2857%] px-0 text-center text-[11px] uppercase tracking-[0.16em]',
-                  day: 'w-[14.2857%] min-w-0 p-0 text-center align-middle',
-                  day_button: 'w-full min-w-0',
+                  root: 'w-auto px-0',
+                  months: 'flex w-auto flex-col',
+                  month: 'w-auto gap-3 px-0',
+                  month_caption: 'justify-start px-0 text-left h-auto mb-4',
+                  caption_label: 'text-[13px] font-semibold',
+                  month_grid: 'mx-auto w-auto border-collapse',
+                  weekdays: 'w-auto',
+                  weeks: 'w-auto',
+                  week: 'w-auto',
+                  weekday: 'w-10 px-0 text-center text-[10px] uppercase tracking-[0.1em]',
+                  day: 'p-0 text-center align-middle',
+                  day_button: 'mx-auto h-10 w-11 min-w-10',
                 }}
                 components={{
                   DayButton: renderTimelineDayButton,
