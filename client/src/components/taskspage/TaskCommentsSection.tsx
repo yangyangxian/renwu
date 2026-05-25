@@ -46,11 +46,20 @@ function buildTimestamp(comment: TaskCommentResDto): string {
   return `${createdAt} · edited ${format(new Date(comment.updatedAt), 'yyyy-MM-dd HH:mm')}`;
 }
 
+export function hasMeaningfulCommentContent(content: string): boolean {
+  return content.trim().length > 0;
+}
+
+export function shouldEnableCommentComposerSubmit({ dirty, content }: { dirty: boolean; content: string }): boolean {
+  return dirty && hasMeaningfulCommentContent(content);
+}
+
 export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<TaskCommentResDto[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [composerDirty, setComposerDirty] = useState(false);
+  const [composerContent, setComposerContent] = useState('');
   const [composerResetKey, setComposerResetKey] = useState(0);
   const composerEditorRef = useRef<MarkdownEditorHandle | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -76,15 +85,25 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
     setEditingCommentId(null);
     setEditingCommentDirty(false);
     setComposerDirty(false);
+    setComposerContent('');
     setComposerResetKey((current) => current + 1);
   }, [fetchComments]);
 
   const handleCreateComment = useCallback(async (content: string) => {
-    const payload: TaskCommentCreateReqDto = { content };
+    const normalizedContent = content.trim();
+    if (!hasMeaningfulCommentContent(normalizedContent)) {
+      setComposerDirty(false);
+      setComposerContent('');
+      setComposerResetKey((current) => current + 1);
+      return;
+    }
+
+    const payload: TaskCommentCreateReqDto = { content: normalizedContent };
     try {
       const created = await apiClient.post<TaskCommentCreateReqDto, TaskCommentResDto>(createTaskCommentByTaskId(taskId), payload);
       setComments((current) => [...current, created]);
       setComposerDirty(false);
+      setComposerContent('');
       setComposerResetKey((current) => current + 1);
       toast.success('Comment added');
     } catch (error) {
@@ -93,6 +112,8 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
       throw error;
     }
   }, [taskId]);
+
+  const canSubmitComposerComment = shouldEnableCommentComposerSubmit({ dirty: composerDirty, content: composerContent });
 
   const handleUpdateComment = useCallback(async (commentId: string, content: string) => {
     const payload: TaskCommentUpdateReqDto = { content };
@@ -270,16 +291,18 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
                 onSave={handleCreateComment}
                 onCancel={() => {
                   setComposerDirty(false);
+                  setComposerContent('');
                   setComposerResetKey((current) => current + 1);
                 }}
                 onDirtyChange={setComposerDirty}
+                onValueChange={setComposerContent}
               />
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-2">
-            {composerDirty && <UnsavedChangesIndicator />}
-            <Button type="button" size="sm" variant="default" disabled={!composerDirty} onClick={() => composerEditorRef.current?.save()}>
+            {canSubmitComposerComment && <UnsavedChangesIndicator />}
+            <Button type="button" size="sm" variant="default" disabled={!canSubmitComposerComment} onClick={() => composerEditorRef.current?.save()}>
               Comment
             </Button>
           </div>

@@ -32,6 +32,7 @@ export interface MarkdownnEditorProps {
   onSave?: (markdown: string) => void;
   onCancel?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onValueChange?: (markdown: string) => void;
   onReadyChange?: (ready: boolean) => void;
   ref: React.Ref<MarkdownEditorHandle> | null;
 }
@@ -52,12 +53,22 @@ export function MarkdownnEditor(props: MarkdownnEditorProps) {
 }
 
 function MarkdownEditorContent(props: MarkdownnEditorProps) {
-  const { value, ref, showSaveCancel, onSave, onCancel, onDirtyChange, onReadyChange } = props;
+  const { value, ref, showSaveCancel, onSave, onCancel, onDirtyChange, onValueChange, onReadyChange } = props;
   const pluginViewFactory = usePluginViewFactory();
   const nodeViewFactory = useNodeViewFactory();
   const [dirty, setDirty] = useState(false);
   const originalValue = useRef<string | null>(null);
   const editorRef = useRef<Editor | null>(null);
+  const onDirtyChangeRef = useRef(onDirtyChange);
+  const onValueChangeRef = useRef(onValueChange);
+
+  useEffect(() => {
+    onDirtyChangeRef.current = onDirtyChange;
+  }, [onDirtyChange]);
+
+  useEffect(() => {
+    onValueChangeRef.current = onValueChange;
+  }, [onValueChange]);
 
   useEditor((root: HTMLElement) => {
     const editor = Editor
@@ -86,7 +97,8 @@ function MarkdownEditorContent(props: MarkdownnEditorProps) {
           }
           const nowDirty = md !== originalValue.current;
           setDirty(nowDirty);
-          onDirtyChange?.(nowDirty);
+          onDirtyChangeRef.current?.(nowDirty);
+          onValueChangeRef.current?.(md);
           logger.debug("Markdown updated:", md);
         });
         ctx.set(slash.key, {

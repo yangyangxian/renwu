@@ -56,6 +56,20 @@ export function shouldIncludeTaskUpdateLabels(initialLabels: LabelLike[] | undef
   return false;
 }
 
+function normalizeTaskDescription(value: string | undefined): string {
+  return (value ?? '').trim();
+}
+
+export function shouldShowTaskDialogDescriptionUnsavedIndicator({
+  initialDescription,
+  currentDescription,
+}: {
+  initialDescription?: string;
+  currentDescription: string;
+}): boolean {
+  return normalizeTaskDescription(initialDescription) !== normalizeTaskDescription(currentDescription);
+}
+
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -95,6 +109,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     assignedTo: initialValues.assignedTo?.id || '',
     labels: initialLabelIds,
   }), [initialValues, initialLabelIds]);
+  const initialDescription = useMemo(() => initialValues.description || '', [initialValues.description]);
 
   const [taskState, dispatch] = useReducer(taskFormReducer, seedState);
   const [assignedToSelectOptions, setAssignedToSelectOptions] = useState<{ value: string; label: string }[]>([]);
@@ -110,8 +125,18 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   };
 
   const [isDirty, setIsDirty] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(initialDescription);
   const [saving, setSaving] = useState(false);
   // Removed effect that re-dispatched labels to prevent unnecessary rerenders
+
+  useEffect(() => {
+    setDescriptionDraft(initialDescription);
+  }, [initialDescription]);
+
+  const showDescriptionUnsavedIndicator = shouldShowTaskDialogDescriptionUnsavedIndicator({
+    initialDescription,
+    currentDescription: descriptionDraft,
+  });
 
   const handleSubmit = async (taskData: any) => {
     const isEditMode = !!taskData.id;
@@ -241,10 +266,15 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
               {/* Description row */}
               <div className="flex flex-col gap-2">
-                <Label className="mb-1 flex items-center gap-3 font-medium">
-                  <FileText className="size-4" />
-                  Description
-                </Label>
+                <div className="mb-1 flex min-h-7 items-center gap-1.5">
+                  <Label className="flex items-center gap-3 font-medium">
+                    <FileText className="size-4" />
+                    Description
+                  </Label>
+                  <div className={showDescriptionUnsavedIndicator ? '' : 'pointer-events-none opacity-0'}>
+                    <UnsavedChangesIndicator />
+                  </div>
+                </div>
                 <div
                   className="markdown-body min-h-[260px] max-h-[320px] rounded-xl border border-border/60 px-3 py-2 overflow-auto bg-muted/40! dark:bg-muted/65!"
                 >
@@ -269,6 +299,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                       }
                     }}
                     onDirtyChange={(d) => setIsDirty(!!d)}
+                    onValueChange={setDescriptionDraft}
                   />
                 </div>
               </div>
@@ -423,13 +454,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           </div>
         </div>
         <div className="flex items-center justify-between border-t bg-background px-8 py-4">
-          <div>
-            {isDirty && (
-              <div className="mr-1">
-                <UnsavedChangesIndicator />
-              </div>
-            )}
-          </div>
+          <div />
           <div className="flex items-center gap-3">
             <DialogClose asChild>
               <Button type="button" variant="outline" onClick={() => mdEditorRef.current?.cancel()} disabled={saving}>
