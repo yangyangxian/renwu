@@ -24,15 +24,18 @@ import isEqual from "lodash/isEqual";
 import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
 import { TASK_VIEW_MODE_ORDER, getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
+import { useAuth } from "@/providers/AuthProvider";
 
-export default function MyTasksPage() {
-  const { tasks, fetchMyTasks, } = useTaskStore();
+export default function PersonalTasksPage() {
+  const { user } = useAuth();
+  const { tasks, loading, fetchPersonalTasks } = useTaskStore();
   const {
     currentSelectedTaskView,
     currentDisplayViewConfig,
     setCurrentDisplayViewConfigViewMode,
     updateTaskView,
     setCurrentDisplayViewConfig,
+    personalDisplayViewConfig,
   } = useTaskViewStore();
 
   const tabOptions = TASK_VIEW_MODE_ORDER;
@@ -45,24 +48,43 @@ export default function MyTasksPage() {
   const [filteredTasks, setFilteredTasks] = useState<TaskResDto[]>([]);
   const [isBookmarkDialogOpen, setIsBookmarkDialogOpen] = useState(false);
   const isSavedView = !!currentSelectedTaskView && !currentSelectedTaskView.projectId;
-  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
 
   // Controlled filter values (lifted from TaskFilterMenu)
   logger.debug("Current display view config:", currentDisplayViewConfig);
-  const selectedProject = currentDisplayViewConfig.projectId ?? 'all';
+  const selectedProject = 'personal';
   const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      setIsLoadingTasks(true);
-      await fetchMyTasks();
-      setIsLoadingTasks(false);
-    };
-    fetchTasks();
-  }, [fetchMyTasks]);
+    if (!user?.id) {
+      return;
+    }
+
+    void fetchPersonalTasks(user.id);
+  }, [fetchPersonalTasks, user?.id]);
+
+  useEffect(() => {
+    if (currentSelectedTaskView) {
+      if (currentDisplayViewConfig.projectId !== 'personal') {
+        setCurrentDisplayViewConfig({
+          ...currentDisplayViewConfig,
+          projectId: 'personal',
+        });
+      }
+      return;
+    }
+
+    if (currentDisplayViewConfig.projectId !== 'personal') {
+      setCurrentDisplayViewConfig(personalDisplayViewConfig);
+    }
+  }, [
+    currentDisplayViewConfig,
+    currentSelectedTaskView,
+    personalDisplayViewConfig,
+    setCurrentDisplayViewConfig,
+  ]);
 
   // Unsaved changes detection
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -101,11 +123,11 @@ export default function MyTasksPage() {
 
   return (
     <>
-    { isLoadingTasks &&
+    { loading && tasks.length === 0 &&
       <HomePageSkeleton />
     }
 
-    { !isLoadingTasks && 
+    { (!loading || tasks.length > 0) && 
     <motion.div
       className="w-full h-full flex flex-col pt-1 gap-1"
       initial={{ opacity: 0 }}
@@ -163,7 +185,7 @@ export default function MyTasksPage() {
           <div className="flex items-center">
             <TaskFilterMenu
               showDateRange={true}
-              showProjectSelect={true}
+              showProjectSelect={false}
               showSearch={true}
               tasks={tasks}
               onFilter={setFilteredTasks}
@@ -249,6 +271,7 @@ export default function MyTasksPage() {
               if (!open) setEditingTask(null);
             }}
             title={editingTask ? "Edit Task" : "Add New Task"}
+            personalTaskMode={true}
             initialValues={editingTask ? {
               ...editingTask,
               labels: editingTask.labels || [],
@@ -266,7 +289,8 @@ export default function MyTasksPage() {
               setEditingTask(fullTask);
               setIsDialogOpen(true);
             }}
-            refreshTasks={fetchMyTasks}
+            refreshTasks={() => fetchPersonalTasks(user?.id)}
+            showProjectName={false}
           />
         )}
 
@@ -280,7 +304,7 @@ export default function MyTasksPage() {
           <TableView
             tasks={filteredTasks}
             scopeProjectId={selectedProject as string | 'all' | null}
-            storageScopeKey={`my-tasks:${selectedProject}`}
+            storageScopeKey="personal-tasks"
             onOpenTask={(taskId) => {
               const fullTask = tasks.find((task) => task.id === taskId) || null;
               setEditingTask(fullTask);
@@ -298,7 +322,7 @@ export default function MyTasksPage() {
               setIsDialogOpen(true);
             }}
             showAssignedTo={true}
-            showProjectName={selectedProject === 'all' || selectedProject === 'personal'}
+            showProjectName={false}
           />
         )}
       </div>

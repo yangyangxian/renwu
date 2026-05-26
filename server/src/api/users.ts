@@ -69,11 +69,11 @@ router.put('/me', async (req: Request<{}, {}, UpdateUserReqDto>, res: Response<A
   }
 });
 
-// GET /api/users/me/tasks
-router.get('/me/tasks', async (req: Request, res: Response<ApiResponse<TaskResDto[]>>, next: NextFunction) => {
+// GET /api/users/me/personal-tasks
+router.get('/me/personal-tasks', async (req: Request, res: Response<ApiResponse<TaskResDto[]>>, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
-    const tasks = await taskService.getTasksByUserId(userId);
+    const tasks = await taskService.getPersonalTasksByUserId(userId);
     const data = tasks.map((task: any) => {
       const dto = mapObject(task, new TaskResDto());
       dto.labels = (task.labels || []).map((l: any) => ({ id: l.id, labelName: l.labelName, color: l.labelColor }));

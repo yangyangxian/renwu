@@ -20,6 +20,11 @@ export const defaultTaskViewConfig: ViewConfig = {
   groupByLabelSetId: null,
 };
 
+export const personalTaskViewConfig: ViewConfig = {
+  ...defaultTaskViewConfig,
+  projectId: 'personal',
+};
+
 export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
   const normalized = {
     ...defaultTaskViewConfig,
@@ -237,6 +242,7 @@ export function useTaskViewStore() {
     setCurrentDisplayViewConfig,
     applyTaskView,
     defaultDisplayViewConfig,
+    personalDisplayViewConfig: personalTaskViewConfig,
     setCurrentDisplayViewConfigViewMode
   };
 }

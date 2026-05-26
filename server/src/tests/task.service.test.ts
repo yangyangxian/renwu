@@ -113,12 +113,12 @@ describe('TaskService.getTasksByProjectId', () => {
   });
 });
 
-describe('TaskService.getTasksByUserId', () => {
+describe('TaskService.getPersonalTasksByUserId', () => {
   beforeEach(() => {
     selectMock.mockReset();
   });
 
-  it('hydrates user task labels with one batched label query', async () => {
+  it('hydrates personal task labels with one batched label query', async () => {
     const mainRows = [
       {
         id: 'task-1',
@@ -126,37 +126,18 @@ describe('TaskService.getTasksByUserId', () => {
         assignedToName: 'Alice',
         assignedToEmail: 'alice@example.com',
         assignedToCreatedAt: new Date('2026-03-10T00:00:00.000Z'),
-        createdById: 'user-2',
-        createdByName: 'Bob',
-        createdByEmail: 'bob@example.com',
+        createdById: 'user-1',
+        createdByName: 'Alice',
+        createdByEmail: 'alice@example.com',
         createdByCreatedAt: new Date('2026-03-09T00:00:00.000Z'),
-        title: 'Assigned Task One',
-        description: 'First assigned task ![cover](https://img.example.com/assigned-1.png)',
+        title: 'Personal Task One',
+        description: 'Personal task ![cover](https://img.example.com/personal-1.png)',
         status: 'todo',
-        projectId: 'project-1',
+        projectId: null,
         dueDate: null,
         createdAt: new Date('2026-03-11T00:00:00.000Z'),
         updatedAt: new Date('2026-03-11T01:00:00.000Z'),
-        projectName: 'Renwu',
-      },
-      {
-        id: 'task-2',
-        assignedToId: 'user-1',
-        assignedToName: 'Alice',
-        assignedToEmail: 'alice@example.com',
-        assignedToCreatedAt: new Date('2026-03-10T00:00:00.000Z'),
-        createdById: 'user-2',
-        createdByName: 'Bob',
-        createdByEmail: 'bob@example.com',
-        createdByCreatedAt: new Date('2026-03-09T00:00:00.000Z'),
-        title: 'Assigned Task Two',
-        description: 'Second assigned task ![cover](https://img.example.com/assigned-2.png)',
-        status: 'in_progress',
-        projectId: 'project-1',
-        dueDate: null,
-        createdAt: new Date('2026-03-11T02:00:00.000Z'),
-        updatedAt: new Date('2026-03-11T03:00:00.000Z'),
-        projectName: 'Renwu',
+        projectName: null,
       },
     ];
 
@@ -164,14 +145,8 @@ describe('TaskService.getTasksByUserId', () => {
       {
         taskId: 'task-1',
         id: 'label-1',
-        labelName: 'backend',
-        labelColor: '#111111',
-      },
-      {
-        taskId: 'task-2',
-        id: 'label-2',
         labelName: 'personal',
-        labelColor: '#222222',
+        labelColor: '#111111',
       },
     ];
 
@@ -179,20 +154,19 @@ describe('TaskService.getTasksByUserId', () => {
       .mockImplementationOnce(() => createSelectBuilder(mainRows, 'where'))
       .mockImplementationOnce(() => createSelectBuilder(labelRows, 'orderBy'));
 
-    const result = await taskService.getTasksByUserId('user-1');
+    const result = await taskService.getPersonalTasksByUserId('user-1');
 
     expect(selectMock).toHaveBeenCalledTimes(2);
-    expect(result).toHaveLength(2);
-    expect(result[0].labels?.map(label => label.labelName)).toEqual(['backend']);
-    expect(result[1].labels?.map(label => label.labelName)).toEqual(['personal']);
-    expect(result[0].previewImageUrl).toBe('https://img.example.com/assigned-1.png');
-    expect(result[1].previewImageUrl).toBe('https://img.example.com/assigned-2.png');
+    expect(result).toHaveLength(1);
+    expect(result[0].projectId).toBe('');
+    expect(result[0].labels?.map(label => label.labelName)).toEqual(['personal']);
+    expect(result[0].previewImageUrl).toBe('https://img.example.com/personal-1.png');
   });
 
-  it('returns early when the user has no tasks', async () => {
+  it('returns early when the user has no personal tasks', async () => {
     selectMock.mockImplementationOnce(() => createSelectBuilder([], 'where'));
 
-    const result = await taskService.getTasksByUserId('user-1');
+    const result = await taskService.getPersonalTasksByUserId('user-1');
 
     expect(selectMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual([]);

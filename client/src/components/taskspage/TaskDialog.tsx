@@ -87,10 +87,11 @@ interface TaskDialogProps {
     labels?: { id: string; labelName: string }[] | string[];
   };
   title?: string;
+  personalTaskMode?: boolean;
 }
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
-  open, onOpenChange, initialValues = {}, title = "Add New Task",
+  open, onOpenChange, initialValues = {}, title = "Add New Task", personalTaskMode = false,
 }) => {
   const { user } = useAuth();
   const { createTask, updateTaskById } = useTaskStore();
@@ -146,6 +147,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         if (isEditMode) {
           const { id, createdAt, updatedAt, projectName, ...rawUpdateData } = taskData;
           const updateData = { ...rawUpdateData };
+          if (personalTaskMode) {
+            delete updateData.assignedTo;
+            delete updateData.projectId;
+          }
           if (!shouldIncludeTaskUpdateLabels(initialValues.labels, taskData.labels)) {
             delete updateData.labels;
           }
@@ -153,6 +158,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         } else {
           // For create mode, only send the fields that are part of TaskCreateReqDto
           const { id, createdAt, updatedAt, projectName, ...createData } = taskData;
+          if (personalTaskMode) {
+            createData.assignedTo = user?.id || "";
+            createData.projectId = "";
+          }
           await createTask(createData);
         }
         submitSuccess = true;
@@ -328,42 +337,46 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                   emptyText=""
                 />
               </div>
-              <div className={fieldRowClass}>
-                <Label className={fieldLabelClass}>
-                  <FolderOpen className="size-4" />
-                  Project
-                </Label>
-                <div className="flex items-center">
-                  <DropDownList
-                    value={taskState.projectId || "personal"}
-                    id="project-select"
-                    className="min-w-[12rem] h-8.5!"
-                    onValueChange={handleProjectChange}
-                    options={[
-                      { value: "personal", label: "Non-project (Personal)" },
-                      ...projects.map(project => ({ value: project.id, label: project.name }))
-                    ]}
-                  />
-                </div>
-              </div>
+              {!personalTaskMode && (
+                <>
+                  <div className={fieldRowClass}>
+                    <Label className={fieldLabelClass}>
+                      <FolderOpen className="size-4" />
+                      Project
+                    </Label>
+                    <div className="flex items-center">
+                      <DropDownList
+                        value={taskState.projectId || "personal"}
+                        id="project-select"
+                        className="min-w-[12rem] h-8.5!"
+                        onValueChange={handleProjectChange}
+                        options={[
+                          { value: "personal", label: "Non-project (Personal)" },
+                          ...projects.map(project => ({ value: project.id, label: project.name }))
+                        ]}
+                      />
+                    </div>
+                  </div>
 
-              <div className={fieldRowClass}>
-                <Label className={fieldLabelClass}>
-                  <User className="size-4" />
-                  Assignee
-                </Label>
-                <div className="flex items-center">
-                  <UserSelector
-                    options={assignedToSelectOptions.map((option) => ({
-                      value: option.value,
-                      label: option.label,
-                    }))}
-                    currentValue={selectedAssignee}
-                    onSelect={handleAssignedToChange}
-                    triggerLabelClassName="font-normal leading-none"
-                  />
-                </div>
-              </div>
+                  <div className={fieldRowClass}>
+                    <Label className={fieldLabelClass}>
+                      <User className="size-4" />
+                      Assignee
+                    </Label>
+                    <div className="flex items-center">
+                      <UserSelector
+                        options={assignedToSelectOptions.map((option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))}
+                        currentValue={selectedAssignee}
+                        onSelect={handleAssignedToChange}
+                        triggerLabelClassName="font-normal leading-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className={fieldRowClass}>
                 <Label className={fieldLabelClass}>

@@ -29,7 +29,7 @@ export function TasksMenuItem({
   location: Location;
   loading: boolean;
 }) {
-  const { setCurrentSelectedTaskView, currentSelectedTaskView, defaultDisplayViewConfig,
+  const { setCurrentSelectedTaskView, currentSelectedTaskView, personalDisplayViewConfig,
     setCurrentDisplayViewConfig, deleteTaskView } = useTaskViewStore();
   const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
   const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
@@ -59,15 +59,15 @@ export function TasksMenuItem({
     } else if (!activeView && currentSelectedTaskView) {
       logger.debug("No active view found, resetting currentSelectedTaskView");
       setCurrentSelectedTaskView(null);
-      setCurrentDisplayViewConfig(defaultDisplayViewConfig);
-      logger.debug("set setCurrentDisplayViewConfig:", defaultDisplayViewConfig);
+      setCurrentDisplayViewConfig(personalDisplayViewConfig);
+      logger.debug("set setCurrentDisplayViewConfig:", personalDisplayViewConfig);
     }
   }, [
     currentSelectedTaskView,
-    defaultDisplayViewConfig,
     isTaskViewActive,
     location.pathname,
     location.search,
+    personalDisplayViewConfig,
     setCurrentDisplayViewConfig,
     setCurrentSelectedTaskView,
     taskViews,
@@ -75,18 +75,18 @@ export function TasksMenuItem({
 
   return (
     <SidebarMenuItem>
-      {/* Main "My Tasks" button - always visible */}
+      {/* Main Personal Tasks button - always visible */}
       <SidebarMenuButton 
         className="relative flex items-center min-w-0 mb-1 cursor-pointer"
         isActive={isTasksActive()}
         onClick={() => {
           navigate(MYTASKS_PATH);
           setCurrentSelectedTaskView(null);
-          setCurrentDisplayViewConfig(defaultDisplayViewConfig);
+          setCurrentDisplayViewConfig(personalDisplayViewConfig);
         }}
       >
         <ListChecks className="w-5 h-5 mr-1 shrink-0" />
-        {showText && <span>My Tasks</span>}
+        {showText && <span>Personal Tasks</span>}
       </SidebarMenuButton>
       {/* Task views - always visible when showText is true */}
         {showText && (

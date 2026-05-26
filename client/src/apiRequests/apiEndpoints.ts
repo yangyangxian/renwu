@@ -10,7 +10,7 @@ export const authMe = () => '/api/auth/me';
 
 // --- Tasks ---
 export const getTasks = () => '/api/tasks';
-export const getMyTasks = () => '/api/users/me/tasks';
+export const getPersonalTasks = () => '/api/users/me/personal-tasks';
 export const getTaskById = (taskId: string) => `/api/tasks/id/${taskId}`;
 export const getTaskCommentsByTaskId = (taskId: string) => `/api/tasks/id/${taskId}/comments`;
 export const createTaskCommentByTaskId = (taskId: string) => `/api/tasks/id/${taskId}/comments`;

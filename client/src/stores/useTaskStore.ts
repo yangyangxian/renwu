@@ -3,13 +3,18 @@ import { create } from 'zustand';
 import { TaskResDto, TaskCreateReqDto, TaskUpdateReqDto } from '@fullstack/common';
 import { apiClient } from '@/utils/APIClient';
 import { 
-  getMyTasks, 
+  getPersonalTasks,
   getTasksByProjectId, 
   getTasks, 
   updateTaskById as updateTaskByIdEndpoint, 
   deleteTaskById as deleteTaskByIdEndpoint, 
   getTaskById 
 } from '@/apiRequests/apiEndpoints';
+import { readPersonalTasksSnapshot, writePersonalTasksSnapshot } from '@/localDb/personalTasksDb';
+
+function isPersonalTask(task: TaskResDto): boolean {
+  return task.projectId === null || task.projectId === undefined || task.projectId === '';
+}
 
 // Internal Zustand store - only for state management
 interface TaskStoreState {
@@ -20,6 +25,7 @@ interface TaskStoreState {
   projectLoading: boolean;
   error: string | null;
   projectError: string | null;
+  personalTasksCacheOwnerId: string | null;
   setTasks: (tasks: TaskResDto[]) => void;
   setProjectTasks: (tasks: TaskResDto[]) => void;
   setCurrentTask: (task: TaskResDto | null) => void;
@@ -27,9 +33,10 @@ interface TaskStoreState {
   setProjectLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setProjectError: (error: string | null) => void;
+  setPersonalTasksCacheOwnerId: (ownerId: string | null) => void;
 }
 
-const useZustandTaskStore = create<TaskStoreState>((set, get) => ({
+const useZustandTaskStore = create<TaskStoreState>((set) => ({
   tasks: [],
   projectTasks: [],
   currentTask: null,
@@ -37,6 +44,7 @@ const useZustandTaskStore = create<TaskStoreState>((set, get) => ({
   projectLoading: false,
   error: null,
   projectError: null,
+  personalTasksCacheOwnerId: null,
   setTasks: (tasks) => set({ tasks }),
   setProjectTasks: (tasks) => set({ projectTasks: tasks }),
   setCurrentTask: (task) => set({ currentTask: task }),
@@ -44,6 +52,7 @@ const useZustandTaskStore = create<TaskStoreState>((set, get) => ({
   setProjectLoading: (loading) => set({ projectLoading: loading }),
   setError: (error) => set({ error }),
   setProjectError: (error) => set({ projectError: error }),
+  setPersonalTasksCacheOwnerId: (ownerId) => set({ personalTasksCacheOwnerId: ownerId }),
 }));
 
 export function useTaskStore() {
@@ -62,6 +71,7 @@ export function useTaskStore() {
     setProjectLoading,
     setError,
     setProjectError,
+    setPersonalTasksCacheOwnerId,
   } = useZustandTaskStore();
 
   const fetchCurrentTask = useCallback(async (taskId: string) => {
@@ -78,18 +88,44 @@ export function useTaskStore() {
     }
   }, [setLoading, setError, setCurrentTask]);
 
-  const fetchMyTasks = useCallback(async () => {
+  const persistPersonalTasksSnapshot = useCallback(async () => {
+    const ownerId = useZustandTaskStore.getState().personalTasksCacheOwnerId;
+    if (!ownerId) {
+      return;
+    }
+
+    const personalTasks = useZustandTaskStore.getState().tasks.filter(isPersonalTask);
+    await writePersonalTasksSnapshot(ownerId, personalTasks);
+  }, []);
+
+  const fetchPersonalTasks = useCallback(async (ownerId?: string) => {
     setLoading(true);
     setError(null);
+
+    if (ownerId) {
+      setPersonalTasksCacheOwnerId(ownerId);
+      try {
+        const cachedTasks = await readPersonalTasksSnapshot(ownerId);
+        if (cachedTasks) {
+          setTasks(cachedTasks);
+        }
+      } catch (cacheErr) {
+        console.warn('Failed to read personal tasks cache:', cacheErr);
+      }
+    }
+
     try {
-      const data = await apiClient.get<TaskResDto[]>(getMyTasks());
+      const data = await apiClient.get<TaskResDto[]>(getPersonalTasks());
       setTasks(data);
+      if (ownerId) {
+        await writePersonalTasksSnapshot(ownerId, data);
+      }
     } catch (err: any) {
-      setError(err?.message || 'Failed to fetch tasks');
+      setError(err?.message || 'Failed to fetch personal tasks');
     } finally {
       setLoading(false);
     }
-  }, [setLoading, setError, setTasks]);
+  }, [setLoading, setError, setPersonalTasksCacheOwnerId, setTasks]);
 
   const fetchProjectTasks = useCallback(async (projectId: string) => {
     setProjectLoading(true);
@@ -106,13 +142,27 @@ export function useTaskStore() {
 
   // Simple state operations - pure state management
   const addTask = useCallback((task: TaskResDto) => {
-    setTasks([...tasks, task]);
-    setProjectTasks([...projectTasks, task]);
+    if (isPersonalTask(task)) {
+      setTasks([...tasks.filter(t => t.id !== task.id), task]);
+      return;
+    }
+
+    setProjectTasks([...projectTasks.filter(t => t.id !== task.id), task]);
   }, [tasks, projectTasks, setTasks, setProjectTasks]);
 
   const updateTask = useCallback((task: TaskResDto) => {
-    setTasks(tasks.map(t => t.id === task.id ? task : t));
-    setProjectTasks(projectTasks.map(t => t.id === task.id ? task : t));
+    if (isPersonalTask(task)) {
+      setTasks(tasks.some(t => t.id === task.id)
+        ? tasks.map(t => t.id === task.id ? task : t)
+        : [...tasks, task]);
+      setProjectTasks(projectTasks.filter(t => t.id !== task.id));
+      return;
+    }
+
+    setTasks(tasks.filter(t => t.id !== task.id));
+    setProjectTasks(projectTasks.some(t => t.id === task.id)
+      ? projectTasks.map(t => t.id === task.id ? task : t)
+      : [...projectTasks, task]);
   }, [tasks, projectTasks, setTasks, setProjectTasks]);
 
   const removeTask = useCallback((taskId: string) => {
@@ -146,12 +196,13 @@ export function useTaskStore() {
 
       const newTask = await apiClient.post<TaskCreateReqDto, TaskResDto>(getTasks(), createPayload);
       addTask(newTask);
+      await persistPersonalTasksSnapshot();
       return newTask;
     } catch (error) {
       console.error('Failed to create task:', error);
       throw error;
     }
-  }, [addTask]);
+  }, [addTask, persistPersonalTasksSnapshot]);
 
   const updateTaskById = useCallback(async (taskId: string, updateData: any): Promise<TaskResDto> => {
     try {
@@ -177,22 +228,24 @@ export function useTaskStore() {
       const updatedTask = await apiClient.put<TaskUpdateReqDto, TaskResDto>(updateTaskByIdEndpoint(taskId), updatePayload);
       updateTask(updatedTask);
       setCurrentTask(updatedTask);
+      await persistPersonalTasksSnapshot();
       return updatedTask;
     } catch (error) {
       console.error('Failed to update task:', error);
       throw error;
     }
-  }, [updateTask, setCurrentTask]);
+  }, [updateTask, setCurrentTask, persistPersonalTasksSnapshot]);
 
   const deleteTaskById = useCallback(async (taskId: string): Promise<void> => {
     try {
       await apiClient.delete(deleteTaskByIdEndpoint(taskId));
       removeTask(taskId);
+      await persistPersonalTasksSnapshot();
     } catch (error) {
       console.error('Failed to delete task:', error);
       throw error;
     }
-  }, [removeTask]);
+  }, [removeTask, persistPersonalTasksSnapshot]);
 
   return {
     tasks,
@@ -202,7 +255,8 @@ export function useTaskStore() {
     projectLoading,
     error,
     projectError,
-    fetchMyTasks,
+    fetchMyTasks: fetchPersonalTasks,
+    fetchPersonalTasks,
     fetchProjectTasks,
     fetchCurrentTask,
     addTask,

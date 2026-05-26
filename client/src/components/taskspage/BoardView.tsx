@@ -264,6 +264,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                             onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
                             onDelete={handleTaskDelete}
                             showDeleteButton={hasPermission(PermissionAction.DELETE_OTHERS_TASK, { resourceType: PermissionResourceType.TASK, loggedUserId: user?.id!, projectId: task.projectId!, assignedUserId: task.assignedTo!.id })}
+                            boardCompactLayout={!showProjectName}
                           />
                         </DraggableTaskCard>
                       ))
@@ -289,6 +290,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
             labels={activeTask.labels}
             status={activeTask.status}
             showDeleteButton={false}
+            boardCompactLayout={!showProjectName}
           />
         ) : null}
       </DragOverlay>

@@ -351,10 +351,10 @@ class TaskService {
     return this.mapTaskEntity(created);
   }
 
-  async getTasksByUserId(userId: string): Promise<TaskEntity[]> {
+  async getPersonalTasksByUserId(userId: string): Promise<TaskEntity[]> {
     const assignedUser = alias(users, 'assigned_user');
     const creatorUser = alias(users, 'creator_user');
-    
+
     const result = await db
       .select({
         id: tasks.id,
@@ -381,7 +381,7 @@ class TaskService {
       .leftJoin(projects, eq(tasks.projectId, projects.id))
       .leftJoin(assignedUser, eq(tasks.assignedTo, assignedUser.id))
       .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
-      .where(eq(tasks.assignedTo, userId));
+      .where(and(eq(tasks.createdBy, userId), isNull(tasks.projectId)));
 
     if (result.length === 0) {
       return [];
@@ -415,6 +415,7 @@ class TaskService {
       entity.previewImageUrl = previewImageUrlsByTaskId.get(task.id);
       entities.push(entity);
     }
+
     return entities;
   }
 

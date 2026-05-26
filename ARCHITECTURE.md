@@ -16,11 +16,12 @@ The root `package.json` orchestrates builds and local development across all thr
 2. `client/src/main.tsx` bootstraps the app with `BrowserRouter`, `AuthProvider`, Milkdown providers, and toast notifications.
 3. `client/src/App.tsx` builds the route tree dynamically from files under `client/src/pages/**` and wraps routes with `ProtectedRoute` inside `MainLayout`.
 4. UI components call thin endpoint helpers in `client/src/apiRequests/apiEndpoints.ts` and use `client/src/utils/APIClient.ts` for HTTP requests.
-5. The API client talks to `/api/**`, sending cookies with requests for session-based auth.
-6. `server/src/index.ts` wires middleware, mounts public routes, serves static assets for the SPA, protects authenticated API routes with `globalAuthMiddleware`, and attaches centralized error handling.
-7. `server/src/routes/apiRouter.ts` auto-discovers route modules in `server/src/api/` and mounts them under `/api/<filename>`.
-8. Route handlers delegate business logic to service classes in `server/src/services/`.
-9. Services use Drizzle ORM through `server/src/database/databaseAccess.ts` against PostgreSQL, with schema definitions in `server/src/database/schema.ts` and SQL migrations in `server/drizzle/`.
+5. Personal Tasks reads first from the browser's IndexedDB snapshot cache, then refreshes from `/api/users/me/personal-tasks` in the background.
+6. The API client talks to `/api/**`, sending cookies with requests for session-based auth.
+7. `server/src/index.ts` wires middleware, mounts public routes, serves static assets for the SPA, protects authenticated API routes with `globalAuthMiddleware`, and attaches centralized error handling.
+8. `server/src/routes/apiRouter.ts` auto-discovers route modules in `server/src/api/` and mounts them under `/api/<filename>`.
+9. Route handlers delegate business logic to service classes in `server/src/services/`.
+10. Services use Drizzle ORM through `server/src/database/databaseAccess.ts` against PostgreSQL, with schema definitions in `server/src/database/schema.ts` and SQL migrations in `server/drizzle/`.
 
 ## Package Responsibilities
 
@@ -39,6 +40,7 @@ The frontend is a route-driven SPA with a few clear layers:
 - `src/layout/`: shared page shell.
 - `src/providers/`: app-wide providers, especially authentication.
 - `src/stores/`: Zustand stores for client state such as tasks, projects, labels, permissions, and task views.
+- `src/localDb/`: browser IndexedDB helpers for local persisted snapshots. Current usage is limited to Personal Tasks.
 - `src/apiRequests/`: string builders for API endpoints.
 - `src/utils/`: cross-cutting browser utilities, including the typed fetch wrapper.
 - `src/consts/`, `src/resources/`, `src/styles/`: frontend configuration and presentation support.
@@ -48,6 +50,7 @@ Important frontend patterns:
 - Routing is file-system-inspired, but implemented manually with `import.meta.glob` rather than a framework router.
 - Almost every route is guarded by auth, with a small allowlist of public routes.
 - State is managed locally in several focused Zustand stores rather than a single global store.
+- Personal Tasks is intentionally scoped as a private, non-project task surface. It uses an IndexedDB snapshot as a read-through cache, while project tasks remain server-first.
 - Rich text editing is supported through Milkdown providers at app bootstrap.
 
 ### Server Package
@@ -71,6 +74,7 @@ Important backend patterns:
 - Authentication is enforced globally for `/api` after public routers are mounted.
 - The server also serves the built frontend, so production can run as one Node process behind a single port.
 - Cross-entity activity logging is centralized in `ActivityService`, with shared enums and DTOs defined in `common/` so tasks, project documents, and future entities emit a consistent event shape.
+- Personal task listing is exposed separately from assigned-task listing through `/api/users/me/personal-tasks`, which only returns current-user tasks with no `projectId`.
 
 ### Common Package
 

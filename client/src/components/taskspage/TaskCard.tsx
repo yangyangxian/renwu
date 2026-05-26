@@ -37,6 +37,7 @@ interface TaskCardProps {
   showDeleteButton?: boolean;
   titleClassName?: string;
   onDelete?: (taskId: string) => Promise<void> | void;
+  boardCompactLayout?: boolean;
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -48,11 +49,12 @@ const statusToColor: Record<TaskStatus, string> = {
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, projectName, assignedTo,
   showProjectName = true, status, onClick, description, className, showDeleteButton, labels,
-  titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden", onDelete }) => {
+  titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden", onDelete, boardCompactLayout = false }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
   const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
   const taskLink = taskCode ? getTaskCardTaskLink(taskId, taskCode) : null;
+  const visibleLabels = (labels || []).filter(l => l && (l.labelName || l.name));
 
   const handleDeleteTask = async () => {
     if (onDelete) {
@@ -77,17 +79,25 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
       (status === TaskStatus.TODO || status === TaskStatus.IN_PROGRESS)
     : false;
   return (
-    <Card
-      className={`group dark:bg-[#010101] p-3 card-border hover:scale-102 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
+      <Card
+        className={`group dark:bg-[#010101] p-3 card-border hover:scale-102 transition-transform duration-200 cursor-pointer relative min-w-0 ${className || ''}`}
       tabIndex={0}
       aria-label={title}
       onClick={onClick}
-    >
-      {!!labels?.length && (
+      >
+      {description && description.trim() !== "" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ChevronRight className="absolute right-3 top-1/2 z-10 w-3 h-3 -translate-y-1/2 shrink-0 text-muted-foreground" aria-label="Has description" />
+          </TooltipTrigger>
+          <TooltipContent side="top" align="center">
+            See description
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {!boardCompactLayout && !!visibleLabels.length && (
         <div className={`absolute top-3 ${labelsRightClass} flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none transition-[right] duration-200`}>
-          {labels
-            .filter(l => l && (l.labelName || l.name))
-            .map(l => (
+          {visibleLabels.map(l => (
               <LabelBadge
                 key={l.id}
                 text={(l.labelName || l.name) as string}
@@ -102,7 +112,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-3 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
+          className="absolute top-2 right-5 bg-white/80 hover:bg-red-100 text-gray-400 hover:text-red-500 
           transition-opacity duration-150 p-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 
           focus:opacity-100 focus-visible:opacity-100 pointer-events-none group-hover:pointer-events-auto 
           group-focus-within:pointer-events-auto focus:pointer-events-auto focus-visible:pointer-events-auto 
@@ -133,7 +143,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
         cancelText="Cancel"
       />
       {(showProjectName || taskLink || assignedTo) && (
-        <div className="mb-2 flex w-3/4 min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <div className={`mb-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 ${boardCompactLayout ? 'w-full pr-8' : 'w-3/4'}`}>
           {showProjectName && (
           <div className={`min-w-0 truncate text-xs lg:text-[13px] font-medium font-sans ${status ? statusToColor[status] : 'text-blue-500'}`}>
             {!projectName || projectName === "" ? "Personal" : projectName}
@@ -161,22 +171,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
         </div>
       )}
       
-      <div className="flex items-center justify-between">
-          <div className="flex items-center mr-2 max-w-full">
+      <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 max-w-full items-center mr-2">
             <h3 className={titleClassName}>{title}</h3>
           </div>
-        <div className="flex flex-col items-end gap-1">
-          {description && description.trim() !== "" && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <ChevronRight className="w-3 h-3 shrink-0 text-muted-foreground" aria-label="Has description" />
-              </TooltipTrigger>
-              <TooltipContent side="top" align="center">
-                See description
-              </TooltipContent>
-            </Tooltip>
-          )}
-          {dueDate && (
+        <div className="flex flex-col items-end gap-1 pr-4">
+          {!boardCompactLayout && dueDate && (
             <span className="text-xs lg:text-[13px] text-muted-foreground whitespace-nowrap bg-transparent px-1 py-0.5 rounded font-sans flex items-center gap-1">
               {isOverdue && (
                 <span title="Overdue">
@@ -188,6 +188,28 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
           )}
         </div>
       </div>
+      {boardCompactLayout && (!!visibleLabels.length || dueDate) && (
+        <div className="mt-2 flex min-h-5 flex-wrap items-center gap-1 pr-1">
+          {visibleLabels.map(l => (
+            <LabelBadge
+              key={l.id}
+              text={(l.labelName || l.name) as string}
+              color={l.color ?? l.labelColor}
+              className="px-1.5 py-0.5 text-[10px]"
+            />
+          ))}
+          {dueDate && (
+            <span className="flex items-center gap-1 rounded bg-transparent px-1 py-0.5 text-[11px] leading-none text-muted-foreground">
+              {isOverdue && (
+                <span title="Overdue">
+                  <AlertCircle className="w-3 h-3 text-red-500" />
+                </span>
+              )}
+              {formatDateSmart(dueDate)}
+            </span>
+          )}
+        </div>
+      )}
     </Card>
   );
 };

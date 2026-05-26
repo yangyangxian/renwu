@@ -84,6 +84,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
   const currentLabelIds = localLabelIds;
   // Normalize projectId: use `null` to indicate personal (no project), matching TaskDialog
   const projectId = task?.projectId ? task.projectId : null;
+  const isPersonalTask = !projectId;
 
   useEffect(() => {
     if (!task || !Array.isArray(task.labels)) {
@@ -481,20 +482,21 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
         </div>
         {/* Right column: Fields */}
         <div className="flex flex-col gap-2">
-          {/* Assigned User */}
-          <div className={fieldLabelContainerClass}>
-            <Label className={fieldLabelClass}>
-              <User className="size-4 text-muted-foreground dark:text-slate-200" />
-              Assigned to:
-            </Label>
-            <div className="flex items-center">
-              <UserSelector
-                options={memberOptions}
-                currentValue={task.assignedTo}
-                onSelect={handleAssigneeSelect}
-              />
+          {!isPersonalTask && (
+            <div className={fieldLabelContainerClass}>
+              <Label className={fieldLabelClass}>
+                <User className="size-4 text-muted-foreground dark:text-slate-200" />
+                Assigned to:
+              </Label>
+              <div className="flex items-center">
+                <UserSelector
+                  options={memberOptions}
+                  currentValue={task.assignedTo}
+                  onSelect={handleAssigneeSelect}
+                />
+              </div>
             </div>
-          </div>
+          )}
           {/* Due Date */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
@@ -557,25 +559,26 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
               </DropdownMenu>
             </div>
           </div>
-          {/* Created By */}
-          <div className={fieldLabelContainerClass}>
-            <Label className={fieldLabelClass}>
-              <User className="size-4 text-muted-foreground dark:text-slate-200" />
-              Created by:
-            </Label>
-            {task.createdBy && typeof task.createdBy === 'object' ? (
-              <div className="flex items-center gap-2">
-                <Avatar className="size-6">
-                  <AvatarFallback className="text-base text-primary">
-                    {task.createdBy.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <Label className="!mb-0">{task.createdBy.name}</Label>
-              </div>
-            ) : (
-              <Label className="text-muted-foreground">--</Label>
-            )}
-          </div>
+          {!isPersonalTask && (
+            <div className={fieldLabelContainerClass}>
+              <Label className={fieldLabelClass}>
+                <User className="size-4 text-muted-foreground dark:text-slate-200" />
+                Created by:
+              </Label>
+              {task.createdBy && typeof task.createdBy === 'object' ? (
+                <div className="flex items-center gap-2">
+                  <Avatar className="size-6">
+                    <AvatarFallback className="text-base text-primary">
+                      {task.createdBy.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Label className="!mb-0">{task.createdBy.name}</Label>
+                </div>
+              ) : (
+                <Label className="text-muted-foreground">--</Label>
+              )}
+            </div>
+          )}
           {/* Created At */}
           <div className={fieldLabelContainerClass}>
             <Label className={fieldLabelClass}>
