@@ -290,7 +290,7 @@ export default function TimelineView({
   };
 
   return (
-    <div className={showCalendar ? 'grid h-full min-h-0 gap-4 lg:grid-cols-[minmax(0,1.5fr)_28rem] xl:grid-cols-[minmax(0,1.45fr)_30rem]' : 'h-full min-h-0'}>
+    <div className={showCalendar ? 'pl-3 grid h-full min-h-0 gap-4 lg:grid-cols-[minmax(0,1.5fr)_28rem] xl:grid-cols-[minmax(0,1.45fr)_30rem]' : 'h-full min-h-0'}>
       <GradientScrollArea
         ref={leftRailRef}
         topOverlayHeight={50}
