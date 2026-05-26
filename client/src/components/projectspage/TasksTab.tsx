@@ -12,6 +12,7 @@ interface ProjectTasksTabProps {
   tasks?: TaskResDto[];
   selectionScopeKey?: string | null;
   scopeProjectId?: string | null;
+  refreshTasks?: () => Promise<void>;
 }
 
 export function ProjectTasksTab({
@@ -22,6 +23,7 @@ export function ProjectTasksTab({
   tasks = [],
   selectionScopeKey = null,
   scopeProjectId = null,
+  refreshTasks,
 }: ProjectTasksTabProps) {
   const filteredTasks = tasks;
 
@@ -33,6 +35,7 @@ export function ProjectTasksTab({
           onTaskClick={onTaskClick}
           showAssignedTo={true}
           showProjectName={false}
+          refreshTasks={refreshTasks}
         />
       ) : view === TaskViewMode.LIST ? (
         <TaskListView

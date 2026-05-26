@@ -9,9 +9,13 @@ import { useTaskStore } from "@/stores/useTaskStore";
 import { withToast } from "@/utils/toastUtils";
 import { usePermissionStore } from "@/stores/usePermissionStore";
 import { useAuth } from "@/providers/AuthProvider";
+import { toast } from 'sonner';
 import {
+  mergeOptimisticTaskDeletions,
   mergeOptimisticTaskStatuses,
+  pruneResolvedOptimisticTaskDeletions,
   pruneResolvedOptimisticTaskStatuses,
+  type OptimisticTaskDeletions,
   type OptimisticTaskStatuses,
 } from "./boardViewOptimisticState";
 
@@ -20,6 +24,7 @@ interface BoardViewProps {
   onTaskClick?: (taskId: string) => void;
   showAssignedTo?: boolean;
   showProjectName?: boolean;
+  refreshTasks?: () => Promise<void>;
 }
 
 const statusColumns = [
@@ -56,17 +61,25 @@ function DroppableColumn({ id, children, className }: { id: string; children: Re
   );
 }
 
-const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedTo, showProjectName = true }) => {
-  const { updateTaskById } = useTaskStore();
+const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedTo, showProjectName = true, refreshTasks }) => {
+  const { updateTaskById, deleteTaskById } = useTaskStore();
   const { hasPermission } = usePermissionStore();
   const { user } = useAuth();
   const [optimisticStatuses, setOptimisticStatuses] = useState<OptimisticTaskStatuses<TaskStatus>>({});
+  const [optimisticDeletedTaskIds, setOptimisticDeletedTaskIds] = useState<OptimisticTaskDeletions>({});
 
   useEffect(() => {
     setOptimisticStatuses((currentStatuses) => pruneResolvedOptimisticTaskStatuses(tasks, currentStatuses));
   }, [tasks]);
 
-  const displayedTasks = mergeOptimisticTaskStatuses(tasks, optimisticStatuses);
+  useEffect(() => {
+    setOptimisticDeletedTaskIds((currentDeletedTaskIds) => pruneResolvedOptimisticTaskDeletions(tasks, currentDeletedTaskIds));
+  }, [tasks]);
+
+  const displayedTasks = mergeOptimisticTaskDeletions(
+    mergeOptimisticTaskStatuses(tasks, optimisticStatuses),
+    optimisticDeletedTaskIds,
+  );
 
   const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     const sourceTask = tasks.find((task) => String(task.id) === String(taskId));
@@ -108,6 +121,36 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
 
         return nextStatuses;
       });
+    }
+  };
+
+  const handleTaskDelete = async (taskId: string) => {
+    setOptimisticDeletedTaskIds((currentDeletedTaskIds) => ({
+      ...currentDeletedTaskIds,
+      [String(taskId)]: true,
+    }));
+
+    try {
+      await deleteTaskById(taskId);
+    } catch (error) {
+      try {
+        await refreshTasks?.();
+      } catch (refreshError) {
+        console.error('Failed to refresh tasks after delete error:', refreshError);
+      } finally {
+        setOptimisticDeletedTaskIds((currentDeletedTaskIds) => {
+          if (!currentDeletedTaskIds[String(taskId)]) {
+            return currentDeletedTaskIds;
+          }
+
+          const nextDeletedTaskIds = { ...currentDeletedTaskIds };
+          delete nextDeletedTaskIds[String(taskId)];
+          return nextDeletedTaskIds;
+        });
+      }
+
+      console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task.');
     }
   };
 
@@ -219,6 +262,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
                             labels={task.labels}
                             status={task.status}
                             onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+                            onDelete={handleTaskDelete}
                             showDeleteButton={hasPermission(PermissionAction.DELETE_OTHERS_TASK, { resourceType: PermissionResourceType.TASK, loggedUserId: user?.id!, projectId: task.projectId!, assignedUserId: task.assignedTo!.id })}
                           />
                         </DraggableTaskCard>

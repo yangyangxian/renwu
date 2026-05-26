@@ -1,4 +1,5 @@
 export type OptimisticTaskStatuses<TStatus extends string> = Record<string, TStatus>;
+export type OptimisticTaskDeletions = Record<string, true>;
 
 type TaskWithStatus<TStatus extends string = string> = {
   id: string;
@@ -31,6 +32,20 @@ export function mergeOptimisticTaskStatuses<TTask extends TaskWithStatus>(
   return hasChanges ? mergedTasks : tasks;
 }
 
+export function mergeOptimisticTaskDeletions<TTask extends { id: string }>(
+  tasks: TTask[],
+  optimisticDeletedTaskIds: OptimisticTaskDeletions,
+): TTask[] {
+  const deletedTaskIds = Object.keys(optimisticDeletedTaskIds);
+
+  if (deletedTaskIds.length === 0) {
+    return tasks;
+  }
+
+  const mergedTasks = tasks.filter((task) => !optimisticDeletedTaskIds[String(task.id)]);
+  return mergedTasks.length === tasks.length ? tasks : mergedTasks;
+}
+
 export function pruneResolvedOptimisticTaskStatuses<TTask extends TaskWithStatus>(
   tasks: TTask[],
   optimisticStatuses: OptimisticTaskStatuses<TTask['status']>,
@@ -57,4 +72,24 @@ export function pruneResolvedOptimisticTaskStatuses<TTask extends TaskWithStatus
   }
 
   return Object.fromEntries(remainingEntries) as OptimisticTaskStatuses<TTask['status']>;
+}
+
+export function pruneResolvedOptimisticTaskDeletions<TTask extends { id: string }>(
+  tasks: TTask[],
+  optimisticDeletedTaskIds: OptimisticTaskDeletions,
+): OptimisticTaskDeletions {
+  const optimisticEntries = Object.entries(optimisticDeletedTaskIds);
+
+  if (optimisticEntries.length === 0) {
+    return optimisticDeletedTaskIds;
+  }
+
+  const currentTaskIds = new Set(tasks.map((task) => String(task.id)));
+  const remainingEntries = optimisticEntries.filter(([taskId]) => currentTaskIds.has(taskId));
+
+  if (remainingEntries.length === optimisticEntries.length) {
+    return optimisticDeletedTaskIds;
+  }
+
+  return Object.fromEntries(remainingEntries) as OptimisticTaskDeletions;
 }

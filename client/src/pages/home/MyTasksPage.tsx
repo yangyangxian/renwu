@@ -266,6 +266,7 @@ export default function MyTasksPage() {
               setEditingTask(fullTask);
               setIsDialogOpen(true);
             }}
+            refreshTasks={fetchMyTasks}
           />
         )}
 

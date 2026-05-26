@@ -515,6 +515,7 @@ export default function ProjectDetailPage() {
           onViewChange={setCurrentDisplayViewConfigViewMode}
           selectionScopeKey={projectId ?? projectSlug ?? null}
           scopeProjectId={projectId ?? null}
+          refreshTasks={projectId ? () => fetchProjectTasks(projectId) : undefined}
           onAddTask={() => {
             setEditingTask(null);
             setIsDialogOpen(true);

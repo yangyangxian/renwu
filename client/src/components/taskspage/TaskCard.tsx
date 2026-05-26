@@ -36,6 +36,7 @@ interface TaskCardProps {
   className?: string;
   showDeleteButton?: boolean;
   titleClassName?: string;
+  onDelete?: (taskId: string) => Promise<void> | void;
 }
 
 const statusToColor: Record<TaskStatus, string> = {
@@ -47,13 +48,18 @@ const statusToColor: Record<TaskStatus, string> = {
 
 const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, projectName, assignedTo,
   showProjectName = true, status, onClick, description, className, showDeleteButton, labels,
-  titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden" }) => {
+  titleClassName = "text-xs lg:text-[13px] line-clamp-3 break-all overflow-hidden", onDelete }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { deleteTaskById } = useTaskStore();
   const labelsRightClass = showDeleteButton ? 'right-3 group-hover:right-10 group-focus-within:right-10' : 'right-3';
   const taskLink = taskCode ? getTaskCardTaskLink(taskId, taskCode) : null;
 
   const handleDeleteTask = async () => {
+    if (onDelete) {
+      await onDelete(taskId);
+      return;
+    }
+
     await withToast(
       async () => {
         await deleteTaskById(taskId);
