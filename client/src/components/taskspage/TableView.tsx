@@ -270,8 +270,8 @@ function TaskTableSectionDropZone({ id, targetLabelId, disabled = false, childre
     <div
       ref={setNodeRef}
       className={cn(
-        'rounded-lg transition-[box-shadow,background-color] duration-150',
-        !disabled && isOver && 'ring-2 ring-purple-400/70 ring-offset-2 ring-offset-background bg-purple-500/5',
+        'rounded-lg border border-transparent transition-[border-color,background-color] duration-150',
+        !disabled && isOver && 'border-purple-400/70 bg-purple-500/5',
         className
       )}
     >
@@ -738,7 +738,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex h-full flex-col gap-3">
+      <div className="flex h-full flex-col gap-3 pl-3">
         <TaskTableGroupByControl scopeProjectId={scopeProjectId} storageScopeKey={storageScopeKey} />
         {inlineCreateDisabled && (
           <div className="px-1 text-xs text-muted-foreground">
@@ -746,7 +746,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
           </div>
         )}
 
-        <GradientScrollArea className="flex-1 min-h-0 py-1.5" scrollAreaClassName="flex flex-col gap-4 pr-1" topOverlayHeight={50} bottomOverlayHeight={60}>
+        <GradientScrollArea className="flex-1 min-h-0 py-1.5" scrollAreaClassName="flex flex-col gap-4" topOverlayHeight={50} bottomOverlayHeight={60}>
           {sections.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
               No tasks found.
