@@ -129,7 +129,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({
   }, [resolvedSelectedTaskId, selectedTaskId, selectionScopeKey]);
 
   return (
-    <div className="flex h-full w-full rounded-lg pl-3">
+    <div className="flex h-full w-full rounded-lg">
       {/* Left: Task List */}
       <div className="w-22/100 min-w-[260px] max-w-[330px] rounded-l-lg border border-input
         dark:border-[1.5px] bg-white-black h-full flex flex-col overflow-hidden">

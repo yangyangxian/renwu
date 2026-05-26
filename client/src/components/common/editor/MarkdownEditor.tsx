@@ -333,10 +333,10 @@ function MarkdownEditorContent(props: MarkdownnEditorProps) {
               <UnsavedChangesIndicator />
             </div>
           )}
-          <Button size="sm" disabled={!dirty} variant="default" onClick={handleSave}>
+          <Button type="button" size="sm" disabled={!dirty} variant="default" onClick={handleSave}>
             Save
           </Button>
-          <Button size="sm" variant="secondary" onClick={handleCancel}>
+          <Button type="button" size="sm" variant="secondary" onClick={handleCancel}>
             Cancel
           </Button>
         </div>

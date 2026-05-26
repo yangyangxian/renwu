@@ -198,7 +198,7 @@ const BoardView: React.FC<BoardViewProps> = ({ tasks, onTaskClick, showAssignedT
       onDragCancel={handleDragCancel}
       sensors={sensors}
     >
-      <div className="pl-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 h-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 h-full">
         {statusColumns.map((col) => (
           <DroppableColumn key={col.key} id={String(col.key)} className="h-full w-full min-h-50">
             <Card className="h-full flex flex-col w-full">

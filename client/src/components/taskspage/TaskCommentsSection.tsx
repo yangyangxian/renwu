@@ -24,7 +24,7 @@ const sectionLabelClass = 'mb-0 flex items-center gap-2 font-medium text-muted-f
 const composerEditorShellClass = 'rounded-xl border border-border/70 bg-background/80 px-3 py-3 dark:bg-background/15';
 const commentCardClass = 'rounded-xl border border-border/70 bg-background/90 shadow-none dark:bg-muted/30';
 const commentReadSurfaceClass = 'markdown-body w-full';
-const commentEditSurfaceClass = 'markdown-body w-full rounded-xl border border-primary/30 bg-background/75 px-3 py-3 ring-1 ring-primary/10 transition-colors dark:border-primary/40 dark:bg-muted/55 dark:ring-primary/15';
+const commentEditSurfaceClass = 'markdown-body w-full';
 const commentContentClass = 'task-comment-content w-full';
 
 function getAuthorInitial(name?: string): string {
@@ -37,13 +37,11 @@ function renderMarkdown(content: string): string {
 }
 
 function buildTimestamp(comment: TaskCommentResDto): string {
-  const createdAt = comment.createdAt ? format(new Date(comment.createdAt), 'yyyy-MM-dd HH:mm') : '--';
+  return comment.createdAt ? format(new Date(comment.createdAt), 'yyyy-MM-dd HH:mm') : '--';
+}
 
-  if (!comment.updatedAt || comment.updatedAt === comment.createdAt) {
-    return createdAt;
-  }
-
-  return `${createdAt} · edited ${format(new Date(comment.updatedAt), 'yyyy-MM-dd HH:mm')}`;
+function isCommentEdited(comment: TaskCommentResDto): boolean {
+  return Boolean(comment.updatedAt && comment.updatedAt !== comment.createdAt);
 }
 
 export function hasMeaningfulCommentContent(content: string): boolean {
@@ -206,6 +204,9 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
                           {comment.createdBy?.name || 'Unknown'}
                         </span>
                         <span className="text-xs text-muted-foreground">{buildTimestamp(comment)}</span>
+                        {isCommentEdited(comment) && (
+                          <span className="text-xs text-muted-foreground">(edited)</span>
+                        )}
                       </div>
                     </div>
 
@@ -238,21 +239,12 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
                   <div className="px-4 py-3">
                     {isEditing ? (
                       <div className={commentContentClass}>
-                        <div className="mb-3 flex items-center justify-end gap-2">
-                          {editingCommentDirty && <UnsavedChangesIndicator />}
-                          <Button type="button" size="sm" variant="ghost" className="text-muted-foreground" onClick={() => editingEditorRef.current?.cancel()}>
-                            Cancel
-                          </Button>
-                          <Button type="button" size="sm" variant="default" disabled={!editingCommentDirty} onClick={() => editingEditorRef.current?.save()}>
-                            Save changes
-                          </Button>
-                        </div>
                         <div className={commentEditSurfaceClass}>
                           <MarkdownnEditor
                             key={comment.id}
                             ref={editingEditorRef}
                             value={comment.content}
-                            showSaveCancel={false}
+                            showSaveCancel
                             onSave={(content) => handleUpdateComment(comment.id, content)}
                             onCancel={() => {
                               setEditingCommentId(null);

@@ -257,7 +257,7 @@ export default function MyTasksPage() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 rounded-xl">
+      <div className="flex-1 overflow-y-auto rounded-xl p-2 pl-3">
         {currentDisplayViewConfig.viewMode === TaskViewMode.BOARD && (       
           <BoardView
             tasks={filteredTasks}

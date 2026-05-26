@@ -738,7 +738,7 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex h-full flex-col gap-3 pl-3">
+      <div className="flex h-full flex-col gap-3">
         <TaskTableGroupByControl scopeProjectId={scopeProjectId} storageScopeKey={storageScopeKey} />
         {inlineCreateDisabled && (
           <div className="px-1 text-xs text-muted-foreground">

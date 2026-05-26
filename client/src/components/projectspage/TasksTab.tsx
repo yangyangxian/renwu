@@ -28,7 +28,7 @@ export function ProjectTasksTab({
   const filteredTasks = tasks;
 
   return (
-    <div className="w-full h-full flex flex-col overflow-auto p-2">
+    <div className="w-full h-full flex flex-col overflow-auto p-2 pl-2">
       {view === TaskViewMode.BOARD ? (
         <BoardView
           tasks={filteredTasks}
