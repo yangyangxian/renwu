@@ -13,6 +13,7 @@ import { UnsavedChangesIndicator } from '@/components/common/UnsavedChangesIndic
 import { Avatar, AvatarFallback } from '@/components/ui-kit/Avatar';
 import { Button } from '@/components/ui-kit/Button';
 import { Label } from '@/components/ui-kit/Label';
+import { Skeleton } from '@/components/ui-kit/Skeleton';
 import { useAuth } from '@/providers/AuthProvider';
 import { apiClient } from '@/utils/APIClient';
 
@@ -44,6 +45,38 @@ function isCommentEdited(comment: TaskCommentResDto): boolean {
   return Boolean(comment.updatedAt && comment.updatedAt !== comment.createdAt);
 }
 
+function TaskCommentsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-hidden="true">
+      {Array.from({ length: 2 }).map((_, index) => {
+        const showThreadLine = index < 1;
+
+        return (
+          <div key={`comment-skeleton-${index}`} className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+            <div className="relative flex justify-center">
+              <Skeleton className="relative z-10 mt-2 size-9 rounded-full" />
+              {showThreadLine && <div className="absolute top-10 -bottom-4 left-1/2 w-px -translate-x-1/2 bg-border/70" />}
+            </div>
+
+            <div className={`${commentCardClass} overflow-hidden`}>
+              <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-3 py-2.5 dark:bg-muted/45">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3.5 w-28" />
+              </div>
+
+              <div className="space-y-2 px-4 py-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-[92%]" />
+                <Skeleton className="h-4 w-[68%]" />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function hasMeaningfulCommentContent(content: string): boolean {
   return content.trim().length > 0;
 }
@@ -55,7 +88,8 @@ export function shouldEnableCommentComposerSubmit({ dirty, content }: { dirty: b
 export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<TaskCommentResDto[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(true);
+  const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
   const [composerDirty, setComposerDirty] = useState(false);
   const [composerContent, setComposerContent] = useState('');
   const [composerResetKey, setComposerResetKey] = useState(0);
@@ -86,6 +120,21 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
     setComposerContent('');
     setComposerResetKey((current) => current + 1);
   }, [fetchComments]);
+
+  useEffect(() => {
+    if (!loadingComments || comments.length > 0) {
+      setShowLoadingSkeleton(false);
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShowLoadingSkeleton(true);
+    }, 200);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [comments.length, loadingComments]);
 
   const handleCreateComment = useCallback(async (content: string) => {
     const normalizedContent = content.trim();
@@ -175,10 +224,11 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
           <MessageSquare className="size-4 text-muted-foreground dark:text-slate-200" />
           Comments{comments.length ? ` (${comments.length})` : ''}:
         </Label>
-        {loadingComments && <span className="text-xs text-muted-foreground">Loading…</span>}
       </div>
 
-      {comments.length > 0 && (
+      {showLoadingSkeleton && loadingComments && comments.length === 0 ? (
+        <TaskCommentsSkeleton />
+      ) : comments.length > 0 && (
         <div className="flex flex-col gap-4">
           {comments.map((comment, index) => {
             const isOwner = comment.createdBy?.id === user?.id;
