@@ -11,6 +11,8 @@ interface ProjectActivityCardProps {
   className?: string;
 }
 
+const activityScrollAreaClass = 'gradient-scroll-area-scrollbar mt-3 -mr-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-3';
+
 type ActivityChange = {
   field: string;
   before?: unknown;
@@ -181,7 +183,7 @@ export const ProjectActivityCard: React.FC<ProjectActivityCardProps> = ({
   return (
     <Card className={`flex min-h-0 flex-1 flex-col overflow-hidden ${className ? ` ${className}` : ''}`}>
       <div className="px-1 font-bold text-md">Activity</div>
-      <div className="mt-3 -mr-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-3">
+      <div className={activityScrollAreaClass}>
         {loading ? (
           <div className="py-4 text-center text-sm text-muted-foreground">Loading activity…</div>
         ) : error ? (
