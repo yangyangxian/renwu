@@ -13,6 +13,7 @@ import type { TaskResDto } from '@fullstack/common';
 import GradientScrollArea, { type GradientScrollAreaHandle } from '@/components/common/GradientScrollArea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui-kit/Tooltip';
 import TimelineTaskCard from './TimelineTaskCard';
+import { getTimelineTargetScrollTop, isTimelineTargetAligned } from './timelineScroll';
 
 interface TimelineViewProps {
   tasks: TaskResDto[];
@@ -58,6 +59,7 @@ export default function TimelineView({
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const shouldAutoScrollToSelectedRef = useRef(true);
+  const selectionOriginRef = useRef<'auto' | 'user'>('auto');
   const programmaticScrollLockedRef = useRef(false);
   const programmaticTargetDateKeyRef = useRef<string | null>(null);
   const programmaticScrollUnlockTimerRef = useRef<number | null>(null);
@@ -71,9 +73,43 @@ export default function TimelineView({
     }
   };
 
+  const startProgrammaticScrollLock = (dateKey: string, unlockDelay = 900) => {
+    programmaticScrollLockedRef.current = true;
+    programmaticTargetDateKeyRef.current = dateKey;
+    if (programmaticScrollUnlockTimerRef.current !== null) {
+      window.clearTimeout(programmaticScrollUnlockTimerRef.current);
+    }
+    programmaticScrollUnlockTimerRef.current = window.setTimeout(() => {
+      releaseProgrammaticScrollLock();
+    }, unlockDelay);
+  };
+
+  const scrollTargetIntoLeftRail = (target: HTMLElement, behavior: ScrollBehavior) => {
+    const container = leftRailRef.current?.scrollElement;
+    if (!container) {
+      target.scrollIntoView({ behavior, block: 'start' });
+      return;
+    }
+
+    const nextScrollTop = getTimelineTargetScrollTop({
+      containerScrollTop: container.scrollTop,
+      containerTop: container.getBoundingClientRect().top,
+      targetTop: target.getBoundingClientRect().top,
+    });
+
+    if (behavior === 'auto') {
+      container.scrollTop = nextScrollTop;
+      return;
+    }
+
+    container.scrollTo({ top: nextScrollTop, behavior });
+  };
+
   useEffect(() => {
     setSelectedDateKey((current) =>
-      resolveTimelineSelectedDateKey(current, groups.map((group) => group.dateKey), toTimelineDateKey(new Date()))
+      resolveTimelineSelectedDateKey(current, groups.map((group) => group.dateKey), toTimelineDateKey(new Date()), {
+        preserveCurrentSelection: selectionOriginRef.current === 'user',
+      })
     );
     shouldAutoScrollToSelectedRef.current = true;
   }, [groups]);
@@ -118,6 +154,10 @@ export default function TimelineView({
         return;
       }
 
+      if (shouldAutoScrollToSelectedRef.current) {
+        return;
+      }
+
       const sections = [
         ...(missingSelectedDate && selectedDateKey && emptyStateRef.current
           ? [{ dateKey: selectedDateKey, node: emptyStateRef.current }]
@@ -146,6 +186,7 @@ export default function TimelineView({
       const currentSection = sections.find((entry) => entry.offsetBottom > anchor) ?? sections[sections.length - 1];
       const currentDateKey = currentSection.dateKey;
 
+      selectionOriginRef.current = 'user';
       setSelectedDateKey((previous) => previous === currentDateKey ? previous : currentDateKey);
     };
 
@@ -182,16 +223,59 @@ export default function TimelineView({
       return;
     }
 
-    const target = sectionRefs.current[selectedDateKey] ?? (missingSelectedDate ? emptyStateRef.current : null);
-    if (!target) {
-      return;
-    }
+    let frame = 0;
+    let attempts = 0;
+    const maxAttempts = 10;
 
-    shouldAutoScrollToSelectedRef.current = false;
-    requestAnimationFrame(() => {
-      target.scrollIntoView({ behavior: 'auto', block: 'start' });
-    });
-  }, [missingSelectedDate, selectedDateKey]);
+    const alignSelectedTarget = () => {
+      frame = 0;
+
+      const target = sectionRefs.current[selectedDateKey] ?? (missingSelectedDate ? emptyStateRef.current : null);
+      if (!target) {
+        if (attempts < maxAttempts) {
+          attempts += 1;
+          frame = requestAnimationFrame(alignSelectedTarget);
+        }
+        return;
+      }
+
+      const container = leftRailRef.current?.scrollElement;
+      startProgrammaticScrollLock(selectedDateKey, 250);
+      scrollTargetIntoLeftRail(target, 'auto');
+
+      if (!container) {
+        shouldAutoScrollToSelectedRef.current = false;
+        return;
+      }
+
+      const aligned = isTimelineTargetAligned({
+        containerTop: container.getBoundingClientRect().top,
+        targetTop: target.getBoundingClientRect().top,
+      });
+      const canScroll = container.scrollHeight > container.clientHeight + 1;
+
+      if (aligned || !canScroll) {
+        shouldAutoScrollToSelectedRef.current = false;
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        shouldAutoScrollToSelectedRef.current = false;
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        return;
+      }
+
+      attempts += 1;
+      frame = requestAnimationFrame(alignSelectedTarget);
+    };
+
+    frame = requestAnimationFrame(alignSelectedTarget);
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  }, [groups, missingSelectedDate, selectedDateKey]);
 
   useEffect(() => {
     if (!selectedDateKey) {
@@ -212,28 +296,25 @@ export default function TimelineView({
   const scrollToDateKey = (dateKey: string) => {
     const isMissingDate = !entryDateSet.has(dateKey);
 
+    selectionOriginRef.current = 'user';
     setSelectedDateKey(dateKey);
 
     // Lock selection while smooth-scrolling so intermediate sections
     // do not briefly override the date the user explicitly clicked.
-    programmaticScrollLockedRef.current = true;
-    programmaticTargetDateKeyRef.current = dateKey;
-    if (programmaticScrollUnlockTimerRef.current !== null) {
-      window.clearTimeout(programmaticScrollUnlockTimerRef.current);
-    }
-    programmaticScrollUnlockTimerRef.current = window.setTimeout(() => {
-      releaseProgrammaticScrollLock();
-    }, 900);
+    startProgrammaticScrollLock(dateKey);
 
     const target = sectionRefs.current[dateKey] ?? (isMissingDate ? emptyStateRef.current : null);
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollTargetIntoLeftRail(target, 'smooth');
       return;
     }
 
     if (isMissingDate) {
       requestAnimationFrame(() => {
-        emptyStateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const emptyState = emptyStateRef.current;
+        if (emptyState) {
+          scrollTargetIntoLeftRail(emptyState, 'smooth');
+        }
       });
     }
   };

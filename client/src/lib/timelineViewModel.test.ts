@@ -77,6 +77,15 @@ test('resolveTimelineSelectedDateKey keeps the current date when it already exis
   );
 });
 
+test('resolveTimelineSelectedDateKey can ignore a stale current selection when the caller wants the closest available date', () => {
+  assert.equal(
+    resolveTimelineSelectedDateKey('2025-03-10', ['2025-03-10', '2026-05-20'], '2026-05-31', {
+      preserveCurrentSelection: false,
+    }),
+    '2026-05-20'
+  );
+});
+
 test('resolveTimelineSelectedDateKey returns no selection when there are no available timeline dates', () => {
   assert.equal(
     resolveTimelineSelectedDateKey(undefined, [], '2026-05-21'),

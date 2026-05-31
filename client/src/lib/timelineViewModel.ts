@@ -65,8 +65,13 @@ export function resolveTimelineSelectedDateKey(
   currentSelectedDateKey: string | null | undefined,
   availableDateKeys: string[],
   fallbackDateKey: string,
+  options?: {
+    preserveCurrentSelection?: boolean;
+  },
 ): string | null {
-  if (currentSelectedDateKey && availableDateKeys.includes(currentSelectedDateKey)) {
+  const preserveCurrentSelection = options?.preserveCurrentSelection ?? true;
+
+  if (preserveCurrentSelection && currentSelectedDateKey && availableDateKeys.includes(currentSelectedDateKey)) {
     return currentSelectedDateKey;
   }
 

@@ -15,3 +15,49 @@ test('timeline calendar only renders when there are timeline groups', async () =
   assert.equal(module.shouldRenderTimelineCalendar(0), false);
   assert.equal(module.shouldRenderTimelineCalendar(1), true);
 });
+
+test('timeline rail auto-scroll computes the selected day top inside the left rail container', async () => {
+  const module = await import('./timelineScroll');
+
+  assert.equal(
+    module.getTimelineTargetScrollTop({
+      containerScrollTop: 120,
+      containerTop: 80,
+      targetTop: 260,
+    }),
+    300
+  );
+});
+
+test('timeline rail auto-scroll never returns a negative scroll target', async () => {
+  const module = await import('./timelineScroll');
+
+  assert.equal(
+    module.getTimelineTargetScrollTop({
+      containerScrollTop: 20,
+      containerTop: 100,
+      targetTop: 40,
+    }),
+    0
+  );
+});
+
+test('timeline rail alignment helper treats near-top targets as aligned', async () => {
+  const module = await import('./timelineScroll');
+
+  assert.equal(
+    module.isTimelineTargetAligned({
+      containerTop: 100,
+      targetTop: 106,
+    }),
+    true
+  );
+
+  assert.equal(
+    module.isTimelineTargetAligned({
+      containerTop: 100,
+      targetTop: 120,
+    }),
+    false
+  );
+});

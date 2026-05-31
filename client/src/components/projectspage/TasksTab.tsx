@@ -46,6 +46,7 @@ export function ProjectTasksTab({
         />
       ) : view === TaskViewMode.TIMELINE ? (
         <TimelineView
+          key={`timeline:${scopeProjectId ?? 'project:unknown'}`}
           tasks={filteredTasks}
           onTaskClick={onTaskClick}
           showAssignedTo={true}
