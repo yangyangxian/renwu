@@ -128,7 +128,7 @@ export function HomeSideBar() {
     >
       <Sidebar
         collapsible="icon"
-        className="h-full pt-3 pl-2 relative border-r-0!"
+        className="h-full pt-3 pl-2 pr-2 relative border-r-0!"
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >

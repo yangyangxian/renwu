@@ -250,7 +250,7 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
                   <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-muted/30 px-3 py-2.5 dark:bg-muted/45">
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2 text-sm">
-                        <span className="truncate font-semibold text-foreground">
+                        <span className="truncate text-foreground">
                           {comment.createdBy?.name || 'Unknown'}
                         </span>
                         <span className="text-xs text-muted-foreground">{buildTimestamp(comment)}</span>
