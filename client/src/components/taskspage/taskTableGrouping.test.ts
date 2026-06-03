@@ -132,7 +132,73 @@ test('createTaskTableSections hides an empty Unassigned section when label-set f
   ]);
 });
 
-test('createTaskTableSections hides label sections whose tasks are all close while keeping empty label sections', () => {
+test('createTaskTableSections hides label sections excluded by selected label-set labels', () => {
+  const sections = createTaskTableSections({
+    tasks: [
+      { id: 'task-1', labels: [{ id: 'sprint-1', labelName: 'Sprint 1' }] },
+      { id: 'task-3', labels: [{ id: 'sprint-3', labelName: 'Sprint 3' }] },
+    ],
+    labelSet: {
+      id: 'set-sprint',
+      name: 'Sprint',
+      labels: [
+        { id: 'sprint-1', name: 'Sprint 1' },
+        { id: 'sprint-2', name: 'Sprint 2' },
+        { id: 'sprint-3', name: 'Sprint 3' },
+      ],
+    },
+    visibleLabelIds: ['sprint-1', 'sprint-3'],
+    hideEmptyUnassignedSection: true,
+  });
+
+  assert.deepEqual(sections, [
+    {
+      key: 'label:sprint-1',
+      title: 'Sprint 1',
+      taskIds: ['task-1'],
+      isUngrouped: false,
+    },
+    {
+      key: 'label:sprint-3',
+      title: 'Sprint 3',
+      taskIds: ['task-3'],
+      isUngrouped: false,
+    },
+  ]);
+});
+
+test('createTaskTableSections keeps all label sections when selected label-set labels are not specified', () => {
+  const sections = createTaskTableSections({
+    tasks: [{ id: 'task-1', labels: [{ id: 'sprint-1', labelName: 'Sprint 1' }] }],
+    labelSet: {
+      id: 'set-sprint',
+      name: 'Sprint',
+      labels: [
+        { id: 'sprint-1', name: 'Sprint 1' },
+        { id: 'sprint-2', name: 'Sprint 2' },
+      ],
+    },
+    visibleLabelIds: null,
+    hideEmptyUnassignedSection: true,
+  });
+
+  assert.deepEqual(sections, [
+    {
+      key: 'label:sprint-1',
+      title: 'Sprint 1',
+      taskIds: ['task-1'],
+      isUngrouped: false,
+    },
+    {
+      key: 'label:sprint-2',
+      title: 'Sprint 2',
+      taskIds: [],
+      isUngrouped: false,
+    },
+  ]);
+});
+
+test('createTaskTableSections keeps label sections whose tasks are all closed', () => {
   const sections = createTaskTableSections({
     tasks: [
       {
@@ -158,6 +224,12 @@ test('createTaskTableSections hides label sections whose tasks are all close whi
   });
 
   assert.deepEqual(sections, [
+    {
+      key: 'label:sprint-1',
+      title: 'Sprint 1',
+      taskIds: ['task-closed'],
+      isUngrouped: false,
+    },
     {
       key: 'label:sprint-2',
       title: 'Sprint 2',
@@ -179,7 +251,7 @@ test('createTaskTableSections hides label sections whose tasks are all close whi
   ]);
 });
 
-test('createTaskTableSections hides label sections that become empty only after closed tasks are filtered out', () => {
+test('createTaskTableSections keeps label sections that become empty after tasks are filtered out', () => {
   const sections = createTaskTableSections({
     tasks: [
       {
@@ -197,27 +269,15 @@ test('createTaskTableSections hides label sections that become empty only after 
         { id: 'sprint-3', name: 'Sprint 3' },
       ],
     },
-    visibilityTasks: [
-      {
-        id: 'task-closed',
-        status: TaskStatus.CLOSE,
-        labels: [{ id: 'sprint-1', labelName: 'Sprint 1' }],
-      },
-      {
-        id: 'task-open',
-        status: TaskStatus.IN_PROGRESS,
-        labels: [{ id: 'sprint-3', labelName: 'Sprint 3' }],
-      },
-    ],
-  } as Parameters<typeof createTaskTableSections>[0] & {
-    visibilityTasks: Array<{
-      id: string;
-      status: TaskStatus;
-      labels: Array<{ id: string; labelName: string }>;
-    }>;
   });
 
   assert.deepEqual(sections, [
+    {
+      key: 'label:sprint-1',
+      title: 'Sprint 1',
+      taskIds: [],
+      isUngrouped: false,
+    },
     {
       key: 'label:sprint-2',
       title: 'Sprint 2',

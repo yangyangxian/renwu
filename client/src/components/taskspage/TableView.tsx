@@ -93,8 +93,8 @@ interface CreateRowState {
 
 interface CreateTaskTableSectionsOptions {
   tasks: TaskTableLikeTask[];
-  visibilityTasks?: TaskTableLikeTask[];
   labelSet: TaskTableLikeLabelSet;
+  visibleLabelIds?: string[] | null;
   hideEmptyUnassignedSection?: boolean;
 }
 
@@ -108,8 +108,8 @@ interface TaskTableSectionDropZoneProps {
 
 export function createTaskTableSections({
   tasks,
-  visibilityTasks = tasks,
   labelSet,
+  visibleLabelIds = null,
   hideEmptyUnassignedSection = false,
 }: CreateTaskTableSectionsOptions): TaskTableSection[] {
   if (!labelSet) {
@@ -124,39 +124,25 @@ export function createTaskTableSections({
   }
 
   const labels = Array.isArray(labelSet.labels) ? labelSet.labels : [];
+  const visibleLabelIdSet = visibleLabelIds ? new Set(visibleLabelIds) : null;
+  const sectionLabels = visibleLabelIdSet
+    ? labels.filter((label) => visibleLabelIdSet.has(label.id))
+    : labels;
   const labelIds = new Set(labels.map((label) => label.id));
-  const taskById = new Map(tasks.map((task) => [task.id, task]));
-  const visibilityTaskById = new Map(visibilityTasks.map((task) => [task.id, task]));
-  const visibilityTaskIdsByLabelId = new Map<string, string[]>();
-  const sections = labels.map<TaskTableSection>((label) => ({
+  const sections = sectionLabels.map<TaskTableSection>((label) => ({
     key: `label:${label.id}`,
     title: label.name ?? label.labelName ?? '',
     taskIds: [],
     isUngrouped: false,
   }));
 
-  const sectionByLabelId = new Map(sections.map((section, index) => [labels[index].id, section]));
+  const sectionByLabelId = new Map(sections.map((section, index) => [sectionLabels[index].id, section]));
   const unassignedSection: TaskTableSection = {
     key: 'unassigned',
     title: UNASSIGNED_SECTION_TITLE,
     taskIds: [],
     isUngrouped: false,
   };
-
-  for (const task of visibilityTasks) {
-    const matchingLabel = (task.labels ?? []).find((label) => labelIds.has(label.id));
-    if (!matchingLabel) {
-      continue;
-    }
-
-    const matchingTaskIds = visibilityTaskIdsByLabelId.get(matchingLabel.id);
-    if (matchingTaskIds) {
-      matchingTaskIds.push(task.id);
-      continue;
-    }
-
-    visibilityTaskIdsByLabelId.set(matchingLabel.id, [task.id]);
-  }
 
   for (const task of tasks) {
     const matchingLabel = (task.labels ?? []).find((label) => labelIds.has(label.id));
@@ -173,24 +159,11 @@ export function createTaskTableSections({
     }
   }
 
-  const visibleSections = sections.filter((section) => {
-    if (section.taskIds.length === 0) {
-      const visibilityTaskIds = visibilityTaskIdsByLabelId.get(section.key.replace('label:', '')) ?? [];
-      if (visibilityTaskIds.length === 0) {
-        return true;
-      }
-
-      return !visibilityTaskIds.every((taskId) => visibilityTaskById.get(taskId)?.status === TaskStatus.CLOSE);
-    }
-
-    return !section.taskIds.every((taskId) => taskById.get(taskId)?.status === TaskStatus.CLOSE);
-  });
-
   if (hideEmptyUnassignedSection && unassignedSection.taskIds.length === 0) {
-    return visibleSections;
+    return sections;
   }
 
-  return [...visibleSections, unassignedSection];
+  return [...sections, unassignedSection];
 }
 
 interface InlineTaskCreateRowProps {
@@ -588,9 +561,12 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
       tasks: displayedSortedTasks,
       visibilityTasks: tasks,
       labelSet: selectedLabelSet,
+      visibleLabelIds: currentDisplayViewConfig.filterLabelSetId === currentDisplayViewConfig.groupByLabelSetId
+        ? currentDisplayViewConfig.filterLabelSetLabelIds
+        : null,
       hideEmptyUnassignedSection: !!currentDisplayViewConfig.filterLabelSetId,
     }),
-    [currentDisplayViewConfig.filterLabelSetId, displayedSortedTasks, selectedLabelSet, tasks]
+    [currentDisplayViewConfig.filterLabelSetId, currentDisplayViewConfig.filterLabelSetLabelIds, currentDisplayViewConfig.groupByLabelSetId, displayedSortedTasks, selectedLabelSet, tasks]
   );
 
   const groupedLabelBySectionKey = useMemo(
