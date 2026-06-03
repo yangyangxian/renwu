@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Calendar, CalendarDayButton } from '@/components/ui-kit/Calendar';
 import { Card } from '@/components/ui-kit/Card';
 import {
@@ -14,10 +14,18 @@ import GradientScrollArea, { type GradientScrollAreaHandle } from '@/components/
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui-kit/Tooltip';
 import TimelineTaskCard from './TimelineTaskCard';
 import { getTimelineTargetScrollTop, isTimelineTargetAligned } from './timelineScroll';
+import { useTaskStore } from '@/stores/useTaskStore';
+import { toast } from 'sonner';
+import {
+  mergeOptimisticTaskDeletions,
+  pruneResolvedOptimisticTaskDeletions,
+  type OptimisticTaskDeletions,
+} from './boardViewOptimisticState';
 
 interface TimelineViewProps {
   tasks: TaskResDto[];
   onTaskClick: (taskId: string) => void;
+  refreshTasks?: () => Promise<void>;
   showAssignedTo?: boolean;
   showProjectName?: boolean;
 }
@@ -45,11 +53,18 @@ export function shouldRenderTimelineCalendar(groupCount: number) {
 export default function TimelineView({
   tasks,
   onTaskClick,
+  refreshTasks,
   showAssignedTo = false,
   showProjectName = true,
 }: TimelineViewProps) {
-  const groups = useMemo(() => buildTimelineGroups(tasks), [tasks]);
-  const dateCounts = useMemo(() => buildTimelineDateCounts(tasks), [tasks]);
+  const { deleteTaskById } = useTaskStore();
+  const [optimisticDeletedTaskIds, setOptimisticDeletedTaskIds] = useState<OptimisticTaskDeletions>({});
+  const displayedTasks = useMemo(
+    () => mergeOptimisticTaskDeletions(tasks, optimisticDeletedTaskIds),
+    [optimisticDeletedTaskIds, tasks]
+  );
+  const groups = useMemo(() => buildTimelineGroups(displayedTasks), [displayedTasks]);
+  const dateCounts = useMemo(() => buildTimelineDateCounts(displayedTasks), [displayedTasks]);
   const showCalendar = shouldRenderTimelineCalendar(groups.length);
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(() =>
     resolveTimelineSelectedDateKey(undefined, groups.map((group) => group.dateKey), toTimelineDateKey(new Date()))
@@ -63,6 +78,10 @@ export default function TimelineView({
   const programmaticScrollLockedRef = useRef(false);
   const programmaticTargetDateKeyRef = useRef<string | null>(null);
   const programmaticScrollUnlockTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setOptimisticDeletedTaskIds((currentDeletedTaskIds) => pruneResolvedOptimisticTaskDeletions(tasks, currentDeletedTaskIds));
+  }, [tasks]);
 
   const releaseProgrammaticScrollLock = () => {
     programmaticScrollLockedRef.current = false;
@@ -104,6 +123,36 @@ export default function TimelineView({
 
     container.scrollTo({ top: nextScrollTop, behavior });
   };
+
+  const handleDeleteTask = useCallback(async (taskId: string) => {
+    setOptimisticDeletedTaskIds((currentDeletedTaskIds) => ({
+      ...currentDeletedTaskIds,
+      [taskId]: true,
+    }));
+
+    try {
+      await deleteTaskById(taskId);
+    } catch (error) {
+      try {
+        await refreshTasks?.();
+      } catch (refreshError) {
+        console.error('Failed to refresh timeline tasks after delete error:', refreshError);
+      } finally {
+        setOptimisticDeletedTaskIds((currentDeletedTaskIds) => {
+          if (!currentDeletedTaskIds[taskId]) {
+            return currentDeletedTaskIds;
+          }
+
+          const nextDeletedTaskIds = { ...currentDeletedTaskIds };
+          delete nextDeletedTaskIds[taskId];
+          return nextDeletedTaskIds;
+        });
+      }
+
+      console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task.');
+    }
+  }, [deleteTaskById, refreshTasks]);
 
   useEffect(() => {
     setSelectedDateKey((current) =>
@@ -438,6 +487,7 @@ export default function TimelineView({
                       showAssignedTo={false}
                       showProjectName={showProjectName}
                       onClick={() => onTaskClick(task.id)}
+                      onDeleteTask={handleDeleteTask}
                     />
                   ))}
                 </div>

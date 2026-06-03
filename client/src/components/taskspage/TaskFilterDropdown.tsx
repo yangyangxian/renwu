@@ -29,7 +29,8 @@ export interface TaskFilterDropdownProps {
   onSelectedLabelChange?: (labelId: string | null) => void;
   showLabelSetFilter?: boolean;
   selectedLabelSetId?: string | null;
-  onSelectedLabelSetChange?: (labelSetId: string | null) => void;
+  onSelectedLabelSetChange?: (labelSetId: string | null, labelIds?: string[] | null) => void;
+  selectedLabelSetLabelIds?: string[] | null;
 
   disabled?: boolean;
   className?: string;
@@ -55,6 +56,7 @@ export function TaskFilterDropdown({
   showLabelSetFilter,
   selectedLabelSetId,
   onSelectedLabelSetChange,
+  selectedLabelSetLabelIds,
   disabled,
   className,
   triggerClassName,
@@ -64,6 +66,7 @@ export function TaskFilterDropdown({
   const [dateRangeExpanded, setDateRangeExpanded] = useState(true);
   const [labelExpanded, setLabelExpanded] = useState(true);
   const [labelSetExpanded, setLabelSetExpanded] = useState(true);
+  const [expandedLabelSetId, setExpandedLabelSetId] = useState<string | null>(null);
   const { projects } = useProjectStore();
   const { fetchLabels, fetchLabelSets, getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
 
@@ -101,6 +104,12 @@ export function TaskFilterDropdown({
     fetchLabelSets(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
   }, [canFilterByLabelSet, fetchLabelSets, normalizedLabelSetScopeProjectId, open]);
 
+  useEffect(() => {
+    if (open && selectedLabelSetId) {
+      setExpandedLabelSetId(selectedLabelSetId);
+    }
+  }, [open, selectedLabelSetId]);
+
   const handleProjectSelect = (nextProjectId: string) => {
     const resolvedProjectId = selectedProject === nextProjectId ? 'all' : nextProjectId;
     onSelectedProjectChange?.(resolvedProjectId);
@@ -114,9 +123,46 @@ export function TaskFilterDropdown({
   };
 
   const handleLabelSetSelect = (nextLabelSetId: string | null) => {
-    const resolvedLabelSetId = selectedLabelSetId === nextLabelSetId ? null : nextLabelSetId;
-    onSelectedLabelSetChange?.(resolvedLabelSetId);
-    setOpen(false);
+    if (selectedLabelSetId === nextLabelSetId || nextLabelSetId == null) {
+      onSelectedLabelSetChange?.(null, null);
+      setExpandedLabelSetId(null);
+      return;
+    }
+
+    const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === nextLabelSetId);
+    if (!selectedLabelSet) {
+      return;
+    }
+
+    onSelectedLabelSetChange?.(nextLabelSetId, null);
+    setExpandedLabelSetId(nextLabelSetId);
+  };
+
+  const handleLabelSetLabelToggle = (labelSetId: string, labelId: string) => {
+    const labelSet = scopedLabelSets.find((candidate) => candidate.id === labelSetId);
+    if (!labelSet) {
+      return;
+    }
+
+    const allLabelIds = labelSet.labels.map((label) => label.id);
+    const currentLabelIds = selectedLabelSetId === labelSetId
+      ? (selectedLabelSetLabelIds?.length ? selectedLabelSetLabelIds : allLabelIds)
+      : [];
+    const nextLabelIds = currentLabelIds.includes(labelId)
+      ? currentLabelIds.filter((currentLabelId) => currentLabelId !== labelId)
+      : [...currentLabelIds, labelId];
+
+    if (nextLabelIds.length === 0) {
+      onSelectedLabelSetChange?.(null, null);
+      setExpandedLabelSetId(null);
+      return;
+    }
+
+    onSelectedLabelSetChange?.(
+      labelSetId,
+      nextLabelIds.length === allLabelIds.length ? null : nextLabelIds
+    );
+    setExpandedLabelSetId(labelSetId);
   };
 
   const handleDateRangeSelect = (nextRange: TaskDateRange) => {
@@ -150,7 +196,7 @@ export function TaskFilterDropdown({
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="min-w-64 p-1.5">
+        <DropdownMenuContent className="min-w-72 p-1.5">
           {showProjectSelect && (
             <>
               <button
@@ -307,17 +353,55 @@ export function TaskFilterDropdown({
                   ) : (
                     <>
                       {scopedLabelSets.map((labelSet) => (
-                        <DropdownMenuItem
-                          key={labelSet.id}
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            handleLabelSetSelect(labelSet.id);
-                          }}
-                          className="flex items-center justify-between ml-2"
-                        >
-                          <span className="truncate">{labelSet.name}</span>
-                          {selectedLabelSetId === labelSet.id && <Check className="w-4 h-4 text-green-600" />}
-                        </DropdownMenuItem>
+                        <React.Fragment key={labelSet.id}>
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              handleLabelSetSelect(labelSet.id);
+                            }}
+                            className="flex items-center justify-between ml-2"
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <ChevronDown
+                                className={cn(
+                                  'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform',
+                                  expandedLabelSetId === labelSet.id ? 'rotate-180' : 'rotate-0'
+                                )}
+                              />
+                              <span className="truncate">{labelSet.name}</span>
+                            </span>
+                            {selectedLabelSetId === labelSet.id && <Check className="w-4 h-4 text-green-600" />}
+                          </DropdownMenuItem>
+
+                          {expandedLabelSetId === labelSet.id && (
+                            <div className="ml-7 flex flex-col gap-0.5 py-1">
+                              {labelSet.labels.length === 0 ? (
+                                <div className="px-2 py-1 text-xs text-muted-foreground">No labels in this set.</div>
+                              ) : (
+                                labelSet.labels.map((label) => {
+                                  const selectedLabelIds = selectedLabelSetId === labelSet.id
+                                    ? (selectedLabelSetLabelIds?.length ? selectedLabelSetLabelIds : labelSet.labels.map((candidate) => candidate.id))
+                                    : [];
+                                  const checked = selectedLabelIds.includes(label.id);
+
+                                  return (
+                                    <DropdownMenuItem
+                                      key={label.id}
+                                      onSelect={(e) => {
+                                        e.preventDefault();
+                                        handleLabelSetLabelToggle(labelSet.id, label.id);
+                                      }}
+                                      className="flex items-center justify-between"
+                                    >
+                                      <LabelBadge text={label.name} color={label.color} className="pointer-events-none !px-2 !py-0.5" />
+                                      {checked && <Check className="w-4 h-4 text-green-600" />}
+                                    </DropdownMenuItem>
+                                  );
+                                })
+                              )}
+                            </div>
+                          )}
+                        </React.Fragment>
                       ))}
                     </>
                   )}

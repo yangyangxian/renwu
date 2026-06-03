@@ -48,6 +48,7 @@ export function ProjectTasksTab({
         <TimelineView
           key={`timeline:${scopeProjectId ?? 'project:unknown'}`}
           tasks={filteredTasks}
+          refreshTasks={refreshTasks}
           onTaskClick={onTaskClick}
           showAssignedTo={true}
           showProjectName={false}

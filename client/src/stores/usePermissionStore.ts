@@ -41,7 +41,14 @@ export function usePermissionStore() {
   } = useZustandPermissionStore();
 
   // Fetch permissions logic is now in the hook, not the store
-  const fetchPermissions = useCallback(async () => {
+  const fetchPermissions = useCallback(async (options?: { force?: boolean }) => {
+    const force = options?.force ?? false;
+    const currentState = useZustandPermissionStore.getState();
+
+    if (!force && (currentState.loading || currentState.hasFetched)) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {

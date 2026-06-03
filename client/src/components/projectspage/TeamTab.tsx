@@ -55,7 +55,7 @@ export function ProjectTeamTab({ project }: ProjectTeamTabProps) {
     await withToast(
       async () => {
         await updateMemberRoleToProject(projectId, memberId, newRoleId, newRoleName);
-        await fetchPermissions();
+        await fetchPermissions({ force: true });
       },
       {
         success: 'Role updated.',

@@ -21,6 +21,7 @@ test('project task tab memory persists only the tab-owned controls under a proje
       searchTerm: 'alpha',
       filterLabelId: 'label-1',
       filterLabelSetId: 'label-set-1',
+      filterLabelSetLabelIds: ['label-2'],
       viewMode: TaskViewMode.TABLE,
     }),
     {
@@ -28,6 +29,7 @@ test('project task tab memory persists only the tab-owned controls under a proje
       searchTerm: 'alpha',
       filterLabelId: 'label-1',
       filterLabelSetId: 'label-set-1',
+      filterLabelSetLabelIds: ['label-2'],
       viewMode: TaskViewMode.TABLE,
     }
   );
@@ -67,6 +69,7 @@ test('project task tab memory round-trips through localStorage per project', asy
     searchTerm: 'beta',
     filterLabelId: null,
     filterLabelSetId: null,
+    filterLabelSetLabelIds: null,
     viewMode: TaskViewMode.LIST,
   });
   assert.equal(module.readProjectTaskTabMemory('project-2'), null);

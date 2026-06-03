@@ -47,6 +47,16 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
   const selectedFilterLabelSet = currentDisplayViewConfig.filterLabelSetId
     ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.filterLabelSetId)
     : null;
+  const selectedFilterLabelSetLabelIds = currentDisplayViewConfig.filterLabelSetLabelIds ?? null;
+  const selectedFilterLabelSetLabels = selectedFilterLabelSet
+    ? selectedFilterLabelSet.labels.filter((label) => {
+        if (!selectedFilterLabelSetLabelIds?.length) {
+          return true;
+        }
+
+        return selectedFilterLabelSetLabelIds.includes(label.id);
+      })
+    : [];
 
   const selectedGroupingLabelSet = currentDisplayViewConfig.groupByLabelSetId
     ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.groupByLabelSetId)
@@ -122,7 +132,17 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
             <Label className="font-medium min-w-22.5">Label Set:</Label>
             <span>
               {selectedFilterLabelSet ? (
-                <span className="text-primary">{selectedFilterLabelSet.name}</span>
+                <span className="text-primary">
+                  {selectedFilterLabelSet.name}
+                  {selectedFilterLabelSet.labels.length > 0 && (
+                    <>
+                      {' '}
+                      ({selectedFilterLabelSetLabels.length === selectedFilterLabelSet.labels.length
+                        ? 'all labels'
+                        : `${selectedFilterLabelSetLabels.length} labels`})
+                    </>
+                  )}
+                </span>
               ) : (
                 <span className="text-muted-foreground">All label sets</span>
               )}

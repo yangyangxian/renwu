@@ -115,8 +115,9 @@ export class ViewConfig {
   searchTerm: string;
   filterLabelId?: string | null;
   filterLabelSetId?: string | null;
+  filterLabelSetLabelIds?: string[] | null;
   groupByLabelSetId?: string | null;
-  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, filterLabelId: string | null = null, filterLabelSetId: string | null = null, groupByLabelSetId: string | null = null) {
+  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, filterLabelId: string | null = null, filterLabelSetId: string | null = null, filterLabelSetLabelIds: string[] | null = null, groupByLabelSetId: string | null = null) {
     this.projectId = projectId;
     this.dateRange = dateRange;
     this.status = status;
@@ -126,6 +127,7 @@ export class ViewConfig {
     this.searchTerm = searchTerm;
     this.filterLabelId = filterLabelId;
     this.filterLabelSetId = filterLabelSetId;
+    this.filterLabelSetLabelIds = filterLabelSetLabelIds;
     this.groupByLabelSetId = groupByLabelSetId;
   }
 }

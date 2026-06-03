@@ -93,6 +93,7 @@ export default function ProjectDetailPage() {
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
+  const selectedLabelSetLabelIds = currentDisplayViewConfig.filterLabelSetLabelIds ?? null;
   const isSavedView = !!currentSelectedTaskView && currentSelectedTaskView.projectId === projectId;
   const canRenameActiveView = !!activeProjectView && user?.id === activeProjectView.userId;
   const [isEditingViewName, setIsEditingViewName] = useState(false);
@@ -425,6 +426,7 @@ export default function ProjectDetailPage() {
                   searchTerm={searchTerm}
                   selectedLabelId={selectedLabelId}
                   selectedLabelSetId={selectedLabelSetId}
+                  selectedLabelSetLabelIds={selectedLabelSetLabelIds}
                   onDateRangeChange={(value) => {
                     setCurrentDisplayViewConfig({
                       ...currentDisplayViewConfig,
@@ -446,11 +448,19 @@ export default function ProjectDetailPage() {
                       filterLabelId: value,
                     });
                   }}
-                  onSelectedLabelSetChange={(value) => {
+                  onSelectedLabelSetChange={(value, labelIds) => {
                     setCurrentDisplayViewConfig({
                       ...currentDisplayViewConfig,
                       projectId,
                       filterLabelSetId: value,
+                      filterLabelSetLabelIds: labelIds ?? null,
+                    });
+                  }}
+                  onSelectedLabelSetLabelIdsChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      filterLabelSetLabelIds: value,
                     });
                   }}
                 />

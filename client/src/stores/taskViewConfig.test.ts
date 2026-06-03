@@ -62,6 +62,18 @@ test('normalizeTaskViewConfig preserves filterLabelId', () => {
   );
 });
 
+test('normalizeTaskViewConfig preserves filterLabelSetLabelIds', () => {
+  assert.deepEqual(
+    normalizeTaskViewConfig({
+      projectId: 'project-1',
+      viewMode: TaskViewMode.LIST,
+      filterLabelSetId: 'filter-label-set-1',
+      filterLabelSetLabelIds: ['label-1', 'label-2'],
+    }).filterLabelSetLabelIds,
+    ['label-1', 'label-2']
+  );
+});
+
 test('sanitizeTaskViewConfigForPersistence clears list-only controls for table views', async () => {
   const { sanitizeTaskViewConfigForPersistence } = await import('./useTaskViewStore');
 
@@ -73,6 +85,7 @@ test('sanitizeTaskViewConfigForPersistence clears list-only controls for table v
     sortOrder: TaskSortOrder.DESC,
     filterLabelId: 'filter-label-1',
     filterLabelSetId: 'filter-label-set-1',
+    filterLabelSetLabelIds: ['label-1'],
     groupByLabelSetId: 'group-label-set-1',
   });
 
@@ -81,6 +94,7 @@ test('sanitizeTaskViewConfigForPersistence clears list-only controls for table v
   assert.equal(sanitized.sortOrder, defaultTaskViewConfig.sortOrder);
   assert.equal(sanitized.filterLabelId, 'filter-label-1');
   assert.equal(sanitized.filterLabelSetId, 'filter-label-set-1');
+  assert.deepEqual(sanitized.filterLabelSetLabelIds, ['label-1']);
   assert.equal(sanitized.groupByLabelSetId, 'group-label-set-1');
 });
 

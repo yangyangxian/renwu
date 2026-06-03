@@ -56,6 +56,7 @@ export default function PersonalTasksPage() {
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
+  const selectedLabelSetLabelIds = currentDisplayViewConfig.filterLabelSetLabelIds ?? null;
 
   useEffect(() => {
     if (!user?.id) {
@@ -194,6 +195,7 @@ export default function PersonalTasksPage() {
               searchTerm={searchTerm}
               selectedLabelId={selectedLabelId}
               selectedLabelSetId={selectedLabelSetId}
+              selectedLabelSetLabelIds={selectedLabelSetLabelIds}
               onSelectedProjectChange={(v) => {
                 setCurrentDisplayViewConfig({
                   ...currentDisplayViewConfig,
@@ -218,10 +220,17 @@ export default function PersonalTasksPage() {
                   filterLabelId: value,
                 });
               }}
-              onSelectedLabelSetChange={(value) => {
+              onSelectedLabelSetChange={(value, labelIds) => {
                 setCurrentDisplayViewConfig({
                   ...currentDisplayViewConfig,
                   filterLabelSetId: value,
+                  filterLabelSetLabelIds: labelIds ?? null,
+                });
+              }}
+              onSelectedLabelSetLabelIdsChange={(value) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  filterLabelSetLabelIds: value,
                 });
               }}
             />
@@ -275,7 +284,7 @@ export default function PersonalTasksPage() {
             initialValues={editingTask ? {
               ...editingTask,
               labels: editingTask.labels || [],
-            } : ((selectedProject !== 'all' && selectedProject !== 'personal') ? { projectId: selectedProject } : {})}
+            } : {}}
           />
         )}
       </div>
@@ -316,6 +325,7 @@ export default function PersonalTasksPage() {
         {currentDisplayViewConfig.viewMode === TaskViewMode.TIMELINE && (
           <TimelineView
             tasks={filteredTasks}
+            refreshTasks={() => fetchPersonalTasks(user?.id)}
             onTaskClick={(taskId) => {
               const fullTask = tasks.find((task) => task.id === taskId) || null;
               setEditingTask(fullTask);
