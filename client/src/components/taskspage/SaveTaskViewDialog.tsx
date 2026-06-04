@@ -43,6 +43,11 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
   const selectedFilterLabel = currentDisplayViewConfig.filterLabelId
     ? scopedLabels.find((label) => label.id === currentDisplayViewConfig.filterLabelId)
     : null;
+  const selectedFilterLabels = currentDisplayViewConfig.filterLabelIds?.length
+    ? scopedLabels.filter((label) => currentDisplayViewConfig.filterLabelIds?.includes(label.id))
+    : selectedFilterLabel
+      ? [selectedFilterLabel]
+      : [];
 
   const selectedFilterLabelSet = currentDisplayViewConfig.filterLabelSetId
     ? scopedLabelSets.find((set) => set.id === currentDisplayViewConfig.filterLabelSetId)
@@ -56,6 +61,21 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
 
         return selectedFilterLabelSetLabelIds.includes(label.id);
       })
+    : [];
+  const selectedFilterLabelSetSummaries = currentDisplayViewConfig.filterLabelSetLabelIdsBySet
+    ? scopedLabelSets
+        .map((set) => {
+          const selectedLabels = set.labels.filter((label) => (
+            currentDisplayViewConfig.filterLabelSetLabelIdsBySet?.[set.id] ?? []
+          ).includes(label.id));
+
+          if (selectedLabels.length === 0) {
+            return null;
+          }
+
+          return `${set.name} (${selectedLabels.map((label) => label.name).join(', ')})`;
+        })
+        .filter((summary): summary is string => Boolean(summary))
     : [];
 
   const selectedGroupingLabelSet = currentDisplayViewConfig.groupByLabelSetId
@@ -120,8 +140,8 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
             <Filter className="w-4 h-4 text-primary" />
             <Label className="font-medium min-w-22.5">Label:</Label>
             <span>
-              {selectedFilterLabel ? (
-                <span className="text-primary">{selectedFilterLabel.name}</span>
+              {selectedFilterLabels.length > 0 ? (
+                <span className="text-primary">{selectedFilterLabels.map((label) => label.name).join(', ')}</span>
               ) : (
                 <span className="text-muted-foreground">All labels</span>
               )}
@@ -131,7 +151,9 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
             <Rows3 className="w-4 h-4 text-primary" />
             <Label className="font-medium min-w-22.5">Label Set:</Label>
             <span>
-              {selectedFilterLabelSet ? (
+              {selectedFilterLabelSetSummaries.length > 0 ? (
+                <span className="text-primary">{selectedFilterLabelSetSummaries.join('; ')}</span>
+              ) : selectedFilterLabelSet ? (
                 <span className="text-primary">
                   {selectedFilterLabelSet.name}
                   {selectedFilterLabelSet.labels.length > 0 && (

@@ -55,8 +55,10 @@ export default function PersonalTasksPage() {
   const dateRange: TaskDateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
+  const selectedLabelIds = currentDisplayViewConfig.filterLabelIds ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
   const selectedLabelSetLabelIds = currentDisplayViewConfig.filterLabelSetLabelIds ?? null;
+  const selectedLabelSetLabelIdsBySet = currentDisplayViewConfig.filterLabelSetLabelIdsBySet ?? null;
 
   useEffect(() => {
     if (!user?.id) {
@@ -194,8 +196,10 @@ export default function PersonalTasksPage() {
               dateRange={dateRange}
               searchTerm={searchTerm}
               selectedLabelId={selectedLabelId}
+              selectedLabelIds={selectedLabelIds}
               selectedLabelSetId={selectedLabelSetId}
               selectedLabelSetLabelIds={selectedLabelSetLabelIds}
+              selectedLabelSetLabelIdsBySet={selectedLabelSetLabelIdsBySet}
               onSelectedProjectChange={(v) => {
                 setCurrentDisplayViewConfig({
                   ...currentDisplayViewConfig,
@@ -220,6 +224,13 @@ export default function PersonalTasksPage() {
                   filterLabelId: value,
                 });
               }}
+              onSelectedLabelIdsChange={(value) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  filterLabelId: null,
+                  filterLabelIds: value,
+                });
+              }}
               onSelectedLabelSetChange={(value, labelIds) => {
                 setCurrentDisplayViewConfig({
                   ...currentDisplayViewConfig,
@@ -231,6 +242,14 @@ export default function PersonalTasksPage() {
                 setCurrentDisplayViewConfig({
                   ...currentDisplayViewConfig,
                   filterLabelSetLabelIds: value,
+                });
+              }}
+              onSelectedLabelSetLabelIdsBySetChange={(value) => {
+                setCurrentDisplayViewConfig({
+                  ...currentDisplayViewConfig,
+                  filterLabelSetId: null,
+                  filterLabelSetLabelIds: null,
+                  filterLabelSetLabelIdsBySet: value,
                 });
               }}
             />

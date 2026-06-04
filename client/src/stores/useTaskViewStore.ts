@@ -16,8 +16,10 @@ export const defaultTaskViewConfig: ViewConfig = {
   sortOrder: TaskSortOrder.ASC,
   viewMode: TaskViewMode.BOARD,
   filterLabelId: null,
+  filterLabelIds: null,
   filterLabelSetId: null,
   filterLabelSetLabelIds: null,
+  filterLabelSetLabelIdsBySet: null,
   groupByLabelSetId: null,
 };
 
@@ -32,8 +34,10 @@ export function normalizeTaskViewConfig(view: Partial<ViewConfig>): ViewConfig {
     ...view,
     status: view.status ?? defaultTaskViewConfig.status,
     filterLabelId: view.filterLabelId ?? defaultTaskViewConfig.filterLabelId,
+    filterLabelIds: view.filterLabelIds ?? defaultTaskViewConfig.filterLabelIds,
     filterLabelSetId: view.filterLabelSetId ?? defaultTaskViewConfig.filterLabelSetId,
     filterLabelSetLabelIds: view.filterLabelSetLabelIds ?? defaultTaskViewConfig.filterLabelSetLabelIds,
+    filterLabelSetLabelIdsBySet: view.filterLabelSetLabelIdsBySet ?? defaultTaskViewConfig.filterLabelSetLabelIdsBySet,
   };
 
   if (normalized.viewMode === TaskViewMode.TABLE) {

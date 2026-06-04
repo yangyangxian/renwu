@@ -557,16 +557,34 @@ export default function TableView({ tasks, scopeProjectId, storageScopeKey, onOp
   }, [selectedLabelSet, sortedTasks, visibleOptimisticTaskLabels]);
 
   const sections = useMemo(
-    () => createTaskTableSections({
-      tasks: displayedSortedTasks,
-      visibilityTasks: tasks,
-      labelSet: selectedLabelSet,
-      visibleLabelIds: currentDisplayViewConfig.filterLabelSetId === currentDisplayViewConfig.groupByLabelSetId
-        ? currentDisplayViewConfig.filterLabelSetLabelIds
-        : null,
-      hideEmptyUnassignedSection: !!currentDisplayViewConfig.filterLabelSetId,
-    }),
-    [currentDisplayViewConfig.filterLabelSetId, currentDisplayViewConfig.filterLabelSetLabelIds, currentDisplayViewConfig.groupByLabelSetId, displayedSortedTasks, selectedLabelSet, tasks]
+    () => {
+      const groupByLabelSetId = currentDisplayViewConfig.groupByLabelSetId;
+      const selectedGroupLabelIds = groupByLabelSetId
+        ? currentDisplayViewConfig.filterLabelSetLabelIdsBySet?.[groupByLabelSetId] ?? null
+        : null;
+      const visibleLabelIds = selectedGroupLabelIds?.length
+        ? selectedGroupLabelIds
+        : currentDisplayViewConfig.filterLabelSetId === groupByLabelSetId
+          ? currentDisplayViewConfig.filterLabelSetLabelIds
+          : null;
+      const hasLabelSetFilter = !!currentDisplayViewConfig.filterLabelSetId
+        || Object.values(currentDisplayViewConfig.filterLabelSetLabelIdsBySet ?? {}).some((labelIds) => labelIds.length > 0);
+
+      return createTaskTableSections({
+        tasks: displayedSortedTasks,
+        labelSet: selectedLabelSet,
+        visibleLabelIds,
+        hideEmptyUnassignedSection: hasLabelSetFilter,
+      });
+    },
+    [
+      currentDisplayViewConfig.filterLabelSetId,
+      currentDisplayViewConfig.filterLabelSetLabelIds,
+      currentDisplayViewConfig.filterLabelSetLabelIdsBySet,
+      currentDisplayViewConfig.groupByLabelSetId,
+      displayedSortedTasks,
+      selectedLabelSet,
+    ]
   );
 
   const groupedLabelBySectionKey = useMemo(

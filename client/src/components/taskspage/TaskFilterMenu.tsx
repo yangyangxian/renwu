@@ -16,15 +16,19 @@ interface TaskFilterMenuProps {
   dateRange: TaskDateRange;
   searchTerm: string;
   selectedLabelId?: string | null;
+  selectedLabelIds?: string[] | null;
   selectedLabelSetId?: string | null;
   selectedLabelSetLabelIds?: string[] | null;
+  selectedLabelSetLabelIdsBySet?: Record<string, string[]> | null;
   // change handlers from parent
   onSelectedProjectChange?: (projectId: string) => void;
   onDateRangeChange?: (range: TaskDateRange) => void;
   onSearchTermChange?: (term: string) => void;
   onSelectedLabelChange?: (labelId: string | null) => void;
+  onSelectedLabelIdsChange?: (labelIds: string[] | null) => void;
   onSelectedLabelSetChange?: (labelSetId: string | null, labelIds?: string[] | null) => void;
   onSelectedLabelSetLabelIdsChange?: (labelIds: string[] | null) => void;
+  onSelectedLabelSetLabelIdsBySetChange?: (labelIdsBySet: Record<string, string[]> | null) => void;
 }
 
 export function TaskFilterMenu({
@@ -37,25 +41,33 @@ export function TaskFilterMenu({
   dateRange,
   searchTerm,
   selectedLabelId,
+  selectedLabelIds,
   selectedLabelSetId,
   selectedLabelSetLabelIds,
+  selectedLabelSetLabelIdsBySet,
   onSelectedProjectChange,
   onDateRangeChange,
   onSearchTermChange,
   onSelectedLabelChange,
+  onSelectedLabelIdsChange,
   onSelectedLabelSetChange,
   onSelectedLabelSetLabelIdsChange,
+  onSelectedLabelSetLabelIdsBySetChange,
 }: TaskFilterMenuProps) {
   const { fetchLabels, fetchLabelSets, getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
+  const hasMultiLabelFilter = (selectedLabelIds?.length ?? 0) > 0
+    || Object.values(selectedLabelSetLabelIdsBySet ?? {}).some((labelIds) => labelIds.length > 0);
   const hasActiveFilters = useMemo(() => {
     const hasProjectFilter = !!showProjectSelect && selectedProject !== 'all';
     const hasDateRangeFilter = !!showDateRange && dateRange !== TaskDateRange.ALL_TIME;
     const hasSearchFilter = !!showSearch && searchTerm.trim().length > 0;
     const hasLabelFilter = !!selectedLabelId;
     const hasLabelSetFilter = !!selectedLabelSetId;
+    const hasMultiLabelFilter = (selectedLabelIds?.length ?? 0) > 0
+      || Object.values(selectedLabelSetLabelIdsBySet ?? {}).some((labelIds) => labelIds.length > 0);
 
-    return hasProjectFilter || hasDateRangeFilter || hasSearchFilter || hasLabelFilter || hasLabelSetFilter;
-  }, [dateRange, searchTerm, selectedLabelId, selectedLabelSetId, selectedProject, showDateRange, showProjectSelect, showSearch]);
+    return hasProjectFilter || hasDateRangeFilter || hasSearchFilter || hasLabelFilter || hasLabelSetFilter || hasMultiLabelFilter;
+  }, [dateRange, searchTerm, selectedLabelId, selectedLabelIds, selectedLabelSetId, selectedLabelSetLabelIdsBySet, selectedProject, showDateRange, showProjectSelect, showSearch]);
   const normalizedLabelSetScopeProjectId = selectedProject === 'all'
     ? undefined
     : selectedProject === 'personal'
@@ -69,6 +81,14 @@ export function TaskFilterMenu({
     () => getLabelSetsForProjectId(normalizedLabelSetScopeProjectId),
     [getLabelSetsForProjectId, normalizedLabelSetScopeProjectId]
   );
+  const labelSetLabelIds = useMemo(
+    () => new Set(scopedLabelSets.flatMap((labelSet) => labelSet.labels.map((label) => label.id))),
+    [scopedLabelSets]
+  );
+  const independentLabelIds = useMemo(
+    () => new Set(scopedLabels.filter((label) => !labelSetLabelIds.has(label.id)).map((label) => label.id)),
+    [labelSetLabelIds, scopedLabels]
+  );
 
   useEffect(() => {
     if (normalizedLabelSetScopeProjectId === undefined) {
@@ -78,12 +98,30 @@ export function TaskFilterMenu({
       if (selectedLabelSetId) {
         onSelectedLabelSetChange?.(null, null);
       }
+      if (selectedLabelIds?.length) {
+        onSelectedLabelIdsChange?.(null);
+      }
+      if (selectedLabelSetLabelIdsBySet && Object.keys(selectedLabelSetLabelIdsBySet).length > 0) {
+        onSelectedLabelSetLabelIdsBySetChange?.(null);
+      }
       return;
     }
 
     fetchLabels(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
     fetchLabelSets(normalizedLabelSetScopeProjectId ?? undefined, { setActiveScope: false });
-  }, [fetchLabels, fetchLabelSets, normalizedLabelSetScopeProjectId, onSelectedLabelChange, onSelectedLabelSetChange, selectedLabelId, selectedLabelSetId]);
+  }, [
+    fetchLabels,
+    fetchLabelSets,
+    normalizedLabelSetScopeProjectId,
+    onSelectedLabelChange,
+    onSelectedLabelIdsChange,
+    onSelectedLabelSetChange,
+    onSelectedLabelSetLabelIdsBySetChange,
+    selectedLabelId,
+    selectedLabelIds,
+    selectedLabelSetId,
+    selectedLabelSetLabelIdsBySet,
+  ]);
 
   useEffect(() => {
     if (!selectedLabelId) {
@@ -95,6 +133,22 @@ export function TaskFilterMenu({
       onSelectedLabelChange?.(null);
     }
   }, [onSelectedLabelChange, scopedLabels, selectedLabelId]);
+
+  useEffect(() => {
+    if (!selectedLabelIds?.length) {
+      return;
+    }
+
+    if (scopedLabels.length === 0) {
+      return;
+    }
+
+    const availableLabelIds = new Set(scopedLabels.map((label) => label.id));
+    const validSelectedLabelIds = selectedLabelIds.filter((labelId) => availableLabelIds.has(labelId));
+    if (validSelectedLabelIds.length !== selectedLabelIds.length) {
+      onSelectedLabelIdsChange?.(validSelectedLabelIds.length > 0 ? validSelectedLabelIds : null);
+    }
+  }, [onSelectedLabelIdsChange, scopedLabels, selectedLabelIds]);
 
   useEffect(() => {
     if (!selectedLabelSetId) {
@@ -123,6 +177,31 @@ export function TaskFilterMenu({
       onSelectedLabelSetLabelIdsChange?.(validSelectedLabelIds.length > 0 ? validSelectedLabelIds : null);
     }
   }, [onSelectedLabelSetLabelIdsChange, scopedLabelSets, selectedLabelSetId, selectedLabelSetLabelIds]);
+
+  useEffect(() => {
+    if (!selectedLabelSetLabelIdsBySet) {
+      return;
+    }
+
+    if (scopedLabelSets.length === 0) {
+      return;
+    }
+
+    const nextSelectedLabelSetLabelIdsBySet: Record<string, string[]> = {};
+    for (const labelSet of scopedLabelSets) {
+      const availableLabelIds = new Set(labelSet.labels.map((label) => label.id));
+      const validLabelIds = (selectedLabelSetLabelIdsBySet[labelSet.id] ?? []).filter((labelId) => availableLabelIds.has(labelId));
+      if (validLabelIds.length > 0) {
+        nextSelectedLabelSetLabelIdsBySet[labelSet.id] = validLabelIds;
+      }
+    }
+
+    if (JSON.stringify(nextSelectedLabelSetLabelIdsBySet) !== JSON.stringify(selectedLabelSetLabelIdsBySet)) {
+      onSelectedLabelSetLabelIdsBySetChange?.(
+        Object.keys(nextSelectedLabelSetLabelIdsBySet).length > 0 ? nextSelectedLabelSetLabelIdsBySet : null
+      );
+    }
+  }, [onSelectedLabelSetLabelIdsBySetChange, scopedLabelSets, selectedLabelSetLabelIdsBySet]);
 
   // Filtering depends on controlled values from parent
   useEffect(() => {
@@ -168,19 +247,44 @@ export function TaskFilterMenu({
 
       let labelSetOk = true;
       let labelOk = true;
-      if (selectedLabelId) {
-        labelOk = (t.labels || []).some((label) => label.id === selectedLabelId);
-      }
+      if (hasMultiLabelFilter) {
+        const taskLabelIds = new Set((t.labels || []).map((label) => label.id));
+        const selectedIndependentLabelIds = new Set(selectedLabelIds ?? []);
 
-      if (selectedLabelSetId) {
-        const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === selectedLabelSetId);
-        if (selectedLabelSet) {
-          const selectedLabelIds = new Set(
-            selectedLabelSetLabelIds?.length
-              ? selectedLabelSetLabelIds
-              : selectedLabelSet.labels.map((label) => label.id)
-          );
-          labelSetOk = (t.labels || []).some((label) => selectedLabelIds.has(label.id));
+        if (selectedIndependentLabelIds.size > 0) {
+          const taskIndependentLabelIds = Array.from(taskLabelIds).filter((labelId) => independentLabelIds.has(labelId));
+          labelOk = taskIndependentLabelIds.length === 0
+            || taskIndependentLabelIds.some((labelId) => selectedIndependentLabelIds.has(labelId));
+        }
+
+        for (const labelSet of scopedLabelSets) {
+          const selectedLabelIdsForSet = selectedLabelSetLabelIdsBySet?.[labelSet.id] ?? [];
+          if (selectedLabelIdsForSet.length === 0) {
+            continue;
+          }
+
+          const labelIdsInSet = new Set(labelSet.labels.map((label) => label.id));
+          const taskLabelIdsInSet = Array.from(taskLabelIds).filter((labelId) => labelIdsInSet.has(labelId));
+          if (taskLabelIdsInSet.length > 0 && !taskLabelIdsInSet.some((labelId) => selectedLabelIdsForSet.includes(labelId))) {
+            labelSetOk = false;
+            break;
+          }
+        }
+      } else {
+        if (selectedLabelId) {
+          labelOk = (t.labels || []).some((label) => label.id === selectedLabelId);
+        }
+
+        if (selectedLabelSetId) {
+          const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === selectedLabelSetId);
+          if (selectedLabelSet) {
+            const selectedLabelIds = new Set(
+              selectedLabelSetLabelIds?.length
+                ? selectedLabelSetLabelIds
+                : selectedLabelSet.labels.map((label) => label.id)
+            );
+            labelSetOk = (t.labels || []).some((label) => selectedLabelIds.has(label.id));
+          }
         }
       }
 
@@ -193,8 +297,12 @@ export function TaskFilterMenu({
     selectedProject,
     searchTerm,
     selectedLabelId,
+    selectedLabelIds,
     selectedLabelSetId,
     selectedLabelSetLabelIds,
+    selectedLabelSetLabelIdsBySet,
+    hasMultiLabelFilter,
+    independentLabelIds,
     scopedLabels,
     scopedLabelSets,
     onFilter,
@@ -213,11 +321,15 @@ export function TaskFilterMenu({
           onSelectedProjectChange={onSelectedProjectChange}
           showLabelFilter={true}
           selectedLabelId={selectedLabelId}
+          selectedLabelIds={selectedLabelIds}
           onSelectedLabelChange={onSelectedLabelChange}
+          onSelectedLabelIdsChange={onSelectedLabelIdsChange}
           showLabelSetFilter={true}
           selectedLabelSetId={selectedLabelSetId}
           onSelectedLabelSetChange={onSelectedLabelSetChange}
           selectedLabelSetLabelIds={selectedLabelSetLabelIds}
+          selectedLabelSetLabelIdsBySet={selectedLabelSetLabelIdsBySet}
+          onSelectedLabelSetLabelIdsBySetChange={onSelectedLabelSetLabelIdsBySetChange}
           value={dateRange}
           onChange={(v) => onDateRangeChange?.(v)}
         />

@@ -114,10 +114,12 @@ export class ViewConfig {
   viewMode: TaskViewMode;
   searchTerm: string;
   filterLabelId?: string | null;
+  filterLabelIds?: string[] | null;
   filterLabelSetId?: string | null;
   filterLabelSetLabelIds?: string[] | null;
+  filterLabelSetLabelIdsBySet?: Record<string, string[]> | null;
   groupByLabelSetId?: string | null;
-  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, filterLabelId: string | null = null, filterLabelSetId: string | null = null, filterLabelSetLabelIds: string[] | null = null, groupByLabelSetId: string | null = null) {
+  constructor(projectId: string, dateRange: TaskDateRange, status: TaskStatus[], sortField: TaskSortField, sortOrder: TaskSortOrder, viewMode: TaskViewMode, searchTerm: string, filterLabelId: string | null = null, filterLabelSetId: string | null = null, filterLabelSetLabelIds: string[] | null = null, groupByLabelSetId: string | null = null, filterLabelIds: string[] | null = null, filterLabelSetLabelIdsBySet: Record<string, string[]> | null = null) {
     this.projectId = projectId;
     this.dateRange = dateRange;
     this.status = status;
@@ -126,8 +128,10 @@ export class ViewConfig {
     this.viewMode = viewMode;
     this.searchTerm = searchTerm;
     this.filterLabelId = filterLabelId;
+    this.filterLabelIds = filterLabelIds;
     this.filterLabelSetId = filterLabelSetId;
     this.filterLabelSetLabelIds = filterLabelSetLabelIds;
+    this.filterLabelSetLabelIdsBySet = filterLabelSetLabelIdsBySet;
     this.groupByLabelSetId = groupByLabelSetId;
   }
 }

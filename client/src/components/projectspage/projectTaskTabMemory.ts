@@ -2,7 +2,14 @@ import { TaskDateRange, TaskViewMode, type ViewConfig } from '@fullstack/common'
 
 export type ProjectTaskTabMemory = Pick<
   ViewConfig,
-  'dateRange' | 'searchTerm' | 'filterLabelId' | 'filterLabelSetId' | 'filterLabelSetLabelIds' | 'viewMode'
+  | 'dateRange'
+  | 'searchTerm'
+  | 'filterLabelId'
+  | 'filterLabelIds'
+  | 'filterLabelSetId'
+  | 'filterLabelSetLabelIds'
+  | 'filterLabelSetLabelIdsBySet'
+  | 'viewMode'
 >;
 
 export function getProjectTaskTabMemoryStorageKey(projectId: string) {
@@ -14,8 +21,10 @@ export function toProjectTaskTabMemory(view: Partial<ViewConfig>): ProjectTaskTa
     dateRange: view.dateRange ?? TaskDateRange.ALL_TIME,
     searchTerm: view.searchTerm ?? '',
     filterLabelId: view.filterLabelId ?? null,
+    filterLabelIds: view.filterLabelIds ?? null,
     filterLabelSetId: view.filterLabelSetId ?? null,
     filterLabelSetLabelIds: view.filterLabelSetLabelIds ?? null,
+    filterLabelSetLabelIdsBySet: view.filterLabelSetLabelIdsBySet ?? null,
     viewMode: view.viewMode ?? TaskViewMode.BOARD,
   };
 }

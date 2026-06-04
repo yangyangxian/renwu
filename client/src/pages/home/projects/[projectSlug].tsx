@@ -92,8 +92,10 @@ export default function ProjectDetailPage() {
   const dateRange = currentDisplayViewConfig.dateRange ?? TaskDateRange.ALL_TIME;
   const searchTerm = currentDisplayViewConfig.searchTerm ?? '';
   const selectedLabelId = currentDisplayViewConfig.filterLabelId ?? null;
+  const selectedLabelIds = currentDisplayViewConfig.filterLabelIds ?? null;
   const selectedLabelSetId = currentDisplayViewConfig.filterLabelSetId ?? null;
   const selectedLabelSetLabelIds = currentDisplayViewConfig.filterLabelSetLabelIds ?? null;
+  const selectedLabelSetLabelIdsBySet = currentDisplayViewConfig.filterLabelSetLabelIdsBySet ?? null;
   const isSavedView = !!currentSelectedTaskView && currentSelectedTaskView.projectId === projectId;
   const canRenameActiveView = !!activeProjectView && user?.id === activeProjectView.userId;
   const [isEditingViewName, setIsEditingViewName] = useState(false);
@@ -425,8 +427,10 @@ export default function ProjectDetailPage() {
                   dateRange={dateRange}
                   searchTerm={searchTerm}
                   selectedLabelId={selectedLabelId}
+                  selectedLabelIds={selectedLabelIds}
                   selectedLabelSetId={selectedLabelSetId}
                   selectedLabelSetLabelIds={selectedLabelSetLabelIds}
+                  selectedLabelSetLabelIdsBySet={selectedLabelSetLabelIdsBySet}
                   onDateRangeChange={(value) => {
                     setCurrentDisplayViewConfig({
                       ...currentDisplayViewConfig,
@@ -448,6 +452,14 @@ export default function ProjectDetailPage() {
                       filterLabelId: value,
                     });
                   }}
+                  onSelectedLabelIdsChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      filterLabelId: null,
+                      filterLabelIds: value,
+                    });
+                  }}
                   onSelectedLabelSetChange={(value, labelIds) => {
                     setCurrentDisplayViewConfig({
                       ...currentDisplayViewConfig,
@@ -461,6 +473,15 @@ export default function ProjectDetailPage() {
                       ...currentDisplayViewConfig,
                       projectId,
                       filterLabelSetLabelIds: value,
+                    });
+                  }}
+                  onSelectedLabelSetLabelIdsBySetChange={(value) => {
+                    setCurrentDisplayViewConfig({
+                      ...currentDisplayViewConfig,
+                      projectId,
+                      filterLabelSetId: null,
+                      filterLabelSetLabelIds: null,
+                      filterLabelSetLabelIdsBySet: value,
                     });
                   }}
                 />

@@ -74,6 +74,24 @@ test('normalizeTaskViewConfig preserves filterLabelSetLabelIds', () => {
   );
 });
 
+test('normalizeTaskViewConfig preserves multi label filters', () => {
+  const normalized = normalizeTaskViewConfig({
+    projectId: 'project-1',
+    viewMode: TaskViewMode.LIST,
+    filterLabelIds: ['label-1', 'label-2'],
+    filterLabelSetLabelIdsBySet: {
+      'label-set-1': ['label-3'],
+      'label-set-2': ['label-4', 'label-5'],
+    },
+  });
+
+  assert.deepEqual(normalized.filterLabelIds, ['label-1', 'label-2']);
+  assert.deepEqual(normalized.filterLabelSetLabelIdsBySet, {
+    'label-set-1': ['label-3'],
+    'label-set-2': ['label-4', 'label-5'],
+  });
+});
+
 test('sanitizeTaskViewConfigForPersistence clears list-only controls for table views', async () => {
   const { sanitizeTaskViewConfigForPersistence } = await import('./useTaskViewStore');
 

@@ -20,16 +20,24 @@ test('project task tab memory persists only the tab-owned controls under a proje
       dateRange: TaskDateRange.LAST_3_MONTHS,
       searchTerm: 'alpha',
       filterLabelId: 'label-1',
+      filterLabelIds: ['label-2'],
       filterLabelSetId: 'label-set-1',
-      filterLabelSetLabelIds: ['label-2'],
+      filterLabelSetLabelIds: ['label-3'],
+      filterLabelSetLabelIdsBySet: {
+        'label-set-2': ['label-4'],
+      },
       viewMode: TaskViewMode.TABLE,
     }),
     {
       dateRange: TaskDateRange.LAST_3_MONTHS,
       searchTerm: 'alpha',
       filterLabelId: 'label-1',
+      filterLabelIds: ['label-2'],
       filterLabelSetId: 'label-set-1',
-      filterLabelSetLabelIds: ['label-2'],
+      filterLabelSetLabelIds: ['label-3'],
+      filterLabelSetLabelIdsBySet: {
+        'label-set-2': ['label-4'],
+      },
       viewMode: TaskViewMode.TABLE,
     }
   );
@@ -68,8 +76,10 @@ test('project task tab memory round-trips through localStorage per project', asy
     dateRange: TaskDateRange.ALL_TIME,
     searchTerm: 'beta',
     filterLabelId: null,
+    filterLabelIds: null,
     filterLabelSetId: null,
     filterLabelSetLabelIds: null,
+    filterLabelSetLabelIdsBySet: null,
     viewMode: TaskViewMode.LIST,
   });
   assert.equal(module.readProjectTaskTabMemory('project-2'), null);
