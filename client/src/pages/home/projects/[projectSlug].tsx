@@ -535,6 +535,13 @@ export default function ProjectDetailPage() {
             if (!open) setEditingTask(null);
           }}
           title={editingTask ? "Edit Task" : "Add New Task"}
+          labelFilter={editingTask ? undefined : {
+            selectedLabelId,
+            selectedLabelIds,
+            selectedLabelSetId,
+            selectedLabelSetLabelIds,
+            selectedLabelSetLabelIdsBySet,
+          }}
           initialValues={editingTask || (project ? { projectId: project.id } : {})}
         />
       )}

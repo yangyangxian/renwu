@@ -4,6 +4,7 @@ import { taskFormReducer, initialTaskFormState } from "@/reducers/taskFormReduce
 import { useAuth } from "@/providers/AuthProvider";
 import { useTaskStore } from "@/stores/useTaskStore";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useLabelStore } from "@/stores/useLabelStore";
 import { withToast } from "@/utils/toastUtils";
 import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui-kit/Dialog";
 import { Input } from "@/components/ui-kit/Input";
@@ -70,6 +71,23 @@ export function shouldShowTaskDialogDescriptionUnsavedIndicator({
   return normalizeTaskDescription(initialDescription) !== normalizeTaskDescription(currentDescription);
 }
 
+interface TaskDialogLabelFilter {
+  selectedLabelId?: string | null;
+  selectedLabelIds?: string[] | null;
+  selectedLabelSetId?: string | null;
+  selectedLabelSetLabelIds?: string[] | null;
+  selectedLabelSetLabelIdsBySet?: Record<string, string[]> | null;
+}
+
+function areTaskLabelIdsEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const leftSet = new Set(left);
+  return right.every((labelId) => leftSet.has(labelId));
+}
+
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,14 +106,16 @@ interface TaskDialogProps {
   };
   title?: string;
   personalTaskMode?: boolean;
+  labelFilter?: TaskDialogLabelFilter;
 }
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
-  open, onOpenChange, initialValues = {}, title = "Add New Task", personalTaskMode = false,
+  open, onOpenChange, initialValues = {}, title = "Add New Task", personalTaskMode = false, labelFilter,
 }) => {
   const { user } = useAuth();
   const { createTask, updateTaskById } = useTaskStore();
   const { projects } = useProjectStore();
+  const { fetchLabels, fetchLabelSets, getLabelSetsForProjectId } = useLabelStore();
   // Ref for Markdown editor imperative handle
   const mdEditorRef = useRef<MarkdownEditorHandle | null>(null);
   // Extract label ids (objects or plain strings) once; avoid extra effects
@@ -128,6 +148,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const [isDirty, setIsDirty] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(initialDescription);
   const [saving, setSaving] = useState(false);
+  const [labelValidationError, setLabelValidationError] = useState<string | null>(null);
   // Removed effect that re-dispatched labels to prevent unnecessary rerenders
 
   useEffect(() => {
@@ -140,6 +161,21 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   });
 
   const handleSubmit = async (taskData: any) => {
+    if (!taskData.id && isCreateLabelRequired && (!Array.isArray(taskData.labels) || taskData.labels.length === 0)) {
+      setLabelValidationError('Please select at least one label.');
+      return;
+    }
+
+    setLabelValidationError(null);
+
+    if (
+      !taskData.title?.trim()
+      || !taskData.assignedTo
+      || !user?.id
+    ) {
+      return;
+    }
+
     const isEditMode = !!taskData.id;
     let submitSuccess = false;
     await withToast(
@@ -220,6 +256,90 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   const fieldRowClass = "flex items-center gap-2 min-h-[40px]";
   const fieldLabelClass = "font-medium min-w-[120px] flex items-center gap-2 mb-0 text-muted-foreground dark:text-white";
   const isEditMode = Boolean(initialValues.id);
+  const normalizedProjectId = taskState.projectId && taskState.projectId.trim() ? taskState.projectId : null;
+  const scopedLabelSets = useMemo(
+    () => getLabelSetsForProjectId(normalizedProjectId),
+    [getLabelSetsForProjectId, normalizedProjectId]
+  );
+  const hasCreateLabelFilter = !isEditMode && Boolean(
+    labelFilter?.selectedLabelId
+      || labelFilter?.selectedLabelIds?.length
+      || labelFilter?.selectedLabelSetId
+      || Object.values(labelFilter?.selectedLabelSetLabelIdsBySet ?? {}).some((labelIds) => labelIds.length > 0)
+  );
+  const allowedCreateLabelIds = useMemo(() => {
+    if (!hasCreateLabelFilter) {
+      return null;
+    }
+
+    const nextLabelIds = new Set<string>();
+
+    if (labelFilter?.selectedLabelId) {
+      nextLabelIds.add(labelFilter.selectedLabelId);
+    }
+
+    for (const labelId of labelFilter?.selectedLabelIds ?? []) {
+      nextLabelIds.add(labelId);
+    }
+
+    if (labelFilter?.selectedLabelSetId) {
+      const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === labelFilter.selectedLabelSetId);
+      const labelIds = labelFilter.selectedLabelSetLabelIds?.length
+        ? labelFilter.selectedLabelSetLabelIds
+        : selectedLabelSet?.labels.map((label) => label.id) ?? [];
+
+      for (const labelId of labelIds) {
+        nextLabelIds.add(labelId);
+      }
+    }
+
+    for (const labelIds of Object.values(labelFilter?.selectedLabelSetLabelIdsBySet ?? {})) {
+      for (const labelId of labelIds) {
+        nextLabelIds.add(labelId);
+      }
+    }
+
+    return Array.from(nextLabelIds);
+  }, [hasCreateLabelFilter, labelFilter, scopedLabelSets]);
+  const isCreateLabelRequired = hasCreateLabelFilter;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    fetchLabels(normalizedProjectId ?? undefined, { setActiveScope: false });
+    fetchLabelSets(normalizedProjectId ?? undefined, { setActiveScope: false });
+  }, [fetchLabelSets, fetchLabels, normalizedProjectId, open]);
+
+  useEffect(() => {
+    if (isEditMode || !hasCreateLabelFilter || !allowedCreateLabelIds) {
+      return;
+    }
+
+    const nextLabels = allowedCreateLabelIds.length === 1
+      ? [allowedCreateLabelIds[0]]
+      : taskState.labels.filter((labelId) => allowedCreateLabelIds.includes(labelId));
+
+    if (!areTaskLabelIdsEqual(taskState.labels, nextLabels)) {
+      dispatch({ type: 'SET_FIELD', field: 'labels', value: nextLabels });
+    }
+  }, [allowedCreateLabelIds, hasCreateLabelFilter, isEditMode, taskState.labels]);
+
+  useEffect(() => {
+    if (!labelValidationError) {
+      return;
+    }
+
+    if (!isCreateLabelRequired || taskState.labels.length > 0) {
+      setLabelValidationError(null);
+    }
+  }, [isCreateLabelRequired, labelValidationError, taskState.labels]);
+
+  const isSaveDisabled = saving
+    || !taskState.title.trim()
+    || !taskState.assignedTo
+    || !user?.id;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -323,19 +443,26 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 <Label className={fieldLabelClass}>
                   <Tag className="size-4" />
                   Labels
+                  {isCreateLabelRequired && <span className="text-red-500">*</span>}
                 </Label>
-                <LabelSelector
-                  value={taskState.labels}
-                  onChange={(next) => {
-                    logger.debug('TaskDialog.LabelSelector onChange', { next, taskId: taskState.id });
-                    dispatch({ type: 'SET_FIELD', field: 'labels', value: next });
-                  }}
-                  projectId={taskState.projectId ? taskState.projectId : null}
-                  deferCommit={false}
-                  className="min-h-8 items-center gap-2"
-                  triggerClassName="h-7 w-7 !px-0 !gap-0"
-                  emptyText=""
-                />
+                <div className="flex flex-col gap-1">
+                  <LabelSelector
+                    value={taskState.labels}
+                    onChange={(next) => {
+                      logger.debug('TaskDialog.LabelSelector onChange', { next, taskId: taskState.id });
+                      dispatch({ type: 'SET_FIELD', field: 'labels', value: next });
+                    }}
+                    projectId={taskState.projectId ? taskState.projectId : null}
+                    allowedLabelIds={isEditMode ? null : allowedCreateLabelIds}
+                    deferCommit={false}
+                    className="min-h-8 items-center gap-2"
+                    triggerClassName="h-7 w-7 !px-0 !gap-0"
+                    emptyText=""
+                  />
+                  {labelValidationError && (
+                    <span className="text-xs text-red-500">{labelValidationError}</span>
+                  )}
+                </div>
               </div>
               {!personalTaskMode && (
                 <>
@@ -478,7 +605,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               type="button"
               variant="default"
               onClick={() => mdEditorRef.current?.save()}
-              disabled={saving || !taskState.title.trim() || !taskState.assignedTo || !user?.id}
+              disabled={isSaveDisabled}
             >
               {saving ? 'Saving...' : 'Save'}
             </Button>

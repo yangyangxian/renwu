@@ -32,6 +32,7 @@ export interface LabelSelectorProps {
   deferCommit?: boolean;
   showBadges?: boolean;
   emptyText?: string;
+  allowedLabelIds?: string[] | null;
   /**
    * If provided: show labels/sets for this project id.
    * If null: show personal (non-project) labels/sets.
@@ -48,6 +49,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   deferCommit = true,
   showBadges = true,
   emptyText = 'Add Label',
+  allowedLabelIds = null,
   projectId,
 }) => {
   const { fetchLabelSets, fetchLabels, getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
@@ -84,10 +86,36 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
 
   // NOTE: We rely on the store's scope-aware caches; avoid filtering by projectId
   // on each label/set because some endpoints don't populate projectId consistently.
-  const filteredLabelSets = scopedLabelSets || [];
+  const allowedLabelIdSet = useMemo(
+    () => (allowedLabelIds?.length ? new Set(allowedLabelIds) : null),
+    [allowedLabelIds]
+  );
+  const filteredLabelSets = useMemo(() => {
+    const baseSets = scopedLabelSets || [];
+    if (!allowedLabelIdSet) {
+      return baseSets;
+    }
+
+    return baseSets
+      .map((set) => ({
+        ...set,
+        labels: (set.labels || []).filter((label: any) => allowedLabelIdSet.has(label.id)),
+      }))
+      .filter((set) => (set.labels || []).length > 0);
+  }, [allowedLabelIdSet, scopedLabelSets]);
 
   const labelIdsInSets = new Set<string>(filteredLabelSets.flatMap(s => (s.labels || []).map((l: any) => l.id)));
-  const independentLabels = (scopedLabels || []).filter(l => !labelIdsInSets.has((l as any).id));
+  const independentLabels = useMemo(
+    () => (scopedLabels || []).filter((label) => {
+      const labelId = (label as any).id;
+      if (allowedLabelIdSet && !allowedLabelIdSet.has(labelId)) {
+        return false;
+      }
+
+      return !labelIdsInSets.has(labelId);
+    }),
+    [allowedLabelIdSet, labelIdsInSets, scopedLabels]
+  );
   const normalizedSearch = search.trim().toLowerCase();
   const matchesIndependent = normalizedSearch
     ? independentLabels.filter(l => ((l as any).name || (l as any).labelName || '').toLowerCase().includes(normalizedSearch))

@@ -300,6 +300,13 @@ export default function PersonalTasksPage() {
             }}
             title={editingTask ? "Edit Task" : "Add New Task"}
             personalTaskMode={true}
+            labelFilter={editingTask ? undefined : {
+              selectedLabelId,
+              selectedLabelIds,
+              selectedLabelSetId,
+              selectedLabelSetLabelIds,
+              selectedLabelSetLabelIdsBySet,
+            }}
             initialValues={editingTask ? {
               ...editingTask,
               labels: editingTask.labels || [],
