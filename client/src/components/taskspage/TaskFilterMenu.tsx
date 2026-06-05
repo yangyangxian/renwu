@@ -63,11 +63,9 @@ export function TaskFilterMenu({
     const hasSearchFilter = !!showSearch && searchTerm.trim().length > 0;
     const hasLabelFilter = !!selectedLabelId;
     const hasLabelSetFilter = !!selectedLabelSetId;
-    const hasMultiLabelFilter = (selectedLabelIds?.length ?? 0) > 0
-      || Object.values(selectedLabelSetLabelIdsBySet ?? {}).some((labelIds) => labelIds.length > 0);
 
     return hasProjectFilter || hasDateRangeFilter || hasSearchFilter || hasLabelFilter || hasLabelSetFilter || hasMultiLabelFilter;
-  }, [dateRange, searchTerm, selectedLabelId, selectedLabelIds, selectedLabelSetId, selectedLabelSetLabelIdsBySet, selectedProject, showDateRange, showProjectSelect, showSearch]);
+  }, [dateRange, hasMultiLabelFilter, searchTerm, selectedLabelId, selectedLabelSetId, selectedProject, showDateRange, showProjectSelect, showSearch]);
   const normalizedLabelSetScopeProjectId = selectedProject === 'all'
     ? undefined
     : selectedProject === 'personal'
@@ -249,42 +247,34 @@ export function TaskFilterMenu({
       let labelOk = true;
       if (hasMultiLabelFilter) {
         const taskLabelIds = new Set((t.labels || []).map((label) => label.id));
-        const selectedIndependentLabelIds = new Set(selectedLabelIds ?? []);
+          const selectedFilterLabelIds = new Set<string>(selectedLabelIds ?? []);
 
-        if (selectedIndependentLabelIds.size > 0) {
-          const taskIndependentLabelIds = Array.from(taskLabelIds).filter((labelId) => independentLabelIds.has(labelId));
-          labelOk = taskIndependentLabelIds.length === 0
-            || taskIndependentLabelIds.some((labelId) => selectedIndependentLabelIds.has(labelId));
+        if (selectedLabelId) {
+            selectedFilterLabelIds.add(selectedLabelId);
         }
 
-        for (const labelSet of scopedLabelSets) {
-          const selectedLabelIdsForSet = selectedLabelSetLabelIdsBySet?.[labelSet.id] ?? [];
-          if (selectedLabelIdsForSet.length === 0) {
-            continue;
-          }
-
-          const labelIdsInSet = new Set(labelSet.labels.map((label) => label.id));
-          const taskLabelIdsInSet = Array.from(taskLabelIds).filter((labelId) => labelIdsInSet.has(labelId));
-          if (taskLabelIdsInSet.length > 0 && !taskLabelIdsInSet.some((labelId) => selectedLabelIdsForSet.includes(labelId))) {
-            labelSetOk = false;
-            break;
+        for (const labelIds of Object.values(selectedLabelSetLabelIdsBySet ?? {})) {
+          for (const labelId of labelIds) {
+              selectedFilterLabelIds.add(labelId);
           }
         }
+
+          labelOk = (t.labels || []).some((label) => selectedFilterLabelIds.has(label.id));
       } else {
         if (selectedLabelId) {
           labelOk = (t.labels || []).some((label) => label.id === selectedLabelId);
         }
 
         if (selectedLabelSetId) {
-          const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === selectedLabelSetId);
-          if (selectedLabelSet) {
-            const selectedLabelIds = new Set(
-              selectedLabelSetLabelIds?.length
-                ? selectedLabelSetLabelIds
-                : selectedLabelSet.labels.map((label) => label.id)
-            );
-            labelSetOk = (t.labels || []).some((label) => selectedLabelIds.has(label.id));
-          }
+        const selectedLabelSet = scopedLabelSets.find((labelSet) => labelSet.id === selectedLabelSetId);
+        if (selectedLabelSet) {
+          const selectedLabelIds = new Set(
+            selectedLabelSetLabelIds?.length
+              ? selectedLabelSetLabelIds
+              : selectedLabelSet.labels.map((label) => label.id)
+          );
+          labelSetOk = (t.labels || []).some((label) => selectedLabelIds.has(label.id));
+        }
         }
       }
 
@@ -302,8 +292,6 @@ export function TaskFilterMenu({
     selectedLabelSetLabelIds,
     selectedLabelSetLabelIdsBySet,
     hasMultiLabelFilter,
-    independentLabelIds,
-    scopedLabels,
     scopedLabelSets,
     onFilter,
     showProjectSelect,
