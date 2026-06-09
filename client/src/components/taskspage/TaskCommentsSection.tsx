@@ -201,7 +201,7 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
         .task-comment-content :where(ul, ol) {
           padding-left: 1.5em;
           margin-top: 0;
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
         }
 
         .task-comment-content :where(ul ul, ul ol, ol ol, ol ul) {
@@ -215,7 +215,7 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
         }
 
         .task-comment-content li + li {
-          margin-top: .25em;
+          margin-top: .2em;
         }
       `}</style>
 
@@ -253,10 +253,10 @@ export default function TaskCommentsSection({ taskId }: TaskCommentsSectionProps
                         <span className="truncate text-foreground">
                           {comment.createdBy?.name || 'Unknown'}
                         </span>
-                        <span className="text-xs text-muted-foreground">{buildTimestamp(comment)}</span>
-                        {isCommentEdited(comment) && (
-                          <span className="text-xs text-muted-foreground">(edited)</span>
-                        )}
+                        <span className="inline-flex items-center self-center text-xs leading-none text-muted-foreground">
+                          <span>{buildTimestamp(comment)}</span>
+                          {isCommentEdited(comment) && <span>(edited)</span>}
+                        </span>
                       </div>
                     </div>
 
