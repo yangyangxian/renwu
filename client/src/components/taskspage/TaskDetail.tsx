@@ -203,7 +203,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
 
   const handleDescClick = () => {
     // capture current viewer height to avoid layout jumps when mounting editor
-    const h = descViewRef.current?.clientHeight;
+    const h = descViewRef.current?.getBoundingClientRect().height;
     if (h) setDescContainerHeight(h);
     descScrollTopRef.current = descViewScrollRef.current?.scrollTop ?? 0;
     setIsDescEditorReady(false);
@@ -316,7 +316,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
         .task-detail-description-content :where(ul, ol) {
           padding-left: 1.5em;
           margin-top: 0;
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
         }
 
         .task-detail-description-content :where(ul ul, ul ol, ol ol, ol ul) {
@@ -330,7 +330,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, previewTask = null }) =
         }
 
         .task-detail-description-content li + li {
-          margin-top: .25em;
+          margin-top: .2em;
         }
       `}</style>
       {/* Title block above columns */}

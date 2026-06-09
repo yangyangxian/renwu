@@ -277,7 +277,7 @@ function MarkdownEditorContent(props: MarkdownnEditorProps) {
         .markdown-body .editor,
         .markdown-body .editor .ProseMirror,
         .markdown-body .editor [contenteditable='true'] {
-          line-height: 1.5;
+          line-height: 1.45;
           word-break: normal;
           overflow-wrap: break-word;
         }
@@ -291,7 +291,7 @@ function MarkdownEditorContent(props: MarkdownnEditorProps) {
 
         .markdown-body .editor :where(p, blockquote, ul, ol, dl, table, pre, details) {
           margin-top: 0;
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
         }
 
         .markdown-body .editor :where(ul, ol) {
