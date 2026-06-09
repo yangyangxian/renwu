@@ -160,7 +160,7 @@ export function ProjectsMenuItem({
                   </div>
 
                   {projectViews.length > 0 && projectViewsExpanded && (
-                    <div className="ml-3 space-y-1">
+                    <div className="ml-3 space-y-1.5">
                       {projectViews.map((view) => (
                         (() => {
                           const { icon: ViewModeIcon } = getTaskViewModeMeta(view.viewConfig.viewMode);
@@ -173,7 +173,7 @@ export function ProjectsMenuItem({
                           onMouseLeave={() => setHoveredViewId(null)}
                         >
                           <SidebarMenuButton
-                            className="pl-6 h-7 cursor-pointer flex-1 min-w-0"
+                            className="pl-6 cursor-pointer flex-1 min-w-0"
                             isActive={isProjectViewActive(project.slug, view.name)}
                             onClick={() => {
                               const encodedName = encodeURIComponent(view.name.replace(/\s+/g, '-'));
