@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui-kit/Card";
 import { Button } from "@/components/ui-kit/Button";
-import { Trash2, AlertCircle, ChevronRight, User } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui-kit/Tooltip";
+import { Trash2, AlertCircle, User } from "lucide-react";
 import { formatDateSmart } from "@/utils/dateUtils";
 import { TaskStatus, UserResDto } from "@fullstack/common";
 import { useTaskStore } from "@/stores/useTaskStore";
@@ -85,16 +84,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
       aria-label={title}
       onClick={onClick}
       >
-      {description && description.trim() !== "" && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ChevronRight className="absolute right-3 top-1/2 z-10 w-3 h-3 -translate-y-1/2 shrink-0 text-muted-foreground" aria-label="Has description" />
-          </TooltipTrigger>
-          <TooltipContent side="top" align="center">
-            See description
-          </TooltipContent>
-        </Tooltip>
-      )}
       {!boardCompactLayout && !!visibleLabels.length && (
         <div className={`absolute top-3 ${labelsRightClass} flex flex-wrap gap-1 justify-end max-w-[70%] pointer-events-none transition-[right] duration-200`}>
           {visibleLabels.map(l => (
