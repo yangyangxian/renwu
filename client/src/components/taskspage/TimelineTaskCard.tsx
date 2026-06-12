@@ -120,9 +120,9 @@ export default function TimelineTaskCard({
             </div>
           </div>
 
-          <p className="line-clamp-4 text-sm leading-6 text-muted-foreground">
+          <div className="line-clamp-4 text-sm leading-6 text-muted-foreground whitespace-pre-line">
             {getTimelineExcerpt(task.description)}
-          </p>
+          </div>
 
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {showProjectName && (
