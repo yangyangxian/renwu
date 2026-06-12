@@ -91,24 +91,10 @@ export function ProjectsMenuItem({
                 <span>
                   Projects
                 </span>
-                <span className="flex-1" />
-                <span className="flex items-center gap-1">
-                  <span
-                    role="button"
-                    aria-label="Add Project"
-                    tabIndex={0}
-                    onClick={handleAddProject}
-                    onMouseDown={e => e.stopPropagation()}
-                    onFocus={e => e.stopPropagation()}
-                    className="inline-flex items-center justify-center rounded-md cursor-pointer hover:bg-primary-purple/70 dark:hover:bg-primary-purple p-1 z-1"
-                  >
-                    <Plus className="w-4 h-4 hover:text-white" />
-                  </span>
-                  <ChevronDown
-                    className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 shrink-0"
-                    aria-hidden="true"
-                  />
-                </span>
+                <ChevronDown
+                  className="absolute right-2 w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180 shrink-0"
+                  aria-hidden="true"
+                />
               </>
             )}
           </SidebarMenuButton>
@@ -247,6 +233,19 @@ export function ProjectsMenuItem({
               </SidebarMenuSubItem>
               );
             })}
+            {showText && !loading && (
+              <SidebarMenuSubItem>
+                <SidebarMenuButton
+                  role="button"
+                  aria-label="Add Project"
+                  onClick={handleAddProject}
+                  className="pl-4 gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <Plus className="h-4" />
+                  <span>Add Project</span>
+                </SidebarMenuButton>
+              </SidebarMenuSubItem>
+            )}
           </SidebarMenuSub>
         </CollapsibleContent>
       </Collapsible>
