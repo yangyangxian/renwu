@@ -132,13 +132,45 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
   currentSelectedTaskView: null,
   setCurrentSelectedTaskView: (view) => set({ currentSelectedTaskView: view }),
   currentDisplayViewConfig: defaultDisplayViewConfig,
-  setCurrentDisplayViewConfig: (view) => set({ currentDisplayViewConfig: normalizeTaskViewConfig(view) }),
-  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => set((state) => ({
-    currentDisplayViewConfig: {
-      ...state.currentDisplayViewConfig,
-      viewMode
+  setCurrentDisplayViewConfig: (view) => set((state) => {
+    const nextConfig = normalizeTaskViewConfig(view);
+
+    if (nextConfig.projectId === 'personal' && !state.currentSelectedTaskView) {
+      writeProjectTaskTabMemory('personal', nextConfig);
+
+      return {
+        currentDisplayViewConfig: nextConfig,
+        projectHomeViewConfigs: {
+          ...state.projectHomeViewConfigs,
+          personal: nextConfig,
+        },
+      };
     }
-  })), // This function allows updating just the viewMode in the currentDisplayViewConfig
+
+    return { currentDisplayViewConfig: nextConfig };
+  }),
+  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => set((state) => {
+    const nextConfig = {
+      ...state.currentDisplayViewConfig,
+      viewMode,
+    };
+
+    if (nextConfig.projectId === 'personal' && !state.currentSelectedTaskView) {
+      writeProjectTaskTabMemory('personal', nextConfig);
+
+      return {
+        currentDisplayViewConfig: nextConfig,
+        projectHomeViewConfigs: {
+          ...state.projectHomeViewConfigs,
+          personal: nextConfig,
+        },
+      };
+    }
+
+    return {
+      currentDisplayViewConfig: nextConfig,
+    };
+  }), // This function allows updating just the viewMode in the currentDisplayViewConfig
 }));
 
 export function useTaskViewStore() {
@@ -248,7 +280,7 @@ export function useTaskViewStore() {
     setCurrentDisplayViewConfig,
     applyTaskView,
     defaultDisplayViewConfig,
-    personalDisplayViewConfig: personalTaskViewConfig,
+    personalDisplayViewConfig: getProjectHomeViewConfig('personal') ?? personalTaskViewConfig,
     setCurrentDisplayViewConfigViewMode
   };
 }
