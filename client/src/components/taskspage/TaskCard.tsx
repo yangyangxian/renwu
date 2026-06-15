@@ -166,10 +166,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
           </div>
         <div className="flex flex-col items-end gap-1 pr-4">
           {!boardCompactLayout && dueDate && (
-            <span className="text-xs lg:text-[13px] text-muted-foreground whitespace-nowrap bg-transparent px-1 py-0.5 rounded font-sans flex items-center gap-1">
+            <span className="text-xs lg:text-[13px] leading-none text-muted-foreground whitespace-nowrap bg-transparent px-1 py-0.5 rounded font-sans flex items-center gap-1">
               {isOverdue && (
-                <span title="Overdue">
-                  <AlertCircle className="w-3 h-3 text-red-500" />
+                <span title="Overdue" className="inline-flex items-center shrink-0">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-500 translate-y-[1px]" />
                 </span>
               )}
               {formatDateSmart(dueDate)}
@@ -190,8 +190,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ taskId, taskCode, title, dueDate, p
           {dueDate && (
             <span className="flex items-center gap-1 rounded bg-transparent px-1 py-0.5 text-[11px] leading-none text-muted-foreground">
               {isOverdue && (
-                <span title="Overdue">
-                  <AlertCircle className="w-3 h-3 text-red-500" />
+                <span title="Overdue" className="inline-flex items-center shrink-0">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-500 translate-y-[1px]" />
                 </span>
               )}
               {formatDateSmart(dueDate)}
