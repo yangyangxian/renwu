@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "target": "ESNext",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
