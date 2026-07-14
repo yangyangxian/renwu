@@ -85,6 +85,13 @@
       "when": 1779514250197,
       "tag": "0011_add_task_comments",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1784008084562,
+      "tag": "0012_add_personal_task_numbering",
+      "breakpoints": true
     }
   ]
 }

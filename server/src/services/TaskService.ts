@@ -53,12 +53,16 @@ type NumberedProject = {
 };
 
 class TaskService {
-  private buildTaskCode(projectSlug: string | null | undefined, taskNumber: number | null | undefined): string {
-    if (!projectSlug || taskNumber == null) {
+  private buildTaskCode(
+    projectSlug: string | null | undefined,
+    taskNumber: number | null | undefined,
+    projectId: string | null | undefined,
+  ): string {
+    if (taskNumber == null) {
       return '';
     }
 
-    return `${projectSlug}-${taskNumber}`;
+    return projectId ? `${projectSlug}-${taskNumber}` : `P-${taskNumber}`;
   }
 
   private mapTaskEntity(source: Record<string, unknown>): TaskEntity {
@@ -68,7 +72,8 @@ class TaskService {
       previewImageUrl: { default: undefined },
     });
 
-    entity.taskCode = this.buildTaskCode((source as { projectSlug?: string | null }).projectSlug, entity.taskNumber);
+    const taskSource = source as { projectSlug?: string | null; projectId?: string | null };
+    entity.taskCode = this.buildTaskCode(taskSource.projectSlug, entity.taskNumber, taskSource.projectId);
     return entity;
   }
 
@@ -140,6 +145,23 @@ class TaskService {
     }
 
     return project;
+  }
+
+  private async allocatePersonalTaskNumber(userId: string, transactionDb: any): Promise<number> {
+    const [user] = await transactionDb
+      .update(users)
+      .set({
+        lastPersonalTaskNumber: sql`${users.lastPersonalTaskNumber} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning({ taskNumber: users.lastPersonalTaskNumber });
+
+    if (!user) {
+      throw new CustomError('User not found', ErrorCodes.NOT_FOUND);
+    }
+
+    return user.taskNumber;
   }
 
   private async assertProjectMember(projectId: string, userId: string): Promise<void> {
@@ -334,6 +356,8 @@ class TaskService {
       if (nextInsertValues.projectId) {
         const numberedProject = await this.allocateProjectTaskNumber(nextInsertValues.projectId, tx);
         nextInsertValues.taskNumber = numberedProject.taskNumber;
+      } else {
+        nextInsertValues.taskNumber = await this.allocatePersonalTaskNumber(data.createdBy, tx);
       }
 
       const [insertedTask] = await tx
@@ -517,6 +541,8 @@ class TaskService {
         if (nextProjectId) {
           const numberedProject = await this.allocateProjectTaskNumber(nextProjectId, tx);
           nextTaskNumber = numberedProject.taskNumber;
+        } else {
+          nextTaskNumber = await this.allocatePersonalTaskNumber(existingTask.createdBy?.id ?? actorUserId, tx);
         }
 
         await tx.update(tasks)

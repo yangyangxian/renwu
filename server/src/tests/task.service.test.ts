@@ -134,6 +134,7 @@ describe('TaskService.getPersonalTasksByUserId', () => {
         description: 'Personal task ![cover](https://img.example.com/personal-1.png)',
         status: 'todo',
         projectId: null,
+        taskNumber: 3,
         dueDate: null,
         createdAt: new Date('2026-03-11T00:00:00.000Z'),
         updatedAt: new Date('2026-03-11T01:00:00.000Z'),
@@ -159,6 +160,8 @@ describe('TaskService.getPersonalTasksByUserId', () => {
     expect(selectMock).toHaveBeenCalledTimes(2);
     expect(result).toHaveLength(1);
     expect(result[0].projectId).toBe('');
+    expect(result[0].taskNumber).toBe(3);
+    expect(result[0].taskCode).toBe('P-3');
     expect(result[0].labels?.map(label => label.labelName)).toEqual(['personal']);
     expect(result[0].previewImageUrl).toBe('https://img.example.com/personal-1.png');
   });

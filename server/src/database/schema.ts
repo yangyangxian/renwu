@@ -5,6 +5,7 @@
 // To push to production using production environment variables:NODE_ENV=production npx drizzle-kit push
 // !important: Remember to pull the latest migrations from git and push to your db before generate your migrations.
 import { pgTable, uuid, text, varchar, timestamp, pgEnum, primaryKey, date, jsonb, integer, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { TaskStatus, PermissionAction, InvitationStatus, ActivityActionType, ActivityEntityType } from '@fullstack/common';
 
 // ---------- ENUMS ----------
@@ -20,6 +21,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   name: varchar('name', { length: 100 }).notNull(),
   passwordHash: text('password_hash').notNull(),
+  lastPersonalTaskNumber: integer('last_personal_task_number').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -91,6 +93,9 @@ export const tasks = pgTable(
   },
   (table) => [
     uniqueIndex('tasks_project_task_number_unique').on(table.projectId, table.taskNumber),
+    uniqueIndex('tasks_personal_task_number_unique')
+      .on(table.createdBy, table.taskNumber)
+      .where(sql`${table.projectId} IS NULL AND ${table.taskNumber} IS NOT NULL`),
   ]
 );
 
