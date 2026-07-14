@@ -25,7 +25,7 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
   scopePath,
   scopeProjectId = null,
 }) => {
-  const { currentDisplayViewConfig, createTaskView, setCurrentSelectedTaskView } = useTaskViewStore();
+  const { currentDisplayViewConfig, createTaskView } = useTaskViewStore();
   const { projects } = useProjectStore();
   const { getLabelsForProjectId, getLabelSetsForProjectId } = useLabelStore();
   const [viewName, setViewName] = useState("");
@@ -86,7 +86,6 @@ export const SaveTaskViewDialog: React.FC<SaveTaskViewDialogProps> = ({
     if (!viewName.trim()) return;
     try {
       const newView = await createTaskView(viewName.trim(), currentDisplayViewConfig, scopeProjectId);
-      setCurrentSelectedTaskView(newView);
       toast.success(`${scopeProjectId ? 'Project' : 'Task'} view saved successfully!`);
       onOpenChange(false);
       setViewName("");

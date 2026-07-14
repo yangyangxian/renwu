@@ -24,6 +24,8 @@ import { getTaskViewToolbarActionIcon } from '@/components/taskspage/taskViewToo
 import { UnsavedChangesIndicator } from "@/components/common/UnsavedChangesIndicator";
 import {
   createProjectTaskViewConfig,
+  isSavedTaskViewContextReady,
+  isTaskViewHomeContextReady,
   resolveProjectPageDisplayViewConfig,
   sanitizeTaskViewConfigForPersistence,
   useTaskViewStore,
@@ -49,14 +51,17 @@ export default function ProjectDetailPage() {
   } = useTaskStore();
   const {
     taskViews,
+    taskViewsLoaded,
     currentSelectedTaskView,
+    currentTaskViewContext,
     currentDisplayViewConfig,
     getProjectHomeViewConfig,
     projectHomeViewConfigs,
     setCurrentDisplayViewConfig,
     setCurrentDisplayViewConfigViewMode,
     setProjectHomeViewConfig,
-    setCurrentSelectedTaskView,
+    selectTaskView,
+    showTaskViewHome,
     updateTaskView,
   } = useTaskViewStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -98,6 +103,19 @@ export default function ProjectDetailPage() {
   const selectedLabelSetLabelIdsBySet = currentDisplayViewConfig.filterLabelSetLabelIdsBySet ?? null;
   const isSavedView = !!currentSelectedTaskView && currentSelectedTaskView.projectId === projectId;
   const canRenameActiveView = !!activeProjectView && user?.id === activeProjectView.userId;
+  const isProjectTaskRouteReady = activeProjectView
+    ? isSavedTaskViewContextReady(
+        activeProjectView,
+        currentTaskViewContext,
+        currentSelectedTaskView,
+        currentDisplayViewConfig
+      )
+    : !!projectId && isTaskViewHomeContextReady(
+        projectId,
+        currentTaskViewContext,
+        currentSelectedTaskView,
+        currentDisplayViewConfig
+      );
   const [isEditingViewName, setIsEditingViewName] = useState(false);
   const [viewNameDraft, setViewNameDraft] = useState('');
   const [isRenamingView, setIsRenamingView] = useState(false);
@@ -136,26 +154,29 @@ export default function ProjectDetailPage() {
   ]);
 
   useEffect(() => {
-    if (!projectId) {
+    if (!projectId || !taskViewsLoaded) {
       return;
     }
 
     if (activeProjectView) {
-      if (currentSelectedTaskView?.id !== activeProjectView.id) {
-        setCurrentSelectedTaskView(activeProjectView);
+      if (!isSavedTaskViewContextReady(
+        activeProjectView,
+        currentTaskViewContext,
+        currentSelectedTaskView,
+        currentDisplayViewConfig
+      )) {
+        selectTaskView(activeProjectView);
       }
-
-      setCurrentDisplayViewConfig(
-        resolveProjectPageDisplayViewConfig(projectId, {
-          activeProjectViewConfig: activeProjectView.viewConfig,
-        })
-      );
       return;
     }
 
-    if (currentSelectedTaskView || currentDisplayViewConfig.projectId !== projectId) {
-      setCurrentSelectedTaskView(null);
-      setCurrentDisplayViewConfig(
+    if (!isTaskViewHomeContextReady(
+      projectId,
+      currentTaskViewContext,
+      currentSelectedTaskView,
+      currentDisplayViewConfig
+    )) {
+      showTaskViewHome(
         resolveProjectPageDisplayViewConfig(projectId, {
           projectHomeViewConfig,
         })
@@ -165,10 +186,12 @@ export default function ProjectDetailPage() {
     projectId,
     activeProjectView,
     currentSelectedTaskView,
-    currentDisplayViewConfig.projectId,
+    currentTaskViewContext,
+    currentDisplayViewConfig,
     projectHomeViewConfig,
-    setCurrentDisplayViewConfig,
-    setCurrentSelectedTaskView,
+    selectTaskView,
+    showTaskViewHome,
+    taskViewsLoaded,
   ]);
 
   useEffect(() => {
@@ -268,15 +291,9 @@ export default function ProjectDetailPage() {
     }
 
     navigate(`${PROJECTS_PATH}/${project.slug ?? projectSlug}`);
-    setCurrentSelectedTaskView(null);
-    setCurrentDisplayViewConfig(
-      resolveProjectPageDisplayViewConfig(projectId, {
-        projectHomeViewConfig,
-      })
-    );
   };
 
-  if (!projectId || !project || loadingCurrentProject) {
+  if (!projectId || !project || loadingCurrentProject || !taskViewsLoaded || !isProjectTaskRouteReady) {
     return <HomePageSkeleton />;
   }
 

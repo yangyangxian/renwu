@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { motion } from 'framer-motion';
 import { useTabHash } from "@/hooks/useTabHash";
 import { useTaskStore } from '@/stores/useTaskStore';
@@ -19,7 +20,12 @@ import { SaveTaskViewPopover } from '@/components/taskspage/SaveTaskViewPopover'
 import { getTaskViewToolbarActionIcon } from '@/components/taskspage/taskViewToolbarActionIcon';
 import { toast } from 'sonner';
 import logger from "@/utils/logger";
-import { sanitizeTaskViewConfigForPersistence, useTaskViewStore } from "@/stores/useTaskViewStore";
+import {
+  isSavedTaskViewContextReady,
+  isTaskViewHomeContextReady,
+  sanitizeTaskViewConfigForPersistence,
+  useTaskViewStore,
+} from "@/stores/useTaskViewStore";
 import isEqual from "lodash/isEqual";
 import { HomePageSkeleton } from "@/components/homepage/HomePageSkeleton";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
@@ -27,16 +33,41 @@ import { TASK_VIEW_MODE_ORDER, getTaskViewModeMeta } from "@/lib/taskViewModeMet
 import { useAuth } from "@/providers/AuthProvider";
 
 export default function PersonalTasksPage() {
+  const location = useLocation();
   const { user } = useAuth();
   const { tasks, loading, fetchPersonalTasks } = useTaskStore();
   const {
+    taskViews,
+    taskViewsLoaded,
     currentSelectedTaskView,
+    currentTaskViewContext,
     currentDisplayViewConfig,
     setCurrentDisplayViewConfigViewMode,
     updateTaskView,
     setCurrentDisplayViewConfig,
     personalDisplayViewConfig,
+    selectTaskView,
+    showTaskViewHome,
   } = useTaskViewStore();
+
+  const activeViewSlug = new URLSearchParams(location.search).get('view');
+  const activePersonalView = taskViews.find((taskView) => (
+    !taskView.projectId
+    && taskView.name.replace(/\s+/g, '-') === activeViewSlug
+  )) ?? null;
+  const isPersonalTaskRouteReady = activePersonalView
+    ? isSavedTaskViewContextReady(
+        activePersonalView,
+        currentTaskViewContext,
+        currentSelectedTaskView,
+        currentDisplayViewConfig
+      )
+    : isTaskViewHomeContextReady(
+        'personal',
+        currentTaskViewContext,
+        currentSelectedTaskView,
+        currentDisplayViewConfig
+      );
 
   const tabOptions = TASK_VIEW_MODE_ORDER;
   const [view, setView] = useTabHash(tabOptions, currentDisplayViewConfig.viewMode,
@@ -61,33 +92,48 @@ export default function PersonalTasksPage() {
   const selectedLabelSetLabelIdsBySet = currentDisplayViewConfig.filterLabelSetLabelIdsBySet ?? null;
 
   useEffect(() => {
+    if (!taskViewsLoaded) {
+      return;
+    }
+
+    if (activePersonalView) {
+      if (!isSavedTaskViewContextReady(
+        activePersonalView,
+        currentTaskViewContext,
+        currentSelectedTaskView,
+        currentDisplayViewConfig
+      )) {
+        selectTaskView(activePersonalView);
+      }
+      return;
+    }
+
+    if (!isTaskViewHomeContextReady(
+      'personal',
+      currentTaskViewContext,
+      currentSelectedTaskView,
+      currentDisplayViewConfig
+    )) {
+      showTaskViewHome(personalDisplayViewConfig);
+    }
+  }, [
+    activePersonalView,
+    currentDisplayViewConfig,
+    currentSelectedTaskView,
+    currentTaskViewContext,
+    personalDisplayViewConfig,
+    selectTaskView,
+    showTaskViewHome,
+    taskViewsLoaded,
+  ]);
+
+  useEffect(() => {
     if (!user?.id) {
       return;
     }
 
     void fetchPersonalTasks(user.id);
   }, [fetchPersonalTasks, user?.id]);
-
-  useEffect(() => {
-    if (currentSelectedTaskView) {
-      if (currentDisplayViewConfig.projectId !== 'personal') {
-        setCurrentDisplayViewConfig({
-          ...currentDisplayViewConfig,
-          projectId: 'personal',
-        });
-      }
-      return;
-    }
-
-    if (currentDisplayViewConfig.projectId !== 'personal') {
-      setCurrentDisplayViewConfig(personalDisplayViewConfig);
-    }
-  }, [
-    currentDisplayViewConfig,
-    currentSelectedTaskView,
-    personalDisplayViewConfig,
-    setCurrentDisplayViewConfig,
-  ]);
 
   // Unsaved changes detection
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -123,6 +169,10 @@ export default function PersonalTasksPage() {
       toast.error('Failed to update task view.');
     }
   }, [currentSelectedTaskView, currentDisplayViewConfig, updateTaskView]);
+
+  if (!taskViewsLoaded || !isPersonalTaskRouteReady) {
+    return <HomePageSkeleton />;
+  }
 
   return (
     <>

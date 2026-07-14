@@ -1,13 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { TaskDateRange, TaskSortField, TaskSortOrder, TaskStatus, TaskViewMode } from '@fullstack/common';
+import { TaskDateRange, TaskSortField, TaskSortOrder, TaskStatus, TaskViewMode, TaskViewResDto } from '@fullstack/common';
 
 import {
+  createPersonalTaskViewConfig,
   createProjectTaskViewConfig,
   defaultTaskViewConfig,
+  isSavedTaskViewContextReady,
+  isTaskViewHomeContextReady,
   normalizeTaskViewConfig,
   resolveProjectPageDisplayViewConfig,
+  resolveSavedTaskViewDisplayConfig,
+  useZustandTaskViewStore,
 } from './useTaskViewStore';
 
 test('normalizeTaskViewConfig fills missing values from defaults', () => {
@@ -148,4 +153,107 @@ test('createProjectTaskViewConfig keeps the current project scope even when over
   assert.equal(resolved.projectId, 'project-1');
   assert.equal(resolved.viewMode, TaskViewMode.TABLE);
   assert.equal(resolved.filterLabelSetId, 'label-set-1');
+});
+
+test('route readiness rejects a stale saved-view context', () => {
+  const personalTableView = {
+    id: 'personal-view',
+    projectId: null,
+    viewConfig: createPersonalTaskViewConfig({
+      viewMode: TaskViewMode.TABLE,
+    }),
+  };
+  const projectBoardView = {
+    id: 'project-view',
+    projectId: 'project-1',
+    viewConfig: createProjectTaskViewConfig('project-1', {
+      viewMode: TaskViewMode.BOARD,
+    }),
+  };
+
+  const personalConfig = resolveSavedTaskViewDisplayConfig(personalTableView);
+
+  assert.equal(
+    isSavedTaskViewContextReady(
+      personalTableView,
+      { kind: 'saved', viewId: projectBoardView.id },
+      projectBoardView,
+      resolveSavedTaskViewDisplayConfig(projectBoardView)
+    ),
+    false
+  );
+  assert.equal(
+    isSavedTaskViewContextReady(
+      personalTableView,
+      { kind: 'saved', viewId: personalTableView.id },
+      personalTableView,
+      personalConfig
+    ),
+    true
+  );
+  assert.equal(
+    isTaskViewHomeContextReady(
+      'personal',
+      { kind: 'saved', viewId: personalTableView.id },
+      personalTableView,
+      personalConfig
+    ),
+    false
+  );
+});
+
+test('late writes from a previous route revision cannot overwrite the active saved view', () => {
+  const initialState = useZustandTaskViewStore.getState();
+  const personalTableView = new TaskViewResDto(
+    'personal-view',
+    'user-1',
+    'Personal table',
+    createPersonalTaskViewConfig({ viewMode: TaskViewMode.TABLE })
+  );
+  const projectBoardView = new TaskViewResDto(
+    'project-view',
+    'user-1',
+    'Project board',
+    createProjectTaskViewConfig('project-1', { viewMode: TaskViewMode.BOARD }),
+    'project-1'
+  );
+
+  try {
+    useZustandTaskViewStore.setState({
+      currentSelectedTaskView: null,
+      currentTaskViewContext: { kind: 'home', projectId: 'all' },
+      currentTaskViewRevision: 0,
+      currentDisplayViewConfig: defaultTaskViewConfig,
+    });
+
+    useZustandTaskViewStore.getState().selectTaskView(personalTableView);
+    useZustandTaskViewStore.getState().selectTaskView(projectBoardView);
+    const staleProjectRevision = useZustandTaskViewStore.getState().currentTaskViewRevision;
+    useZustandTaskViewStore.getState().selectTaskView(personalTableView);
+
+    useZustandTaskViewStore.getState().setCurrentDisplayViewConfig(
+      resolveSavedTaskViewDisplayConfig(projectBoardView),
+      staleProjectRevision
+    );
+    useZustandTaskViewStore.getState().setCurrentDisplayViewConfigViewMode(
+      TaskViewMode.BOARD,
+      staleProjectRevision
+    );
+
+    const finalState = useZustandTaskViewStore.getState();
+    assert.equal(finalState.currentSelectedTaskView?.id, personalTableView.id);
+    assert.deepEqual(finalState.currentTaskViewContext, {
+      kind: 'saved',
+      viewId: personalTableView.id,
+    });
+    assert.equal(finalState.currentDisplayViewConfig.projectId, 'personal');
+    assert.equal(finalState.currentDisplayViewConfig.viewMode, TaskViewMode.TABLE);
+  } finally {
+    useZustandTaskViewStore.setState({
+      currentSelectedTaskView: initialState.currentSelectedTaskView,
+      currentTaskViewContext: initialState.currentTaskViewContext,
+      currentTaskViewRevision: initialState.currentTaskViewRevision,
+      currentDisplayViewConfig: initialState.currentDisplayViewConfig,
+    });
+  }
 });

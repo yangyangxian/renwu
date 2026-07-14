@@ -60,6 +60,51 @@ export function createProjectTaskViewConfig(projectId: string, overrides: Partia
   });
 }
 
+export function createPersonalTaskViewConfig(overrides: Partial<ViewConfig> = {}): ViewConfig {
+  return normalizeTaskViewConfig({
+    ...personalTaskViewConfig,
+    ...overrides,
+    projectId: 'personal',
+  });
+}
+
+export function resolveSavedTaskViewDisplayConfig(
+  view: Pick<TaskViewResDto, 'projectId' | 'viewConfig'>
+): ViewConfig {
+  return view.projectId
+    ? createProjectTaskViewConfig(view.projectId, view.viewConfig)
+    : createPersonalTaskViewConfig(view.viewConfig);
+}
+
+export type TaskViewContext =
+  | { kind: 'saved'; viewId: string }
+  | { kind: 'home'; projectId: string };
+
+export function isSavedTaskViewContextReady(
+  view: Pick<TaskViewResDto, 'id' | 'projectId'>,
+  currentTaskViewContext: TaskViewContext,
+  currentSelectedTaskView: Pick<TaskViewResDto, 'id'> | null,
+  currentDisplayViewConfig: ViewConfig
+): boolean {
+  const expectedProjectId = view.projectId ?? 'personal';
+  return currentTaskViewContext.kind === 'saved'
+    && currentTaskViewContext.viewId === view.id
+    && currentSelectedTaskView?.id === view.id
+    && currentDisplayViewConfig.projectId === expectedProjectId;
+}
+
+export function isTaskViewHomeContextReady(
+  projectId: string,
+  currentTaskViewContext: TaskViewContext,
+  currentSelectedTaskView: Pick<TaskViewResDto, 'id'> | null,
+  currentDisplayViewConfig: ViewConfig
+): boolean {
+  return currentTaskViewContext.kind === 'home'
+    && currentTaskViewContext.projectId === projectId
+    && currentSelectedTaskView === null
+    && currentDisplayViewConfig.projectId === projectId;
+}
+
 export function resolveProjectPageDisplayViewConfig(
   projectId: string,
   options: {
@@ -84,28 +129,37 @@ export function sanitizeTaskViewConfigForPersistence(view: Partial<ViewConfig>):
 
 interface TaskViewStoreState {
   taskViews: TaskViewResDto[];
+  taskViewsLoaded: boolean;
   loading: boolean;
   error: string | null;
   currentSelectedTaskView: TaskViewResDto | null;
+  currentTaskViewContext: TaskViewContext;
+  currentTaskViewRevision: number;
   setCurrentSelectedTaskView: (view: TaskViewResDto | null) => void;
+  selectTaskView: (view: TaskViewResDto) => void;
+  showTaskViewHome: (view: ViewConfig) => void;
   setTaskViews: (views: TaskViewResDto[]) => void;
+  setTaskViewsLoaded: (loaded: boolean) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   projectHomeViewConfigs: Record<string, ViewConfig>;
   getProjectHomeViewConfig: (projectId: string) => ViewConfig | null;
   setProjectHomeViewConfig: (projectId: string, view: ViewConfig) => void;
   currentDisplayViewConfig: ViewConfig;
-  setCurrentDisplayViewConfig: (view: ViewConfig) => void;
-  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => void;
+  setCurrentDisplayViewConfig: (view: ViewConfig, expectedRevision: number) => void;
+  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode, expectedRevision: number) => void;
 }
 
 const defaultDisplayViewConfig: ViewConfig = defaultTaskViewConfig;
 
-const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
+/** @internal Exported only for deterministic store regression tests. */
+export const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
   taskViews: [],
+  taskViewsLoaded: false,
   loading: false,
   error: null,
   setTaskViews: (views) => set({ taskViews: views }),
+  setTaskViewsLoaded: (loaded) => set({ taskViewsLoaded: loaded }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   projectHomeViewConfigs: {},
@@ -130,9 +184,32 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
     };
   }),
   currentSelectedTaskView: null,
+  currentTaskViewContext: { kind: 'home', projectId: defaultDisplayViewConfig.projectId },
+  currentTaskViewRevision: 0,
   setCurrentSelectedTaskView: (view) => set({ currentSelectedTaskView: view }),
+  selectTaskView: (view) => set((state) => ({
+    currentSelectedTaskView: view,
+    currentTaskViewContext: { kind: 'saved', viewId: view.id },
+    currentTaskViewRevision: state.currentTaskViewRevision + 1,
+    currentDisplayViewConfig: resolveSavedTaskViewDisplayConfig(view),
+  })),
+  showTaskViewHome: (view) => set((state) => {
+    const nextConfig = normalizeTaskViewConfig(view);
+    return {
+      currentSelectedTaskView: null,
+      currentTaskViewContext: { kind: 'home', projectId: nextConfig.projectId },
+      currentTaskViewRevision: state.currentTaskViewRevision + 1,
+      currentDisplayViewConfig: nextConfig,
+    };
+  }),
   currentDisplayViewConfig: defaultDisplayViewConfig,
-  setCurrentDisplayViewConfig: (view) => set((state) => {
+  setCurrentDisplayViewConfig: (view, expectedRevision) => set((state) => {
+    // A filter/grouping effect from an unmounted route can resolve after the
+    // next saved view has already been activated. Ignore that stale write.
+    if (state.currentTaskViewRevision !== expectedRevision) {
+      return state;
+    }
+
     const nextConfig = normalizeTaskViewConfig(view);
 
     if (nextConfig.projectId === 'personal' && !state.currentSelectedTaskView) {
@@ -149,7 +226,11 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
 
     return { currentDisplayViewConfig: nextConfig };
   }),
-  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode) => set((state) => {
+  setCurrentDisplayViewConfigViewMode: (viewMode: TaskViewMode, expectedRevision: number) => set((state) => {
+    if (state.currentTaskViewRevision !== expectedRevision) {
+      return state;
+    }
+
     const nextConfig = {
       ...state.currentDisplayViewConfig,
       viewMode,
@@ -174,10 +255,22 @@ const useZustandTaskViewStore = create<TaskViewStoreState>((set, get) => ({
 }));
 
 export function useTaskViewStore() {
-  const { taskViews, loading, error, setTaskViews, setLoading, setError,
+  const { taskViews, taskViewsLoaded, loading, error, setTaskViews, setTaskViewsLoaded, setLoading, setError,
     projectHomeViewConfigs, getProjectHomeViewConfig, setProjectHomeViewConfig,
-    currentSelectedTaskView, setCurrentSelectedTaskView, currentDisplayViewConfig, 
-    setCurrentDisplayViewConfig, setCurrentDisplayViewConfigViewMode } = useZustandTaskViewStore();
+    currentSelectedTaskView, currentTaskViewContext, currentTaskViewRevision, setCurrentSelectedTaskView, selectTaskView, showTaskViewHome,
+    currentDisplayViewConfig, setCurrentDisplayViewConfig: setCurrentDisplayViewConfigForRevision,
+    setCurrentDisplayViewConfigViewMode: setCurrentDisplayViewConfigViewModeForRevision } = useZustandTaskViewStore();
+
+  // These wrappers deliberately capture the activation revision for this
+  // render. Async callbacks retained by an old route keep the old revision and
+  // are rejected by the store after navigation activates another view.
+  const setCurrentDisplayViewConfig = useCallback((view: ViewConfig) => {
+    setCurrentDisplayViewConfigForRevision(view, currentTaskViewRevision);
+  }, [currentTaskViewRevision, setCurrentDisplayViewConfigForRevision]);
+
+  const setCurrentDisplayViewConfigViewMode = useCallback((viewMode: TaskViewMode) => {
+    setCurrentDisplayViewConfigViewModeForRevision(viewMode, currentTaskViewRevision);
+  }, [currentTaskViewRevision, setCurrentDisplayViewConfigViewModeForRevision]);
     
   const deleteTaskView = useCallback(async (viewId: string): Promise<void> => {
     setLoading(true);
@@ -205,9 +298,10 @@ export function useTaskViewStore() {
     } catch (err: any) {
       setError(err?.message || 'Failed to fetch task views');
     } finally {
+      setTaskViewsLoaded(true);
       setLoading(false);
     }
-  }, [setLoading, setError, setTaskViews]);
+  }, [setLoading, setError, setTaskViews, setTaskViewsLoaded]);
 
 
   const createTaskView = useCallback(async (name: string, viewConfig: ViewConfig, projectId: string | null = null): Promise<TaskViewResDto> => {
@@ -263,6 +357,7 @@ export function useTaskViewStore() {
 
   return {
     taskViews,
+    taskViewsLoaded,
     personalTaskViews: taskViews.filter(view => !view.projectId),
     getProjectTaskViews: (projectId: string) => taskViews.filter(view => view.projectId === projectId),
     loading,
@@ -275,7 +370,9 @@ export function useTaskViewStore() {
     updateTaskView,
     deleteTaskView,
     currentSelectedTaskView,
-    setCurrentSelectedTaskView,
+    currentTaskViewContext,
+    selectTaskView,
+    showTaskViewHome,
     currentDisplayViewConfig,
     setCurrentDisplayViewConfig,
     applyTaskView,

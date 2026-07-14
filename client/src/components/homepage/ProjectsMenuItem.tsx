@@ -12,7 +12,7 @@ import { PROJECTS_PATH } from "@/routes/routeConfig";
 import React, { useCallback, useState } from "react";
 import { ProjectResDto, TaskViewResDto } from "@fullstack/common";
 import { Skeleton } from "../ui-kit/Skeleton";
-import { resolveProjectPageDisplayViewConfig, useTaskViewStore } from "@/stores/useTaskViewStore";
+import { useTaskViewStore } from "@/stores/useTaskViewStore";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui-kit/Tooltip";
 import { useAuth } from "@/providers/AuthProvider";
@@ -40,9 +40,6 @@ export function ProjectsMenuItem({
   const {
     currentSelectedTaskView,
     deleteTaskView,
-    getProjectHomeViewConfig,
-    setCurrentDisplayViewConfig,
-    setCurrentSelectedTaskView,
   } = useTaskViewStore();
   const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
   const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
@@ -119,12 +116,6 @@ export function ProjectsMenuItem({
                       isActive={isProjectActive(project.id)}
                       onClick={() => {
                         navigate(`${PROJECTS_PATH}/${project.slug}`);
-                        setCurrentSelectedTaskView(null);
-                        setCurrentDisplayViewConfig(
-                          resolveProjectPageDisplayViewConfig(project.id, {
-                            projectHomeViewConfig: getProjectHomeViewConfig(project.id),
-                          })
-                        );
                       }}
                     >
                       <span className="block truncate" title={project.name}>{project.name}</span>
@@ -206,12 +197,6 @@ export function ProjectsMenuItem({
                                     const wasSelected = currentSelectedTaskView?.id === view.id;
                                     await deleteTaskView(view.id);
                                     if (wasSelected) {
-                                      setCurrentSelectedTaskView(null);
-                                      setCurrentDisplayViewConfig(
-                                        resolveProjectPageDisplayViewConfig(project.id, {
-                                          projectHomeViewConfig: getProjectHomeViewConfig(project.id),
-                                        })
-                                      );
                                       navigate(`${PROJECTS_PATH}/${project.slug}`);
                                     }
                                   } finally {

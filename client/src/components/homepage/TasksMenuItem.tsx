@@ -8,9 +8,8 @@ import { ListChecks, Trash2 } from "lucide-react";
 import { useTaskViewStore } from '@/stores/useTaskViewStore';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui-kit/Tooltip";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { MYTASKS_PATH } from "@/routes/routeConfig";
-import { logger } from "@/utils/logger";
 import { Skeleton } from "../ui-kit/Skeleton";
 import { TaskViewResDto } from "@fullstack/common";
 import { Location, NavigateFunction } from "react-router-dom";
@@ -29,8 +28,10 @@ export function TasksMenuItem({
   location: Location;
   loading: boolean;
 }) {
-  const { setCurrentSelectedTaskView, currentSelectedTaskView, personalDisplayViewConfig,
-    setCurrentDisplayViewConfig, deleteTaskView } = useTaskViewStore();
+  const {
+    currentSelectedTaskView,
+    deleteTaskView,
+  } = useTaskViewStore();
   const [hoveredViewId, setHoveredViewId] = useState<string | null>(null);
   const [deleteDialogOpenId, setDeleteDialogOpenId] = useState<string | null>(null);
 
@@ -43,36 +44,6 @@ export function TasksMenuItem({
     return location.pathname.startsWith(MYTASKS_PATH) && params.get('view') === dashedName;
   }, [location]);
 
-  // Automatically set currentSelectedTaskView based on active view in URL
-  useEffect(() => {
-    if (!location.pathname.startsWith(MYTASKS_PATH)) {
-      return;
-    }
-
-    // Find the active view by matching the URL
-    const activeView = taskViews.find(view => isTaskViewActive(view.name));
-    
-    if (activeView && (!currentSelectedTaskView || currentSelectedTaskView.id !== activeView.id)) {
-      setCurrentSelectedTaskView(activeView);
-      setCurrentDisplayViewConfig(activeView.viewConfig);
-      logger.debug("set setCurrentDisplayViewConfig:", activeView.viewConfig);
-    } else if (!activeView && currentSelectedTaskView) {
-      logger.debug("No active view found, resetting currentSelectedTaskView");
-      setCurrentSelectedTaskView(null);
-      setCurrentDisplayViewConfig(personalDisplayViewConfig);
-      logger.debug("set setCurrentDisplayViewConfig:", personalDisplayViewConfig);
-    }
-  }, [
-    currentSelectedTaskView,
-    isTaskViewActive,
-    location.pathname,
-    location.search,
-    personalDisplayViewConfig,
-    setCurrentDisplayViewConfig,
-    setCurrentSelectedTaskView,
-    taskViews,
-  ]);
-
   return (
     <SidebarMenuItem>
       {/* Main Personal Tasks button - always visible */}
@@ -81,8 +52,6 @@ export function TasksMenuItem({
         isActive={isTasksActive()}
         onClick={() => {
           navigate(MYTASKS_PATH);
-          setCurrentSelectedTaskView(null);
-          setCurrentDisplayViewConfig(personalDisplayViewConfig);
         }}
       >
         <ListChecks className="w-5 h-5 mr-1 shrink-0" />
@@ -114,8 +83,6 @@ export function TasksMenuItem({
                     const dashedName = view.name.replace(/\s+/g, '-');
                     const encoded = encodeURIComponent(dashedName);
                     navigate(`${MYTASKS_PATH}?view=${encoded}`);
-                    setCurrentSelectedTaskView(view);
-                    setCurrentDisplayViewConfig(view.viewConfig);
                   }}
                 >
                   <span className="flex items-center gap-2 min-w-0">
@@ -161,12 +128,10 @@ export function TasksMenuItem({
                             const remainingViews = taskViews.filter(v => v.id !== view.id);
                             if (remainingViews.length > 0) {
                               const nextView = remainingViews[0];
-                              setCurrentSelectedTaskView(nextView);
                               const dashedName = nextView.name.replace(/\s+/g, '-');
                               const encoded = encodeURIComponent(dashedName);
                               navigate(`${MYTASKS_PATH}?view=${encoded}`);
                             } else {
-                              setCurrentSelectedTaskView(null);
                               navigate(MYTASKS_PATH);
                             }
                           }
