@@ -112,6 +112,23 @@ router.delete('/:taskId',
   }
 );
 
+router.get('/upcoming',
+  async (
+    req: express.Request<{}, {}, {}, { days?: string }>,
+    res: express.Response<ApiResponse<TaskResDto[]>>,
+    next: express.NextFunction
+  ) => {
+    try {
+      const days = req.query.days === '7' ? 7 : 3;
+      const upcomingTasks = await taskService.getUpcomingTasksByUserId(req.user!.userId, days);
+      const data = upcomingTasks.map(task => mapObject(task, new TaskResDto()));
+      res.json(createApiResponse<TaskResDto[]>(data));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 router.get('/id/:taskId/activities',
   async (
     req: express.Request<{ taskId: string }>,

@@ -1,9 +1,9 @@
 import { db } from '../database/databaseAccess';
 import { tasks, projects, users, taskView, taskLabels, labels, projectMembers, taskComments } from '../database/schema';
-import { eq, and, inArray, or, isNull, sql, asc } from 'drizzle-orm';
+import { eq, and, inArray, or, isNull, sql, asc, gte, lt, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
-import { ErrorCodes, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
+import { ErrorCodes, TaskStatus, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
 import logger from '../utils/logger';
 import { mapDbToEntity } from '../utils/mappers';
 import { LabelEntity } from './LabelService';
@@ -51,6 +51,29 @@ type NumberedProject = {
   slug: string;
   taskNumber: number;
 };
+
+function formatDateOnly(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getUpcomingTaskDateRange(days: number, now: Date = new Date()): {
+  from: string;
+  toExclusive: string;
+} {
+  const normalizedDays = days === 7 ? 7 : 3;
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + normalizedDays);
+
+  return {
+    from: formatDateOnly(start),
+    toExclusive: formatDateOnly(end),
+  };
+}
 
 class TaskService {
   private buildTaskCode(
@@ -441,6 +464,74 @@ class TaskService {
     }
 
     return entities;
+  }
+
+  async getUpcomingTasksByUserId(userId: string, days: number): Promise<TaskEntity[]> {
+    const assignedUser = alias(users, 'assigned_user');
+    const creatorUser = alias(users, 'creator_user');
+    const range = getUpcomingTaskDateRange(days);
+
+    const result = await db
+      .select({
+        id: tasks.id,
+        taskNumber: tasks.taskNumber,
+        assignedToId: tasks.assignedTo,
+        assignedToName: assignedUser.name,
+        assignedToEmail: assignedUser.email,
+        assignedToCreatedAt: assignedUser.createdAt,
+        createdById: tasks.createdBy,
+        createdByName: creatorUser.name,
+        createdByEmail: creatorUser.email,
+        createdByCreatedAt: creatorUser.createdAt,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        projectId: tasks.projectId,
+        dueDate: tasks.dueDate,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+        projectName: projects.name,
+        projectSlug: projects.slug,
+      })
+      .from(tasks)
+      .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .leftJoin(assignedUser, eq(tasks.assignedTo, assignedUser.id))
+      .leftJoin(creatorUser, eq(tasks.createdBy, creatorUser.id))
+      .leftJoin(
+        projectMembers,
+        and(eq(projectMembers.projectId, tasks.projectId), eq(projectMembers.userId, userId)),
+      )
+      .where(and(
+        gte(tasks.dueDate, range.from),
+        lt(tasks.dueDate, range.toExclusive),
+        ne(tasks.status, TaskStatus.CLOSE),
+        or(
+          and(isNull(tasks.projectId), eq(tasks.createdBy, userId)),
+          eq(projectMembers.userId, userId),
+        ),
+      ))
+      .orderBy(asc(tasks.dueDate), asc(tasks.createdAt));
+
+    return result.map((task) => {
+      const entity = this.mapTaskEntity(task);
+      if (task.assignedToId) {
+        entity.assignedTo = new UserEntity({
+          id: task.assignedToId,
+          name: task.assignedToName || '',
+          email: task.assignedToEmail || '',
+          createdAt: task.assignedToCreatedAt?.toISOString() || '',
+        });
+      }
+      if (task.createdById) {
+        entity.createdBy = {
+          id: task.createdById,
+          name: task.createdByName || '',
+          email: task.createdByEmail || '',
+          createdAt: task.createdByCreatedAt?.toISOString() || '',
+        };
+      }
+      return entity;
+    });
   }
 
   async getTasksByProjectId(projectId: string): Promise<TaskEntity[]> {

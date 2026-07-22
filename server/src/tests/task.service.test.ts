@@ -10,7 +10,7 @@ vi.mock('../database/databaseAccess', () => ({
   },
 }));
 
-import { taskService } from '../services/TaskService';
+import { getUpcomingTaskDateRange, taskService } from '../services/TaskService';
 
 type QueryResolutionPoint = 'where' | 'orderBy';
 
@@ -25,6 +25,22 @@ function createSelectBuilder<T>(rows: T[], resolveAt: QueryResolutionPoint = 'wh
 
   return builder;
 }
+
+describe('getUpcomingTaskDateRange', () => {
+  const now = new Date(2026, 6, 22, 15, 30);
+
+  it('uses today through the next three calendar days by default', () => {
+    expect(getUpcomingTaskDateRange(3, now)).toEqual({
+      from: '2026-07-22',
+      toExclusive: '2026-07-25',
+    });
+  });
+
+  it('supports a seven-day range and normalizes unsupported values', () => {
+    expect(getUpcomingTaskDateRange(7, now).toExclusive).toBe('2026-07-29');
+    expect(getUpcomingTaskDateRange(30, now).toExclusive).toBe('2026-07-25');
+  });
+});
 
 describe('TaskService.getTasksByProjectId', () => {
   beforeEach(() => {
