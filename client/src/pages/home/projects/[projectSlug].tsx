@@ -307,18 +307,19 @@ export default function ProjectDetailPage() {
     >
     <div className="h-full w-full flex flex-col mt-1">
       <div className="flex items-center px-2 my-1">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           {activeProjectView ? (
-            <div className="px-1 flex items-center gap-1 min-w-0">
+            <nav aria-label="Project view breadcrumb" className="flex min-w-0 items-center gap-1 px-1">
               <button
                 type="button"
-                className="max-w-[18rem] rounded-md px-2 py-1 text-sm font-medium text-muted-foreground cursor-pointer hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground focus:outline-none"
+                className="min-w-0 max-w-[18rem] rounded-md px-2 py-1 text-base font-medium text-muted-foreground transition-colors cursor-pointer hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground focus:outline-none"
                 onClick={handleNavigateToProjectHome}
+                title={project.name}
               >
-                <span className="truncate block">{project.name}</span>
+                <span className="block truncate">{project.name}</span>
               </button>
 
-              <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
 
               {isEditingViewName ? (
                 <Input
@@ -337,14 +338,14 @@ export default function ProjectDetailPage() {
                       setIsEditingViewName(false);
                     }
                   }}
-                  className="h-7 w-full max-w-[24rem] border-transparent px-2 py-1 text-sm font-medium leading-5 text-foreground shadow-none dark:text-slate-100"
+                  className="h-9 w-full max-w-[24rem] border-transparent px-2 py-1 text-base font-semibold leading-6 text-foreground shadow-none dark:text-slate-100"
                   autoFocus
                   disabled={isRenamingView}
                 />
               ) : (
                 <button
                   type="button"
-                  className="max-w-[24rem] rounded-md px-2 py-1 text-left text-sm font-medium text-foreground dark:text-slate-100 cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none"
+                  className="min-w-0 max-w-[24rem] rounded-md px-2 py-1 text-left text-base font-semibold text-foreground transition-colors enabled:cursor-pointer enabled:hover:bg-accent focus:bg-accent focus:outline-none disabled:opacity-100 dark:text-slate-100"
                   onClick={() => {
                     if (canRenameActiveView) {
                       setViewNameDraft(activeProjectView.name);
@@ -352,13 +353,15 @@ export default function ProjectDetailPage() {
                     }
                   }}
                   disabled={!canRenameActiveView}
+                  aria-current="page"
+                  title={activeProjectView.name}
                 >
-                  <h1 className="text-sm font-medium leading-5 truncate text-foreground dark:text-slate-100">
+                  <h1 className="truncate leading-6">
                     {activeProjectView.name}
                   </h1>
                 </button>
               )}
-            </div>
+            </nav>
           ) : (
             <Tabs
               value={resolvedActiveTab}

@@ -128,6 +128,7 @@ export function getTimelineExcerpt(markdown: string | null | undefined): string 
   const excerpt = markdown
     .replace(/!\[[^\]]*\]\(([^)]+)\)/g, ' ')
     .replace(/<img[^>]*>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
     .replace(/[`#>*_~\-]/g, ' ')
     .replace(/[^\S\n]+/g, ' ')
