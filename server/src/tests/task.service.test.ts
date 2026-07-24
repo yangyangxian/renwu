@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TaskDueDateFilter } from '@fullstack/common';
 
 const { selectMock } = vi.hoisted(() => ({
   selectMock: vi.fn(),
@@ -10,7 +11,7 @@ vi.mock('../database/databaseAccess', () => ({
   },
 }));
 
-import { getUpcomingTaskDateRange, taskService } from '../services/TaskService';
+import { getDueTaskDateRange, taskService } from '../services/TaskService';
 
 type QueryResolutionPoint = 'where' | 'orderBy';
 
@@ -26,19 +27,20 @@ function createSelectBuilder<T>(rows: T[], resolveAt: QueryResolutionPoint = 'wh
   return builder;
 }
 
-describe('getUpcomingTaskDateRange', () => {
+describe('getDueTaskDateRange', () => {
   const now = new Date(2026, 6, 22, 15, 30);
 
-  it('uses today through the next three calendar days by default', () => {
-    expect(getUpcomingTaskDateRange(3, now)).toEqual({
+  it('uses today through the next three calendar days for upcoming tasks', () => {
+    expect(getDueTaskDateRange(TaskDueDateFilter.NEXT_3_DAYS, now)).toEqual({
       from: '2026-07-22',
       toExclusive: '2026-07-25',
     });
   });
 
-  it('supports a seven-day range and normalizes unsupported values', () => {
-    expect(getUpcomingTaskDateRange(7, now).toExclusive).toBe('2026-07-29');
-    expect(getUpcomingTaskDateRange(30, now).toExclusive).toBe('2026-07-25');
+  it('uses today as the exclusive upper bound for overdue tasks', () => {
+    expect(getDueTaskDateRange(TaskDueDateFilter.OVERDUE, now)).toEqual({
+      toExclusive: '2026-07-22',
+    });
   });
 });
 

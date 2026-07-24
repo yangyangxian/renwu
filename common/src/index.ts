@@ -12,3 +12,4 @@ export * from './permission/permissionCheck.js';
 export * from './enums/taskViewMode.js';
 export * from './enums/taskSort.js';
 export * from './enums/taskDateRange.js';
+export * from './enums/taskDueDateFilter.js';

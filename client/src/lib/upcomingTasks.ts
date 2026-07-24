@@ -1,5 +1,3 @@
-export type UpcomingTaskRangeDays = 3 | 7;
-
 function toLocalDate(dateValue: string | Date): Date | null {
   if (dateValue instanceof Date) {
     return Number.isNaN(dateValue.getTime()) ? null : new Date(dateValue);
@@ -29,10 +27,14 @@ export function getDaysUntilDue(dueDate: string | Date, now: Date = new Date()):
   return Math.round((due.getTime() - today.getTime()) / 86_400_000);
 }
 
-export function formatUpcomingDueLabel(dueDate: string | Date, now: Date = new Date()): string {
+export function formatDueDateLabel(dueDate: string | Date, now: Date = new Date()): string {
   const daysUntilDue = getDaysUntilDue(dueDate, now);
 
   if (daysUntilDue === null) return 'Due date unavailable';
+  if (daysUntilDue < 0) {
+    const overdueDays = Math.abs(daysUntilDue);
+    return `${overdueDays} day${overdueDays === 1 ? '' : 's'} overdue`;
+  }
   if (daysUntilDue === 0) return 'Today';
   if (daysUntilDue === 1) return 'Tomorrow';
   return `In ${daysUntilDue} days`;

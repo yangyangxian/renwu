@@ -3,7 +3,7 @@ import { tasks, projects, users, taskView, taskLabels, labels, projectMembers, t
 import { eq, and, inArray, or, isNull, sql, asc, gte, lt, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { CustomError } from '../classes/CustomError';
-import { ErrorCodes, TaskStatus, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
+import { ErrorCodes, TaskDueDateFilter, TaskStatus, TaskUpdateReqDto, TaskCreateReqDto } from '@fullstack/common';
 import logger from '../utils/logger';
 import { mapDbToEntity } from '../utils/mappers';
 import { LabelEntity } from './LabelService';
@@ -59,15 +59,21 @@ function formatDateOnly(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getUpcomingTaskDateRange(days: number, now: Date = new Date()): {
-  from: string;
+export function getDueTaskDateRange(filter: TaskDueDateFilter, now: Date = new Date()): {
+  from?: string;
   toExclusive: string;
 } {
-  const normalizedDays = days === 7 ? 7 : 3;
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
+
+  if (filter === TaskDueDateFilter.OVERDUE) {
+    return {
+      toExclusive: formatDateOnly(start),
+    };
+  }
+
   const end = new Date(start);
-  end.setDate(end.getDate() + normalizedDays);
+  end.setDate(end.getDate() + 3);
 
   return {
     from: formatDateOnly(start),
@@ -466,10 +472,16 @@ class TaskService {
     return entities;
   }
 
-  async getUpcomingTasksByUserId(userId: string, days: number): Promise<TaskEntity[]> {
+  async getDueDateTasksByUserId(
+    userId: string,
+    filter: TaskDueDateFilter,
+  ): Promise<TaskEntity[]> {
     const assignedUser = alias(users, 'assigned_user');
     const creatorUser = alias(users, 'creator_user');
-    const range = getUpcomingTaskDateRange(days);
+    const range = getDueTaskDateRange(filter);
+    const dueDateCondition = range.from
+      ? and(gte(tasks.dueDate, range.from), lt(tasks.dueDate, range.toExclusive))
+      : lt(tasks.dueDate, range.toExclusive);
 
     const result = await db
       .select({
@@ -502,8 +514,7 @@ class TaskService {
         and(eq(projectMembers.projectId, tasks.projectId), eq(projectMembers.userId, userId)),
       )
       .where(and(
-        gte(tasks.dueDate, range.from),
-        lt(tasks.dueDate, range.toExclusive),
+        dueDateCondition,
         ne(tasks.status, TaskStatus.CLOSE),
         or(
           and(isNull(tasks.projectId), eq(tasks.createdBy, userId)),

@@ -1,6 +1,6 @@
 import express from 'express';
 import { taskService } from '../services/TaskService';
-import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType, ViewConfig, ActivityResDto, ErrorCodes, TaskCommentResDto, TaskCommentCreateReqDto, TaskCommentUpdateReqDto } from '@fullstack/common';
+import { TaskResDto, TaskUpdateReqDto, TaskCreateReqDto, ApiResponse, PermissionAction, PermissionResourceType, ViewConfig, ActivityResDto, ErrorCodes, TaskCommentResDto, TaskCommentCreateReqDto, TaskCommentUpdateReqDto, TaskDueDateFilter } from '@fullstack/common';
 import { TaskViewCreateReqDto, TaskViewUpdateReqDto, TaskViewResDto } from '@fullstack/common';
 import { mapObject } from '../utils/mappers';
 import { createApiResponse } from '../utils/apiUtils';
@@ -114,14 +114,16 @@ router.delete('/:taskId',
 
 router.get('/upcoming',
   async (
-    req: express.Request<{}, {}, {}, { days?: string }>,
+    req: express.Request<{}, {}, {}, { filter?: string }>,
     res: express.Response<ApiResponse<TaskResDto[]>>,
     next: express.NextFunction
   ) => {
     try {
-      const days = req.query.days === '7' ? 7 : 3;
-      const upcomingTasks = await taskService.getUpcomingTasksByUserId(req.user!.userId, days);
-      const data = upcomingTasks.map(task => mapObject(task, new TaskResDto()));
+      const filter = req.query.filter === TaskDueDateFilter.OVERDUE
+        ? TaskDueDateFilter.OVERDUE
+        : TaskDueDateFilter.NEXT_3_DAYS;
+      const dueDateTasks = await taskService.getDueDateTasksByUserId(req.user!.userId, filter);
+      const data = dueDateTasks.map(task => mapObject(task, new TaskResDto()));
       res.json(createApiResponse<TaskResDto[]>(data));
     } catch (err) {
       next(err);

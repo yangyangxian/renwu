@@ -12,7 +12,7 @@ import { LayoutDashboard, User, Sun, Moon, Monitor } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
 import { HomeSideBar } from "@/components/homepage/SideBar";
-import { UpcomingTasksPopover } from "@/components/common/UpcomingTasksPopover";
+import { DueDateTasksPopover } from "@/layout/DueDateTasksPopover";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -79,7 +79,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {isAuthenticated && <UpcomingTasksPopover />}
+          {isAuthenticated && <DueDateTasksPopover />}
           {/* Log out dropdown menu */}
           {isAuthenticated && (
             <DropdownMenu>
