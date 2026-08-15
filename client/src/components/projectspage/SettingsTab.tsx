@@ -2,7 +2,7 @@ import { Card } from '@/components/ui-kit/Card';
 import { Label } from '@/components/ui-kit/Label';
 import { Input } from '@/components/ui-kit/Input';
 import { Button } from '@/components/ui-kit/Button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { usePermissionStore } from '@/stores/usePermissionStore';
@@ -27,6 +27,7 @@ export function ProjectSettingsTab() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [validationErrors, setValidationErrors] = useState<{ name?: string; slug?: string }>({});
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const canEditProject = project && hasPermission(
@@ -160,6 +161,7 @@ export function ProjectSettingsTab() {
     
     // Clear any validation errors
     setValidationErrors({});
+    setIsSaving(true);
     
     const originalSlug = project.slug;
     const slugChanged = projectSlug !== originalSlug;
@@ -181,6 +183,8 @@ export function ProjectSettingsTab() {
     } catch (error) {
       console.error('Failed to update project:', error);
       toast.error('Failed to update project settings. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -252,7 +256,7 @@ export function ProjectSettingsTab() {
                 }}
                 placeholder="Project Name"
                 className={validationErrors.name ? 'border-red-500' : ''}
-                disabled={!canEditProject}
+                disabled={!canEditProject || isSaving}
               />
               <div className="h-5 mt-1">
                 {validationErrors.name && (
@@ -273,7 +277,7 @@ export function ProjectSettingsTab() {
                 }}
                 placeholder="Project Slug"
                 className={validationErrors.slug ? 'border-red-500' : ''}
-                disabled={!canEditProject}
+                disabled={!canEditProject || isSaving}
               />
               <div className="h-5 mt-1">
                 {validationErrors.slug && (
@@ -287,15 +291,17 @@ export function ProjectSettingsTab() {
             <Button 
               size="sm"
               onClick={handleSave}
-              disabled={!isFormValid || !hasUnsavedChanges || !canEditProject}
+              disabled={!isFormValid || !hasUnsavedChanges || !canEditProject || isSaving}
+              aria-busy={isSaving}
             >
-              Save Changes
+              {isSaving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button 
               size="sm"
               variant="outline" 
               onClick={handleCancel}
-              disabled={!hasUnsavedChanges || !canEditProject}
+              disabled={!hasUnsavedChanges || !canEditProject || isSaving}
             >
               Cancel
             </Button>

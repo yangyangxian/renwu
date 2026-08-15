@@ -13,3 +13,11 @@ test('project detail layout uses a narrower wiki panel and a slightly reduced te
   assert.equal(typeof module.PROJECT_TEAM_PRIMARY_COLUMN_CLASS, 'string');
   assert.doesNotMatch(module.PROJECT_TEAM_PRIMARY_COLUMN_CLASS, /max-w-/);
 });
+
+test('only the tasks tab waits for task view initialization', async () => {
+  const module = await import('./projectDetailLayout');
+
+  assert.equal(module.shouldWaitForTaskViewData('settings', false, false), false);
+  assert.equal(module.shouldWaitForTaskViewData('tasks', false, false), true);
+  assert.equal(module.shouldWaitForTaskViewData('tasks', true, true), false);
+});

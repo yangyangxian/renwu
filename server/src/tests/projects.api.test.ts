@@ -1,6 +1,9 @@
 import { describe, it, beforeAll, expect } from 'vitest';
 import { baseURL } from './globalSetup';
-import { ErrorCodes, ProjectRole } from '@fullstack/common';
+import { ErrorCodes, PermissionAction, ProjectRole } from '@fullstack/common';
+import { and, eq } from 'drizzle-orm';
+import { db } from '../database/databaseAccess';
+import { permissions, projectMembers, rolePermissions, roles } from '../database/schema';
 
 describe('Projects API', () => {
   let ownerCookie: string;
@@ -103,6 +106,51 @@ describe('Projects API', () => {
     const data = await res.json();
     expect(res.status).toBe(200);
     expect(data.data.success).toBe(true);
+  });
+
+  it('should allow the project owner to update the project name and slug', async () => {
+    const [ownerMember] = await db
+      .select({ roleId: projectMembers.roleId })
+      .from(projectMembers)
+      .innerJoin(roles, eq(projectMembers.roleId, roles.id))
+      .where(and(eq(projectMembers.projectId, projectId), eq(roles.name, ProjectRole.OWNER)))
+      .limit(1);
+    const [updatePermission] = await db
+      .select({ permissionId: permissions.id })
+      .from(permissions)
+      .where(eq(permissions.action, PermissionAction.UPDATE_PROJECT))
+      .limit(1);
+    if (!ownerMember || !updatePermission) {
+      throw new Error('Test database is missing the owner role or update_project permission');
+    }
+    const ownerPermissionRows = await db
+      .select({ permissionId: rolePermissions.permissionId })
+      .from(rolePermissions)
+      .where(eq(rolePermissions.roleId, ownerMember.roleId));
+
+    expect(ownerPermissionRows.length).toBeGreaterThan(0);
+
+    await db.delete(rolePermissions).where(eq(rolePermissions.roleId, ownerMember.roleId));
+
+    try {
+      const res = await fetch(`${baseURL}/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': ownerCookie
+        },
+        body: JSON.stringify({ name: 'Owner Updated Project', slug: 'oup' })
+      });
+      const data = await res.json();
+      expect(res.status).toBe(200);
+      expect(data.data.name).toBe('Owner Updated Project');
+      expect(data.data.slug).toBe('oup');
+    } finally {
+      await db.insert(rolePermissions).values(ownerPermissionRows.map(({ permissionId }) => ({
+        roleId: ownerMember.roleId,
+        permissionId,
+      }))).onConflictDoNothing();
+    }
   });
 
   it('should update the project', async () => {

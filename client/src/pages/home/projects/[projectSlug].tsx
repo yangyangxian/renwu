@@ -37,6 +37,7 @@ import { Input } from "@/components/ui-kit/Input";
 import { useAuth } from "@/providers/AuthProvider";
 import { ProjectWikiTab } from "@/components/projectspage/WikiTab";
 import { PROJECT_DEFAULT_TAB, PROJECT_DETAIL_TABS, PROJECT_DETAIL_TAB_HASH_VALUES, normalizeProjectDetailTab, type ProjectDetailTab, type ProjectDetailTabHash } from "@/components/projectspage/projectDetailTabs";
+import { shouldWaitForTaskViewData } from "@/components/projectspage/projectDetailLayout";
 import { TASK_VIEW_MODE_ORDER, getTaskViewModeMeta } from "@/lib/taskViewModeMeta";
 
 export default function ProjectDetailPage() {
@@ -47,6 +48,7 @@ export default function ProjectDetailPage() {
   const { currentProject: project, projects, fetchCurrentProject } = useProjectStore();
   const {
     projectTasks: tasks,
+    projectLoading: projectTasksLoading,
     fetchProjectTasks,
   } = useTaskStore();
   const {
@@ -122,17 +124,17 @@ export default function ProjectDetailPage() {
 
   const buildViewSlug = (viewName: string) => encodeURIComponent(viewName.replace(/\s+/g, '-'));
 
-  // Fetch project and tasks together when projectId changes
+  // Fetch project details and tasks in parallel; non-task tabs only need the project.
   useEffect(() => {
     setLoadingCurrentProject(true);
     if (projectId) {
+      void fetchProjectTasks(projectId);
       fetchCurrentProject(projectId)
-        .then(async () => {
-          await fetchProjectTasks(projectId);
+        .then(() => {
           setLoadingCurrentProject(false);
         })
         .catch(err => {
-          logger.error("Failed to fetch project or tasks:", err);
+          logger.error("Failed to fetch project:", err);
           setLoadingCurrentProject(false);
         });
     }
@@ -293,7 +295,10 @@ export default function ProjectDetailPage() {
     navigate(`${PROJECTS_PATH}/${project.slug ?? projectSlug}`);
   };
 
-  if (!projectId || !project || loadingCurrentProject || !taskViewsLoaded || !isProjectTaskRouteReady) {
+  const isTaskTabLoading = resolvedActiveTab === 'tasks'
+    && (projectTasksLoading || shouldWaitForTaskViewData(resolvedActiveTab, taskViewsLoaded, isProjectTaskRouteReady));
+
+  if (!projectId || !project || loadingCurrentProject || isTaskTabLoading) {
     return <HomePageSkeleton />;
   }
 
